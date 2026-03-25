@@ -1,0 +1,97 @@
+name: Build & Draft Release
+
+# Triggers when you push a version tag: git tag v1.0.1 && git push origin v1.0.1
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      # ── Checkout ────────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history so we can generate commit-based notes
+
+      # ── Node.js ─────────────────────────────────────────────────────────────
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      # ── Dependencies ─────────────────────────────────────────────────────────
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Rebuild native modules
+        run: npx electron-builder install-app-deps
+
+      # ── Build installer ──────────────────────────────────────────────────────
+      - name: Build Windows installer
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run build
+
+      # ── Generate commit-based changelog ─────────────────────────────────────
+      # Collects all commits since the previous tag and groups them into a
+      # draft changelog. You (or Claude) can then edit this before publishing.
+      - name: Generate draft changelog
+        id: changelog
+        shell: pwsh
+        run: |
+          # Get the previous tag
+          $prevTag = git describe --tags --abbrev=0 HEAD^ 2>$null
+          if (-not $prevTag) { $prevTag = "" }
+
+          # Collect commits since last tag
+          if ($prevTag) {
+            $commits = git log "$prevTag..HEAD" --pretty=format:"- %s (%h)" --no-merges
+          } else {
+            $commits = git log --pretty=format:"- %s (%h)" --no-merges
+          }
+
+          # Build the draft body
+          $version = "${{ github.ref_name }}"
+          $date    = Get-Date -Format "yyyy-MM-dd"
+
+          $body = @"
+          ## RohanKar Launcher $version
+
+          > ✏️ **This is an auto-generated draft.** Edit the notes below before publishing.
+
+          ---
+
+          ## What's New
+          <!-- Claude will fill this in each release -->
+
+          ## Changes since $prevTag
+
+          $($commits -join "`n")
+
+          ---
+          *Released $date*
+          "@
+
+          # Write to file so the next step can read it (avoids multiline env issues)
+          $body | Out-File -FilePath release_notes.md -Encoding utf8
+          echo "notes_file=release_notes.md" >> $env:GITHUB_OUTPUT
+
+      # ── Create GitHub Draft Release ──────────────────────────────────────────
+      - name: Create draft release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true           # DRAFT — you review & publish manually
+          prerelease: false
+          name: RohanKar Launcher ${{ github.ref_name }}
+          body_path: release_notes.md
+          files: |
+            dist/*.exe
+            dist/*.blockmap
+            dist/latest.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

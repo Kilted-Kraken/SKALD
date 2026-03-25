@@ -1,0 +1,51 @@
+{
+  "name": "rohankar-launcher",
+  "version": "1.4.1",
+  "description": "RohanKar Game Launcher",
+  "author": "Kilted-Kraken",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "devDependencies": {
+    "electron": "latest",
+    "electron-builder": "latest"
+  },
+  "dependencies": {
+    "axios": "^1.0.0",
+    "better-sqlite3": "^12.6.2",
+    "electron-updater": "^6.3.9",
+    "extract-zip": "^2.0.1"
+  },
+  "build": {
+    "appId": "com.rohankar.launcher",
+    "productName": "RohanKar Launcher",
+    "files": [
+      "src/**/*",
+      "assets/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "assets/heroes",
+        "to": "heroes"
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icons/rk-logo.ico"
+    },
+    "mac": {
+      "icon": "assets/icons/rk-logo.icns"
+    },
+    "linux": {
+      "icon": "assets/icons/rk-logo.png"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "Kilted-Kraken",
+      "repo": "-RohanKar-Launcher"
+    }
+  }
+}
