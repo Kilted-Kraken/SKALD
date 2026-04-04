@@ -1,4 +1,4 @@
-# RohanKar Launcher
+# SKALD Launcher
 
 A desktop game launcher for the classic PC game collection uploaded to [Archive.org](https://archive.org/search?query=uploader%3Arohanjackson071%40gmail.com) by **rohanjackson071**. Browse, install, and launch games from a single polished interface — no account required.
 
