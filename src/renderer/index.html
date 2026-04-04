@@ -8,22 +8,22 @@
     script-src 'self';
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
     font-src https://fonts.gstatic.com;
-    connect-src 'self' https://archive.org;
-    img-src 'self' https://archive.org file: data:;
+    connect-src 'self' https://archive.org https://*.archive.org https://www.steamgriddb.com https://retroachievements.org;
+    img-src 'self' https://archive.org https://*.archive.org https://www.steamgriddb.com https://media.retroachievements.org https://retroachievements.org file: data:;
   ">
-  <title>RohanKar Launcher</title>
+  <title>SKALD Launcher</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&display=swap">
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="ra-styles.css" />
 </head>
 <body>
 
   <!-- Titlebar -->
   <div id="titlebar">
     <div id="titlebar-drag">
-      <img src="../../assets/icons/rk-logo.jpg" class="titlebar-logo" alt="RK" />
-      <span class="titlebar-title">RohanKar Launcher</span>
+      <img src="../../assets/icons/RETRO-logo.svg" class="titlebar-logo" alt="SKALD" />
     </div>
     <div id="window-controls">
       <button id="btn-minimize">─</button>
@@ -47,12 +47,19 @@
     <!-- Sidebar -->
     <aside id="sidebar">
       <div id="sidebar-top">
-        <div id="sidebar-search-row">
+        <!-- System selector -->
+      <div id="system-selector-row">
+        <select id="system-select">
+          <option value="snes">🎮 SNES</option>
+          <option value="psx">🎮 PlayStation</option>
+        </select>
+      </div>
+      <div id="sidebar-search-row">
           <button id="btn-home" title="Home">
         <svg viewBox="8 8 48 48" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M56 32 Q56 42 48.95 48.95 42 56 32 56 22.05 56 15 48.95 8 42 8 32 8 22.05 15 15 22.05 8 32 8 42 8 48.95 15 56 22.05 56 32 M32 11 Q23.3 11 17.15 17.15 11 23.3 11 32 11 40.75 17.15 46.85 23.3 53 32 53 40.75 53 46.85 46.85 53 40.75 53 32 53 23.3 46.85 17.15 40.75 11 32 11 M20.6 30.55 L30.6 20.6 Q31.15 20 32 20 32.85 20 33.45 20.6 L43.45 30.55 Q44 31.1 44 31.95 L44 33.05 Q44 33.9 43.45 34.5 42.85 35.05 42 35.05 L40 35.05 40 41 Q40 41.85 39.45 42.45 38.85 43 38 43 L26 43 Q25.15 43 24.6 42.45 24 41.85 24 41 L24 35.05 22 35.05 Q21.15 35.05 20.6 34.5 20 33.9 20 33.05 L20 31.95 Q20 31.1 20.6 30.55 M28 39 L36 39 36 31 28 31 28 39"/></svg>
       </button>
           <div id="search-wrapper">
-            <input id="search-input" type="text" placeholder="Search games…" />
+            <input id="search-input" type="text" placeholder="Search ROMs…" />
             <button id="btn-search-clear" title="Clear search">✕</button>
           </div>
         </div>
@@ -84,9 +91,23 @@
             <svg viewBox="8 8 48 48" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M17.15 17.15 Q11 23.3 11 32 11 40.75 17.15 46.85 23.3 53 32 53 40.75 53 46.85 46.85 53 40.75 53 32 53 23.3 46.85 17.15 40.75 11 32 11 23.3 11 17.15 17.15 M56 32 Q56 42 48.95 48.95 42 56 32 56 22.05 56 15 48.95 8 42 8 32 8 22.05 15 15 22.05 8 32 8 42 8 48.95 15 56 22.05 56 32 M21 30 L43 30 43 34 21 34 21 30 M21 38 L43 38 43 42 21 42 21 38 M21 22 L43 22 43 26 21 26 21 22"/></svg>
             Settings
           </button>
+          <button id="btn-blades-mode" title="Blades Mode" style="background:linear-gradient(135deg,#1a3a1a,#0d1f0d);border-color:rgba(80,160,80,0.4);color:rgba(180,255,180,0.9);">
+            <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" fill="currentColor" style="width:15px;height:15px;flex-shrink:0"><rect x="8" y="8" width="12" height="48" rx="2"/><rect x="24" y="14" width="16" height="42" rx="2"/><rect x="44" y="8" width="12" height="48" rx="2"/></svg>
+            Blades Mode
+          </button>
           <button id="btn-about" title="About">
             <img src="../../assets/icons/information.png" alt="About" style="width:16px;height:16px;object-fit:contain;flex-shrink:0;" />
           </button>
+        </div>
+      </div>
+      <!-- HLTB background prefetch progress -->
+      <div id="hltb-prefetch-bar" class="hidden">
+        <div id="hltb-prefetch-inner">
+          <div id="hltb-prefetch-track">
+            <div id="hltb-prefetch-fill"></div>
+          </div>
+          <span id="hltb-prefetch-label">Fetching game data…</span>
+          <button id="hltb-prefetch-dismiss" title="Dismiss">✕</button>
         </div>
       </div>
       <div id="library-grid"></div>
@@ -210,8 +231,8 @@
         <!-- Tabs -->
         <div id="tabs">
           <button class="tab-btn active" data-tab="info">Info</button>
-          <button class="tab-btn"        data-tab="readme">Readme</button>
-          <button class="tab-btn"        data-tab="reviews">Reviews</button>
+          <button class="tab-btn"        data-tab="hltb">How Long To Beat</button>
+          <button class="tab-btn"        data-tab="files">Files</button>
           <button class="tab-btn"        data-tab="notes">Notes</button>
         </div>
 
@@ -220,6 +241,16 @@
           <p id="detail-desc-archive"></p>
           <hr id="desc-separator" class="hidden" />
           <p id="detail-desc-igdb" class="hidden"></p>
+          <!-- HLTB metadata (summary + dev/genre/etc) -->
+          <div id="hltb-meta-section" class="hidden">
+            <div id="hltb-meta-content"></div>
+          </div>
+          <!-- RetroAchievements section -->
+          <div id="ra-section" class="hidden">
+            <hr class="ra-divider" />
+            <div id="ra-content"></div>
+          </div>
+          <p id="ra-loading" class="hidden" style="font-size:13px;color:var(--text-dim);margin-top:12px;">Loading RetroAchievements…</p>
         </div>
 
         <!-- Tab: Notes -->
@@ -232,16 +263,16 @@
         </div>
 
         <!-- Tab: Readme -->
-        <div id="tab-readme" class="tab-panel">
-          <pre id="readme-content"></pre>
-          <p id="readme-empty" style="display:none">No readme file found.</p>
+        <div id="tab-hltb" class="tab-panel">
+          <div id="hltb-content"></div>
+          <p id="hltb-empty" style="display:none;color:var(--text-dim);font-size:13px;">No How Long To Beat data found for this game.</p>
+          <p id="hltb-loading" style="display:none;color:var(--text-dim);font-size:13px;">Loading...</p>
+
         </div>
 
-        <!-- Tab: Reviews -->
-        <div id="tab-reviews" class="tab-panel">
-          <p id="reviews-loading" style="display:none">Loading reviews…</p>
-          <div id="reviews-list"></div>
-          <p id="reviews-empty" style="display:none">No reviews yet.</p>
+        <!-- Tab: Files (ROM file info) -->
+        <div id="tab-files" class="tab-panel">
+          <div id="rom-file-info"></div>
         </div>
 
       </div><!-- /detail-panel -->
@@ -271,7 +302,9 @@
 
       <div class="filter-sort-section">
         <div class="filter-sort-section-label">COLLECTION</div>
-        <div id="fs-collection-list"></div>
+        <select id="fs-collection-select" class="fs-select">
+          <option value="">All Collections</option>
+        </select>
       </div>
 
       <div class="filter-sort-section">
@@ -279,10 +312,33 @@
         <div class="filter-sort-pills">
           <button class="fs-pill active" data-sort="az">A → Z</button>
           <button class="fs-pill" data-sort="za">Z → A</button>
-          <button class="fs-pill" data-sort="date-archived">Date Added</button>
           <button class="fs-pill" data-sort="date-published">Year</button>
-          <button class="fs-pill" data-sort="developer">Developer</button>
         </div>
+      </div>
+
+      <div class="filter-sort-section" id="fs-genre-section" style="display:none">
+        <div class="filter-sort-section-label">GENRE</div>
+        <select id="fs-genre-select" class="fs-select"><option value="">All Genres</option></select>
+      </div>
+
+      <div class="filter-sort-section" id="fs-developer-section" style="display:none">
+        <div class="filter-sort-section-label">DEVELOPER</div>
+        <select id="fs-developer-select" class="fs-select"><option value="">All Developers</option></select>
+      </div>
+
+      <div class="filter-sort-section" id="fs-released-section" style="display:none">
+        <div class="filter-sort-section-label">RELEASED</div>
+        <select id="fs-released-select" class="fs-select"><option value="">All Years</option></select>
+      </div>
+
+      <div class="filter-sort-section" id="fs-esrb-section" style="display:none">
+        <div class="filter-sort-section-label">ESRB</div>
+        <select id="fs-esrb-select" class="fs-select"><option value="">All Ratings</option></select>
+      </div>
+
+      <div class="filter-sort-section" id="fs-pegi-section" style="display:none">
+        <div class="filter-sort-section-label">PEGI</div>
+        <select id="fs-pegi-select" class="fs-select"><option value="">All Ratings</option></select>
       </div>
 
       <div id="filter-sort-footer">
@@ -300,46 +356,139 @@
         <button id="btn-close-settings">✕</button>
       </div>
 
-      <div class="settings-row">
-        <label for="setting-download-path">Download folder</label>
-        <div class="settings-path-row">
-          <input id="setting-download-path" type="text" placeholder="Default: AppData/games" />
-          <button id="btn-choose-download">Browse…</button>
+      <!-- ─── General ────────────────────────────── -->
+      <details class="settings-section" open>
+        <summary class="settings-section-heading">General</summary>
+        <div class="settings-section-body">
+          <div class="settings-row">
+            <label for="setting-download-path">Download folder</label>
+            <div class="settings-path-row">
+              <input id="setting-download-path" type="text" placeholder="Default: AppData/games" />
+              <button id="btn-choose-download">Browse…</button>
+            </div>
+          </div>
+          <div class="settings-row">
+            <label for="setting-install-path">Install folder</label>
+            <div class="settings-path-row">
+              <input id="setting-install-path" type="text" placeholder="Default: AppData/games" />
+              <button id="btn-choose-install">Browse…</button>
+            </div>
+          </div>
+          <div class="settings-row settings-check-row">
+            <label for="setting-extract-archive">Extract archive after download <span style="font-size:11px;color:var(--text-dim);display:block;font-weight:400;">Off = keep .zip and pass directly to emulator (RetroArch supports this)</span></label>
+            <input id="setting-extract-archive" type="checkbox" />
+          </div>
+          <div class="settings-row settings-check-row">
+            <label for="setting-delete-after-install">Delete archive after install</label>
+            <input id="setting-delete-after-install" type="checkbox" />
+          </div>
+          <div class="settings-row settings-check-row">
+            <label for="setting-installed-first">Show installed games first</label>
+            <input id="setting-installed-first" type="checkbox" />
+          </div>
+          <div class="settings-row settings-check-row">
+            <label for="setting-show-installed-badge">Show "Installed" badge on cards</label>
+            <input id="setting-show-installed-badge" type="checkbox" />
+          </div>
+          <div class="settings-row">
+            <label>Detect pre-installed games</label>
+            <div class="settings-path-row">
+              <button id="btn-scan-games">🔍 Scan Install Folder</button>
+              <span id="scan-result"></span>
+            </div>
+          </div>
         </div>
-      </div>
+      </details>
 
-      <div class="settings-row">
-        <label for="setting-install-path">Install folder</label>
-        <div class="settings-path-row">
-          <input id="setting-install-path" type="text" placeholder="Default: AppData/games" />
-          <button id="btn-choose-install">Browse…</button>
+      <!-- ─── ROM Library ───────────────────────── -->
+      <details class="settings-section">
+        <summary class="settings-section-heading">ROM Library</summary>
+        <div class="settings-section-body">
+          <div class="settings-row">
+            <label>ROM list cache</label>
+            <div class="settings-path-row">
+              <button id="btn-refresh-rom-list">&#8635; Refresh from Archive.org</button>
+              <span id="rom-cache-status" style="font-size:12px;color:var(--text-dim);"></span>
+            </div>
+          </div>
         </div>
-      </div>
+      </details>
 
-      <div class="settings-row settings-check-row">
-        <label for="setting-delete-after-install">Delete archive after install</label>
-        <input id="setting-delete-after-install" type="checkbox" />
-      </div>
-
-      <div class="settings-row settings-check-row">
-        <label for="setting-installed-first">Show installed games first</label>
-        <input id="setting-installed-first" type="checkbox" />
-      </div>
-
-      <div class="settings-row settings-check-row">
-        <label for="setting-show-installed-badge">Show "Installed" badge on cards</label>
-        <input id="setting-show-installed-badge" type="checkbox" />
-      </div>
-
-      <div class="settings-row">
-        <label>Detect pre-installed games</label>
-        <div class="settings-path-row">
-          <button id="btn-scan-games">🔍 Scan Install Folder</button>
-          <span id="scan-result"></span>
+      <!-- ─── Archive.org Account ────────────────── -->
+      <details class="settings-section" id="settings-section-archive">
+        <summary class="settings-section-heading">Archive.org Account</summary>
+        <div class="settings-section-body">
+          <div id="archiveorg-login-row" class="settings-row">
+            <div id="archiveorg-status">
+              <span id="archiveorg-status-text">Not logged in</span>
+              <span style="font-size:11px;color:var(--text-dim);display:block;margin-top:3px;">Required to download ROMs — not needed to browse</span>
+            </div>
+            <div id="archiveorg-login-form">
+            <input id="setting-archive-email" type="email" placeholder="archive.org email" />
+            <input id="setting-archive-password" type="password" placeholder="Password" />
+            <label class="archive-save-row">
+            <input type="checkbox" id="setting-archive-save" />
+            Save login (auto-sign in on launch)
+            </label>
+            <div style="display:flex;gap:8px;margin-top:6px;">
+            <button id="btn-archive-login">Log In</button>
+            <span id="archive-login-error" style="color:var(--accent);font-size:12px;align-self:center;"></span>
+            </div>
+            </div>
+            <!-- Shown when logged in -->
+        <div id="archiveorg-saved-creds" class="hidden" style="margin-top:6px;">
+          <label class="archive-save-row">
+            <input type="checkbox" id="setting-archive-save-loggedin" />
+            Save login (auto-sign in on launch)
+          </label>
         </div>
-      </div>
+        <button id="btn-archive-logout" class="hidden">Log Out</button>
+          </div>
+        </div>
+      </details>
 
-      <button id="btn-save-settings">Save</button>
+      <!-- ─── RetroArch ─────────────────────────── -->
+      <details class="settings-section">
+        <summary class="settings-section-heading">RetroArch</summary>
+        <div class="settings-section-body">
+          <div class="settings-row">
+            <label for="setting-retroarch-path">RetroArch executable</label>
+            <div class="settings-path-row">
+              <input id="setting-retroarch-path" type="text" placeholder="e.g. C:\RetroArch\retroarch.exe" />
+              <button id="btn-choose-retroarch">Browse…</button>
+            </div>
+          </div>
+          <div id="libretro-core-settings"></div>
+        </div>
+      </details>
+
+      <!-- ─── SteamGridDB ────────────────────────── -->
+      <details class="settings-section">
+        <summary class="settings-section-heading">SteamGridDB</summary>
+        <div class="settings-section-body">
+          <div class="settings-row">
+            <label for="setting-sgdb-key">API key</label>
+            <input id="setting-sgdb-key" type="text" placeholder="Get a free key at steamgriddb.com" />
+          </div>
+        </div>
+      </details>
+
+      <!-- ─── RetroAchievements ─────────────────── -->
+      <details class="settings-section">
+        <summary class="settings-section-heading">RetroAchievements</summary>
+        <div class="settings-section-body">
+          <div class="settings-row">
+            <label for="setting-ra-key">API key</label>
+            <input id="setting-ra-key" type="text" placeholder="Get your key at retroachievements.org/settings" />
+          </div>
+          <div class="settings-row">
+            <label for="setting-ra-user">Username <span style="font-size:11px;color:var(--text-dim);">(optional — enables your progress)</span></label>
+            <input id="setting-ra-user" type="text" placeholder="Your RetroAchievements username" />
+          </div>
+        </div>
+      </details>
+
+      <button id="btn-save-settings">Save Settings</button>
     </div>
   </div>
 
@@ -351,35 +500,27 @@
         <button id="btn-close-about">✕</button>
       </div>
       <div id="about-body">
-        <img src="../../assets/icons/rk-logo.jpg" id="about-logo" alt="RohanKar" />
+        <img src="../../assets/icons/RETRO-logo.svg" id="about-logo" alt="SKALD" />
         <div id="about-info">
-          <div id="about-name">RohanKar Launcher</div>
+          <div id="about-name">SKALD Launcher</div>
           <div id="about-version"></div>
-          <div id="about-desc">A desktop launcher for the RohanKar game archive on archive.org.</div>
+          <div id="about-desc">A desktop ROM launcher powered by archive.org — browse and play your retro library.</div>
           <div id="about-links">
-            <a href="https://github.com/Kilted-Kraken/-RohanKar-Launcher" id="about-github">
+            <a href="https://github.com/Kilted-Kraken/SKALD" id="about-github">
               <svg class="about-link-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
               GitHub Repository
             </a>
-            <a href="https://archive.org/search?query=uploader%3Arohanjackson071%40gmail.com" id="about-archive">
+            <a href="https://archive.org/details/ni-roms" id="about-archive">
               <svg class="about-link-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M23.101 3.67H.9A.9.9 0 0 0 0 4.57v2.257a.9.9 0 0 0 .9.9h22.201a.9.9 0 0 0 .9-.9V4.57a.9.9 0 0 0-.9-.9zM2.087 9.005v11.33h19.826V9.005zm6.727 9.274a.45.45 0 0 1-.45.45H5.735a.45.45 0 0 1-.45-.45v-7.22a.45.45 0 0 1 .45-.45h2.629a.45.45 0 0 1 .45.45zm9.866 0a.45.45 0 0 1-.45.45H9.77a.45.45 0 0 1-.45-.45v-.893a.45.45 0 0 1 .45-.45h8.46a.45.45 0 0 1 .45.45zm0-3.21a.45.45 0 0 1-.45.45H9.77a.45.45 0 0 1-.45-.45v-.893a.45.45 0 0 1 .45-.45h8.46a.45.45 0 0 1 .45.45zm0-3.21a.45.45 0 0 1-.45.45H9.77a.45.45 0 0 1-.45-.45v-.893a.45.45 0 0 1 .45-.45h8.46a.45.45 0 0 1 .45.45z"/></svg>
               Archive.org Collection
             </a>
-            <a href="https://x.com/RohanKarMooN" id="about-twitter">
+            <a href="https://archive.org/donate" id="about-archive-donate-2">
               <svg class="about-link-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.911-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-              Support Rohan Kar on X
-            </a>
-            <a href="https://archive.org/donate" id="about-archive-donate">
-              <svg class="about-link-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
               Donate to the Internet Archive
             </a>
-            <a href="https://ko-fi.com/rohankarmoon" id="about-kofi">
-              <svg class="about-link-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M23.881 8.948c-.773-4.085-4.859-4.593-4.859-4.593H.723c-.604 0-.679.798-.679.798s-.082 7.324-.022 11.822c.164 2.424 2.586 2.672 2.586 2.672s8.267-.023 11.966-.049c2.438-.426 2.683-2.566 2.658-3.734 4.352.24 7.422-2.831 6.649-6.916zm-11.062 3.511c-1.246 1.453-4.011 3.976-4.011 3.976s-.121.119-.31.023c-.076-.057-.108-.09-.108-.09-.443-.441-3.368-3.049-4.034-3.954-.709-.965-1.041-2.7-.091-3.71.951-1.01 3.005-1.086 4.363.407 0 0 1.565-1.782 3.468-.963 1.904.82 1.832 3.011.723 4.311zm6.173.478c-.928.116-1.682.028-1.682.028V7.284h1.77s1.971.551 1.971 2.638c0 1.913-.985 2.667-2.059 3.015z"/></svg>
-              Support Rohan Kar on Ko-fi
-            </a>
-            <a href="https://buymeacoffee.com/uberbeauz" id="about-buymeacoffee">
-              <svg class="about-link-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M2 9h20v2H2zm2 4h16l-1.5 7H5.5zm7-11a1 1 0 0 1 1 1v3a1 1 0 0 1-2 0V3a1 1 0 0 1 1-1zm-4 1a1 1 0 0 1 1 1v3a1 1 0 0 1-2 0V4a1 1 0 0 1 1-1zm8 0a1 1 0 0 1 1 1v3a1 1 0 0 1-2 0V4a1 1 0 0 1 1-1z"/></svg>
-              Support the Launcher Creator — Buy Me a Coffee
+            <a href="#" id="about-placeholder" style="display:none">
+              <svg class="about-link-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+              placeholder
             </a>
           </div>
         </div>
@@ -464,6 +605,18 @@
         <div class="downloads-section-label">History <span id="downloads-history-count"></span></div>
         <div id="downloads-history-list"></div>
       </div>
+    </div>
+  </div>
+
+  <!-- Version picker modal -->
+  <div id="version-picker-modal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;display:flex;align-items:center;justify-content:center;">
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);width:400px;max-width:90vw;max-height:80vh;display:flex;flex-direction:column;overflow:hidden;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);">
+        <span id="version-picker-title" style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:16px;">Select Version</span>
+        <button id="btn-close-version-picker" style="background:transparent;font-size:18px;padding:0 6px;">✕</button>
+      </div>
+      <p style="padding:10px 16px 4px;font-size:12px;color:var(--text-dim);">Multiple versions available — choose which to install:</p>
+      <div id="version-picker-list" style="overflow-y:auto;padding:8px 12px 12px;"></div>
     </div>
   </div>
 

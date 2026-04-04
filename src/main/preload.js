@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -46,8 +46,32 @@ contextBridge.exposeInMainWorld('electronAPI', {
   openGameLocation: (opts)=> ipcRenderer.invoke('open-game-location',  opts),
   readReadme:     (opts)  => ipcRenderer.invoke('read-readme',         opts),
 
-  // Reviews
-  fetchReviews:   (opts)  => ipcRenderer.invoke('fetch-reviews', opts),
+  // ROM list + launch
+  fetchRomList:       (opts)  => ipcRenderer.invoke('fetch-rom-list', opts),
+  onRomFetchProgress: (cb)   => ipcRenderer.on('rom-fetch-progress', (_, d) => cb(d)),
+  clearRomCache:  (opts)  => ipcRenderer.invoke('clear-rom-cache',  opts), // opts: { system }
+  launchRom:      (opts)  => ipcRenderer.invoke('launch-rom',     opts),
+  hltbSearch:     (opts)  => ipcRenderer.invoke('hltb-search',      opts),
+  listHltbCache:    ()      => ipcRenderer.invoke('hltb-list-cache'),
+  hltbPrefetchNext: (opts)  => ipcRenderer.invoke('hltb-prefetch-next', opts),
+  getLibretroSystems: ()    => ipcRenderer.invoke('libretro-systems'),
+  raGameSearch:   (opts)  => ipcRenderer.invoke('ra-game-search',   opts),
+  raUserSummary:  ()      => ipcRenderer.invoke('ra-user-summary'),
+  listArtCache:   (opts)  => ipcRenderer.invoke('list-art-cache',  opts),
+  getRomArt:      (opts)  => ipcRenderer.invoke('get-rom-art',     opts),
+  getRomLogo:     (opts)  => ipcRenderer.invoke('get-rom-logo',    opts),
+
+  // File picker (for RetroArch exe + core paths)
+  chooseFile:     (opts)  => ipcRenderer.invoke('choose-file',   opts),
+
+  // Archive.org login
+  debugDumpHtml:          (opts) => ipcRenderer.invoke('debug-dump-html', opts),
+  archiveAutoLogin:       ()     => ipcRenderer.invoke('archiveorg-autologin'),
+  archiveSaveCredentials: (opts) => ipcRenderer.invoke('archiveorg-save-credentials', opts),
+  archiveGetCredentials:  ()     => ipcRenderer.invoke('archiveorg-get-credentials'),
+  archiveLogin:           (opts) => ipcRenderer.invoke('archiveorg-login',  opts),
+  archiveLogout:          ()     => ipcRenderer.invoke('archiveorg-logout'),
+  archiveCheck:           ()     => ipcRenderer.invoke('archiveorg-check'),
 
   // Auto-updater
   onUpdaterStatus: (cb) => ipcRenderer.on('updater-status', (_, data) => cb(data)),
@@ -67,4 +91,36 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getHeroesPath:   () => ipcRenderer.invoke('heroes-path'),
   checkGameHero:   (opts) => ipcRenderer.invoke('check-game-hero', opts),
   openExternal:    (url) => ipcRenderer.send('open-external', url),
+
+  // Blades theme
+  openBladesWindow:    ()      => ipcRenderer.invoke('blades-open'),
+  closeBladesWindow:   ()      => ipcRenderer.invoke('blades-close'),
+  bladesSelectSystem:  (opts)  => ipcRenderer.invoke('blades-select-system', opts),
+  onBladesSystemSelected: (cb) => ipcRenderer.on('blades-system-selected', (_, data) => cb(data)),
+  openThirdPartyAccountWindow: (opts) => ipcRenderer.invoke('thirdparty-open-window', opts),
+  closeThirdPartyAccountWindow: () => ipcRenderer.invoke('thirdparty-close-window'),
+  getThirdPartyAccount: (opts) => ipcRenderer.invoke('thirdparty-get-account', opts),
+  saveThirdPartyAccount: (opts) => ipcRenderer.invoke('thirdparty-save-account', opts),
+  clearThirdPartyAccount: (opts) => ipcRenderer.invoke('thirdparty-clear-account', opts),
+
+  // Stoat Chat
+  stoatLogin:          (opts)  => ipcRenderer.invoke('stoat-login',          opts),
+  stoatLogout:         ()      => ipcRenderer.invoke('stoat-logout'),
+  stoatStatus:         ()      => ipcRenderer.invoke('stoat-status'),
+  stoatServers:        ()      => ipcRenderer.invoke('stoat-servers'),
+  stoatChannels:       (opts)  => ipcRenderer.invoke('stoat-channels',       opts),
+  stoatDMChannels:     ()      => ipcRenderer.invoke('stoat-dm-channels'),
+  stoatMessages:       (opts)  => ipcRenderer.invoke('stoat-messages',       opts),
+  stoatSendMessage:    (opts)  => ipcRenderer.invoke('stoat-send-message',   opts),
+  stoatOpenDM:         (opts)  => ipcRenderer.invoke('stoat-open-dm',        opts),
+  stoatFriends:        ()      => ipcRenderer.invoke('stoat-friends'),
+  stoatServerMembers:  (opts)  => ipcRenderer.invoke('stoat-server-members', opts),
+  stoatSetPresence:    (opts)  => ipcRenderer.invoke('stoat-set-presence',   opts),
+  stoatClearPresence:  ()      => ipcRenderer.invoke('stoat-clear-presence'),
+  onStoatReady:        (cb)    => ipcRenderer.on('stoat-ready',          (_, d) => cb(d)),
+  onStoatMessage:      (cb)    => ipcRenderer.on('stoat-message',        (_, d) => cb(d)),
+  onStoatMessageUpdate:(cb)    => ipcRenderer.on('stoat-message-update', (_, d) => cb(d)),
+  onStoatMessageDelete:(cb)    => ipcRenderer.on('stoat-message-delete', (_, d) => cb(d)),
+  onStoatTypingStart:  (cb)    => ipcRenderer.on('stoat-typing-start',   (_, d) => cb(d)),
+  onStoatTypingStop:   (cb)    => ipcRenderer.on('stoat-typing-stop',    (_, d) => cb(d)),
 });

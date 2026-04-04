@@ -1,7 +1,7 @@
 {
-  "name": "rohankar-launcher",
-  "version": "1.4.1",
-  "description": "RohanKar Game Launcher",
+  "name": "skald-launcher",
+  "version": "0.1.0",
+  "description": "SKALD ROM Launcher — archive.org powered retro gaming library",
   "author": "Kilted-Kraken",
   "main": "src/main/main.js",
   "scripts": {
@@ -17,35 +17,38 @@
     "axios": "^1.0.0",
     "better-sqlite3": "^12.6.2",
     "electron-updater": "^6.3.9",
-    "extract-zip": "^2.0.1"
+    "extract-zip": "^2.0.1",
+    "howlongtobeat-core": "^1.1.1",
+    "stoat.js": "^7.3.6"
   },
   "build": {
-    "appId": "com.rohankar.launcher",
-    "productName": "RohanKar Launcher",
+    "appId": "com.skald.launcher",
+    "productName": "SKALD Launcher",
     "files": [
       "src/**/*",
-      "assets/**/*"
+      "assets/**/*",
+      "!assets/roms"
     ],
     "extraResources": [
       {
-        "from": "assets/heroes",
-        "to": "heroes"
+        "from": "assets/roms",
+        "to": "roms"
       }
     ],
     "win": {
       "target": "nsis",
-      "icon": "assets/icons/rk-logo.ico"
+      "icon": "assets/icons/rg-logo.ico"
     },
     "mac": {
-      "icon": "assets/icons/rk-logo.icns"
+      "icon": "assets/icons/rg-logo.icns"
     },
     "linux": {
-      "icon": "assets/icons/rk-logo.png"
+      "icon": "assets/icons/rg-logo.png"
     },
     "publish": {
       "provider": "github",
       "owner": "Kilted-Kraken",
-      "repo": "-RohanKar-Launcher"
+      "repo": "SKALD"
     }
   }
 }

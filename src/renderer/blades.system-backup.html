@@ -1,0 +1,826 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' 'unsafe-inline';
+  style-src 'self' 'unsafe-inline';
+  font-src file:;
+  img-src 'self' file: data: https:;
+  media-src file:;
+">
+<title>SKALD — Blades</title>
+<style>
+@font-face{font-family:'MC360';src:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/fonts/MC360.ttf') format('truetype');}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'MC360','Segoe UI',Tahoma,sans-serif;user-select:none;}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden;opacity:0;transition:opacity 500ms;transform-origin:0 0;}
+#stage.loaded{opacity:1;}
+#bg-anim{position:absolute;left:0;top:0;width:1920px;height:1080px;z-index:0;object-fit:cover;}
+.bg-col{position:absolute;left:0;top:0;width:1920px;height:1080px;z-index:1;opacity:0;transition:opacity 200ms;background-size:cover;background-position:center;background-repeat:no-repeat;}
+.bg-col.on{opacity:1;}
+#bc-mkt{background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/background-red-alpha.webp');}
+#bc-live{background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/background-orange-alpha.webp');}
+#bc-games{background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/background-green-alpha.webp');}
+#bc-media{background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/background-blue-alpha.webp');}
+#bc-sys{background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/background-purple.webp');}
+.ov{position:absolute;z-index:10;background-size:100% 100%;background-repeat:no-repeat;transition:left 180ms ease-out;}
+#ov-gt-l{left:373px;top:0;width:43px;height:120px;background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/bkgd-whitewash-glass-top-left-ws.webp');}
+#ov-gt-m{left:416px;top:0;width:1311px;height:120px;background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/bkgd-whitewash-glass-top-middle.webp');}
+#ov-gt-r{left:1727px;top:0;width:43px;height:120px;background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/bkgd-whitewash-glass-top-right-ws.webp');}
+#ov-gb-l{left:373px;top:960px;width:43px;height:120px;background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/bkgd-whitewash-glass-bottom-left-ws.webp');}
+#ov-gb-m{left:416px;top:960px;width:1311px;height:120px;background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/bkgd-whitewash-glass-bottom-middle.webp');}
+#ov-gb-r{left:1727px;top:960px;width:43px;height:120px;background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/bkgd-whitewash-glass-bottom-right-ws.webp');}
+#ov-wl{left:347px;top:0;width:85px;height:1080px;background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/background-overlay-whitewash-left-ws.webp');}
+#ov-wm{left:432px;top:0;width:1208px;height:1080px;background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/background-overlay-whitewash-centertile-ws.webp');background-size:auto 100%;background-repeat:repeat-x;}
+#ov-wr{left:1640px;top:0;width:171px;height:1080px;background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/background-overlay-whitewash-right-ws.webp');}
+#hz-l,#hz-r{position:absolute;top:656px;width:400px;height:428px;z-index:12;background-size:100% 100%;transition:left 180ms ease-out;}
+#hz-l{left:0;}
+#hz-r{left:1520px;}
+#blade-layer{position:fixed;left:0;top:0;width:3840px;height:1268px;z-index:20;pointer-events:none;transform-origin:0 0;}
+#run-l{position:absolute;left:-163px;top:0;width:341px;height:1268px;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/blades-runner-left.webp') no-repeat;background-size:100% 100%;z-index:25;}
+#run-r{position:absolute;left:1773px;top:0;width:341px;height:1268px;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/blades-runner-right.webp') no-repeat;background-size:100% 100%;z-index:25;}
+.blade{position:absolute;top:0;height:1268px;background-size:100% 100%;background-repeat:no-repeat;cursor:pointer;pointer-events:all;transition:left 180ms ease-out;z-index:21;}
+.blade-lbl{position:absolute;top:340px;width:100%;writing-mode:vertical-lr;font-family:'MC360','Segoe UI',Tahoma,sans-serif;font-size:22px;letter-spacing:3px;white-space:nowrap;pointer-events:none;text-transform:lowercase;padding:0 8px;box-sizing:border-box;}
+.blade.active .blade-lbl{color:#333;font-size:24px;font-weight:bold;}
+.blade.inactive .blade-lbl{color:#555;}
+#gamercard{position:absolute;top:140px;z-index:30;width:412px;height:200px;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/gamecard_home-silver.webp') no-repeat;background-size:100% 100%;transition:left 180ms ease-out;padding:0;}
+#gc-pic-wrap{position:absolute;left:18px;top:65px;width:100px;height:100px;}
+#gc-pic{width:100px;height:100px;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/gamercard_defaultgamerpic.webp') no-repeat center/cover;}
+#gc-outline{position:absolute;inset:-6px;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/gamercard_iconoutline.webp') no-repeat;background-size:100% 100%;}
+#gc-tag{position:absolute;left:18px;top:20px;font-size:22px;color:#333;font-weight:bold;text-shadow:none;}
+
+#gc-stats{position:absolute;left:130px;top:54px;font-size:25px;color:#333;}
+.gc-stat{display:flex;justify-content:space-between;width:240px;padding:2px 0;}
+.gc-stat span:last-child{font-weight:bold;text-align:right;}
+#gc-rep{position:absolute;left:255px;top:20px;width:120px;height:30px;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/gamercard_rep_12.webp') no-repeat;background-size:auto 100%;}
+#content{position:absolute;top:400px;width:1220px;height:650px;z-index:30;overflow:hidden;transition:left 180ms ease-out;}
+.panel{display:none;flex-direction:column;width:100%;height:100%;}.panel.on{display:flex;}
+.menu{list-style:none;}
+.mitem{display:flex;align-items:center;gap:18px;padding:0 18px 0 24px;font-size:22px;color:rgba(0,0,0,.78);cursor:pointer;position:relative;transition:all 100ms;max-width:560px;height:64px;margin-bottom:0;background:none;border-bottom:4px solid rgba(72,50,94,.28);}
+.mitem:hover,.mitem.sel{color:#000;filter:none;box-shadow:none;}
+.mitem.sel{border-bottom-color:transparent;background-image:none;}
+.mitem.sel::before,.sitem.sel::before,.subnav-item.sel::before,.stoat-dm-item.sel::before,.sys-card.sel::before{content:'';position:absolute;left:8px;top:0;width:640px;height:100%;z-index:-1;background-repeat:no-repeat;background-size:100% auto;background-position:left top;pointer-events:none;overflow:hidden;}
+.mitem.sel::after,.sitem.sel::after,.subnav-item.sel::after,.stoat-dm-item.sel::after,.sys-card.sel::after{content:'';position:absolute;left:18px;top:6px;width:626px;height:100%;z-index:-2;background-repeat:no-repeat;background-size:100% auto;background-position:left top;pointer-events:none;opacity:.62;overflow:hidden;}
+.mitem-shadow{display:none;}
+.micon{width:40px;height:40px;background-size:contain;background-repeat:no-repeat;background-position:center;flex-shrink:0;opacity:.72;}
+.subpanel{position:absolute;left:0;top:0;width:100%;height:100%;display:none;flex-direction:column;}.subpanel.on{display:flex;}
+.panel.sub-open>.menu,.panel.sub-open>#stoat-signed-out>.menu,.panel.sub-open>#stoat-signed-in>.menu{display:none;}
+.subpanel-title{font-size:20px;color:rgba(0,0,0,.5);letter-spacing:2px;text-transform:uppercase;padding:8px 10px 10px;border-bottom:1px solid rgba(0,0,0,.15);margin-bottom:12px;}
+.sitem,.subnav-item,.stoat-dm-item{display:flex;align-items:center;gap:16px;padding:0 18px 0 24px;font-size:20px;color:rgba(0,0,0,.78);cursor:pointer;max-width:620px;transition:all 100ms;position:relative;height:60px;background:none;margin-bottom:0;border-bottom:4px solid rgba(72,50,94,.28);}
+.sitem:hover,.sitem.sel,.subnav-item.sel,.stoat-dm-item.sel{color:#000;filter:none;box-shadow:none;border-bottom-color:transparent;outline:none;background-image:none;}
+.sys-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:8px 0;max-width:700px;}
+.sys-card{background:none;border:none;border-bottom:4px solid rgba(72,50,94,.28);padding:16px 18px 16px 24px;cursor:pointer;transition:all 100ms;position:relative;min-height:66px;}
+.sys-card:hover,.sys-card.sel{filter:none;box-shadow:none;border-bottom-color:transparent;background-image:none;}
+.sys-card-title{font-size:20px;color:#111;font-weight:bold;}
+.sys-card-count{font-size:14px;color:#555;margin-top:2px;}
+.info-block{padding:14px 10px;font-size:19px;color:rgba(0,0,0,.55);line-height:1.5;max-width:640px;}
+#btn-hints{position:absolute;bottom:30px;right:400px;z-index:30;display:flex;align-items:center;gap:24px;}
+.bhint{display:flex;align-items:center;gap:7px;font-size:19px;color:rgba(0,0,0,.6);}
+.bhint img{width:28px;height:28px;object-fit:contain;}
+#guide{position:absolute;inset:0;z-index:50;display:none;pointer-events:none;}
+#guide.on{display:block;pointer-events:all;}
+#g-black{position:absolute;inset:0;background:rgba(0,0,0,.82);}
+#g-panel{position:absolute;left:843px;top:0;width:1077px;height:1080px;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/background-grey.webp') no-repeat center/cover;transform:translateX(1077px);transition:transform 250ms ease-out;}
+#g-tile{position:absolute;left:1035px;top:0;width:885px;height:1080px;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/guide-blade-overlay-tile.webp') repeat;transform:translateX(1077px);transition:transform 250ms ease-out;opacity:.85;}
+#g-edge{position:absolute;left:576px;top:0;width:267px;height:1080px;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/guide-blade-overlay-edge-right.webp') no-repeat;background-size:100% 100%;transform:translateX(1077px);transition:transform 250ms ease-out;}
+#g-content{position:absolute;left:880px;top:80px;width:960px;transform:translateX(1077px);transition:transform 250ms ease-out;}
+#guide.on #g-panel,#guide.on #g-tile,#guide.on #g-edge,#guide.on #g-content{transform:translateX(0);}
+#g-gamerpic{width:100px;height:100px;float:left;margin-right:18px;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/gamercard_defaultgamerpic.webp') no-repeat center/cover;}
+#g-tag{font-size:30px;color:#fff;margin-bottom:4px;}
+#g-gscore{font-size:18px;color:rgba(255,255,255,.65);margin-bottom:6px;}
+#g-rep{width:132px;height:20px;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/gamercard_rep_12.webp') no-repeat;background-size:auto 100%;margin-bottom:24px;clear:left;}
+.g-div{width:100%;height:2px;background:rgba(255,255,255,.12);margin-bottom:6px;}
+.gbtn{display:flex;align-items:center;gap:16px;padding:14px 18px;cursor:pointer;font-size:21px;color:#ccc;border-bottom:1px solid rgba(255,255,255,.07);transition:background 60ms;position:relative;}
+.gbtn:hover,.gbtn.sel{background:rgba(255,255,255,.1);color:#fff;}
+.gbtn.sel::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:rgba(255,255,255,.5);}
+.gicon{width:34px;height:34px;background-size:contain;background-repeat:no-repeat;background-position:center;opacity:.8;flex-shrink:0;}
+#toast{position:absolute;left:720px;bottom:-160px;width:572px;height:120px;z-index:60;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/notify-panel.webp') no-repeat;background-size:100% 100%;display:flex;align-items:center;padding:0 28px;font-size:22px;color:#fff;transition:bottom 250ms ease-out;pointer-events:none;}
+#toast.on{bottom:22px;}
+#btn-exit{position:absolute;top:10px;right:16px;z-index:100;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.18);color:rgba(255,255,255,.65);font-family:'MC360',sans-serif;font-size:18px;padding:5px 16px;cursor:pointer;transition:background 100ms;}
+#btn-exit:hover{background:rgba(0,0,0,.75);color:#fff;}
+#drag{position:absolute;top:0;left:0;right:0;height:8px;-webkit-app-region:drag;z-index:99;}
+#ctrl-hint{position:absolute;bottom:28px;z-index:30;font-size:17px;color:rgba(0,0,0,.45);transition:left 180ms ease-out;}
+/* ─── Stoat Chat ─── */
+.stoat-list{max-height:100%;overflow-y:auto;}
+.stoat-friend{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid rgba(0,0,0,.07);font-size:18px;color:rgba(0,0,0,.72);}
+.stoat-friend img{width:40px;height:40px;border-radius:50%;background:#ccc;object-fit:cover;}
+.stoat-friend .sf-name{font-weight:bold;color:#111;}
+.stoat-friend .sf-status{font-size:14px;color:rgba(0,0,0,.45);margin-top:2px;}
+.stoat-friend .sf-dot{width:24px;height:24px;flex-shrink:0;background-size:contain;background-repeat:no-repeat;background-position:center;}
+.stoat-friend .sf-dot.online{background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/buddyitem-online.webp');}
+.stoat-friend .sf-dot.offline{background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/buddyitem-offline.webp');}
+.stoat-ch-btn{padding:6px 14px;font-size:14px;font-family:inherit;cursor:pointer;background:rgba(255,255,255,.5);border:1px solid rgba(0,0,0,.12);transition:background 80ms;}
+.stoat-ch-btn:hover,.stoat-ch-btn.active{background:rgba(255,255,255,.8);border-color:rgba(0,0,0,.25);}
+.stoat-msg{padding:6px 8px;font-size:16px;line-height:1.4;}
+.stoat-msg .sm-author{font-weight:bold;color:#111;margin-right:8px;font-size:14px;}
+.stoat-msg .sm-time{font-size:12px;color:rgba(0,0,0,.35);margin-left:6px;}
+.stoat-msg .sm-content{color:rgba(0,0,0,.72);}
+.stoat-msg+.stoat-msg{border-top:1px solid rgba(0,0,0,.04);}
+.stoat-dm-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid rgba(0,0,0,.07);cursor:pointer;transition:background 80ms;}
+.stoat-dm-item:hover{background:rgba(255,255,255,.4);}
+.stoat-dm-item img{width:36px;height:36px;border-radius:50%;background:#ccc;}
+.stoat-dm-item .dm-name{font-size:18px;color:#111;}
+.stoat-ch-btn.sel{outline:3px solid rgba(149,205,76,.85);outline-offset:2px;filter:brightness(1.02);}
+.menu>.mitem.sel:nth-child(1)::before, .subpanel .sitem.sel:nth-child(1)::before, .subpanel .subnav-item.sel:nth-child(1)::before, .subpanel .stoat-dm-item.sel:nth-child(1)::before{background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/homebutton-1a.webp');}
+.menu>.mitem.sel:nth-child(2)::before, .subpanel .sitem.sel:nth-child(2)::before, .subpanel .subnav-item.sel:nth-child(2)::before, .subpanel .stoat-dm-item.sel:nth-child(2)::before{background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/homebutton-2a.webp');}
+.menu>.mitem.sel:nth-child(3)::before, .subpanel .sitem.sel:nth-child(3)::before, .subpanel .subnav-item.sel:nth-child(3)::before, .subpanel .stoat-dm-item.sel:nth-child(3)::before{background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/homebutton-3a.webp');}
+.menu>.mitem.sel:nth-child(4)::before, .subpanel .sitem.sel:nth-child(4)::before, .subpanel .subnav-item.sel:nth-child(4)::before, .subpanel .stoat-dm-item.sel:nth-child(4)::before{background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/homebutton-4a.webp');}
+.menu>.mitem.sel:nth-child(5)::before, .subpanel .sitem.sel:nth-child(5)::before, .subpanel .subnav-item.sel:nth-child(5)::before, .subpanel .stoat-dm-item.sel:nth-child(5)::before{background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/homebutton-5a.webp');}
+.menu>.mitem.sel:nth-child(6)::before, .subpanel .sitem.sel:nth-child(6)::before, .subpanel .subnav-item.sel:nth-child(6)::before, .subpanel .stoat-dm-item.sel:nth-child(6)::before{background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/homebutton-6a.webp');}
+.menu>.mitem.sel:nth-child(1)::after, .subpanel .sitem.sel:nth-child(1)::after, .subpanel .subnav-item.sel:nth-child(1)::after, .subpanel .stoat-dm-item.sel:nth-child(1)::after{background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/homebutton-1-shadow.webp');}
+.menu>.mitem.sel:nth-child(2)::after, .subpanel .sitem.sel:nth-child(2)::after, .subpanel .subnav-item.sel:nth-child(2)::after, .subpanel .stoat-dm-item.sel:nth-child(2)::after{background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/homebutton-2-shadow.webp');}
+.menu>.mitem.sel:nth-child(3)::after, .subpanel .sitem.sel:nth-child(3)::after, .subpanel .subnav-item.sel:nth-child(3)::after, .subpanel .stoat-dm-item.sel:nth-child(3)::after{background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/homebutton-3-shadow.webp');}
+.menu>.mitem.sel:nth-child(4)::after, .subpanel .sitem.sel:nth-child(4)::after, .subpanel .subnav-item.sel:nth-child(4)::after, .subpanel .stoat-dm-item.sel:nth-child(4)::after{background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/homebutton-4-shadow.webp');}
+.menu>.mitem.sel:nth-child(5)::after, .subpanel .sitem.sel:nth-child(5)::after, .subpanel .subnav-item.sel:nth-child(5)::after, .subpanel .stoat-dm-item.sel:nth-child(5)::after{background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/homebutton-5-shadow.webp');}
+.menu>.mitem.sel:nth-child(6)::after, .subpanel .sitem.sel:nth-child(6)::after, .subpanel .subnav-item.sel:nth-child(6)::after, .subpanel .stoat-dm-item.sel:nth-child(6)::after{background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/homebutton-6-shadow.webp');}
+.vk-field{width:100%;padding:12px 14px;margin-bottom:8px;font-size:18px;font-family:inherit;background:rgba(255,255,255,.6);border:1px solid rgba(0,0,0,.15);color:#222;min-height:48px;display:flex;align-items:center;}
+.vk-field.is-password{letter-spacing:4px;}
+.vk-label{display:block;font-size:13px;color:rgba(0,0,0,.45);margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;}
+.vk-btn{padding:10px 28px;font-size:18px;font-family:inherit;cursor:pointer;background:rgba(255,255,255,.7);border:1px solid rgba(0,0,0,.2);}
+#vk-overlay{position:absolute;inset:0;z-index:70;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.35);}
+#vk-overlay.on{display:flex;}
+#vk-panel{width:980px;min-height:520px;padding:26px 30px 22px;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/background-grey.webp') no-repeat center/cover;border-radius:20px;box-shadow:0 22px 60px rgba(0,0,0,.45);}
+#vk-title{font-size:28px;color:#222;margin-bottom:10px;}
+#vk-target{min-height:56px;padding:12px 16px;background:rgba(255,255,255,.7);border:1px solid rgba(0,0,0,.14);font-size:24px;color:#111;margin-bottom:18px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+#vk-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:10px;}
+.vk-key{height:64px;border:none;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/systemhomebutton-1a.webp') no-repeat center/100% 100%;font-family:inherit;font-size:24px;color:#222;cursor:pointer;position:relative;}
+.vk-key.sel{filter:brightness(0.92);box-shadow:0 0 0 3px rgba(149,205,76,.9);}
+.vk-key.wide-2{grid-column:span 2;}
+.vk-key.wide-3{grid-column:span 3;}
+#vk-hints{display:flex;gap:22px;margin-top:18px;font-size:18px;color:rgba(0,0,0,.65);}
+#vk-hints span{display:flex;align-items:center;gap:7px;}
+#vk-hints img{width:24px;height:24px;object-fit:contain;}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="drag"></div>
+  <button id="btn-exit">✕ Exit</button>
+  <img id="bg-anim" src="" alt="" draggable="false"/>
+  <div id="bc-mkt" class="bg-col"></div><div id="bc-live" class="bg-col"></div><div id="bc-games" class="bg-col"></div><div id="bc-media" class="bg-col"></div><div id="bc-sys" class="bg-col"></div>
+  <div class="ov" id="ov-gt-l"></div><div class="ov" id="ov-gt-m"></div><div class="ov" id="ov-gt-r"></div>
+  <div class="ov" id="ov-gb-l"></div><div class="ov" id="ov-gb-m"></div><div class="ov" id="ov-gb-r"></div>
+  <div class="ov" id="ov-wl"></div><div class="ov" id="ov-wm"></div><div class="ov" id="ov-wr"></div>
+  <div id="hz-l"></div><div id="hz-r"></div>
+  <div id="gamercard"><div id="gc-tag">RetroPlayer</div><div id="gc-pic-wrap"><div id="gc-pic"></div><div id="gc-outline"></div></div><div id="gc-stats"><div class="gc-stat"><span>Games</span><span id="gc-games-count">0</span></div><div class="gc-stat"><span>Gamerscore</span><span id="gc-gscore-val">0</span></div><div class="gc-stat"><span>Achievements</span><span id="gc-achieve-val">0</span></div></div><div id="gc-rep"></div></div>
+  <div id="content">
+    <div id="p-mkt" class="panel"><ul class="menu"><li class="mitem sel" data-sub="browse"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-search.webp')"></div>Browse ROMs</li><li class="mitem" data-sub="downloads"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-update.webp')"></div>Downloads</li><li class="mitem" data-sub="themes"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-appearance.webp')"></div>Themes</li><li class="mitem" data-sub="account"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-profile.webp')"></div>Archive.org Account</li></ul><div class="subpanel" id="sub-browse"><div class="subpanel-title">BROWSE ROMS</div><div class="sys-grid"><div class="sys-card sel" data-system="snes"><div class="sys-card-title">Super Nintendo</div><div class="sys-card-count" id="cnt-snes">Loading…</div></div><div class="sys-card" data-system="psx"><div class="sys-card-title">PlayStation</div><div class="sys-card-count" id="cnt-psx">Loading…</div></div></div></div><div class="subpanel" id="sub-downloads"><div class="subpanel-title">DOWNLOADS</div><div class="info-block">No active downloads.</div></div><div class="subpanel" id="sub-themes"><div class="subpanel-title">THEMES</div><div class="info-block">Theme customisation coming soon.</div></div><div class="subpanel" id="sub-account"><div class="subpanel-title">ARCHIVE.ORG ACCOUNT</div><div class="info-block">Sign in to Archive.org in Settings to enable ROM downloads.</div></div></div>
+    <div id="p-live" class="panel">
+      <!-- Signed-out state -->
+      <div id="stoat-signed-out">
+        <ul class="menu">
+          <li class="mitem sel" data-sub="signin"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-profile.webp')"></div>Sign In to Stoat</li>
+        </ul>
+        <div class="subpanel" id="sub-signin">
+          <div class="subpanel-title">SIGN IN TO STOAT</div>
+          <div id="stoat-login-form" style="padding:10px 0;max-width:400px;">
+            <label class="vk-label" for="stoat-email">Email</label>
+            <input id="stoat-email" type="email" placeholder="Email" style="display:none;"/>
+            <div id="stoat-email-display" class="vk-field subnav-item" data-vk-target="stoat-email" tabindex="-1"></div>
+            <label class="vk-label" for="stoat-pass" style="margin-top:6px;">Password</label>
+            <input id="stoat-pass" type="password" placeholder="Password" style="display:none;"/>
+            <div id="stoat-pass-display" class="vk-field is-password subnav-item" data-vk-target="stoat-pass" tabindex="-1"></div>
+            <button id="stoat-login-btn" class="vk-btn subnav-item" tabindex="-1">Sign In</button>
+            <div id="stoat-login-error" style="color:#c00;font-size:15px;margin-top:8px;display:none;"></div>
+            <div class="info-block" style="margin-top:16px;font-size:14px;">Don't have a Stoat account? Create one free at stoat.chat</div>
+          </div>
+        </div>
+      </div>
+      <!-- Signed-in state -->
+      <div id="stoat-signed-in" style="display:none;">
+        <ul class="menu" id="stoat-live-menu">
+          <li class="mitem sel" data-sub="friends"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-friends.webp')"></div>Friends</li>
+          <li class="mitem" data-sub="community"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-messages.webp')"></div>Community Chat</li>
+          <li class="mitem" data-sub="messages"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-messages.webp')"></div>Direct Messages</li>
+          <li class="mitem" data-sub="profile"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-profile.webp')"></div>Gamer Profile</li>
+        </ul>
+        <!-- Friends subpanel -->
+        <div class="subpanel" id="sub-friends">
+          <div class="subpanel-title">FRIENDS</div>
+          <div id="stoat-friends-list" class="stoat-list"><div class="info-block">Loading friends...</div></div>
+        </div>
+        <!-- Community Chat subpanel -->
+        <div class="subpanel" id="sub-community">
+          <div class="subpanel-title">COMMUNITY</div>
+          <div id="stoat-channels" style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;"></div>
+          <div id="stoat-chat-area" style="display:flex;flex-direction:column;height:calc(100% - 80px);">
+            <div id="stoat-messages" style="flex:1;overflow-y:auto;padding:4px 0;"></div>
+            <div id="stoat-typing" style="font-size:13px;color:rgba(0,0,0,.4);height:18px;padding:0 4px;"></div>
+            <div style="display:flex;gap:8px;padding-top:6px;">
+              <input id="stoat-msg-input" type="text" placeholder="Type a message..." style="flex:1;padding:10px 14px;font-size:16px;font-family:inherit;background:rgba(255,255,255,.6);border:1px solid rgba(0,0,0,.15);outline:none;"/>
+              <button id="stoat-send-btn" style="padding:8px 20px;font-size:16px;font-family:inherit;cursor:pointer;background:rgba(255,255,255,.7);border:1px solid rgba(0,0,0,.2);">Send</button>
+            </div>
+          </div>
+        </div>
+        <!-- DMs subpanel -->
+        <div class="subpanel" id="sub-messages">
+          <div class="subpanel-title">DIRECT MESSAGES</div>
+          <div id="stoat-dm-list" class="stoat-list"><div class="info-block">Loading messages...</div></div>
+        </div>
+        <!-- Profile subpanel -->
+        <div class="subpanel" id="sub-profile">
+          <div class="subpanel-title">GAMER PROFILE</div>
+          <div id="stoat-profile" style="padding:10px 0;">
+            <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
+              <img id="stoat-avatar" src="" style="width:80px;height:80px;border-radius:50%;background:#ccc;"/>
+              <div>
+                <div id="stoat-username" style="font-size:24px;color:#111;font-weight:bold;"></div>
+                <div id="stoat-user-status" style="font-size:16px;color:rgba(0,0,0,.5);margin-top:4px;"></div>
+              </div>
+            </div>
+            <button id="stoat-logout-btn" style="padding:8px 22px;font-size:16px;font-family:inherit;cursor:pointer;background:rgba(255,255,255,.7);border:1px solid rgba(0,0,0,.2);">Sign Out</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="vk-overlay">
+      <div id="vk-panel">
+        <div id="vk-title">Keyboard</div>
+        <div id="vk-target"></div>
+        <div id="vk-grid"></div>
+        <div id="vk-hints">
+          <span><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-a.webp" alt="A"/>Type</span>
+          <span><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-x.webp" alt="X"/>Backspace</span>
+          <span><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-y.webp" alt="Y"/>Space</span>
+          <span><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-b.webp" alt="B"/>Close</span>
+        </div>
+      </div>
+    </div>
+    <div id="p-games" class="panel"><ul class="menu"><li class="mitem sel" data-sub="library"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-games.webp')"></div>Game Library</li><li class="mitem" data-sub="achievements"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-trophy.webp')"></div>Achievements</li><li class="mitem" data-sub="played"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-gamescore.webp')"></div>Played Games</li><li class="mitem" data-sub="demos"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-apps.webp')"></div>Demos &amp; More</li></ul><div class="subpanel" id="sub-library"><div class="subpanel-title">SELECT SYSTEM</div><div class="sys-grid"><div class="sys-card sel" data-system="snes"><div class="sys-card-title">Super Nintendo</div><div class="sys-card-count" id="cnt-snes2">Loading…</div></div><div class="sys-card" data-system="psx"><div class="sys-card-title">PlayStation</div><div class="sys-card-count" id="cnt-psx2">Loading…</div></div></div></div><div class="subpanel" id="sub-achievements"><div class="subpanel-title">ACHIEVEMENTS</div><div class="info-block">Set your RetroAchievements API key in Settings to track achievements.</div></div><div class="subpanel" id="sub-played"><div class="subpanel-title">PLAYED GAMES</div><div class="info-block">No games played yet.</div></div><div class="subpanel" id="sub-demos"><div class="subpanel-title">DEMOS &amp; MORE</div><div class="info-block">Coming soon.</div></div></div>
+    <div id="p-media" class="panel"><ul class="menu"><li class="mitem sel" data-sub="music"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-music.webp')"></div>Music</li><li class="mitem" data-sub="pictures"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-pictures.webp')"></div>Pictures</li><li class="mitem" data-sub="videos"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-videos.webp')"></div>Videos</li><li class="mitem" data-sub="mc"><div class="micon"></div>Media Center</li></ul><div class="subpanel" id="sub-music"><div class="subpanel-title">MUSIC</div><div class="info-block">Music playback coming soon.</div></div><div class="subpanel" id="sub-pictures"><div class="subpanel-title">PICTURES</div><div class="info-block">Picture viewer coming soon.</div></div><div class="subpanel" id="sub-videos"><div class="subpanel-title">VIDEOS</div><div class="info-block">Video playback coming soon.</div></div><div class="subpanel" id="sub-mc"><div class="subpanel-title">MEDIA CENTER</div><div class="info-block">Media Center coming soon.</div></div></div>
+    <div id="p-sys" class="panel"><ul class="menu"><li class="mitem sel" data-sub="settings"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-system.webp')"></div>Console Settings</li><li class="mitem" data-sub="network"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-network.webp')"></div>Network Settings</li><li class="mitem" data-sub="family"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-partymode.webp')"></div>Family Settings</li><li class="mitem" data-sub="memory"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-stack.webp')"></div>Memory</li><li class="mitem" data-sub="sysinfo"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-systeminfo.webp')"></div>System Info</li></ul><div class="subpanel" id="sub-settings"><div class="subpanel-title">CONSOLE SETTINGS</div><ul class="menu" style="margin-top:4px;"><li class="sitem sel" data-action="opensettings">RetroArch &amp; Cores</li><li class="sitem" data-action="opensettings">Downloads &amp; Install Path</li><li class="sitem" data-action="opensettings">RetroAchievements</li><li class="sitem" data-action="opensettings">Display &amp; Interface</li></ul></div><div class="subpanel" id="sub-network"><div class="subpanel-title">NETWORK SETTINGS</div><div class="info-block">Configure network settings for ROM downloads.</div></div><div class="subpanel" id="sub-family"><div class="subpanel-title">FAMILY SETTINGS</div><div class="info-block">Parental controls coming soon.</div></div><div class="subpanel" id="sub-memory"><div class="subpanel-title">MEMORY</div><div class="info-block" id="mem-info">Calculating storage…</div></div><div class="subpanel" id="sub-sysinfo"><div class="subpanel-title">SYSTEM INFO</div><div class="info-block" id="sys-info-txt">SKALD Launcher</div></div></div>
+  </div>
+  <div id="ctrl-hint">← → / D-Pad to switch blades · A to select · B to back</div>
+  <div id="btn-hints"><div class="bhint"><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-a.webp" alt="A"/>Select</div><div class="bhint"><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-b.webp" alt="B"/>Back</div><div class="bhint"><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-y.webp" alt="Y"/>Options</div></div>
+  <div id="guide"><div id="g-black"></div><div id="g-panel"></div><div id="g-tile"></div><div id="g-edge"></div><div id="g-content"><div id="g-gamerpic"></div><div id="g-tag">RetroPlayer</div><div id="g-gscore">0 Gamerscore</div><div id="g-rep"></div><div class="g-div"></div><div class="gbtn sel" data-gact="profile"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-profile.webp')"></div>Gamer Profile</div><div class="gbtn" data-gact="friends"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-friends.webp')"></div>Friends</div><div class="gbtn" data-gact="messages"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-messages.webp')"></div>Messages</div><div class="gbtn" data-gact="achievements"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-trophy.webp')"></div>Achievements</div><div class="gbtn" data-gact="settings"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-system.webp')"></div>Settings</div><div class="gbtn" data-gact="exit"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-power.webp')"></div>Exit Blades Mode</div></div></div>
+  <div id="toast"></div>
+</div>
+<div id="blade-layer"><div id="run-l"></div><div id="run-r"></div></div>
+
+<script>
+'use strict';
+const A='file:///C:/Projects/RG-THEMES/X360 BLADES/blades';
+const SND='file:///C:/Projects/RG-THEMES/X360 BLADES/XBMC360/XBMC360/01.Main Files/skin/MC360 2.1/sounds';
+const FR='file:///C:/Projects/RG-THEMES/X360 BLADES/blades/bkgd_frames';
+const BLADES=[
+  {id:'mkt',label:'MARKETPLACE',panel:'p-mkt',bg:'bc-mkt',hazeL:`${A}/haze-purple-left.webp`,hazeR:`${A}/haze-purple-right.webp`},
+  {id:'live',label:'XBOX LIVE',panel:'p-live',bg:'bc-live',hazeL:`${A}/haze-orange-left.webp`,hazeR:`${A}/haze-orange-right.webp`},
+  {id:'games',label:'GAMES',panel:'p-games',bg:'bc-games',hazeL:`${A}/haze-green-left.webp`,hazeR:`${A}/haze-green-right.webp`},
+  {id:'media',label:'MEDIA',panel:'p-media',bg:'bc-media',hazeL:`${A}/haze-blue-left.webp`,hazeR:`${A}/haze-blue-right.webp`},
+  {id:'sys',label:'SYSTEM',panel:'p-sys',bg:'bc-sys',hazeL:`${A}/haze-purple-left.webp`,hazeR:`${A}/haze-purple-right.webp`},
+];
+
+/*  BLADE LAYOUT — ALL blades are the SAME FULL WIDTH (213px).
+    They OVERLAP like cards in a deck, offset 72px from each other.
+    Z-index determines which blade is on top (nearest to active = on top).
+    Left group: offset 72px apart from LEFT_ANCHOR rightward.
+    Active blade: continues the sequence, same 213px.
+    Right group: offset 72px apart, rightmost blade right edge near screen edge.
+    Content panel, gamercard, hints shift left position to follow active blade. */
+const BLADE_W = 160;         // ALL blades same full width
+const OFFSET = 72;           // Spacing between blade left edges
+const LEFT_ANCHOR = 78;      // First left blade x position
+const RIGHT_EDGE = 1873;     // Rightmost blade right edge
+const CONTENT_OFFSET = 170;  // Content left offset from active blade x
+
+// ALL blades use the SAME image — the full blade shape.
+// Left blades use left-facing images, right use right-facing, active uses header.
+const IMG_ACT=`${A}/blades-size4-header.webp`;
+const IMG_L_INACTIVE=`${A}/blades-size3-left-nf.webp`;
+const IMG_R_INACTIVE=`${A}/blades-size3-right-nf.webp`;
+
+let activeIdx=2,guideOpen=false,frameIdx=0,audioCtx=null;
+const sfx={},menuSel=[0,0,0,0,0],subOpen=[false,false,false,false,false];
+let guideSelIdx=0;
+const stage=document.getElementById('stage'),bladeLayer=document.getElementById('blade-layer');
+const vkOverlay=document.getElementById('vk-overlay');
+const vkGrid=document.getElementById('vk-grid');
+const vkTarget=document.getElementById('vk-target');
+let subSelIdx=0;
+let vkOpen=false;
+let vkSelIdx=0;
+let vkFieldId=null;
+const VK_KEYS=[
+  '1','2','3','4','5','6','7','8','9','0',
+  'q','w','e','r','t','y','u','i','o','p',
+  'a','s','d','f','g','h','j','k','l','@',
+  'z','x','c','v','b','n','m','.','-','_',
+  {label:'Space',value:' ',cls:'wide-3'},
+  {label:'Back',action:'backspace',cls:'wide-2'},
+  {label:'Clear',action:'clear',cls:'wide-2'},
+  {label:'Done',action:'done',cls:'wide-3'}
+];
+
+function scaleStage(){
+  const W=window.innerWidth,H=window.innerHeight,scale=Math.min(W/1920,H/1080);
+  const offX=Math.round((W-1920*scale)/2),offY=Math.round((H-1080*scale)/2);
+  stage.style.transform=`scale(${scale})`;stage.style.transformOrigin='0 0';
+  stage.style.left=offX+'px';stage.style.top=offY+'px';
+  bladeLayer.style.transform=`translate(${offX}px, ${offY-94*scale}px) scale(${scale})`;
+}
+window.addEventListener('resize',scaleStage);
+
+async function loadSfx(n){try{if(!audioCtx)audioCtx=new AudioContext();const r=await fetch(`${SND}/${n}`);sfx[n]=await audioCtx.decodeAudioData(await r.arrayBuffer());}catch{}}
+function playSfx(n){if(!audioCtx||!sfx[n])return;const s=audioCtx.createBufferSource();s.buffer=sfx[n];s.connect(audioCtx.destination);s.start(0);}
+function loadAllSfx(){return Promise.all(['bladeslide_1.wav','bladeslide_2.wav','bladeslide_3.wav','bladeslide_4.wav','cursor.wav','select.wav','back.wav','guide_open.wav','guide_close.wav','notification.wav','tier2_enter.wav','tier2_exit.wav'].map(loadSfx));}
+const bgImg=document.getElementById('bg-anim');
+function startFrames(){bgImg.src=`${FR}/background-01.webp`;setInterval(()=>{frameIdx=(frameIdx+1)%61;bgImg.src=`${FR}/background-${String(frameIdx+1).padStart(2,'0')}.webp`;},70);}
+
+/* Every inactive blade uses the same left/right art so curves and tab widths
+   stay visually uniform, matching the 360 reference captures. */
+function buildBlades(){
+  document.querySelectorAll('.blade').forEach(e=>e.remove());
+  const layer=document.getElementById('blade-layer');
+  const numLeft=activeIdx, numRight=BLADES.length-1-activeIdx;
+
+  BLADES.forEach((b,i)=>{
+    const dist=i-activeIdx;
+    let x, z;
+
+    if(i < activeIdx){
+      // LEFT blade: stack from LEFT_ANCHOR rightward
+      x = LEFT_ANCHOR + i * OFFSET;
+      z = 21 + i; // further right (closer to active) = higher z
+    } else if(i === activeIdx){
+      // ACTIVE blade
+      x = LEFT_ANCHOR + activeIdx * OFFSET;
+      z = 30; // on top
+    } else {
+      // RIGHT blade: stack from right edge leftward
+      // j=0 is nearest to active, j=numRight-1 is furthest right
+      const j = i - activeIdx - 1;
+      x = RIGHT_EDGE - BLADE_W - (numRight - 1 - j) * OFFSET;
+      z = 25 - j; // nearest to active = highest z in right group
+    }
+
+    const img = dist===0 ? IMG_ACT : dist<0 ? IMG_L_INACTIVE : IMG_R_INACTIVE;
+    const el=document.createElement('div');
+    el.className=`blade ${dist===0?'active':'inactive'}`;
+    el.id=`blade-${b.id}`;
+    el.style.left=x+'px';
+    el.style.width=BLADE_W+'px';
+    el.style.zIndex=z;
+    el.style.backgroundImage=`url('${img}')`;
+    const lbl=document.createElement('div');lbl.className='blade-lbl';lbl.textContent=b.label.toLowerCase();if(dist<0){lbl.style.left='75px';lbl.style.right='auto';}else if(dist>0){lbl.style.left='35px';lbl.style.right='auto';}else{lbl.style.left='65px';lbl.style.right='auto';}
+    el.appendChild(lbl);
+    el.addEventListener('click',()=>{if(i!==activeIdx)navBlade(i);});
+    layer.appendChild(el);
+  });
+
+  // Move content panel, gamercard, ctrl-hint to follow the active blade
+  const activeX = LEFT_ANCHOR + activeIdx * OFFSET;
+  const contentLeft = activeX + CONTENT_OFFSET;
+  document.getElementById('content').style.left = contentLeft + 'px';
+  document.getElementById('gamercard').style.left = contentLeft + 'px';
+  document.getElementById('ctrl-hint').style.left = contentLeft + 'px';
+  // Reposition whitewash/glass overlays to track the active blade content area
+  const cl=contentLeft;
+  document.getElementById('ov-wl').style.left=(cl-109)+'px';
+  document.getElementById('ov-wm').style.left=(cl-24)+'px';
+  document.getElementById('ov-wr').style.left=(cl+1184)+'px';
+  document.getElementById('ov-gt-l').style.left=(cl-83)+'px';
+  document.getElementById('ov-gt-m').style.left=(cl-40)+'px';
+  document.getElementById('ov-gt-r').style.left=(cl+1271)+'px';
+  document.getElementById('ov-gb-l').style.left=(cl-83)+'px';
+  document.getElementById('ov-gb-m').style.left=(cl-40)+'px';
+  document.getElementById('ov-gb-r').style.left=(cl+1271)+'px';
+  document.getElementById('hz-l').style.left=(cl-456)+'px';
+  document.getElementById('hz-r').style.left=(cl+1064)+'px';
+}
+
+function navBlade(idx){if(idx<0||idx>=BLADES.length||idx===activeIdx)return;playSfx(`bladeslide_${Math.min(Math.abs(idx-activeIdx),4)}.wav`);activeIdx=idx;buildBlades();applyBg();applyPanel();}
+function applyBg(){const b=BLADES[activeIdx];document.querySelectorAll('.bg-col').forEach(e=>e.classList.remove('on'));document.getElementById(b.bg)?.classList.add('on');document.getElementById('hz-l').style.backgroundImage=`url('${b.hazeL}')`;document.getElementById('hz-r').style.backgroundImage=`url('${b.hazeR}')`;}
+function applyPanel(){document.querySelectorAll('.panel').forEach(e=>{e.classList.remove('on');e.classList.remove('sub-open');});document.getElementById(BLADES[activeIdx].panel)?.classList.add('on');applyMenuSel();const panel=document.getElementById(BLADES[activeIdx].panel);if(panel)panel.querySelectorAll('.subpanel').forEach(e=>e.classList.remove('on'));subSelIdx=0;}
+function getMenuItems(){const p=document.getElementById(BLADES[activeIdx].panel);if(!p)return[];const items=[...p.querySelectorAll('.mitem')];return items.filter(el=>el.offsetParent!==null);}
+function applyMenuSel(){getMenuItems().forEach((el,i)=>el.classList.toggle('sel',i===menuSel[activeIdx]));}
+function getActiveSubpanel(){return document.getElementById(BLADES[activeIdx].panel)?.querySelector('.subpanel.on')||null;}
+function getSubItems(){const sub=getActiveSubpanel();if(!sub)return[];const items=[...sub.querySelectorAll('.subnav-item,.sitem,.sys-card,.stoat-ch-btn,.stoat-dm-item')];return items.filter(el=>el.offsetParent!==null);}
+function applySubSel(){getSubItems().forEach((el,i)=>el.classList.toggle('sel',i===subSelIdx));}
+function getSelectedTextFieldId(){const item=getSubItems()[subSelIdx];return item?.dataset?.vkTarget||null;}
+function menuUp(){const items=getMenuItems();if(!items.length)return;menuSel[activeIdx]=(menuSel[activeIdx]-1+items.length)%items.length;applyMenuSel();playSfx('cursor.wav');}
+function menuDown(){const items=getMenuItems();if(!items.length)return;menuSel[activeIdx]=(menuSel[activeIdx]+1)%items.length;applyMenuSel();playSfx('cursor.wav');}
+function subUp(){const items=getSubItems();if(!items.length)return;subSelIdx=(subSelIdx-1+items.length)%items.length;applySubSel();playSfx('cursor.wav');}
+function subDown(){const items=getSubItems();if(!items.length)return;subSelIdx=(subSelIdx+1)%items.length;applySubSel();playSfx('cursor.wav');}
+function subSelect(){const item=getSubItems()[subSelIdx];if(!item)return;if(item.dataset.vkTarget){openKeyboard(item.dataset.vkTarget);return;}if(typeof item.click==='function')item.click();}
+function menuSelect(){if(subOpen[activeIdx]){subSelect();return;}const item=getMenuItems()[menuSel[activeIdx]];if(!item)return;const sub=item.dataset.sub,act=item.dataset.action;if(act){handleAction(act);return;}if(sub){subOpen[activeIdx]=true;subSelIdx=0;playSfx('tier2_enter.wav');const panel=document.getElementById(BLADES[activeIdx].panel);panel.classList.add('sub-open');panel.querySelectorAll('.subpanel').forEach(e=>e.classList.remove('on'));document.getElementById('sub-'+sub)?.classList.add('on');applySubSel();}}
+function menuBack(){if(vkOpen){closeKeyboard(true);return;}if(!subOpen[activeIdx])return;subOpen[activeIdx]=false;subSelIdx=0;playSfx('tier2_exit.wav');const panel=document.getElementById(BLADES[activeIdx].panel);panel?.classList.remove('sub-open');panel?.querySelectorAll('.subpanel').forEach(e=>e.classList.remove('on'));}
+function handleAction(a){if(a==='opensettings'){playSfx('select.wav');exitBlades(true);}if(a==='exit')exitBlades(false);}
+const guideEl=document.getElementById('guide');
+function openGuide(){if(guideOpen)return;guideOpen=true;playSfx('guide_open.wav');guideEl.classList.add('on');applyGSel();}
+function closeGuide(){if(!guideOpen)return;guideOpen=false;playSfx('guide_close.wav');guideEl.classList.remove('on');}
+function getGBtns(){return[...document.querySelectorAll('.gbtn')];}
+function applyGSel(){getGBtns().forEach((b,i)=>b.classList.toggle('sel',i===guideSelIdx));}
+function guideUp(){guideSelIdx=(guideSelIdx-1+getGBtns().length)%getGBtns().length;applyGSel();playSfx('cursor.wav');}
+function guideDown(){guideSelIdx=(guideSelIdx+1)%getGBtns().length;applyGSel();playSfx('cursor.wav');}
+function guideSelect(){const btn=getGBtns()[guideSelIdx];if(!btn)return;playSfx('select.wav');const a=btn.dataset.gact;if(a==='exit'){exitBlades(false);return;}if(a==='settings'){exitBlades(true);return;}closeGuide();}
+document.getElementById('g-black').addEventListener('click',closeGuide);
+document.querySelectorAll('.gbtn').forEach((btn,i)=>btn.addEventListener('click',()=>{guideSelIdx=i;guideSelect();}));
+const toastEl=document.getElementById('toast');let toastTmr=null;
+function toast(msg){toastEl.textContent=msg;toastEl.classList.add('on');playSfx('notification.wav');clearTimeout(toastTmr);toastTmr=setTimeout(()=>toastEl.classList.remove('on'),3500);}
+document.addEventListener('keydown',e=>{
+  if(vkOpen){
+    if(handlePhysicalTextKey(e)){e.preventDefault();return;}
+    if(e.key==='ArrowLeft')vkMove(-1);else if(e.key==='ArrowRight')vkMove(1);else if(e.key==='ArrowUp')vkMove(-10);else if(e.key==='ArrowDown')vkMove(10);else if(e.key==='Enter'||e.key===' ')vkActivate();else if(e.key==='Backspace')vkBackspace();else if(e.key==='Escape'||e.key==='b')closeKeyboard(true);
+    e.preventDefault();return;
+  }
+  if(guideOpen){if(e.key==='ArrowUp')guideUp();else if(e.key==='ArrowDown')guideDown();else if(e.key==='Enter'||e.key===' ')guideSelect();else if(e.key==='Escape'||e.key==='b')closeGuide();e.preventDefault();return;}
+  if(handlePhysicalTextKey(e)){e.preventDefault();return;}
+  if(e.key==='ArrowLeft')navBlade(activeIdx-1);else if(e.key==='ArrowRight')navBlade(activeIdx+1);else if(e.key==='ArrowUp')subOpen[activeIdx]?subUp():menuUp();else if(e.key==='ArrowDown')subOpen[activeIdx]?subDown():menuDown();else if(e.key==='Enter'||e.key===' ')menuSelect();else if(e.key==='Backspace'||e.key==='b')menuBack();else if(e.key==='Escape')exitBlades(false);else if(e.key==='g'||e.key==='G')openGuide();
+  e.preventDefault();
+});
+const PAD={A:0,B:1,X:2,Y:3,LB:4,RB:5,SELECT:8,START:9,DU:12,DD:13,DL:14,DR:15,GUIDE:16};const padPrev={};const DEAD=0.5;
+function padPoll(){const pad=[...navigator.getGamepads()].find(p=>p&&p.connected);if(!pad)return;const just=i=>pad.buttons[i]?.pressed&&!padPrev[i];const axL=pad.axes[0]??0,axU=pad.axes[1]??0;if(vkOpen){if(just(PAD.DL)||(axL<-DEAD&&!padPrev._aL))vkMove(-1);if(just(PAD.DR)||(axL>DEAD&&!padPrev._aR))vkMove(1);if(just(PAD.DU)||(axU<-DEAD&&!padPrev._aU))vkMove(-10);if(just(PAD.DD)||(axU>DEAD&&!padPrev._aD))vkMove(10);if(just(PAD.A))vkActivate();if(just(PAD.X))vkBackspace();if(just(PAD.Y))vkSpace();if(just(PAD.B)||just(PAD.GUIDE))closeKeyboard(true);}else if(guideOpen){if(just(PAD.DU)||(axU<-DEAD&&!padPrev._aU))guideUp();if(just(PAD.DD)||(axU>DEAD&&!padPrev._aD))guideDown();if(just(PAD.A))guideSelect();if(just(PAD.B)||just(PAD.GUIDE))closeGuide();}else{if(just(PAD.DL)||(axL<-DEAD&&!padPrev._aL)||just(PAD.LB))navBlade(activeIdx-1);if(just(PAD.DR)||(axL>DEAD&&!padPrev._aR)||just(PAD.RB))navBlade(activeIdx+1);if(just(PAD.DU)||(axU<-DEAD&&!padPrev._aU))(subOpen[activeIdx]?subUp():menuUp());if(just(PAD.DD)||(axU>DEAD&&!padPrev._aD))(subOpen[activeIdx]?subDown():menuDown());if(just(PAD.A))menuSelect();if(just(PAD.B))menuBack();if(just(PAD.GUIDE))openGuide();if(just(PAD.START))exitBlades(true);if(just(PAD.SELECT))exitBlades(false);}pad.buttons.forEach((b,i)=>padPrev[i]=b.pressed);padPrev._aL=axL<-DEAD;padPrev._aR=axL>DEAD;padPrev._aU=axU<-DEAD;padPrev._aD=axU>DEAD;}
+setInterval(padPoll,100);window.addEventListener('gamepadconnected',e=>{toast(`Controller: ${e.gamepad.id.slice(0,28)}`);});
+document.querySelectorAll('.mitem').forEach(el=>el.addEventListener('click',()=>{const items=[...el.parentElement.querySelectorAll('.mitem')];menuSel[activeIdx]=items.indexOf(el);applyMenuSel();menuSelect();}));
+document.querySelectorAll('.sitem').forEach(el=>el.addEventListener('click',()=>{if(el.dataset.action)handleAction(el.dataset.action);}));
+document.querySelectorAll('.sys-card').forEach(card=>card.addEventListener('click',()=>{playSfx('select.wav');window.electronAPI?.bladesSelectSystem?.({system:card.dataset.system});exitBlades(false);}));
+function exitBlades(openSettings){playSfx('back.wav');setTimeout(()=>{if(openSettings)window.electronAPI?.openSettingsWindow?.();window.electronAPI?.closeBladesWindow?.();window.close?.();},200);}
+document.getElementById('btn-exit').addEventListener('click',()=>exitBlades(false));
+async function loadRomCounts(){if(!window.electronAPI?.fetchRomList)return;try{const[sR,pR]=await Promise.all([window.electronAPI.fetchRomList({system:'snes'}),window.electronAPI.fetchRomList({system:'psx'})]);const sf=sR.ok?`${sR.roms.length.toLocaleString()} ROMs`:'—';const pf=pR.ok?`${pR.roms.length.toLocaleString()} ROMs`:'—';['cnt-snes','cnt-snes2'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=sf;});['cnt-psx','cnt-psx2'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=pf;});}catch{}}
+async function loadSysInfo(){try{const v=await window.electronAPI?.getAppVersion?.()??'—';const e=document.getElementById('sys-info-txt');if(e)e.innerHTML=`SKALD Launcher v${v}<br>Electron · Node.js`;}catch{}}
+
+// ─── Stoat Chat Integration ─────────────────────────────────────────────────
+
+let stoatConnected = false;
+let stoatUser = null;
+let stoatCurrentChannel = null;
+let stoatServerChannels = [];
+
+function syncStoatFieldDisplays(){
+  const email=document.getElementById('stoat-email')?.value || '';
+  const pass=document.getElementById('stoat-pass')?.value || '';
+  const emailDisplay=document.getElementById('stoat-email-display');
+  const passDisplay=document.getElementById('stoat-pass-display');
+  if(emailDisplay) emailDisplay.textContent=email || 'Enter email';
+  if(passDisplay) passDisplay.textContent=pass ? '•'.repeat(pass.length) : 'Enter password';
+}
+
+function renderKeyboard(){
+  if(!vkGrid) return;
+  vkGrid.innerHTML=VK_KEYS.map((k,i)=>{
+    const obj=typeof k==='string'?{label:k,value:k,cls:''}:k;
+    return `<button class="vk-key ${obj.cls||''} ${i===vkSelIdx?'sel':''}" data-idx="${i}">${obj.label}</button>`;
+  }).join('');
+  vkGrid.querySelectorAll('.vk-key').forEach(btn=>{
+    btn.addEventListener('click',()=>{vkSelIdx=Number(btn.dataset.idx)||0;renderKeyboard();vkActivate();});
+  });
+}
+
+function openKeyboard(fieldId){
+  vkFieldId=fieldId;
+  vkOpen=true;
+  vkSelIdx=0;
+  const input=document.getElementById(fieldId);
+  const label=fieldId==='stoat-pass'?'Password':'Email';
+  if(vkTarget) vkTarget.textContent=(input?.value || '');
+  const title=document.getElementById('vk-title');
+  if(title) title.textContent=`${label} Keyboard`;
+  vkOverlay?.classList.add('on');
+  renderKeyboard();
+}
+
+function closeKeyboard(keepSelection=false){
+  vkOpen=false;
+  vkFieldId=null;
+  vkOverlay?.classList.remove('on');
+  syncStoatFieldDisplays();
+  if(!keepSelection) subSelIdx=0;
+  applySubSel();
+}
+
+function updateKeyboardTarget(){
+  if(!vkFieldId) return;
+  const input=document.getElementById(vkFieldId);
+  if(vkTarget) vkTarget.textContent=input?.value || '';
+  syncStoatFieldDisplays();
+}
+
+function vkMove(delta){
+  const max=VK_KEYS.length-1;
+  vkSelIdx=Math.max(0,Math.min(max,vkSelIdx+delta));
+  renderKeyboard();
+}
+
+function vkApply(action){
+  if(!vkFieldId) return;
+  const input=document.getElementById(vkFieldId);
+  if(!input) return;
+  if(action==='backspace') input.value=input.value.slice(0,-1);
+  else if(action==='clear') input.value='';
+  else if(action==='done'){ closeKeyboard(true); return; }
+  else input.value += action;
+  updateKeyboardTarget();
+}
+
+function vkActivate(){
+  const key=VK_KEYS[vkSelIdx];
+  const obj=typeof key==='string'?{value:key}:key;
+  vkApply(obj.action || obj.value || '');
+}
+function vkBackspace(){ vkApply('backspace'); }
+function vkSpace(){ vkApply(' '); }
+function applyTextToField(fieldId,action){
+  if(!fieldId) return false;
+  const input=document.getElementById(fieldId);
+  if(!input) return false;
+  if(action==='backspace') input.value=input.value.slice(0,-1);
+  else if(action==='delete') input.value='';
+  else input.value += action;
+  updateKeyboardTarget();
+  return true;
+}
+function handlePhysicalTextKey(e){
+  if(e.ctrlKey||e.metaKey||e.altKey) return false;
+  const fieldId = vkOpen ? vkFieldId : getSelectedTextFieldId();
+  if(!fieldId) return false;
+  if(e.key==='Backspace') return applyTextToField(fieldId,'backspace');
+  if(e.key==='Delete') return applyTextToField(fieldId,'delete');
+  if(e.key===' ') return applyTextToField(fieldId,' ');
+  if(e.key.length===1) return applyTextToField(fieldId,e.key);
+  return false;
+}
+
+function showStoatSignedOut(){
+  const so=document.getElementById('stoat-signed-out');
+  const si=document.getElementById('stoat-signed-in');
+  if(so)so.style.display='';
+  if(si)si.style.display='none';
+}
+function showStoatSignedIn(){
+  const so=document.getElementById('stoat-signed-out');
+  const si=document.getElementById('stoat-signed-in');
+  if(so)so.style.display='none';
+  if(si)si.style.display='';
+}
+function exitCurrentSubpanel(){
+  subOpen[activeIdx]=false;
+  subSelIdx=0;
+  const panel=document.getElementById(BLADES[activeIdx].panel);
+  panel?.classList.remove('sub-open');
+  panel?.querySelectorAll('.subpanel').forEach(e=>e.classList.remove('on'));
+}
+
+// Login handler
+document.getElementById('stoat-login-btn')?.addEventListener('click', async ()=>{
+  const email=document.getElementById('stoat-email')?.value?.trim();
+  const pass=document.getElementById('stoat-pass')?.value;
+  const errEl=document.getElementById('stoat-login-error');
+  if(!email||!pass){if(errEl){errEl.textContent='Enter email and password';errEl.style.display='';} return;}
+  if(errEl)errEl.style.display='none';
+  document.getElementById('stoat-login-btn').textContent='Signing in...';
+  try{
+    const r=await window.electronAPI.stoatLogin({email,password:pass});
+    if(r.ok){
+      stoatConnected=true;
+      stoatUser=r.user;
+      showStoatSignedIn();
+      exitCurrentSubpanel();
+      menuSel[activeIdx]=0;
+      applyMenuSel();
+      updateStoatProfile();
+      loadStoatFriends();
+      loadStoatServers();
+      loadStoatDMs();
+      toast('Signed in to Stoat as '+r.user.username);
+    } else {
+      if(errEl){errEl.textContent=r.error||'Login failed';errEl.style.display='';}
+    }
+  }catch(e){if(errEl){errEl.textContent=e.message;errEl.style.display='';}}
+  document.getElementById('stoat-login-btn').textContent='Sign In';
+});
+
+document.getElementById('stoat-email-display')?.addEventListener('click',()=>openKeyboard('stoat-email'));
+document.getElementById('stoat-pass-display')?.addEventListener('click',()=>openKeyboard('stoat-pass'));
+
+// Logout handler
+document.getElementById('stoat-logout-btn')?.addEventListener('click', async ()=>{
+  await window.electronAPI.stoatLogout();
+  stoatConnected=false;
+  stoatUser=null;
+  showStoatSignedOut();
+  exitCurrentSubpanel();
+  menuSel[activeIdx]=0;
+  applyMenuSel();
+  toast('Signed out of Stoat');
+});
+
+// Profile display
+function updateStoatProfile(){
+  if(!stoatUser)return;
+  const av=document.getElementById('stoat-avatar');
+  const un=document.getElementById('stoat-username');
+  const us=document.getElementById('stoat-user-status');
+  if(av)av.src=stoatUser.avatar||'';
+  if(un)un.textContent=stoatUser.username||'';
+  if(us)us.textContent=stoatUser.status?.text||'Online';
+}
+
+// Friends list
+async function loadStoatFriends(){
+  const el=document.getElementById('stoat-friends-list');
+  if(!el)return;
+  const friends=await window.electronAPI.stoatFriends();
+  if(!friends.length){el.innerHTML='<div class="info-block">No friends yet. Add friends on stoat.chat!</div>';return;}
+  el.innerHTML=friends.map(f=>`
+    <div class="stoat-friend stoat-dm-item subnav-item" data-userid="${f.id}">
+      <div class="sf-dot ${f.online?'online':'offline'}"></div>
+      <img src="${f.avatar||''}" onerror="this.style.display='none'" alt=""/>
+      <div>
+        <div class="sf-name">${esc(f.username)}</div>
+        <div class="sf-status">${f.online?(f.status?.text||'Online'):'Offline'}</div>
+      </div>
+    </div>
+  `).join('');
+  el.querySelectorAll('.stoat-friend[data-userid]').forEach(friendEl=>{
+    friendEl.addEventListener('click',()=>openFriendDM(friendEl.dataset.userid));
+  });
+}
+
+// Server channels
+async function loadStoatServers(){
+  const servers=await window.electronAPI.stoatServers();
+  if(!servers.length)return;
+  // Use the first server (the SKALD community)
+  const srv=servers[0];
+  const channels=await window.electronAPI.stoatChannels({serverId:srv.id});
+  stoatServerChannels=channels;
+  renderChannelTabs();
+  if(channels.length>0) switchStoatChannel(channels[0].id);
+}
+
+function renderChannelTabs(){
+  const el=document.getElementById('stoat-channels');
+  if(!el)return;
+  el.innerHTML=stoatServerChannels.map(ch=>`
+    <button class="stoat-ch-btn ${ch.id===stoatCurrentChannel?'active':''}" data-chid="${ch.id}">#${esc(ch.name)}</button>
+  `).join('');
+  el.querySelectorAll('.stoat-ch-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>switchStoatChannel(btn.dataset.chid));
+  });
+}
+
+async function switchStoatChannel(channelId){
+  stoatCurrentChannel=channelId;
+  renderChannelTabs();
+  const msgs=await window.electronAPI.stoatMessages({channelId,limit:50});
+  renderMessages(msgs);
+  // Scroll to bottom
+  const area=document.getElementById('stoat-messages');
+  if(area)area.scrollTop=area.scrollHeight;
+}
+
+function renderMessages(msgs){
+  const el=document.getElementById('stoat-messages');
+  if(!el)return;
+  if(!msgs.length){el.innerHTML='<div class="info-block" style="padding:20px 8px;">No messages yet. Be the first to say hello!</div>';return;}
+  el.innerHTML=msgs.map(m=>{
+    const time=new Date(m.createdAt);
+    const ts=time.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    const name=m.author?.username||'Unknown';
+    return `<div class="stoat-msg"><span class="sm-author">${esc(name)}</span><span class="sm-time">${ts}</span><div class="sm-content">${esc(m.content)}</div></div>`;
+  }).join('');
+}
+
+// Send message
+document.getElementById('stoat-send-btn')?.addEventListener('click', sendStoatMessage);
+document.getElementById('stoat-msg-input')?.addEventListener('keydown', e=>{
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendStoatMessage();}
+});
+
+async function sendStoatMessage(){
+  const input=document.getElementById('stoat-msg-input');
+  if(!input||!stoatCurrentChannel)return;
+  const content=input.value.trim();
+  if(!content)return;
+  input.value='';
+  await window.electronAPI.stoatSendMessage({channelId:stoatCurrentChannel,content});
+}
+
+// Real-time message listener
+if(window.electronAPI.onStoatMessage){
+  window.electronAPI.onStoatMessage(msg=>{
+    if(msg.channelId===stoatCurrentChannel){
+      const el=document.getElementById('stoat-messages');
+      if(!el)return;
+      const time=new Date(msg.createdAt);
+      const ts=time.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+      const name=msg.author?.username||'Unknown';
+      const div=document.createElement('div');
+      div.className='stoat-msg';
+      div.innerHTML=`<span class="sm-author">${esc(name)}</span><span class="sm-time">${ts}</span><div class="sm-content">${esc(msg.content)}</div>`;
+      el.appendChild(div);
+      el.scrollTop=el.scrollHeight;
+    }
+  });
+}
+
+// Typing indicator
+const typingUsers=new Map();
+if(window.electronAPI.onStoatTypingStart){
+  window.electronAPI.onStoatTypingStart(({channelId,userId})=>{
+    if(channelId!==stoatCurrentChannel)return;
+    typingUsers.set(userId,Date.now());
+    updateTypingIndicator();
+  });
+}
+if(window.electronAPI.onStoatTypingStop){
+  window.electronAPI.onStoatTypingStop(({channelId,userId})=>{
+    if(channelId!==stoatCurrentChannel)return;
+    typingUsers.delete(userId);
+    updateTypingIndicator();
+  });
+}
+function updateTypingIndicator(){
+  const el=document.getElementById('stoat-typing');
+  if(!el)return;
+  const count=typingUsers.size;
+  if(count===0)el.textContent='';
+  else if(count===1)el.textContent='Someone is typing...';
+  else el.textContent=count+' people are typing...';
+}
+
+// DM list
+async function loadStoatDMs(){
+  const el=document.getElementById('stoat-dm-list');
+  if(!el)return;
+  const dms=await window.electronAPI.stoatDMChannels();
+  if(!dms.length){el.innerHTML='<div class="info-block">No direct messages.</div>';return;}
+  el.innerHTML=dms.map(dm=>`
+    <div class="stoat-dm-item" data-chid="${dm.id}">
+      <img src="${dm.icon||''}" onerror="this.style.display='none'" alt=""/>
+      <div class="dm-name">${esc(dm.name||'Direct Message')}</div>
+    </div>
+  `).join('');
+  el.querySelectorAll('.stoat-dm-item[data-chid]').forEach(dmEl=>{
+    dmEl.addEventListener('click',()=>switchToDM(dmEl.dataset.chid));
+  });
+}
+
+async function switchToDM(channelId){
+  stoatCurrentChannel=channelId;
+  menuSel[activeIdx]=2;
+  const panel=document.getElementById(BLADES[activeIdx].panel);
+  panel?.classList.add('sub-open');
+  panel?.querySelectorAll('.subpanel').forEach(e=>e.classList.remove('on'));
+  document.getElementById('sub-messages')?.classList.add('on');
+  applyMenuSel();
+  subSelIdx=0;
+  applySubSel();
+  const msgs=await window.electronAPI.stoatMessages({channelId,limit:50});
+  renderMessages(msgs);
+  const area=document.getElementById('stoat-messages');
+  if(area)area.scrollTop=area.scrollHeight;
+}
+
+async function openFriendDM(userId){
+  const result=await window.electronAPI.stoatOpenDM({userId});
+  if(!result?.ok||!result.channel?.id){
+    toast(result?.error || 'Could not open DM');
+    return;
+  }
+  await loadStoatDMs();
+  await switchToDM(result.channel.id);
+}
+
+// HTML escape helper
+function esc(s){return s?s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'):'';}
+
+// Stoat ready event (auto-reconnect from saved session)
+if(window.electronAPI.onStoatReady){
+  window.electronAPI.onStoatReady(({user})=>{
+    stoatConnected=true;
+    stoatUser=user;
+    showStoatSignedIn();
+    updateStoatProfile();
+    loadStoatFriends();
+    loadStoatServers();
+    loadStoatDMs();
+  });
+}
+
+// Check Stoat status on init
+async function initStoat(){
+  try{
+    const status=await window.electronAPI.stoatStatus();
+    if(status.connected&&status.user){
+      stoatConnected=true;
+      stoatUser=status.user;
+      showStoatSignedIn();
+      updateStoatProfile();
+      loadStoatFriends();
+      loadStoatServers();
+      loadStoatDMs();
+    } else {
+      showStoatSignedOut();
+    }
+  }catch{showStoatSignedOut();}
+  syncStoatFieldDisplays();
+}
+async function init(){scaleStage();buildBlades();applyBg();applyPanel();startFrames();loadAllSfx().catch(()=>{});loadRomCounts();loadSysInfo();setTimeout(()=>stage.classList.add('loaded'),80);setTimeout(()=>toast('Welcome to SKALD'),1000);}
+init();
+initStoat();
+</script>
+</body>
+</html>

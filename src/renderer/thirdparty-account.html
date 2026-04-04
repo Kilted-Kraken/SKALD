@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' 'unsafe-inline';
+  style-src 'self' 'unsafe-inline';
+  font-src file:;
+  img-src 'self' file: data: https:;
+">
+<title>SKALD — 3rd Party Account</title>
+<style>
+@font-face{font-family:'MC360';src:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/fonts/MC360.ttf') format('truetype');}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'MC360','Segoe UI',Tahoma,sans-serif;color:#111;}
+body{position:relative;}
+#stage{position:absolute;inset:0;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/background-grey.webp') center/cover no-repeat;}
+#tint{position:absolute;inset:0;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/background-overlay-whitewash-centertile-ws.webp') repeat-x center/100% 100%;opacity:.95;}
+#drag{position:absolute;left:0;right:0;top:0;height:12px;-webkit-app-region:drag;z-index:20;}
+#close{position:absolute;top:18px;right:22px;z-index:25;border:none;background:rgba(0,0,0,.42);color:#fff;font-size:18px;padding:8px 16px;cursor:pointer;font-family:'MC360',sans-serif;}
+#shell{position:absolute;left:74px;top:70px;right:74px;bottom:56px;display:grid;grid-template-columns:440px 1fr;gap:42px;}
+#menuFrame{position:relative;height:520px;}
+#menuShadow,#menuGlass{position:absolute;left:0;top:0;width:440px;height:520px;background-repeat:no-repeat;background-size:100% 100%;}
+#menuShadow{background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/systemhomebutton-4-shadow.webp');opacity:.75;filter:blur(.25px);}
+#menuGlass{background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/systemhomebutton-4a.webp');}
+#menu{position:absolute;left:62px;top:34px;right:28px;list-style:none;}
+.row{display:flex;align-items:center;gap:16px;height:58px;font-size:25px;color:rgba(0,0,0,.82);}
+.row + .row{margin-top:12px;}
+.row img{width:32px;height:32px;object-fit:contain;opacity:.9;}
+#details{padding-top:24px;}
+#eyebrow{font-size:22px;color:rgba(0,0,0,.5);margin-bottom:10px;}
+#title{font-size:36px;line-height:1.1;margin-bottom:16px;}
+#desc{font-size:22px;line-height:1.35;max-width:430px;color:rgba(0,0,0,.74);margin-bottom:28px;white-space:pre-line;}
+#status{font-size:19px;line-height:1.35;color:rgba(0,0,0,.62);margin-bottom:22px;}
+.card{width:100%;max-width:500px;padding:20px 22px 22px;background:rgba(255,255,255,.32);border:1px solid rgba(0,0,0,.08);box-shadow:0 14px 40px rgba(40,18,66,.12);}
+.field{margin-bottom:14px;}
+.label{display:block;font-size:20px;color:rgba(0,0,0,.7);margin-bottom:8px;}
+.input{width:100%;height:50px;padding:0 14px;border:1px solid rgba(0,0,0,.16);background:rgba(255,255,255,.68);font-family:'MC360','Segoe UI',Tahoma,sans-serif;font-size:20px;color:#111;outline:none;}
+.checkRow{display:flex;align-items:center;gap:10px;font-size:18px;color:rgba(0,0,0,.74);margin:8px 0 18px;}
+.checkRow input{width:18px;height:18px;}
+#actions{display:flex;gap:12px;flex-wrap:wrap;}
+.btn{min-width:132px;height:46px;border:1px solid rgba(0,0,0,.18);background:rgba(255,255,255,.72);font-family:'MC360','Segoe UI',Tahoma,sans-serif;font-size:18px;color:#111;cursor:pointer;}
+.btn.primary{background:rgba(255,255,255,.9);}
+#message{margin-top:14px;font-size:18px;line-height:1.35;color:rgba(0,0,0,.72);min-height:24px;}
+#footer{position:absolute;left:74px;right:74px;bottom:18px;display:flex;justify-content:flex-end;gap:18px;color:rgba(0,0,0,.6);font-size:18px;}
+.hint{display:flex;align-items:center;gap:8px;}
+.hint img{width:24px;height:24px;object-fit:contain;}
+</style>
+</head>
+<body>
+  <div id="stage">
+    <div id="tint"></div>
+    <div id="drag"></div>
+    <button id="close" type="button">Close</button>
+    <div id="shell">
+      <div id="menuFrame">
+        <div id="menuShadow"></div>
+        <div id="menuGlass"></div>
+        <ul id="menu">
+          <li class="row"><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-profile.webp" alt=""><span id="row-provider">Provider</span></li>
+          <li class="row"><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-system.webp" alt=""><span>Save to Stoat Profile</span></li>
+          <li class="row"><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-network.webp" alt=""><span>Shared Sign-In Source</span></li>
+          <li class="row"><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-messages.webp" alt=""><span>Manage Per User</span></li>
+        </ul>
+      </div>
+      <div id="details">
+        <div id="eyebrow">3RD PARTY ACCOUNT</div>
+        <div id="title">Provider</div>
+        <div id="desc"></div>
+        <div id="status"></div>
+        <div class="card">
+          <div class="field">
+            <label class="label" id="loginLabel" for="loginInput">Login</label>
+            <input class="input" id="loginInput" type="text" autocomplete="off"/>
+          </div>
+          <div class="field">
+            <label class="label" id="secretLabel" for="secretInput">Secret</label>
+            <input class="input" id="secretInput" type="password" autocomplete="new-password"/>
+          </div>
+          <label class="checkRow">
+            <input id="saveToggle" type="checkbox" checked />
+            <span>Save login to this Stoat profile</span>
+          </label>
+          <div id="actions">
+            <button id="saveBtn" class="btn primary" type="button">Save</button>
+            <button id="loginBtn" class="btn" type="button" style="display:none;">Sign In</button>
+            <button id="logoutBtn" class="btn" type="button" style="display:none;">Sign Out</button>
+            <button id="clearBtn" class="btn" type="button">Clear Saved</button>
+            <button id="cancelBtn" class="btn" type="button">Cancel</button>
+          </div>
+          <div id="message"></div>
+        </div>
+      </div>
+    </div>
+    <div id="footer">
+      <div class="hint"><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-a.webp" alt="">Save</div>
+      <div class="hint"><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-b.webp" alt="">Close</div>
+    </div>
+  </div>
+<script>
+'use strict';
+const PROVIDERS = {
+  archiveorg: {
+    name: 'Archive.org',
+    desc: 'Store your Archive.org email and password for this Stoat profile.\nSaved credentials can be reused for auto sign-in and ROM download access.',
+  },
+  retroachievements: {
+    name: 'RetroAchievements',
+    desc: 'Store your RetroAchievements username and API key for this Stoat profile.\nThis powers achievement lookups, progress tracking, and future profile features.',
+  },
+  steamgriddb: {
+    name: 'SteamGridDB',
+    desc: 'Store your SteamGridDB account email and API key for this Stoat profile.\nSaved credentials are used for logo, cover, and art lookups.',
+  },
+};
+
+const qs = new URLSearchParams(window.location.search);
+const providerId = qs.get('provider') || 'archiveorg';
+const providerMeta = PROVIDERS[providerId] || PROVIDERS.archiveorg;
+
+const rowProvider = document.getElementById('row-provider');
+const titleEl = document.getElementById('title');
+const descEl = document.getElementById('desc');
+const statusEl = document.getElementById('status');
+const loginLabel = document.getElementById('loginLabel');
+const secretLabel = document.getElementById('secretLabel');
+const loginInput = document.getElementById('loginInput');
+const secretInput = document.getElementById('secretInput');
+const saveToggle = document.getElementById('saveToggle');
+const messageEl = document.getElementById('message');
+const saveBtn = document.getElementById('saveBtn');
+const clearBtn = document.getElementById('clearBtn');
+const loginBtn = document.getElementById('loginBtn');
+const logoutBtn = document.getElementById('logoutBtn');
+
+function showMessage(text, isError){
+  messageEl.textContent = text || '';
+  messageEl.style.color = isError ? '#8b1d1d' : 'rgba(0,0,0,.72)';
+}
+
+async function load(){
+  rowProvider.textContent = providerMeta.name;
+  titleEl.textContent = providerMeta.name;
+  descEl.textContent = providerMeta.desc;
+
+  const result = await window.electronAPI.getThirdPartyAccount({ provider: providerId });
+  if (!result?.ok) {
+    statusEl.textContent = result?.error || 'Could not load account details.';
+    saveBtn.disabled = true;
+    clearBtn.disabled = true;
+    return;
+  }
+
+  loginLabel.textContent = result.provider.loginLabel;
+  secretLabel.textContent = result.provider.secretLabel;
+  loginInput.placeholder = result.provider.loginLabel;
+  secretInput.placeholder = result.provider.secretLabel;
+  loginInput.value = result.login || '';
+  secretInput.value = result.secret || '';
+  saveToggle.checked = result.saveToProfile !== false;
+
+  const isArchive = providerId === 'archiveorg';
+  loginBtn.style.display = isArchive ? '' : 'none';
+  logoutBtn.style.display = isArchive ? '' : 'none';
+
+  if (!result.stoatUserId) {
+    statusEl.textContent = 'Sign in to Stoat first. 3rd-party logins are saved per Stoat profile.';
+    saveBtn.disabled = true;
+    clearBtn.disabled = true;
+    loginBtn.disabled = true;
+    logoutBtn.disabled = true;
+  } else {
+    statusEl.textContent = result.hasSavedCredentials
+      ? `Saving to Stoat profile ${result.stoatUserId}. Saved credentials found for ${providerMeta.name}.`
+      : `Saving to Stoat profile ${result.stoatUserId}. No saved credentials yet for ${providerMeta.name}.`;
+    saveBtn.disabled = false;
+    clearBtn.disabled = false;
+    loginBtn.disabled = false;
+    logoutBtn.disabled = false;
+  }
+
+  if (isArchive) {
+    const archive = await window.electronAPI.archiveCheck();
+    statusEl.textContent += archive.loggedIn
+      ? `\nArchive.org is currently signed in as ${archive.username || 'unknown'}.`
+      : '\nArchive.org is currently signed out.';
+  }
+}
+
+async function save(){
+  const result = await window.electronAPI.saveThirdPartyAccount({
+    provider: providerId,
+    login: loginInput.value.trim(),
+    secret: secretInput.value,
+    saveToProfile: !!saveToggle.checked,
+  });
+  if (!result?.ok) {
+    showMessage(result?.error || 'Could not save this account.', true);
+    return;
+  }
+  showMessage(saveToggle.checked ? 'Saved to current Stoat profile.' : 'Saved credentials removed.');
+  await load();
+}
+
+async function clearSaved(){
+  const result = await window.electronAPI.clearThirdPartyAccount({ provider: providerId });
+  if (!result?.ok) {
+    showMessage(result?.error || 'Could not clear saved credentials.', true);
+    return;
+  }
+  loginInput.value = '';
+  secretInput.value = '';
+  saveToggle.checked = true;
+  showMessage('Saved credentials cleared.');
+  await load();
+}
+
+async function signInArchive(){
+  const email = loginInput.value.trim();
+  const password = secretInput.value;
+  if (!email || !password) {
+    showMessage('Enter your Archive.org email and password first.', true);
+    return;
+  }
+  loginBtn.disabled = true;
+  loginBtn.textContent = 'Signing In...';
+  const result = await window.electronAPI.archiveLogin({ email, password });
+  loginBtn.disabled = false;
+  loginBtn.textContent = 'Sign In';
+  if (!result?.ok) {
+    showMessage(result?.error || 'Archive.org sign-in failed.', true);
+    return;
+  }
+  if (saveToggle.checked) {
+    await window.electronAPI.saveThirdPartyAccount({
+      provider: 'archiveorg',
+      login: email,
+      secret: password,
+      saveToProfile: true,
+    });
+  }
+  showMessage(`Signed in to Archive.org as ${result.username || email}.`);
+  await load();
+}
+
+async function signOutArchive(){
+  const result = await window.electronAPI.archiveLogout();
+  if (!result?.ok) {
+    showMessage(result?.error || 'Archive.org sign-out failed.', true);
+    return;
+  }
+  showMessage('Signed out of Archive.org.');
+  await load();
+}
+
+document.getElementById('close').addEventListener('click', () => window.electronAPI.closeThirdPartyAccountWindow());
+document.getElementById('cancelBtn').addEventListener('click', () => window.electronAPI.closeThirdPartyAccountWindow());
+saveBtn.addEventListener('click', save);
+clearBtn.addEventListener('click', clearSaved);
+loginBtn.addEventListener('click', signInArchive);
+logoutBtn.addEventListener('click', signOutArchive);
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') window.electronAPI.closeThirdPartyAccountWindow();
+  if (e.key === 'Enter' && document.activeElement !== clearBtn && document.activeElement !== logoutBtn) {
+    if (providerId === 'archiveorg') signInArchive();
+    else save();
+  }
+});
+
+load();
+</script>
+</body>
+</html>

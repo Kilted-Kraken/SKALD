@@ -5,8 +5,8 @@
   --bg:          #0f0f13;
   --bg2:         #17171e;
   --bg3:         #1e1e28;
-  --accent:      #d93025;
-  --accent-dim:  #b52219;
+  --accent:      #f95b01;
+  --accent-dim:  #d44900;
   --text:        #e2e2ef;
   --text-dim:    #8888aa;
   --border:      #2a2a38;
@@ -68,10 +68,10 @@ input:focus, select:focus { border-color: var(--accent); }
   gap: 8px;
 }
 .titlebar-logo {
-  width: 22px;
-  height: 22px;
-  border-radius: 4px;
-  object-fit: cover;
+  height: 33px;
+  width: auto;
+  max-width: 180px;
+  object-fit: contain;
 }
 .titlebar-title {
   font-weight: 600;
@@ -143,10 +143,8 @@ input:focus, select:focus { border-color: var(--accent); }
 #library-grid {
   flex: 1;
   overflow-y: auto;
-  padding: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  padding: 4px 8px;
+  display: block;
 }
 
 /* ─── Game cards ─────────────────────────────────────────────────────────── */
@@ -161,6 +159,7 @@ input:focus, select:focus { border-color: var(--accent); }
   transition: background 0.12s, transform 0.12s, box-shadow 0.12s;
   border: 1px solid transparent;
   border-left: 3px solid transparent;
+  margin-bottom: 4px;
 }
 .game-card:hover {
   background: var(--bg3);
@@ -196,10 +195,11 @@ input:focus, select:focus { border-color: var(--accent); }
 }
 .game-thumb {
   width: 45px;
-  height: 60px;
-  object-fit: cover;
+  height: 45px;
+  object-fit: contain;
   border-radius: 4px;
   flex-shrink: 0;
+  background: transparent;
 }
 .card-label {
   font-size: 13px;
@@ -433,7 +433,154 @@ input:focus, select:focus { border-color: var(--accent); }
 .tab-panel { display: none; padding-top: 10px; }
 .tab-panel.active { display: block; }
 
+/* ─── HowLongToBeat tab ──────────────────────────────────── */
+.hltb-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 16px;
+  font-family: Rajdhani, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.hltb-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.hltb-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+}
+.hltb-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+  width: 22px;
+  text-align: center;
+}
+.hltb-label {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.hltb-value {
+  font-size: 18px;
+  font-weight: 700;
+  font-family: Rajdhani, sans-serif;
+  color: var(--accent);
+  letter-spacing: 0.02em;
+}
+.hltb-link {
+  display: inline-block;
+  font-size: 12px;
+  color: var(--text-dim);
+  text-decoration: none;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.hltb-link:hover { color: var(--accent); border-color: var(--accent); }
+
+/* HLTB metadata grid */
+.hltb-summary {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.55;
+  margin: 0 0 14px;
+}
+#hltb-meta-section {
+  margin-top: 14px;
+}
+.hltb-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 6px 12px;
+  margin-bottom: 16px;
+  padding: 10px 12px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.hltb-meta-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.hltb-meta-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.hltb-meta-value {
+  font-size: 12px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* HLTB community stats chips */
+.hltb-stats-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 14px 0 16px;
+}
+.hltb-stat-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 7px 12px;
+  min-width: 64px;
+  text-align: center;
+}
+.hltb-stat-num {
+  font-size: 16px;
+  font-weight: 700;
+  font-family: Rajdhani, sans-serif;
+  color: var(--accent);
+  line-height: 1.1;
+}
+.hltb-stat-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+.hltb-stat-sub {
+  font-size: 9px;
+  color: var(--text-dim);
+  margin-top: 1px;
+}
+
 /* ─── Info tab ───────────────────────────────────────────────────────────── */
+.rom-desc-summary {
+  display: block;
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.55;
+  margin-bottom: 8px;
+}
+.rom-desc-filename {
+  display: block;
+  font-size: 11px;
+  color: var(--text-dim);
+  word-break: break-all;
+}
 #detail-desc-archive,
 #detail-desc-igdb {
   font-size: 13px;
@@ -500,12 +647,14 @@ input:focus, select:focus { border-color: var(--accent); }
   background: var(--bg2);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 24px;
+  padding: 16px;
   width: 480px;
+  max-height: 80vh;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 6px;
   box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+  overflow-y: auto;
 }
 #settings-header {
   display: flex;
@@ -653,12 +802,11 @@ input:focus, select:focus { border-color: var(--accent); }
   padding: 20px;
 }
 #about-logo {
-  width: 72px;
-  height: 72px;
-  border-radius: 12px;
-  object-fit: cover;
+  width: auto;
+  max-width: 220px;
+  height: 80px;
+  object-fit: contain;
   flex-shrink: 0;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
 }
 #about-info {
   display: flex;
@@ -2451,10 +2599,35 @@ body.gp-mouse-mode * { cursor: none !important; }
   color: var(--text-dim);
   margin-bottom: 8px;
 }
-.filter-sort-pills {
+.filter-sort-pills,
+.fs-dynamic-pills {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+}
+.fs-select {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 12px;
+  padding: 6px 8px;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  padding-right: 24px;
+  cursor: pointer;
+}
+.fs-select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.fs-select option {
+  background: var(--bg2);
+  color: var(--text);
 }
 .fs-pill {
   background: var(--bg3);
@@ -2569,3 +2742,312 @@ body.gp-mouse-mode * { cursor: none !important; }
   border-color: var(--success);
   color: var(--success);
 }
+
+/* ─── System selector ─────────────────────────────────── */
+#system-selector-row {
+  padding: 10px 12px 6px;
+}
+#system-select {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: var(--radius);
+  padding: 7px 10px;
+  font-size: 13px;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+}
+#system-select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* ─── Settings accordion sections ───────────────────────── */
+.settings-section {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.settings-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--text);
+  padding: 10px 14px;
+  background: var(--bg3);
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+  margin: 0;
+  border: none;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+.settings-section-heading::-webkit-details-marker { display: none; }
+.settings-section-heading::after {
+  content: '▸';
+  font-size: 10px;
+  color: var(--text-dim);
+  transition: transform 0.18s ease;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.settings-section[open] > .settings-section-heading::after {
+  transform: rotate(90deg);
+}
+.settings-section-heading:hover { color: var(--accent); }
+.settings-section-body {
+  padding: 8px 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+}
+
+/* ─── ROM file info table ─────────────────────────────────── */
+.rom-file-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-top: 4px;
+}
+.rom-file-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.rom-file-table td:first-child {
+  color: var(--text-dim);
+  white-space: nowrap;
+  width: 110px;
+  font-size: 12px;
+}
+.rom-file-table td:last-child {
+  color: var(--text);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* ─── Archive.org login prompt (sidebar) ─────────────────── */
+.login-prompt {
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.login-prompt p { margin: 0; line-height: 1.5; }
+.login-prompt button {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  padding: 8px 18px;
+  font-size: 13px;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+}
+.login-prompt button:hover { filter: brightness(1.15); }
+
+/* ─── Archive.org login form (in Settings) ────────────────── */
+#archiveorg-login-row {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+#archiveorg-status-text {
+  font-size: 13px;
+}
+#archiveorg-login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+#archiveorg-login-form input[type="email"],
+#archiveorg-login-form input[type="password"] {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.archive-save-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-dim);
+  cursor: pointer;
+  user-select: none;
+  margin-top: 2px;
+}
+.archive-save-row input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+  cursor: pointer;
+}
+
+/* ─── ROM fetch progress (sidebar) ──────────────────────────────── */
+.rom-fetch-progress {
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.rfp-label {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text);
+}
+.rfp-bar-bg {
+  width: 100%;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.rfp-bar {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+.rfp-sub {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+/* ─── Login prompt (sidebar) ─────────────────────────────── */
+.login-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 32px 16px;
+  text-align: center;
+}
+.login-prompt svg {
+  width: 40px;
+  height: 40px;
+  color: var(--text-dim);
+  opacity: 0.6;
+}
+.login-prompt p {
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+.login-prompt button {
+  background: var(--accent);
+  color: #fff;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 8px 18px;
+  border-radius: var(--radius);
+  border: none;
+  cursor: pointer;
+  width: 100%;
+}
+.login-prompt button:hover { background: var(--accent-dim); }
+
+/* ─── Card title row + versions badge ─────────────────────── */
+.card-title-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+.card-title-row .card-label {
+  flex: 1;
+  min-width: 0;
+}
+.card-versions-badge {
+  flex-shrink: 0;
+  background: var(--accent);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  font-family: 'Rajdhani', sans-serif;
+  line-height: 1;
+  padding: 2px 5px;
+  border-radius: 10px;
+  letter-spacing: 0.3px;
+}
+
+/* ─── Card region badge ────────────────────────────────────── */
+.card-region {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 1px 4px;
+  margin-bottom: 3px;
+}
+
+/* ─── HLTB prefetch progress bar ──────────────────── */
+#hltb-prefetch-bar {
+  padding: 6px 8px 4px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+#hltb-prefetch-bar.hidden { display: none; }
+#hltb-prefetch-inner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+#hltb-prefetch-track {
+  flex: 1;
+  height: 4px;
+  background: var(--bg3);
+  border-radius: 2px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+#hltb-prefetch-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  width: 0%;
+  transition: width 0.3s ease;
+}
+#hltb-prefetch-label {
+  font-size: 10px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+#hltb-prefetch-dismiss {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 10px;
+  padding: 0 2px;
+  cursor: pointer;
+  flex-shrink: 0;
+  line-height: 1;
+}
+#hltb-prefetch-dismiss:hover { color: var(--text); }

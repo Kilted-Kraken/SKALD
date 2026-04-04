@@ -1,0 +1,201 @@
+
+/* ─── RetroAchievements ───────────────────────────────────── */
+
+.ra-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 14px 0 12px;
+}
+
+/* Header row: game icon + title/stats */
+.ra-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.ra-game-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+
+.ra-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.ra-header-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.ra-logo {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.ra-stats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.ra-stat { font-size: 12px; color: var(--text-dim); }
+.ra-stat-num { color: var(--accent); font-weight: 700; font-family: 'Rajdhani', sans-serif; }
+.ra-stat-sep { color: var(--border); font-size: 12px; }
+
+/* Progress bar */
+.ra-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.ra-progress-bar-bg {
+  flex: 1;
+  height: 6px;
+  background: var(--bg3);
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.ra-progress-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: width 0.4s ease;
+  min-width: 2px;
+}
+
+.ra-progress-label {
+  font-size: 11px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 600;
+}
+
+/* Achievements — 3-column grid, no scroll */
+.ra-achievements-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+/* Individual achievement cell */
+.ra-achievement {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  transition: border-color 0.15s;
+  min-width: 0;
+}
+
+.ra-achievement:hover {
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+}
+
+/* Type indicator: colored left border */
+.ra-achievement.ra-ach-progression { border-left: 3px solid #4a9eff; }
+.ra-achievement.ra-ach-win         { border-left: 3px solid #f5c518; }
+.ra-achievement.ra-ach-missable    { border-left: 3px solid #ff6b6b; }
+
+/* Locked achievements: grayed out */
+.ra-achievement.ra-ach-locked {
+  opacity: 0.45;
+}
+.ra-achievement.ra-ach-locked .ra-badge {
+  filter: grayscale(1);
+}
+
+/* Badge icon */
+.ra-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 5px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--bg2);
+}
+
+/* Achievement text */
+.ra-ach-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  overflow: hidden;
+  flex: 1;
+}
+
+.ra-ach-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ra-ach-desc {
+  font-size: 11px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ra-ach-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 1px;
+}
+
+.ra-ach-pts {
+  font-size: 10px;
+  color: var(--accent);
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+}
+
+.ra-ach-earned {
+  font-size: 10px;
+  color: #4caf50;
+  font-weight: 600;
+}
+
+/* Footer link */
+.ra-link {
+  display: inline-block;
+  font-size: 12px;
+  color: var(--accent);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.ra-link:hover { text-decoration: underline; }
