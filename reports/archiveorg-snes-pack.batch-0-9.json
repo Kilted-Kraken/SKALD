@@ -1,0 +1,425 @@
+{
+  "provider": "archiveorg",
+  "system": "snes",
+  "source": "C:\\Projects\\SKALD\\reports\\archiveorg-snes-pack.candidates.json",
+  "generatedAt": "2026-04-06T21:23:04.163Z",
+  "offset": 0,
+  "count": 10,
+  "instructions": "Fill metadata.description plus publisher/developer/genres/release/ratings, then merge with npm run merge:pack -- <this file> --provider archiveorg --system snes --dry-run first.",
+  "entries": [
+    {
+      "key": "jurassic park",
+      "suggestedTitle": "Jurassic Park",
+      "variantCount": 10,
+      "regions": [
+        "Europe",
+        "France",
+        "Germany",
+        "Italy",
+        "Japan",
+        "Spain",
+        "USA"
+      ],
+      "tags": [
+        "Beta",
+        "Rev 1"
+      ],
+      "identifiers": [
+        "Jurassic Park (Europe) (Beta).zip",
+        "Jurassic Park (Europe).zip",
+        "Jurassic Park (France).zip",
+        "Jurassic Park (Germany).zip",
+        "Jurassic Park (Italy).zip",
+        "Jurassic Park (Japan).zip",
+        "Jurassic Park (Spain).zip",
+        "Jurassic Park (USA) (Beta).zip",
+        "Jurassic Park (USA) (Rev 1).zip",
+        "Jurassic Park (USA).zip"
+      ],
+      "metadata": {
+        "title": "Jurassic Park",
+        "sort_title": "Jurassic Park",
+        "publisher": "",
+        "developer": "",
+        "genres": [],
+        "description": "",
+        "release_date": "",
+        "players": "",
+        "age_rating": "",
+        "age_rating_label": "",
+        "age_rating_board": "ESRB",
+        "metadata_source": "packaged-metadata",
+        "match_confidence": 1
+      }
+    },
+    {
+      "key": "magical quest starring mickey mouse the",
+      "suggestedTitle": "Magical Quest Starring Mickey Mouse, The",
+      "variantCount": 10,
+      "regions": [
+        "Europe",
+        "Germany",
+        "Italy",
+        "USA"
+      ],
+      "tags": [
+        "Beta 1",
+        "Beta 2",
+        "Beta 3",
+        "Rev 1"
+      ],
+      "identifiers": [
+        "Magical Quest Starring Mickey Mouse, The (Europe) (Rev 1).zip",
+        "Magical Quest Starring Mickey Mouse, The (Europe).zip",
+        "Magical Quest Starring Mickey Mouse, The (Germany) (Rev 1).zip",
+        "Magical Quest Starring Mickey Mouse, The (Germany).zip",
+        "Magical Quest Starring Mickey Mouse, The (Italy).zip",
+        "Magical Quest Starring Mickey Mouse, The (USA) (Beta 1) (1992-05-21).zip",
+        "Magical Quest Starring Mickey Mouse, The (USA) (Beta 2).zip",
+        "Magical Quest Starring Mickey Mouse, The (USA) (Beta 3).zip",
+        "Magical Quest Starring Mickey Mouse, The (USA) (Rev 1).zip",
+        "Magical Quest Starring Mickey Mouse, The (USA).zip"
+      ],
+      "metadata": {
+        "title": "Magical Quest Starring Mickey Mouse, The",
+        "sort_title": "Magical Quest Starring Mickey Mouse, The",
+        "publisher": "",
+        "developer": "",
+        "genres": [],
+        "description": "",
+        "release_date": "",
+        "players": "",
+        "age_rating": "",
+        "age_rating_label": "",
+        "age_rating_board": "ESRB",
+        "metadata_source": "packaged-metadata",
+        "match_confidence": 1
+      }
+    },
+    {
+      "key": "aladdin",
+      "suggestedTitle": "Aladdin",
+      "variantCount": 8,
+      "regions": [
+        "Europe",
+        "France",
+        "Germany",
+        "Japan",
+        "Spain",
+        "USA",
+        "World"
+      ],
+      "tags": [
+        "Beta"
+      ],
+      "identifiers": [
+        "Aladdin (Europe).zip",
+        "Aladdin (France).zip",
+        "Aladdin (Germany).zip",
+        "Aladdin (Japan).zip",
+        "Aladdin (Spain).zip",
+        "Aladdin (USA) (Beta).zip",
+        "Aladdin (USA).zip",
+        "Aladdin (World) (Disney Classic Games).zip"
+      ],
+      "metadata": {
+        "title": "Aladdin",
+        "sort_title": "Aladdin",
+        "publisher": "",
+        "developer": "",
+        "genres": [],
+        "description": "",
+        "release_date": "",
+        "players": "",
+        "age_rating": "",
+        "age_rating_label": "",
+        "age_rating_board": "ESRB",
+        "metadata_source": "packaged-metadata",
+        "match_confidence": 1
+      }
+    },
+    {
+      "key": "secret of mana",
+      "suggestedTitle": "Secret of Mana",
+      "variantCount": 9,
+      "regions": [
+        "Europe",
+        "France",
+        "Germany",
+        "USA",
+        "World"
+      ],
+      "tags": [
+        "Rev 1",
+        "Virtual Console"
+      ],
+      "identifiers": [
+        "Secret of Mana (Europe) (Rev 1).zip",
+        "Secret of Mana (Europe).zip",
+        "Secret of Mana (France) (Rev 1).zip",
+        "Secret of Mana (France).zip",
+        "Secret of Mana (Germany).zip",
+        "Secret of Mana (USA) (Virtual Console).zip",
+        "Secret of Mana (USA).zip",
+        "Secret of Mana (World) (De) (Collection of Mana).zip",
+        "Secret of Mana (World) (Fr) (Rev 1) (Collection of Mana).zip"
+      ],
+      "metadata": {
+        "title": "Secret of Mana",
+        "sort_title": "Secret of Mana",
+        "publisher": "",
+        "developer": "",
+        "genres": [],
+        "description": "",
+        "release_date": "",
+        "players": "",
+        "age_rating": "",
+        "age_rating_label": "",
+        "age_rating_board": "ESRB",
+        "metadata_source": "packaged-metadata",
+        "match_confidence": 1
+      }
+    },
+    {
+      "key": "actraiser",
+      "suggestedTitle": "ActRaiser",
+      "variantCount": 7,
+      "regions": [
+        "Europe",
+        "France",
+        "Germany",
+        "Japan",
+        "USA"
+      ],
+      "tags": [
+        "Virtual Console"
+      ],
+      "identifiers": [
+        "ActRaiser (Europe).zip",
+        "ActRaiser (France).zip",
+        "ActRaiser (Germany).zip",
+        "ActRaiser (Japan) (Virtual Console).zip",
+        "ActRaiser (USA) (Arcade).zip",
+        "ActRaiser (USA).zip",
+        "Actraiser (Japan).zip"
+      ],
+      "metadata": {
+        "title": "ActRaiser",
+        "sort_title": "ActRaiser",
+        "publisher": "",
+        "developer": "",
+        "genres": [],
+        "description": "",
+        "release_date": "",
+        "players": "",
+        "age_rating": "",
+        "age_rating_label": "",
+        "age_rating_board": "ESRB",
+        "metadata_source": "packaged-metadata",
+        "match_confidence": 1
+      }
+    },
+    {
+      "key": "mechwarrior",
+      "suggestedTitle": "MechWarrior",
+      "variantCount": 8,
+      "regions": [
+        "Europe",
+        "France",
+        "Germany",
+        "Italy",
+        "Spain",
+        "USA"
+      ],
+      "tags": [
+        "Beta 1",
+        "Beta 2"
+      ],
+      "identifiers": [
+        "MechWarrior (Europe).zip",
+        "MechWarrior (France).zip",
+        "MechWarrior (Germany).zip",
+        "MechWarrior (Italy).zip",
+        "MechWarrior (Spain).zip",
+        "MechWarrior (USA) (Beta 1).zip",
+        "MechWarrior (USA) (Beta 2).zip",
+        "MechWarrior (USA).zip"
+      ],
+      "metadata": {
+        "title": "MechWarrior",
+        "sort_title": "MechWarrior",
+        "publisher": "",
+        "developer": "",
+        "genres": [],
+        "description": "",
+        "release_date": "",
+        "players": "",
+        "age_rating": "",
+        "age_rating_label": "",
+        "age_rating_board": "ESRB",
+        "metadata_source": "packaged-metadata",
+        "match_confidence": 1
+      }
+    },
+    {
+      "key": "secret of evermore",
+      "suggestedTitle": "Secret of Evermore",
+      "variantCount": 7,
+      "regions": [
+        "Europe",
+        "France",
+        "Germany",
+        "Spain",
+        "USA"
+      ],
+      "tags": [
+        "Beta",
+        "Rev 1",
+        "Rev 2"
+      ],
+      "identifiers": [
+        "Secret of Evermore (Europe).zip",
+        "Secret of Evermore (France).zip",
+        "Secret of Evermore (Germany).zip",
+        "Secret of Evermore (Spain) (Rev 1).zip",
+        "Secret of Evermore (Spain) (Rev 2).zip",
+        "Secret of Evermore (USA).zip",
+        "Secret of Evermore (Unknown) (Beta) (Non-working).zip"
+      ],
+      "metadata": {
+        "title": "Secret of Evermore",
+        "sort_title": "Secret of Evermore",
+        "publisher": "",
+        "developer": "",
+        "genres": [],
+        "description": "",
+        "release_date": "",
+        "players": "",
+        "age_rating": "",
+        "age_rating_label": "",
+        "age_rating_board": "ESRB",
+        "metadata_source": "packaged-metadata",
+        "match_confidence": 1
+      }
+    },
+    {
+      "key": "tecmo super nba basketball",
+      "suggestedTitle": "Tecmo Super NBA Basketball",
+      "variantCount": 7,
+      "regions": [
+        "Australia",
+        "Europe",
+        "Japan",
+        "USA"
+      ],
+      "tags": [
+        "Beta",
+        "Rev 1"
+      ],
+      "identifiers": [
+        "Tecmo Super NBA Basketball (Australia).zip",
+        "Tecmo Super NBA Basketball (Europe).zip",
+        "Tecmo Super NBA Basketball (Japan) (En) (Rev 1).zip",
+        "Tecmo Super NBA Basketball (Japan) (En).zip",
+        "Tecmo Super NBA Basketball (USA) (Beta) (1992-10-26).zip",
+        "Tecmo Super NBA Basketball (USA) (SNS-NA).zip",
+        "Tecmo Super NBA Basketball (USA) (SNS-XM).zip"
+      ],
+      "metadata": {
+        "title": "Tecmo Super NBA Basketball",
+        "sort_title": "Tecmo Super NBA Basketball",
+        "publisher": "",
+        "developer": "",
+        "genres": [],
+        "description": "",
+        "release_date": "",
+        "players": "",
+        "age_rating": "",
+        "age_rating_label": "",
+        "age_rating_board": "ESRB",
+        "metadata_source": "packaged-metadata",
+        "match_confidence": 1
+      }
+    },
+    {
+      "key": "super mahjong taikai",
+      "suggestedTitle": "Super Mahjong Taikai",
+      "variantCount": 6,
+      "regions": [
+        "Japan"
+      ],
+      "tags": [
+        "Rev 1",
+        "Rev 2",
+        "Rev 3",
+        "Rev 4",
+        "Rev 5"
+      ],
+      "identifiers": [
+        "Super Mahjong Taikai (Japan) (Rev 1).zip",
+        "Super Mahjong Taikai (Japan) (Rev 2).zip",
+        "Super Mahjong Taikai (Japan) (Rev 3).zip",
+        "Super Mahjong Taikai (Japan) (Rev 4).zip",
+        "Super Mahjong Taikai (Japan) (Rev 5).zip",
+        "Super Mahjong Taikai (Japan).zip"
+      ],
+      "metadata": {
+        "title": "Super Mahjong Taikai",
+        "sort_title": "Super Mahjong Taikai",
+        "publisher": "",
+        "developer": "",
+        "genres": [],
+        "description": "",
+        "release_date": "",
+        "players": "",
+        "age_rating": "",
+        "age_rating_label": "",
+        "age_rating_board": "ESRB",
+        "metadata_source": "packaged-metadata",
+        "match_confidence": 1
+      }
+    },
+    {
+      "key": "donkey kong country 2 diddy s kong quest",
+      "suggestedTitle": "Donkey Kong Country 2 - Diddy's Kong Quest",
+      "variantCount": 9,
+      "regions": [
+        "Europe",
+        "Germany",
+        "USA",
+        "USA, Europe"
+      ],
+      "tags": [
+        "Rev 1",
+        "Switch Online",
+        "Virtual Console"
+      ],
+      "identifiers": [
+        "Donkey Kong Country 2 - Diddy's Kong Quest (Europe) (En,Fr) (Rev 1) (Virtual Console).zip",
+        "Donkey Kong Country 2 - Diddy's Kong Quest (Europe) (En,Fr) (Rev 1).zip",
+        "Donkey Kong Country 2 - Diddy's Kong Quest (Germany) (En,De) (Rev 1) (Virtual Console).zip",
+        "Donkey Kong Country 2 - Diddy's Kong Quest (Germany) (En,De) (Rev 1).zip",
+        "Donkey Kong Country 2 - Diddy's Kong Quest (Germany) (En,De).zip",
+        "Donkey Kong Country 2 - Diddy's Kong Quest (USA) (En,Fr) (Rev 1) (Virtual Console).zip",
+        "Donkey Kong Country 2 - Diddy's Kong Quest (USA) (En,Fr) (Rev 1).zip",
+        "Donkey Kong Country 2 - Diddy's Kong Quest (USA) (En,Fr).zip",
+        "Donkey Kong Country 2 - Diddy's Kong Quest (USA, Europe) (En,Fr) (Rev 1) (Switch Online).zip"
+      ],
+      "metadata": {
+        "title": "Donkey Kong Country 2 - Diddy's Kong Quest",
+        "sort_title": "Donkey Kong Country 2 - Diddy's Kong Quest",
+        "publisher": "",
+        "developer": "",
+        "genres": [],
+        "description": "",
+        "release_date": "",
+        "players": "",
+        "age_rating": "",
+        "age_rating_label": "",
+        "age_rating_board": "ESRB",
+        "metadata_source": "packaged-metadata",
+        "match_confidence": 1
+      }
+    }
+  ]
+}

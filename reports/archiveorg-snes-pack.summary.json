@@ -1,0 +1,11 @@
+{
+  "provider": "archiveorg",
+  "system": "snes",
+  "catalogPath": "C:\\Projects\\SKALD\\assets\\roms\\roms-snes.json",
+  "packPath": "C:\\Projects\\SKALD\\assets\\metadata\\archiveorg\\snes.json",
+  "catalogEntries": 4123,
+  "packEntries": 51,
+  "matchedCatalogEntries": 52,
+  "missingCatalogEntries": 4071,
+  "generatedAt": "2026-04-06T22:07:56.435Z"
+}

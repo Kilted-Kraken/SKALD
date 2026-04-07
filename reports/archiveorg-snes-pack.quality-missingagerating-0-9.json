@@ -1,0 +1,154 @@
+{
+  "provider": "archiveorg",
+  "system": "snes",
+  "source": "C:\\Projects\\SKALD\\reports\\archiveorg-snes-pack.quality.json",
+  "generatedAt": "2026-04-06T21:36:44.402Z",
+  "bucket": "missingAgeRating",
+  "offset": 0,
+  "count": 6,
+  "instructions": "Edit the metadata fields in this JSON file, validate it, then merge with npm run merge:pack.",
+  "entries": [
+    {
+      "identifier": "Super Metroid (USA, Europe) (En,Ja) (Virtual Console, Classic Mini, Switch Online).zip",
+      "identifiers": [
+        "Super Metroid (USA, Europe) (En,Ja) (Virtual Console, Classic Mini, Switch Online).zip"
+      ],
+      "metadata": {
+        "title": "Super Metroid",
+        "sort_title": "Super Metroid",
+        "publisher": "Nintendo",
+        "developer": "Nintendo R&D1",
+        "genres": [
+          "Action",
+          "Adventure"
+        ],
+        "description": "Samus Aran returns to planet Zebes to rescue a stolen Metroid hatchling in a sprawling action-adventure built around exploration, upgrades, and atmospheric sci-fi world design.",
+        "release_date": "1994-03-19",
+        "players": "1",
+        "age_rating": "E",
+        "age_rating_label": "Everyone",
+        "age_rating_board": "ESRB",
+        "match_confidence": 1,
+        "metadata_source": "packaged-metadata"
+      }
+    },
+    {
+      "identifier": "Super Metroid (Europe) (En,Fr,De).zip",
+      "identifiers": [
+        "Super Metroid (Europe) (En,Fr,De).zip"
+      ],
+      "metadata": {
+        "title": "Super Metroid",
+        "sort_title": "Super Metroid",
+        "publisher": "Nintendo",
+        "developer": "Nintendo R&D1",
+        "genres": [
+          "Action",
+          "Adventure"
+        ],
+        "description": "Samus Aran returns to planet Zebes to rescue a stolen Metroid hatchling in a sprawling action-adventure built around exploration, upgrades, and atmospheric sci-fi world design.",
+        "release_date": "1994-03-19",
+        "players": "1",
+        "age_rating": "E",
+        "age_rating_label": "Everyone",
+        "age_rating_board": "ESRB",
+        "match_confidence": 1,
+        "metadata_source": "packaged-metadata"
+      }
+    },
+    {
+      "identifier": "Super Metroid (Japan) (En,Ja) (Virtual Console, Switch Online).zip",
+      "identifiers": [
+        "Super Metroid (Japan) (En,Ja) (Virtual Console, Switch Online).zip"
+      ],
+      "metadata": {
+        "title": "Super Metroid",
+        "sort_title": "Super Metroid",
+        "publisher": "Nintendo",
+        "developer": "Nintendo R&D1",
+        "genres": [
+          "Action",
+          "Adventure"
+        ],
+        "description": "Samus Aran returns to planet Zebes to rescue a stolen Metroid hatchling in a sprawling action-adventure built around exploration, upgrades, and atmospheric sci-fi world design.",
+        "release_date": "1994-03-19",
+        "players": "1",
+        "age_rating": "E",
+        "age_rating_label": "Everyone",
+        "age_rating_board": "ESRB",
+        "match_confidence": 1,
+        "metadata_source": "packaged-metadata"
+      }
+    },
+    {
+      "identifier": "Super Metroid (Japan, USA) (En,Ja).zip",
+      "identifiers": [
+        "Super Metroid (Japan, USA) (En,Ja).zip"
+      ],
+      "metadata": {
+        "title": "Super Metroid",
+        "sort_title": "Super Metroid",
+        "publisher": "Nintendo",
+        "developer": "Nintendo R&D1",
+        "genres": [
+          "Action",
+          "Adventure"
+        ],
+        "description": "Samus Aran returns to planet Zebes to rescue a stolen Metroid hatchling in a sprawling action-adventure built around exploration, upgrades, and atmospheric sci-fi world design.",
+        "release_date": "1994-03-19",
+        "players": "1",
+        "age_rating": "E",
+        "age_rating_label": "Everyone",
+        "age_rating_board": "ESRB",
+        "match_confidence": 1,
+        "metadata_source": "packaged-metadata"
+      }
+    },
+    {
+      "identifier": "Chrono Trigger (USA).zip",
+      "identifiers": [
+        "Chrono Trigger (USA).zip"
+      ],
+      "metadata": {
+        "title": "Chrono Trigger",
+        "sort_title": "Chrono Trigger",
+        "publisher": "Square",
+        "developer": "Square",
+        "genres": [
+          "Role-Playing"
+        ],
+        "description": "Time-traveling role-playing adventure that follows Crono and his allies across multiple eras as they try to prevent a planetary catastrophe.",
+        "release_date": "1995-08-11",
+        "players": "1",
+        "age_rating": "E",
+        "age_rating_label": "Everyone",
+        "age_rating_board": "ESRB",
+        "match_confidence": 1,
+        "metadata_source": "packaged-metadata"
+      }
+    },
+    {
+      "identifier": "Chrono Trigger (Japan).zip",
+      "identifiers": [
+        "Chrono Trigger (Japan).zip"
+      ],
+      "metadata": {
+        "title": "Chrono Trigger",
+        "sort_title": "Chrono Trigger",
+        "publisher": "Square",
+        "developer": "Square",
+        "genres": [
+          "Role-Playing"
+        ],
+        "description": "Time-traveling role-playing adventure that follows Crono and his allies across multiple eras as they try to prevent a planetary catastrophe.",
+        "release_date": "1995-03-11",
+        "players": "1",
+        "age_rating": "E",
+        "age_rating_label": "Everyone",
+        "age_rating_board": "ESRB",
+        "match_confidence": 1,
+        "metadata_source": "packaged-metadata"
+      }
+    }
+  ]
+}

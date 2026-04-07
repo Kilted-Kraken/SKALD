@@ -1,0 +1,1024 @@
+{
+  "system": "snes",
+  "version": 1,
+  "source": "packaged-metadata",
+  "generatedAt": "2026-04-06T22:07:55.537Z",
+  "games": {
+    "3 Ninjas Kick Back (USA).zip": {
+      "title": "3 Ninjas Kick Back",
+      "sort_title": "3 Ninjas Kick Back",
+      "publisher": "Sony Imagesoft",
+      "developer": "Malibu Interactive",
+      "genres": [
+        "Action",
+        "Platform"
+      ],
+      "description": "Side-scrolling action game based on the film, following the ninja brothers as they fight through enemy-filled stages to rescue their grandfather.",
+      "release_date": "1994-01-01",
+      "players": "1",
+      "age_rating": "E",
+      "age_rating_label": "Everyone",
+      "age_rating_board": "ESRB",
+      "match_confidence": 1,
+      "metadata_source": "packaged-metadata"
+    },
+    "Super Metroid (USA, Europe) (En,Ja) (Virtual Console, Classic Mini, Switch Online).zip": {
+      "title": "Super Metroid",
+      "sort_title": "Super Metroid",
+      "publisher": "Nintendo",
+      "developer": "Nintendo R&D1",
+      "genres": [
+        "Action",
+        "Adventure"
+      ],
+      "description": "Samus Aran returns to planet Zebes to rescue a stolen Metroid hatchling in a sprawling action-adventure built around exploration, upgrades, and atmospheric sci-fi world design.",
+      "release_date": "1994-03-19",
+      "players": "1",
+      "match_confidence": 1,
+      "metadata_source": "packaged-metadata",
+      "age_rating": "E",
+      "age_rating_label": "Everyone",
+      "age_rating_board": "ESRB",
+      "rating": "",
+      "source_id": ""
+    },
+    "Super Metroid (Europe) (En,Fr,De).zip": {
+      "title": "Super Metroid",
+      "sort_title": "Super Metroid",
+      "publisher": "Nintendo",
+      "developer": "Nintendo R&D1",
+      "genres": [
+        "Action",
+        "Adventure"
+      ],
+      "description": "Samus Aran returns to planet Zebes to rescue a stolen Metroid hatchling in a sprawling action-adventure built around exploration, upgrades, and atmospheric sci-fi world design.",
+      "release_date": "1994-03-19",
+      "players": "1",
+      "match_confidence": 1,
+      "metadata_source": "packaged-metadata",
+      "age_rating": "E",
+      "age_rating_label": "Everyone",
+      "age_rating_board": "ESRB",
+      "rating": "",
+      "source_id": ""
+    },
+    "Super Metroid (Japan) (En,Ja) (Virtual Console, Switch Online).zip": {
+      "title": "Super Metroid",
+      "sort_title": "Super Metroid",
+      "publisher": "Nintendo",
+      "developer": "Nintendo R&D1",
+      "genres": [
+        "Action",
+        "Adventure"
+      ],
+      "description": "Samus Aran returns to planet Zebes to rescue a stolen Metroid hatchling in a sprawling action-adventure built around exploration, upgrades, and atmospheric sci-fi world design.",
+      "release_date": "1994-03-19",
+      "players": "1",
+      "match_confidence": 1,
+      "metadata_source": "packaged-metadata",
+      "age_rating": "E",
+      "age_rating_label": "Everyone",
+      "age_rating_board": "ESRB",
+      "rating": "",
+      "source_id": ""
+    },
+    "Super Metroid (Japan, USA) (En,Ja).zip": {
+      "title": "Super Metroid",
+      "sort_title": "Super Metroid",
+      "publisher": "Nintendo",
+      "developer": "Nintendo R&D1",
+      "genres": [
+        "Action",
+        "Adventure"
+      ],
+      "description": "Samus Aran returns to planet Zebes to rescue a stolen Metroid hatchling in a sprawling action-adventure built around exploration, upgrades, and atmospheric sci-fi world design.",
+      "release_date": "1994-03-19",
+      "players": "1",
+      "match_confidence": 1,
+      "metadata_source": "packaged-metadata",
+      "age_rating": "E",
+      "age_rating_label": "Everyone",
+      "age_rating_board": "ESRB",
+      "rating": "",
+      "source_id": ""
+    },
+    "Chrono Trigger (USA).zip": {
+      "title": "Chrono Trigger",
+      "sort_title": "Chrono Trigger",
+      "publisher": "Square",
+      "developer": "Square",
+      "genres": [
+        "Role-Playing"
+      ],
+      "description": "Time-traveling role-playing adventure that follows Crono and his allies across multiple eras as they try to prevent a planetary catastrophe.",
+      "release_date": "1995-08-11",
+      "players": "1",
+      "match_confidence": 1,
+      "metadata_source": "packaged-metadata",
+      "age_rating": "E",
+      "age_rating_label": "Everyone",
+      "age_rating_board": "ESRB",
+      "rating": "",
+      "source_id": ""
+    },
+    "Chrono Trigger (Japan).zip": {
+      "title": "Chrono Trigger",
+      "sort_title": "Chrono Trigger",
+      "publisher": "Square",
+      "developer": "Square",
+      "genres": [
+        "Role-Playing"
+      ],
+      "description": "Time-traveling role-playing adventure that follows Crono and his allies across multiple eras as they try to prevent a planetary catastrophe.",
+      "release_date": "1995-03-11",
+      "players": "1",
+      "match_confidence": 1,
+      "metadata_source": "packaged-metadata",
+      "age_rating": "E",
+      "age_rating_label": "Everyone",
+      "age_rating_board": "ESRB",
+      "rating": "",
+      "source_id": ""
+    },
+    "Jurassic Park (Europe) (Beta).zip": {
+      "title": "Jurassic Park",
+      "sort_title": "Jurassic Park",
+      "publisher": "Ocean Software",
+      "developer": "Ocean Software",
+      "genres": [
+        "Action",
+        "Adventure"
+      ],
+      "description": "Top-down action-adventure game based on the film, sending Dr. Alan Grant across Isla Nublar to restore park systems, rescue survivors, and escape dinosaur-filled areas.",
+      "release_date": "1993",
+      "players": "1",
+      "age_rating": "E",
+      "age_rating_label": "Everyone",
+      "age_rating_board": "ESRB",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "Jurassic Park (Europe).zip": {
+      "title": "Jurassic Park",
+      "sort_title": "Jurassic Park",
+      "publisher": "Ocean Software",
+      "developer": "Ocean Software",
+      "genres": [
+        "Action",
+        "Adventure"
+      ],
+      "description": "Top-down action-adventure game based on the film, sending Dr. Alan Grant across Isla Nublar to restore park systems, rescue survivors, and escape dinosaur-filled areas.",
+      "release_date": "1993",
+      "players": "1",
+      "age_rating": "E",
+      "age_rating_label": "Everyone",
+      "age_rating_board": "ESRB",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "Jurassic Park (France).zip": {
+      "title": "Jurassic Park",
+      "sort_title": "Jurassic Park",
+      "publisher": "Ocean Software",
+      "developer": "Ocean Software",
+      "genres": [
+        "Action",
+        "Adventure"
+      ],
+      "description": "Top-down action-adventure game based on the film, sending Dr. Alan Grant across Isla Nublar to restore park systems, rescue survivors, and escape dinosaur-filled areas.",
+      "release_date": "1993",
+      "players": "1",
+      "age_rating": "E",
+      "age_rating_label": "Everyone",
+      "age_rating_board": "ESRB",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "Jurassic Park (Germany).zip": {
+      "title": "Jurassic Park",
+      "sort_title": "Jurassic Park",
+      "publisher": "Ocean Software",
+      "developer": "Ocean Software",
+      "genres": [
+        "Action",
+        "Adventure"
+      ],
+      "description": "Top-down action-adventure game based on the film, sending Dr. Alan Grant across Isla Nublar to restore park systems, rescue survivors, and escape dinosaur-filled areas.",
+      "release_date": "1993",
+      "players": "1",
+      "age_rating": "E",
+      "age_rating_label": "Everyone",
+      "age_rating_board": "ESRB",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "Jurassic Park (Italy).zip": {
+      "title": "Jurassic Park",
+      "sort_title": "Jurassic Park",
+      "publisher": "Ocean Software",
+      "developer": "Ocean Software",
+      "genres": [
+        "Action",
+        "Adventure"
+      ],
+      "description": "Top-down action-adventure game based on the film, sending Dr. Alan Grant across Isla Nublar to restore park systems, rescue survivors, and escape dinosaur-filled areas.",
+      "release_date": "1993",
+      "players": "1",
+      "age_rating": "E",
+      "age_rating_label": "Everyone",
+      "age_rating_board": "ESRB",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "Jurassic Park (Japan).zip": {
+      "title": "Jurassic Park",
+      "sort_title": "Jurassic Park",
+      "publisher": "Ocean Software",
+      "developer": "Ocean Software",
+      "genres": [
+        "Action",
+        "Adventure"
+      ],
+      "description": "Top-down action-adventure game based on the film, sending Dr. Alan Grant across Isla Nublar to restore park systems, rescue survivors, and escape dinosaur-filled areas.",
+      "release_date": "1993",
+      "players": "1",
+      "age_rating": "E",
+      "age_rating_label": "Everyone",
+      "age_rating_board": "ESRB",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "Jurassic Park (Spain).zip": {
+      "title": "Jurassic Park",
+      "sort_title": "Jurassic Park",
+      "publisher": "Ocean Software",
+      "developer": "Ocean Software",
+      "genres": [
+        "Action",
+        "Adventure"
+      ],
+      "description": "Top-down action-adventure game based on the film, sending Dr. Alan Grant across Isla Nublar to restore park systems, rescue survivors, and escape dinosaur-filled areas.",
+      "release_date": "1993",
+      "players": "1",
+      "age_rating": "E",
+      "age_rating_label": "Everyone",
+      "age_rating_board": "ESRB",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "Jurassic Park (USA) (Beta).zip": {
+      "title": "Jurassic Park",
+      "sort_title": "Jurassic Park",
+      "publisher": "Ocean Software",
+      "developer": "Ocean Software",
+      "genres": [
+        "Action",
+        "Adventure"
+      ],
+      "description": "Top-down action-adventure game based on the film, sending Dr. Alan Grant across Isla Nublar to restore park systems, rescue survivors, and escape dinosaur-filled areas.",
+      "release_date": "1993",
+      "players": "1",
+      "age_rating": "E",
+      "age_rating_label": "Everyone",
+      "age_rating_board": "ESRB",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "Jurassic Park (USA) (Rev 1).zip": {
+      "title": "Jurassic Park",
+      "sort_title": "Jurassic Park",
+      "publisher": "Ocean Software",
+      "developer": "Ocean Software",
+      "genres": [
+        "Action",
+        "Adventure"
+      ],
+      "description": "Top-down action-adventure game based on the film, sending Dr. Alan Grant across Isla Nublar to restore park systems, rescue survivors, and escape dinosaur-filled areas.",
+      "release_date": "1993",
+      "players": "1",
+      "age_rating": "E",
+      "age_rating_label": "Everyone",
+      "age_rating_board": "ESRB",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "Jurassic Park (USA).zip": {
+      "title": "Jurassic Park",
+      "sort_title": "Jurassic Park",
+      "publisher": "Ocean Software",
+      "developer": "Ocean Software",
+      "genres": [
+        "Action",
+        "Adventure"
+      ],
+      "description": "Top-down action-adventure game based on the film, sending Dr. Alan Grant across Isla Nublar to restore park systems, rescue survivors, and escape dinosaur-filled areas.",
+      "release_date": "1993",
+      "players": "1",
+      "age_rating": "E",
+      "age_rating_label": "Everyone",
+      "age_rating_board": "ESRB",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "Magical Quest Starring Mickey Mouse, The (Europe) (Rev 1).zip": {
+      "title": "The Magical Quest Starring Mickey Mouse",
+      "sort_title": "Magical Quest Starring Mickey Mouse, The",
+      "publisher": "Capcom",
+      "developer": "Capcom",
+      "genres": [
+        "Action",
+        "Platform"
+      ],
+      "description": "Side-scrolling platform game starring Mickey Mouse as he searches for Pluto after Emperor Pete kidnaps him, using magical costumes with different abilities to move through colorful stages.",
+      "release_date": "1992",
+      "players": "1-2",
+      "age_rating": "",
+      "age_rating_label": "",
+      "age_rating_board": "",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "Magical Quest Starring Mickey Mouse, The (Europe).zip": {
+      "title": "The Magical Quest Starring Mickey Mouse",
+      "sort_title": "Magical Quest Starring Mickey Mouse, The",
+      "publisher": "Capcom",
+      "developer": "Capcom",
+      "genres": [
+        "Action",
+        "Platform"
+      ],
+      "description": "Side-scrolling platform game starring Mickey Mouse as he searches for Pluto after Emperor Pete kidnaps him, using magical costumes with different abilities to move through colorful stages.",
+      "release_date": "1992",
+      "players": "1-2",
+      "age_rating": "",
+      "age_rating_label": "",
+      "age_rating_board": "",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "Magical Quest Starring Mickey Mouse, The (Germany) (Rev 1).zip": {
+      "title": "The Magical Quest Starring Mickey Mouse",
+      "sort_title": "Magical Quest Starring Mickey Mouse, The",
+      "publisher": "Capcom",
+      "developer": "Capcom",
+      "genres": [
+        "Action",
+        "Platform"
+      ],
+      "description": "Side-scrolling platform game starring Mickey Mouse as he searches for Pluto after Emperor Pete kidnaps him, using magical costumes with different abilities to move through colorful stages.",
+      "release_date": "1992",
+      "players": "1-2",
+      "age_rating": "",
+      "age_rating_label": "",
+      "age_rating_board": "",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "Magical Quest Starring Mickey Mouse, The (Germany).zip": {
+      "title": "The Magical Quest Starring Mickey Mouse",
+      "sort_title": "Magical Quest Starring Mickey Mouse, The",
+      "publisher": "Capcom",
+      "developer": "Capcom",
+      "genres": [
+        "Action",
+        "Platform"
+      ],
+      "description": "Side-scrolling platform game starring Mickey Mouse as he searches for Pluto after Emperor Pete kidnaps him, using magical costumes with different abilities to move through colorful stages.",
+      "release_date": "1992",
+      "players": "1-2",
+      "age_rating": "",
+      "age_rating_label": "",
+      "age_rating_board": "",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "Magical Quest Starring Mickey Mouse, The (Italy).zip": {
+      "title": "The Magical Quest Starring Mickey Mouse",
+      "sort_title": "Magical Quest Starring Mickey Mouse, The",
+      "publisher": "Capcom",
+      "developer": "Capcom",
+      "genres": [
+        "Action",
+        "Platform"
+      ],
+      "description": "Side-scrolling platform game starring Mickey Mouse as he searches for Pluto after Emperor Pete kidnaps him, using magical costumes with different abilities to move through colorful stages.",
+      "release_date": "1992",
+      "players": "1-2",
+      "age_rating": "",
+      "age_rating_label": "",
+      "age_rating_board": "",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "Magical Quest Starring Mickey Mouse, The (USA) (Beta 1) (1992-05-21).zip": {
+      "title": "The Magical Quest Starring Mickey Mouse",
+      "sort_title": "Magical Quest Starring Mickey Mouse, The",
+      "publisher": "Capcom",
+      "developer": "Capcom",
+      "genres": [
+        "Action",
+        "Platform"
+      ],
+      "description": "Side-scrolling platform game starring Mickey Mouse as he searches for Pluto after Emperor Pete kidnaps him, using magical costumes with different abilities to move through colorful stages.",
+      "release_date": "1992",
+      "players": "1-2",
+      "age_rating": "",
+      "age_rating_label": "",
+      "age_rating_board": "",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "Magical Quest Starring Mickey Mouse, The (USA) (Beta 2).zip": {
+      "title": "The Magical Quest Starring Mickey Mouse",
+      "sort_title": "Magical Quest Starring Mickey Mouse, The",
+      "publisher": "Capcom",
+      "developer": "Capcom",
+      "genres": [
+        "Action",
+        "Platform"
+      ],
+      "description": "Side-scrolling platform game starring Mickey Mouse as he searches for Pluto after Emperor Pete kidnaps him, using magical costumes with different abilities to move through colorful stages.",
+      "release_date": "1992",
+      "players": "1-2",
+      "age_rating": "",
+      "age_rating_label": "",
+      "age_rating_board": "",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "Magical Quest Starring Mickey Mouse, The (USA) (Beta 3).zip": {
+      "title": "The Magical Quest Starring Mickey Mouse",
+      "sort_title": "Magical Quest Starring Mickey Mouse, The",
+      "publisher": "Capcom",
+      "developer": "Capcom",
+      "genres": [
+        "Action",
+        "Platform"
+      ],
+      "description": "Side-scrolling platform game starring Mickey Mouse as he searches for Pluto after Emperor Pete kidnaps him, using magical costumes with different abilities to move through colorful stages.",
+      "release_date": "1992",
+      "players": "1-2",
+      "age_rating": "",
+      "age_rating_label": "",
+      "age_rating_board": "",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "Magical Quest Starring Mickey Mouse, The (USA) (Rev 1).zip": {
+      "title": "The Magical Quest Starring Mickey Mouse",
+      "sort_title": "Magical Quest Starring Mickey Mouse, The",
+      "publisher": "Capcom",
+      "developer": "Capcom",
+      "genres": [
+        "Action",
+        "Platform"
+      ],
+      "description": "Side-scrolling platform game starring Mickey Mouse as he searches for Pluto after Emperor Pete kidnaps him, using magical costumes with different abilities to move through colorful stages.",
+      "release_date": "1992",
+      "players": "1-2",
+      "age_rating": "",
+      "age_rating_label": "",
+      "age_rating_board": "",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "Magical Quest Starring Mickey Mouse, The (USA).zip": {
+      "title": "The Magical Quest Starring Mickey Mouse",
+      "sort_title": "Magical Quest Starring Mickey Mouse, The",
+      "publisher": "Capcom",
+      "developer": "Capcom",
+      "genres": [
+        "Action",
+        "Platform"
+      ],
+      "description": "Side-scrolling platform game starring Mickey Mouse as he searches for Pluto after Emperor Pete kidnaps him, using magical costumes with different abilities to move through colorful stages.",
+      "release_date": "1992",
+      "players": "1-2",
+      "age_rating": "",
+      "age_rating_label": "",
+      "age_rating_board": "",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "Aladdin (Europe).zip": {
+      "title": "Disney's Aladdin",
+      "sort_title": "Disney's Aladdin",
+      "publisher": "Capcom",
+      "developer": "Capcom",
+      "genres": [
+        "Action",
+        "Platform"
+      ],
+      "description": "Side-scrolling platform game based on Disney's animated film, following Aladdin through Agrabah, the Cave of Wonders, and other movie-inspired stages with jumping, apple-throwing, and magic-carpet sequences.",
+      "release_date": "1993",
+      "players": "1",
+      "age_rating": "",
+      "age_rating_label": "",
+      "age_rating_board": "",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "Aladdin (France).zip": {
+      "title": "Disney's Aladdin",
+      "sort_title": "Disney's Aladdin",
+      "publisher": "Capcom",
+      "developer": "Capcom",
+      "genres": [
+        "Action",
+        "Platform"
+      ],
+      "description": "Side-scrolling platform game based on Disney's animated film, following Aladdin through Agrabah, the Cave of Wonders, and other movie-inspired stages with jumping, apple-throwing, and magic-carpet sequences.",
+      "release_date": "1993",
+      "players": "1",
+      "age_rating": "",
+      "age_rating_label": "",
+      "age_rating_board": "",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "Aladdin (Germany).zip": {
+      "title": "Disney's Aladdin",
+      "sort_title": "Disney's Aladdin",
+      "publisher": "Capcom",
+      "developer": "Capcom",
+      "genres": [
+        "Action",
+        "Platform"
+      ],
+      "description": "Side-scrolling platform game based on Disney's animated film, following Aladdin through Agrabah, the Cave of Wonders, and other movie-inspired stages with jumping, apple-throwing, and magic-carpet sequences.",
+      "release_date": "1993",
+      "players": "1",
+      "age_rating": "",
+      "age_rating_label": "",
+      "age_rating_board": "",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "Aladdin (Japan).zip": {
+      "title": "Disney's Aladdin",
+      "sort_title": "Disney's Aladdin",
+      "publisher": "Capcom",
+      "developer": "Capcom",
+      "genres": [
+        "Action",
+        "Platform"
+      ],
+      "description": "Side-scrolling platform game based on Disney's animated film, following Aladdin through Agrabah, the Cave of Wonders, and other movie-inspired stages with jumping, apple-throwing, and magic-carpet sequences.",
+      "release_date": "1993",
+      "players": "1",
+      "age_rating": "",
+      "age_rating_label": "",
+      "age_rating_board": "",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "Aladdin (Spain).zip": {
+      "title": "Disney's Aladdin",
+      "sort_title": "Disney's Aladdin",
+      "publisher": "Capcom",
+      "developer": "Capcom",
+      "genres": [
+        "Action",
+        "Platform"
+      ],
+      "description": "Side-scrolling platform game based on Disney's animated film, following Aladdin through Agrabah, the Cave of Wonders, and other movie-inspired stages with jumping, apple-throwing, and magic-carpet sequences.",
+      "release_date": "1993",
+      "players": "1",
+      "age_rating": "",
+      "age_rating_label": "",
+      "age_rating_board": "",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "Aladdin (USA) (Beta).zip": {
+      "title": "Disney's Aladdin",
+      "sort_title": "Disney's Aladdin",
+      "publisher": "Capcom",
+      "developer": "Capcom",
+      "genres": [
+        "Action",
+        "Platform"
+      ],
+      "description": "Side-scrolling platform game based on Disney's animated film, following Aladdin through Agrabah, the Cave of Wonders, and other movie-inspired stages with jumping, apple-throwing, and magic-carpet sequences.",
+      "release_date": "1993",
+      "players": "1",
+      "age_rating": "",
+      "age_rating_label": "",
+      "age_rating_board": "",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "Aladdin (USA).zip": {
+      "title": "Disney's Aladdin",
+      "sort_title": "Disney's Aladdin",
+      "publisher": "Capcom",
+      "developer": "Capcom",
+      "genres": [
+        "Action",
+        "Platform"
+      ],
+      "description": "Side-scrolling platform game based on Disney's animated film, following Aladdin through Agrabah, the Cave of Wonders, and other movie-inspired stages with jumping, apple-throwing, and magic-carpet sequences.",
+      "release_date": "1993",
+      "players": "1",
+      "age_rating": "",
+      "age_rating_label": "",
+      "age_rating_board": "",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "Aladdin (World) (Disney Classic Games).zip": {
+      "title": "Disney's Aladdin",
+      "sort_title": "Disney's Aladdin",
+      "publisher": "Capcom",
+      "developer": "Capcom",
+      "genres": [
+        "Action",
+        "Platform"
+      ],
+      "description": "Side-scrolling platform game based on Disney's animated film, following Aladdin through Agrabah, the Cave of Wonders, and other movie-inspired stages with jumping, apple-throwing, and magic-carpet sequences.",
+      "release_date": "1993",
+      "players": "1",
+      "age_rating": "",
+      "age_rating_label": "",
+      "age_rating_board": "",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "Secret of Mana (Europe) (Rev 1).zip": {
+      "title": "Secret of Mana",
+      "sort_title": "Secret of Mana",
+      "publisher": "Square",
+      "developer": "Square",
+      "genres": [
+        "Action",
+        "Role-Playing"
+      ],
+      "description": "Action role-playing adventure in which a young hero and his companions set out to restore the power of Mana, fighting monsters in real time with weapons, magic, and cooperative multiplayer.",
+      "release_date": "1993-08-06",
+      "players": "1-3",
+      "age_rating": "",
+      "age_rating_label": "",
+      "age_rating_board": "",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "Secret of Mana (Europe).zip": {
+      "title": "Secret of Mana",
+      "sort_title": "Secret of Mana",
+      "publisher": "Square",
+      "developer": "Square",
+      "genres": [
+        "Action",
+        "Role-Playing"
+      ],
+      "description": "Action role-playing adventure in which a young hero and his companions set out to restore the power of Mana, fighting monsters in real time with weapons, magic, and cooperative multiplayer.",
+      "release_date": "1993-08-06",
+      "players": "1-3",
+      "age_rating": "",
+      "age_rating_label": "",
+      "age_rating_board": "",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "Secret of Mana (France) (Rev 1).zip": {
+      "title": "Secret of Mana",
+      "sort_title": "Secret of Mana",
+      "publisher": "Square",
+      "developer": "Square",
+      "genres": [
+        "Action",
+        "Role-Playing"
+      ],
+      "description": "Action role-playing adventure in which a young hero and his companions set out to restore the power of Mana, fighting monsters in real time with weapons, magic, and cooperative multiplayer.",
+      "release_date": "1993-08-06",
+      "players": "1-3",
+      "age_rating": "",
+      "age_rating_label": "",
+      "age_rating_board": "",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "Secret of Mana (France).zip": {
+      "title": "Secret of Mana",
+      "sort_title": "Secret of Mana",
+      "publisher": "Square",
+      "developer": "Square",
+      "genres": [
+        "Action",
+        "Role-Playing"
+      ],
+      "description": "Action role-playing adventure in which a young hero and his companions set out to restore the power of Mana, fighting monsters in real time with weapons, magic, and cooperative multiplayer.",
+      "release_date": "1993-08-06",
+      "players": "1-3",
+      "age_rating": "",
+      "age_rating_label": "",
+      "age_rating_board": "",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "Secret of Mana (Germany).zip": {
+      "title": "Secret of Mana",
+      "sort_title": "Secret of Mana",
+      "publisher": "Square",
+      "developer": "Square",
+      "genres": [
+        "Action",
+        "Role-Playing"
+      ],
+      "description": "Action role-playing adventure in which a young hero and his companions set out to restore the power of Mana, fighting monsters in real time with weapons, magic, and cooperative multiplayer.",
+      "release_date": "1993-08-06",
+      "players": "1-3",
+      "age_rating": "",
+      "age_rating_label": "",
+      "age_rating_board": "",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "Secret of Mana (USA) (Virtual Console).zip": {
+      "title": "Secret of Mana",
+      "sort_title": "Secret of Mana",
+      "publisher": "Square",
+      "developer": "Square",
+      "genres": [
+        "Action",
+        "Role-Playing"
+      ],
+      "description": "Action role-playing adventure in which a young hero and his companions set out to restore the power of Mana, fighting monsters in real time with weapons, magic, and cooperative multiplayer.",
+      "release_date": "1993-08-06",
+      "players": "1-3",
+      "age_rating": "",
+      "age_rating_label": "",
+      "age_rating_board": "",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "Secret of Mana (USA).zip": {
+      "title": "Secret of Mana",
+      "sort_title": "Secret of Mana",
+      "publisher": "Square",
+      "developer": "Square",
+      "genres": [
+        "Action",
+        "Role-Playing"
+      ],
+      "description": "Action role-playing adventure in which a young hero and his companions set out to restore the power of Mana, fighting monsters in real time with weapons, magic, and cooperative multiplayer.",
+      "release_date": "1993-08-06",
+      "players": "1-3",
+      "age_rating": "",
+      "age_rating_label": "",
+      "age_rating_board": "",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "Secret of Mana (World) (De) (Collection of Mana).zip": {
+      "title": "Secret of Mana",
+      "sort_title": "Secret of Mana",
+      "publisher": "Square",
+      "developer": "Square",
+      "genres": [
+        "Action",
+        "Role-Playing"
+      ],
+      "description": "Action role-playing adventure in which a young hero and his companions set out to restore the power of Mana, fighting monsters in real time with weapons, magic, and cooperative multiplayer.",
+      "release_date": "1993-08-06",
+      "players": "1-3",
+      "age_rating": "",
+      "age_rating_label": "",
+      "age_rating_board": "",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "Secret of Mana (World) (Fr) (Rev 1) (Collection of Mana).zip": {
+      "title": "Secret of Mana",
+      "sort_title": "Secret of Mana",
+      "publisher": "Square",
+      "developer": "Square",
+      "genres": [
+        "Action",
+        "Role-Playing"
+      ],
+      "description": "Action role-playing adventure in which a young hero and his companions set out to restore the power of Mana, fighting monsters in real time with weapons, magic, and cooperative multiplayer.",
+      "release_date": "1993-08-06",
+      "players": "1-3",
+      "age_rating": "",
+      "age_rating_label": "",
+      "age_rating_board": "",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "ActRaiser (Europe).zip": {
+      "title": "ActRaiser",
+      "sort_title": "ActRaiser",
+      "publisher": "Enix",
+      "developer": "Quintet",
+      "genres": [
+        "Action",
+        "Strategy"
+      ],
+      "description": "Hybrid action and simulation game where the Master fights through side-scrolling monster lairs, then guides townspeople from above to rebuild civilization and push back evil.",
+      "release_date": "1990-12-16",
+      "players": "1",
+      "age_rating": "",
+      "age_rating_label": "",
+      "age_rating_board": "",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "ActRaiser (France).zip": {
+      "title": "ActRaiser",
+      "sort_title": "ActRaiser",
+      "publisher": "Enix",
+      "developer": "Quintet",
+      "genres": [
+        "Action",
+        "Strategy"
+      ],
+      "description": "Hybrid action and simulation game where the Master fights through side-scrolling monster lairs, then guides townspeople from above to rebuild civilization and push back evil.",
+      "release_date": "1990-12-16",
+      "players": "1",
+      "age_rating": "",
+      "age_rating_label": "",
+      "age_rating_board": "",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "ActRaiser (Germany).zip": {
+      "title": "ActRaiser",
+      "sort_title": "ActRaiser",
+      "publisher": "Enix",
+      "developer": "Quintet",
+      "genres": [
+        "Action",
+        "Strategy"
+      ],
+      "description": "Hybrid action and simulation game where the Master fights through side-scrolling monster lairs, then guides townspeople from above to rebuild civilization and push back evil.",
+      "release_date": "1990-12-16",
+      "players": "1",
+      "age_rating": "",
+      "age_rating_label": "",
+      "age_rating_board": "",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "ActRaiser (Japan) (Virtual Console).zip": {
+      "title": "ActRaiser",
+      "sort_title": "ActRaiser",
+      "publisher": "Enix",
+      "developer": "Quintet",
+      "genres": [
+        "Action",
+        "Strategy"
+      ],
+      "description": "Hybrid action and simulation game where the Master fights through side-scrolling monster lairs, then guides townspeople from above to rebuild civilization and push back evil.",
+      "release_date": "1990-12-16",
+      "players": "1",
+      "age_rating": "",
+      "age_rating_label": "",
+      "age_rating_board": "",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "ActRaiser (USA) (Arcade).zip": {
+      "title": "ActRaiser",
+      "sort_title": "ActRaiser",
+      "publisher": "Enix",
+      "developer": "Quintet",
+      "genres": [
+        "Action",
+        "Strategy"
+      ],
+      "description": "Hybrid action and simulation game where the Master fights through side-scrolling monster lairs, then guides townspeople from above to rebuild civilization and push back evil.",
+      "release_date": "1990-12-16",
+      "players": "1",
+      "age_rating": "",
+      "age_rating_label": "",
+      "age_rating_board": "",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "ActRaiser (USA).zip": {
+      "title": "ActRaiser",
+      "sort_title": "ActRaiser",
+      "publisher": "Enix",
+      "developer": "Quintet",
+      "genres": [
+        "Action",
+        "Strategy"
+      ],
+      "description": "Hybrid action and simulation game where the Master fights through side-scrolling monster lairs, then guides townspeople from above to rebuild civilization and push back evil.",
+      "release_date": "1990-12-16",
+      "players": "1",
+      "age_rating": "",
+      "age_rating_label": "",
+      "age_rating_board": "",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    },
+    "Actraiser (Japan).zip": {
+      "title": "ActRaiser",
+      "sort_title": "ActRaiser",
+      "publisher": "Enix",
+      "developer": "Quintet",
+      "genres": [
+        "Action",
+        "Strategy"
+      ],
+      "description": "Hybrid action and simulation game where the Master fights through side-scrolling monster lairs, then guides townspeople from above to rebuild civilization and push back evil.",
+      "release_date": "1990-12-16",
+      "players": "1",
+      "age_rating": "",
+      "age_rating_label": "",
+      "age_rating_board": "",
+      "rating": "",
+      "metadata_source": "packaged-metadata",
+      "match_confidence": 1,
+      "source_id": ""
+    }
+  }
+}

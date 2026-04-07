@@ -504,13 +504,14 @@ async function init() {
   });
 
   // Download progress IPC
-  window.electronAPI.onDownloadProgress(({ identifier, percent }) => {
+  window.electronAPI.onDownloadProgress(({ identifier, percent, stage }) => {
     const entry = downloadQueue.get(identifier);
-    if (!entry || entry.status !== 'downloading') return;
-    dqSet(identifier, { percent });
+    if (!entry) return;
+    const nextStatus = stage === 'extracting' ? 'extracting' : 'downloading';
+    dqSet(identifier, { percent, status: nextStatus });
     if (selectedRom && getRomId(selectedRom) === identifier) {
       progressBar.style.width  = percent + '%';
-      progressText.textContent = percent + '%';
+      progressText.textContent = stage === 'extracting' ? 'Extracting…' : (percent + '%');
     }
   });
 
@@ -573,28 +574,6 @@ async function init() {
 async function fetchRoms() {
   renderSkeletonCards(12);
 
-  // Load HLTB metadata index first — independent of login status
-  hltbMetaIndex = await window.electronAPI.listHltbCache().catch(() => ({}));
-  console.log(`[hltb-meta] loaded ${Object.keys(hltbMetaIndex).length} entries`);
-
-  // Check archive.org login first — required to download ROMs
-  const loginStatus = await window.electronAPI.archiveCheck();
-  if (!loginStatus.loggedIn) {
-    showLoginPrompt();
-    // Still load ROM data in background so it’s ready when they log in
-    window.electronAPI.fetchRomList({ system: currentSystem }).then(r => {
-      if (r.ok) {
-        allRoms = r.roms;
-        if (currentView === 'home') renderHomeScreen();
-        startHltbPrefetch();
-      }
-    });
-    return;
-  }
-
-  // Populate filter dropdowns with whatever is already cached
-  renderFsMetaPills();
-
   const result = await window.electronAPI.fetchRomList({ system: currentSystem });
 
   if (!result.ok) {
@@ -624,9 +603,6 @@ async function fetchRoms() {
   renderLibraryGrid();
   updateFilterSortLabel();
   renderHomeScreen();
-
-  // Start background HLTB prefetch once ROMs are loaded
-  startHltbPrefetch();
 }
 
 function showLoginPrompt() {
@@ -1426,10 +1402,16 @@ async function startDownload(rom) {
   progressBar.style.width  = '0%';
   progressText.textContent = '0%';
 
-  const result = await window.electronAPI.downloadStart({
+  const result = await window.electronAPI.marketplaceInstall({
     identifier:  id,
     downloadUrl: rom.downloadUrl,
     fileName:    rom.name,
+    title,
+    system: currentSystem,
+    provider: 'archiveorg',
+    sourceType: 'marketplace_download',
+    catalogIdentifier: id,
+    matchConfidence: 1,
   });
 
   if (!downloadQueue.has(id)) {
@@ -1439,52 +1421,17 @@ async function startDownload(rom) {
   }
 
   if (!result.ok) {
+    if (result.requiresAuth) {
+      showLoginPrompt();
+      showToast(result.error || 'Sign in to archive.org to download ROMs');
+    }
     dqSet(id, { status: 'error', finishedAt: Date.now() });
     setTimeout(() => { downloadQueue.delete(id); updateDownloadsButton(); }, 4000);
     progressWrap.classList.add('hidden');
     refreshButtonStates();
     return;
   }
-
-  const settings = await window.electronAPI.getSettings();
-  // Never extract if the downloaded file is already a native ROM format
-  const ROM_DIRECT_EXTS = ['.chd', '.cue', '.bin', '.img', '.sfc', '.smc', '.nes', '.gba', '.n64'];
-  const isDirectRom = ROM_DIRECT_EXTS.some(ext => result.filePath.toLowerCase().endsWith(ext));
-  const shouldExtract = !!settings.extractArchive && !isDirectRom;
-
-  let installDir;
-
-  if (shouldExtract) {
-    dqSet(id, { status: 'extracting', percent: 100 });
-    progressBar.style.width  = '100%';
-    progressText.textContent = '100%';
-
-    const extractResult = await window.electronAPI.extractArchive({
-      filePath:   result.filePath,
-      identifier: id,
-      subFolder:  null,
-    });
-
-    progressWrap.classList.add('hidden');
-
-    if (!extractResult.ok) {
-      dqSet(id, { status: 'error' });
-      setTimeout(() => { downloadQueue.delete(id); }, 4000);
-      return;
-    }
-
-    installDir = extractResult.installDir;
-  } else {
-    // No extraction — register the .zip itself as the install path
-    progressWrap.classList.add('hidden');
-    installDir = result.filePath;
-  }
-
-  await window.electronAPI.installGame({
-    identifier: id,
-    installDir,
-    exePath:    null,
-  });
+  progressWrap.classList.add('hidden');
 
   library = await window.electronAPI.getLibrary();
   dqDone(id);
@@ -1521,6 +1468,7 @@ async function onLaunch() {
   const result = await window.electronAPI.launchRom({
     romPath: lib.install_dir,  // main process expects the dir; it finds the ROM inside
     system:  currentSystem,
+    identifier: getRomId(selectedRom),
   });
 
   if (!result.ok) {

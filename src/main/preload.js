@@ -11,10 +11,21 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getSettings:    ()      => ipcRenderer.invoke('settings-get'),
   saveSettings:   (s)     => ipcRenderer.invoke('settings-save', s),
   chooseFolder:   ()      => ipcRenderer.invoke('choose-folder'),
+  rerunArtMigration: ()   => ipcRenderer.invoke('storage-rerun-art-migration'),
+  clearCatalogCache: ()   => ipcRenderer.invoke('storage-clear-catalog-cache'),
+  clearArtCache:    ()    => ipcRenderer.invoke('storage-clear-art-cache'),
+  openStoragePath:  (opts)=> ipcRenderer.invoke('storage-open-path', opts),
 
   // Library
   getLibrary:     ()      => ipcRenderer.invoke('library-get'),
   getLibraryGame: (opts)  => ipcRenderer.invoke('library-get-game',    opts),
+  upsertLibraryMetadata: (opts) => ipcRenderer.invoke('library-upsert-metadata', opts),
+  enrichLibraryGame: (opts) => ipcRenderer.invoke('library-enrich-game', opts),
+  previewGameMetadata: (opts) => ipcRenderer.invoke('metadata-preview-game', opts),
+  getPackagedMarketplaceMetadata: (opts) => ipcRenderer.invoke('marketplace-packaged-metadata', opts),
+  getPackagedMarketplaceMetadataStats: (opts) => ipcRenderer.invoke('marketplace-packaged-metadata-stats', opts),
+  markLibraryPlayed: (opts) => ipcRenderer.invoke('library-mark-played', opts),
+  checkMetadataService: () => ipcRenderer.invoke('metadata-service-health'),
   setCategory:    (opts)  => ipcRenderer.invoke('library-set-category', opts),
   setFavorite:    (opts)  => ipcRenderer.invoke('library-set-favorite', opts),
   setNotes:       (opts)  => ipcRenderer.invoke('library-set-notes',    opts),
@@ -32,6 +43,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   fetchFileList:  (opts)  => ipcRenderer.invoke('fetch-file-list', opts),
   downloadStart:  (opts)  => ipcRenderer.invoke('download-start',  opts),
   downloadCancel: (opts)  => ipcRenderer.invoke('download-cancel', opts),
+  marketplaceInstall: (opts) => ipcRenderer.invoke('marketplace-install', opts),
+  archiveProbeDownload: (opts) => ipcRenderer.invoke('archiveorg-probe-download', opts),
   onDownloadProgress: (cb) => ipcRenderer.on('download-progress', (_, data) => cb(data)),
 
   // Extract / Install / Delete
@@ -48,6 +61,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // ROM list + launch
   fetchRomList:       (opts)  => ipcRenderer.invoke('fetch-rom-list', opts),
+  listMarketplaceSources: (opts) => ipcRenderer.invoke('marketplace-list-sources', opts),
+  fetchMarketplaceCatalog: (opts) => ipcRenderer.invoke('marketplace-fetch-catalog', opts),
   onRomFetchProgress: (cb)   => ipcRenderer.on('rom-fetch-progress', (_, d) => cb(d)),
   clearRomCache:  (opts)  => ipcRenderer.invoke('clear-rom-cache',  opts), // opts: { system }
   launchRom:      (opts)  => ipcRenderer.invoke('launch-rom',     opts),
@@ -58,6 +73,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   raGameSearch:   (opts)  => ipcRenderer.invoke('ra-game-search',   opts),
   raUserSummary:  ()      => ipcRenderer.invoke('ra-user-summary'),
   listArtCache:   (opts)  => ipcRenderer.invoke('list-art-cache',  opts),
+  getRomIcon:     (opts)  => ipcRenderer.invoke('get-rom-icon',    opts),
   getRomArt:      (opts)  => ipcRenderer.invoke('get-rom-art',     opts),
   getRomLogo:     (opts)  => ipcRenderer.invoke('get-rom-logo',    opts),
 

@@ -1,0 +1,54 @@
+{
+  "provider": "archiveorg",
+  "system": "snes",
+  "source": "C:\\Projects\\SKALD\\reports\\archiveorg-snes-pack.candidates.json",
+  "generatedAt": "2026-04-06T22:07:21.609Z",
+  "offset": 0,
+  "count": 1,
+  "search": "ActRaiser",
+  "instructions": "Fill metadata.description plus publisher/developer/genres/release/ratings, then merge with npm run merge:pack -- <this file> --provider archiveorg --system snes --dry-run first.",
+  "entries": [
+    {
+      "key": "actraiser",
+      "suggestedTitle": "ActRaiser",
+      "variantCount": 7,
+      "regions": [
+        "Europe",
+        "France",
+        "Germany",
+        "Japan",
+        "USA"
+      ],
+      "tags": [
+        "Virtual Console"
+      ],
+      "identifiers": [
+        "ActRaiser (Europe).zip",
+        "ActRaiser (France).zip",
+        "ActRaiser (Germany).zip",
+        "ActRaiser (Japan) (Virtual Console).zip",
+        "ActRaiser (USA) (Arcade).zip",
+        "ActRaiser (USA).zip",
+        "Actraiser (Japan).zip"
+      ],
+      "metadata": {
+        "title": "ActRaiser",
+        "sort_title": "ActRaiser",
+        "publisher": "Enix",
+        "developer": "Quintet",
+        "genres": [
+          "Action",
+          "Strategy"
+        ],
+        "description": "Hybrid action and simulation game where the Master fights through side-scrolling monster lairs, then guides townspeople from above to rebuild civilization and push back evil.",
+        "release_date": "1990-12-16",
+        "players": "1",
+        "age_rating": "",
+        "age_rating_label": "",
+        "age_rating_board": "",
+        "metadata_source": "packaged-metadata",
+        "match_confidence": 1
+      }
+    }
+  ]
+}

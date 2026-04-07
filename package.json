@@ -7,7 +7,19 @@
   "scripts": {
     "start": "electron .",
     "build": "electron-builder",
-    "postinstall": "electron-builder install-app-deps"
+    "postinstall": "electron-builder install-app-deps",
+    "report:pack": "node scripts/report-marketplace-pack.js",
+    "report:pack:quality": "node scripts/report-marketplace-pack-quality.js",
+    "report:pack:candidates": "node scripts/build-marketplace-pack-candidates.js",
+    "create:pack:batch": "node scripts/create-marketplace-pack-batch.js",
+    "create:pack:quality-batch": "node scripts/create-marketplace-pack-quality-batch.js",
+    "fetch:pack:screenscraper": "node scripts/fetch-screenscraper-pack-batch.js",
+    "report:minerva:torrent": "node scripts/report-minerva-torrent.js",
+    "build:minerva:index": "node scripts/build-minerva-index.js",
+    "prototype:minerva:download": "node scripts/prototype-minerva-download.mjs",
+    "validate:pack:batch": "node scripts/validate-marketplace-pack-batch.js",
+    "validate:pack": "node scripts/validate-marketplace-pack.js",
+    "merge:pack": "node scripts/merge-marketplace-pack-batch.js"
   },
   "devDependencies": {
     "electron": "latest",
@@ -19,7 +31,9 @@
     "electron-updater": "^6.3.9",
     "extract-zip": "^2.0.1",
     "howlongtobeat-core": "^1.1.1",
-    "stoat.js": "^7.3.6"
+    "sharp": "^0.34.5",
+    "stoat.js": "^7.3.6",
+    "webtorrent": "^2.8.5"
   },
   "build": {
     "appId": "com.skald.launcher",

@@ -1,0 +1,60 @@
+{
+  "provider": "archiveorg",
+  "system": "snes",
+  "source": "C:\\Projects\\SKALD\\reports\\archiveorg-snes-pack.candidates.json",
+  "generatedAt": "2026-04-06T21:34:29.955Z",
+  "offset": 0,
+  "count": 1,
+  "search": "Jurassic Park",
+  "instructions": "Fill metadata.description plus publisher/developer/genres/release/ratings, then merge with npm run merge:pack -- <this file> --provider archiveorg --system snes --dry-run first.",
+  "entries": [
+    {
+      "key": "jurassic park",
+      "suggestedTitle": "Jurassic Park",
+      "variantCount": 10,
+      "regions": [
+        "Europe",
+        "France",
+        "Germany",
+        "Italy",
+        "Japan",
+        "Spain",
+        "USA"
+      ],
+      "tags": [
+        "Beta",
+        "Rev 1"
+      ],
+      "identifiers": [
+        "Jurassic Park (Europe) (Beta).zip",
+        "Jurassic Park (Europe).zip",
+        "Jurassic Park (France).zip",
+        "Jurassic Park (Germany).zip",
+        "Jurassic Park (Italy).zip",
+        "Jurassic Park (Japan).zip",
+        "Jurassic Park (Spain).zip",
+        "Jurassic Park (USA) (Beta).zip",
+        "Jurassic Park (USA) (Rev 1).zip",
+        "Jurassic Park (USA).zip"
+      ],
+      "metadata": {
+        "title": "Jurassic Park",
+        "sort_title": "Jurassic Park",
+        "publisher": "Ocean Software",
+        "developer": "Ocean Software",
+        "genres": [
+          "Action",
+          "Adventure"
+        ],
+        "description": "Top-down action-adventure game based on the film, sending Dr. Alan Grant across Isla Nublar to restore park systems, rescue survivors, and escape dinosaur-filled areas.",
+        "release_date": "1993",
+        "players": "1",
+        "age_rating": "E",
+        "age_rating_label": "Everyone",
+        "age_rating_board": "ESRB",
+        "metadata_source": "packaged-metadata",
+        "match_confidence": 1
+      }
+    }
+  ]
+}

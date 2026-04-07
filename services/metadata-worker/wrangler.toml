@@ -1,0 +1,15 @@
+name = "skald-metadata-worker"
+main = "src/index.js"
+compatibility_date = "2026-04-05"
+
+[observability]
+enabled = true
+
+[vars]
+# Optional shared bearer token the launcher can send in Authorization: Bearer <token>
+SKALD_API_KEY = ""
+
+# Set these as secrets with `wrangler secret put ...` for real deployment.
+# IGDB_CLIENT_ID
+# IGDB_CLIENT_SECRET
+# STEAMGRIDDB_API_KEY

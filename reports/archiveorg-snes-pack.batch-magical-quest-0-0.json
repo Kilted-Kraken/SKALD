@@ -1,0 +1,59 @@
+{
+  "provider": "archiveorg",
+  "system": "snes",
+  "source": "C:\\Projects\\SKALD\\reports\\archiveorg-snes-pack.candidates.json",
+  "generatedAt": "2026-04-06T22:01:53.642Z",
+  "offset": 0,
+  "count": 1,
+  "search": "Magical Quest",
+  "instructions": "Fill metadata.description plus publisher/developer/genres/release/ratings, then merge with npm run merge:pack -- <this file> --provider archiveorg --system snes --dry-run first.",
+  "entries": [
+    {
+      "key": "magical quest starring mickey mouse the",
+      "suggestedTitle": "Magical Quest Starring Mickey Mouse, The",
+      "variantCount": 10,
+      "regions": [
+        "Europe",
+        "Germany",
+        "Italy",
+        "USA"
+      ],
+      "tags": [
+        "Beta 1",
+        "Beta 2",
+        "Beta 3",
+        "Rev 1"
+      ],
+      "identifiers": [
+        "Magical Quest Starring Mickey Mouse, The (Europe) (Rev 1).zip",
+        "Magical Quest Starring Mickey Mouse, The (Europe).zip",
+        "Magical Quest Starring Mickey Mouse, The (Germany) (Rev 1).zip",
+        "Magical Quest Starring Mickey Mouse, The (Germany).zip",
+        "Magical Quest Starring Mickey Mouse, The (Italy).zip",
+        "Magical Quest Starring Mickey Mouse, The (USA) (Beta 1) (1992-05-21).zip",
+        "Magical Quest Starring Mickey Mouse, The (USA) (Beta 2).zip",
+        "Magical Quest Starring Mickey Mouse, The (USA) (Beta 3).zip",
+        "Magical Quest Starring Mickey Mouse, The (USA) (Rev 1).zip",
+        "Magical Quest Starring Mickey Mouse, The (USA).zip"
+      ],
+      "metadata": {
+        "title": "The Magical Quest Starring Mickey Mouse",
+        "sort_title": "Magical Quest Starring Mickey Mouse, The",
+        "publisher": "Capcom",
+        "developer": "Capcom",
+        "genres": [
+          "Action",
+          "Platform"
+        ],
+        "description": "Side-scrolling platform game starring Mickey Mouse as he searches for Pluto after Emperor Pete kidnaps him, using magical costumes with different abilities to move through colorful stages.",
+        "release_date": "1992",
+        "players": "1-2",
+        "age_rating": "",
+        "age_rating_label": "",
+        "age_rating_board": "",
+        "metadata_source": "packaged-metadata",
+        "match_confidence": 1
+      }
+    }
+  ]
+}

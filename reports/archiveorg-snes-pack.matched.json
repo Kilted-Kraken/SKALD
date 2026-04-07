@@ -1,0 +1,418 @@
+[
+  {
+    "identifier": "3 Ninjas Kick Back (USA).zip",
+    "cleanName": "3 Ninjas Kick Back",
+    "region": "USA",
+    "size": "1.1 MB",
+    "exact": true,
+    "matchedPackEntry": "3 Ninjas Kick Back (USA).zip"
+  },
+  {
+    "identifier": "ActRaiser (Europe).zip",
+    "cleanName": "ActRaiser",
+    "region": "Europe",
+    "size": "670 KB",
+    "exact": true,
+    "matchedPackEntry": "ActRaiser (Europe).zip"
+  },
+  {
+    "identifier": "ActRaiser (France).zip",
+    "cleanName": "ActRaiser",
+    "region": "France",
+    "size": "671 KB",
+    "exact": true,
+    "matchedPackEntry": "ActRaiser (France).zip"
+  },
+  {
+    "identifier": "ActRaiser (Germany).zip",
+    "cleanName": "ActRaiser",
+    "region": "Germany",
+    "size": "671 KB",
+    "exact": true,
+    "matchedPackEntry": "ActRaiser (Germany).zip"
+  },
+  {
+    "identifier": "ActRaiser (Japan) (Virtual Console).zip",
+    "cleanName": "ActRaiser",
+    "region": "Japan",
+    "size": "662 KB",
+    "exact": true,
+    "matchedPackEntry": "ActRaiser (Japan) (Virtual Console).zip"
+  },
+  {
+    "identifier": "ActRaiser (USA) (Arcade).zip",
+    "cleanName": "ActRaiser (Arcade)",
+    "region": "USA",
+    "size": "529 KB",
+    "exact": true,
+    "matchedPackEntry": "ActRaiser (USA) (Arcade).zip"
+  },
+  {
+    "identifier": "ActRaiser (USA).zip",
+    "cleanName": "ActRaiser",
+    "region": "USA",
+    "size": "669 KB",
+    "exact": true,
+    "matchedPackEntry": "ActRaiser (USA).zip"
+  },
+  {
+    "identifier": "Actraiser (Japan).zip",
+    "cleanName": "Actraiser",
+    "region": "Japan",
+    "size": "662 KB",
+    "exact": true,
+    "matchedPackEntry": "Actraiser (Japan).zip"
+  },
+  {
+    "identifier": "Aladdin (Europe).zip",
+    "cleanName": "Aladdin",
+    "region": "Europe",
+    "size": "805 KB",
+    "exact": true,
+    "matchedPackEntry": "Aladdin (Europe).zip"
+  },
+  {
+    "identifier": "Aladdin (France).zip",
+    "cleanName": "Aladdin",
+    "region": "France",
+    "size": "788 KB",
+    "exact": true,
+    "matchedPackEntry": "Aladdin (France).zip"
+  },
+  {
+    "identifier": "Aladdin (Germany).zip",
+    "cleanName": "Aladdin",
+    "region": "Germany",
+    "size": "808 KB",
+    "exact": true,
+    "matchedPackEntry": "Aladdin (Germany).zip"
+  },
+  {
+    "identifier": "Aladdin (Japan).zip",
+    "cleanName": "Aladdin",
+    "region": "Japan",
+    "size": "827 KB",
+    "exact": true,
+    "matchedPackEntry": "Aladdin (Japan).zip"
+  },
+  {
+    "identifier": "Aladdin (Spain).zip",
+    "cleanName": "Aladdin",
+    "region": "Spain",
+    "size": "776 KB",
+    "exact": true,
+    "matchedPackEntry": "Aladdin (Spain).zip"
+  },
+  {
+    "identifier": "Aladdin (USA) (Beta).zip",
+    "cleanName": "Aladdin",
+    "region": "USA",
+    "size": "806 KB",
+    "exact": true,
+    "matchedPackEntry": "Aladdin (USA) (Beta).zip"
+  },
+  {
+    "identifier": "Aladdin (USA).zip",
+    "cleanName": "Aladdin",
+    "region": "USA",
+    "size": "806 KB",
+    "exact": true,
+    "matchedPackEntry": "Aladdin (USA).zip"
+  },
+  {
+    "identifier": "Aladdin (World) (Disney Classic Games).zip",
+    "cleanName": "Aladdin (Disney Classic Games)",
+    "region": "World",
+    "size": "806 KB",
+    "exact": true,
+    "matchedPackEntry": "Aladdin (World) (Disney Classic Games).zip"
+  },
+  {
+    "identifier": "Chrono Trigger (Japan) (Taikenban Sample ROM).zip",
+    "cleanName": "Chrono Trigger (Taikenban Sample ROM)",
+    "region": "Japan",
+    "size": "2.5 MB",
+    "exact": false,
+    "matchedPackEntry": "Chrono Trigger (USA).zip"
+  },
+  {
+    "identifier": "Chrono Trigger (Japan).zip",
+    "cleanName": "Chrono Trigger",
+    "region": "Japan",
+    "size": "2.9 MB",
+    "exact": true,
+    "matchedPackEntry": "Chrono Trigger (Japan).zip"
+  },
+  {
+    "identifier": "Chrono Trigger (USA).zip",
+    "cleanName": "Chrono Trigger",
+    "region": "USA",
+    "size": "2.9 MB",
+    "exact": true,
+    "matchedPackEntry": "Chrono Trigger (USA).zip"
+  },
+  {
+    "identifier": "Jurassic Park (Europe) (Beta).zip",
+    "cleanName": "Jurassic Park",
+    "region": "Europe",
+    "size": "1.0 MB",
+    "exact": true,
+    "matchedPackEntry": "Jurassic Park (Europe) (Beta).zip"
+  },
+  {
+    "identifier": "Jurassic Park (Europe).zip",
+    "cleanName": "Jurassic Park",
+    "region": "Europe",
+    "size": "1.0 MB",
+    "exact": true,
+    "matchedPackEntry": "Jurassic Park (Europe).zip"
+  },
+  {
+    "identifier": "Jurassic Park (France).zip",
+    "cleanName": "Jurassic Park",
+    "region": "France",
+    "size": "1.0 MB",
+    "exact": true,
+    "matchedPackEntry": "Jurassic Park (France).zip"
+  },
+  {
+    "identifier": "Jurassic Park (Germany).zip",
+    "cleanName": "Jurassic Park",
+    "region": "Germany",
+    "size": "1.0 MB",
+    "exact": true,
+    "matchedPackEntry": "Jurassic Park (Germany).zip"
+  },
+  {
+    "identifier": "Jurassic Park (Italy).zip",
+    "cleanName": "Jurassic Park",
+    "region": "Italy",
+    "size": "1.0 MB",
+    "exact": true,
+    "matchedPackEntry": "Jurassic Park (Italy).zip"
+  },
+  {
+    "identifier": "Jurassic Park (Japan).zip",
+    "cleanName": "Jurassic Park",
+    "region": "Japan",
+    "size": "1.1 MB",
+    "exact": true,
+    "matchedPackEntry": "Jurassic Park (Japan).zip"
+  },
+  {
+    "identifier": "Jurassic Park (Spain).zip",
+    "cleanName": "Jurassic Park",
+    "region": "Spain",
+    "size": "1.0 MB",
+    "exact": true,
+    "matchedPackEntry": "Jurassic Park (Spain).zip"
+  },
+  {
+    "identifier": "Jurassic Park (USA) (Beta).zip",
+    "cleanName": "Jurassic Park",
+    "region": "USA",
+    "size": "1.0 MB",
+    "exact": true,
+    "matchedPackEntry": "Jurassic Park (USA) (Beta).zip"
+  },
+  {
+    "identifier": "Jurassic Park (USA) (Rev 1).zip",
+    "cleanName": "Jurassic Park",
+    "region": "USA",
+    "size": "1.0 MB",
+    "exact": true,
+    "matchedPackEntry": "Jurassic Park (USA) (Rev 1).zip"
+  },
+  {
+    "identifier": "Jurassic Park (USA).zip",
+    "cleanName": "Jurassic Park",
+    "region": "USA",
+    "size": "1.0 MB",
+    "exact": true,
+    "matchedPackEntry": "Jurassic Park (USA).zip"
+  },
+  {
+    "identifier": "Magical Quest Starring Mickey Mouse, The (Europe) (Rev 1).zip",
+    "cleanName": "Magical Quest Starring Mickey Mouse, The",
+    "region": "Europe",
+    "size": "664 KB",
+    "exact": true,
+    "matchedPackEntry": "Magical Quest Starring Mickey Mouse, The (Europe) (Rev 1).zip"
+  },
+  {
+    "identifier": "Magical Quest Starring Mickey Mouse, The (Europe).zip",
+    "cleanName": "Magical Quest Starring Mickey Mouse, The",
+    "region": "Europe",
+    "size": "662 KB",
+    "exact": true,
+    "matchedPackEntry": "Magical Quest Starring Mickey Mouse, The (Europe).zip"
+  },
+  {
+    "identifier": "Magical Quest Starring Mickey Mouse, The (Germany) (Rev 1).zip",
+    "cleanName": "Magical Quest Starring Mickey Mouse, The",
+    "region": "Germany",
+    "size": "663 KB",
+    "exact": true,
+    "matchedPackEntry": "Magical Quest Starring Mickey Mouse, The (Germany) (Rev 1).zip"
+  },
+  {
+    "identifier": "Magical Quest Starring Mickey Mouse, The (Germany).zip",
+    "cleanName": "Magical Quest Starring Mickey Mouse, The",
+    "region": "Germany",
+    "size": "665 KB",
+    "exact": true,
+    "matchedPackEntry": "Magical Quest Starring Mickey Mouse, The (Germany).zip"
+  },
+  {
+    "identifier": "Magical Quest Starring Mickey Mouse, The (Italy).zip",
+    "cleanName": "Magical Quest Starring Mickey Mouse, The",
+    "region": "Italy",
+    "size": "658 KB",
+    "exact": true,
+    "matchedPackEntry": "Magical Quest Starring Mickey Mouse, The (Italy).zip"
+  },
+  {
+    "identifier": "Magical Quest Starring Mickey Mouse, The (USA) (Beta 1) (1992-05-21).zip",
+    "cleanName": "Magical Quest Starring Mickey Mouse, The (1992-05-21)",
+    "region": "USA",
+    "size": "504 KB",
+    "exact": true,
+    "matchedPackEntry": "Magical Quest Starring Mickey Mouse, The (USA) (Beta 1) (1992-05-21).zip"
+  },
+  {
+    "identifier": "Magical Quest Starring Mickey Mouse, The (USA) (Beta 2).zip",
+    "cleanName": "Magical Quest Starring Mickey Mouse, The",
+    "region": "USA",
+    "size": "661 KB",
+    "exact": true,
+    "matchedPackEntry": "Magical Quest Starring Mickey Mouse, The (USA) (Beta 2).zip"
+  },
+  {
+    "identifier": "Magical Quest Starring Mickey Mouse, The (USA) (Beta 3).zip",
+    "cleanName": "Magical Quest Starring Mickey Mouse, The",
+    "region": "USA",
+    "size": "661 KB",
+    "exact": true,
+    "matchedPackEntry": "Magical Quest Starring Mickey Mouse, The (USA) (Beta 3).zip"
+  },
+  {
+    "identifier": "Magical Quest Starring Mickey Mouse, The (USA) (Rev 1).zip",
+    "cleanName": "Magical Quest Starring Mickey Mouse, The",
+    "region": "USA",
+    "size": "663 KB",
+    "exact": true,
+    "matchedPackEntry": "Magical Quest Starring Mickey Mouse, The (USA) (Rev 1).zip"
+  },
+  {
+    "identifier": "Magical Quest Starring Mickey Mouse, The (USA).zip",
+    "cleanName": "Magical Quest Starring Mickey Mouse, The",
+    "region": "USA",
+    "size": "665 KB",
+    "exact": true,
+    "matchedPackEntry": "Magical Quest Starring Mickey Mouse, The (USA).zip"
+  },
+  {
+    "identifier": "Secret of Mana (Europe) (Rev 1).zip",
+    "cleanName": "Secret of Mana",
+    "region": "Europe",
+    "size": "1.3 MB",
+    "exact": true,
+    "matchedPackEntry": "Secret of Mana (Europe) (Rev 1).zip"
+  },
+  {
+    "identifier": "Secret of Mana (Europe).zip",
+    "cleanName": "Secret of Mana",
+    "region": "Europe",
+    "size": "1.3 MB",
+    "exact": true,
+    "matchedPackEntry": "Secret of Mana (Europe).zip"
+  },
+  {
+    "identifier": "Secret of Mana (France) (Rev 1).zip",
+    "cleanName": "Secret of Mana",
+    "region": "France",
+    "size": "1.3 MB",
+    "exact": true,
+    "matchedPackEntry": "Secret of Mana (France) (Rev 1).zip"
+  },
+  {
+    "identifier": "Secret of Mana (France).zip",
+    "cleanName": "Secret of Mana",
+    "region": "France",
+    "size": "1.3 MB",
+    "exact": true,
+    "matchedPackEntry": "Secret of Mana (France).zip"
+  },
+  {
+    "identifier": "Secret of Mana (Germany).zip",
+    "cleanName": "Secret of Mana",
+    "region": "Germany",
+    "size": "1.3 MB",
+    "exact": true,
+    "matchedPackEntry": "Secret of Mana (Germany).zip"
+  },
+  {
+    "identifier": "Secret of Mana (USA) (Virtual Console).zip",
+    "cleanName": "Secret of Mana",
+    "region": "USA",
+    "size": "1.3 MB",
+    "exact": true,
+    "matchedPackEntry": "Secret of Mana (USA) (Virtual Console).zip"
+  },
+  {
+    "identifier": "Secret of Mana (USA).zip",
+    "cleanName": "Secret of Mana",
+    "region": "USA",
+    "size": "1.3 MB",
+    "exact": true,
+    "matchedPackEntry": "Secret of Mana (USA).zip"
+  },
+  {
+    "identifier": "Secret of Mana (World) (De) (Collection of Mana).zip",
+    "cleanName": "Secret of Mana (Collection of Mana)",
+    "region": "World",
+    "size": "1.3 MB",
+    "exact": true,
+    "matchedPackEntry": "Secret of Mana (World) (De) (Collection of Mana).zip"
+  },
+  {
+    "identifier": "Secret of Mana (World) (Fr) (Rev 1) (Collection of Mana).zip",
+    "cleanName": "Secret of Mana (Collection of Mana)",
+    "region": "World",
+    "size": "1.3 MB",
+    "exact": true,
+    "matchedPackEntry": "Secret of Mana (World) (Fr) (Rev 1) (Collection of Mana).zip"
+  },
+  {
+    "identifier": "Super Metroid (Europe) (En,Fr,De).zip",
+    "cleanName": "Super Metroid",
+    "region": "Europe",
+    "size": "1.5 MB",
+    "exact": true,
+    "matchedPackEntry": "Super Metroid (Europe) (En,Fr,De).zip"
+  },
+  {
+    "identifier": "Super Metroid (Japan) (En,Ja) (Virtual Console, Switch Online).zip",
+    "cleanName": "Super Metroid",
+    "region": "Japan",
+    "size": "1.5 MB",
+    "exact": true,
+    "matchedPackEntry": "Super Metroid (Japan) (En,Ja) (Virtual Console, Switch Online).zip"
+  },
+  {
+    "identifier": "Super Metroid (Japan, USA) (En,Ja).zip",
+    "cleanName": "Super Metroid",
+    "region": "Japan, USA",
+    "size": "1.5 MB",
+    "exact": true,
+    "matchedPackEntry": "Super Metroid (Japan, USA) (En,Ja).zip"
+  },
+  {
+    "identifier": "Super Metroid (USA, Europe) (En,Ja) (Virtual Console, Classic Mini, Switch Online).zip",
+    "cleanName": "Super Metroid",
+    "region": "USA, Europe",
+    "size": "1.5 MB",
+    "exact": true,
+    "matchedPackEntry": "Super Metroid (USA, Europe) (En,Ja) (Virtual Console, Classic Mini, Switch Online).zip"
+  }
+]

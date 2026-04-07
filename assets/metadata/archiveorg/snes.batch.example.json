@@ -1,0 +1,25 @@
+{
+  "entries": [
+    {
+      "identifiers": [
+        "Example Game (USA).zip",
+        "Example Game (Europe).zip"
+      ],
+      "metadata": {
+        "title": "Example Game",
+        "sort_title": "Example Game",
+        "publisher": "Example Publisher",
+        "developer": "Example Developer",
+        "genres": ["Action"],
+        "description": "A short curated description for the Marketplace detail panel.",
+        "release_date": "1994-01-01",
+        "players": "1",
+        "age_rating": "E",
+        "age_rating_label": "Everyone",
+        "age_rating_board": "ESRB",
+        "metadata_source": "packaged-metadata",
+        "match_confidence": 1
+      }
+    }
+  ]
+}
