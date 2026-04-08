@@ -17,6 +17,19 @@
 html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'MC360','Segoe UI',Tahoma,sans-serif;user-select:none;}
 #stage{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden;opacity:0;transition:opacity 500ms;transform-origin:0 0;}
 #stage.loaded{opacity:1;}
+#stage.custom-theme-active::before{content:'';position:absolute;inset:0;z-index:2;pointer-events:none;background:transparent;}
+#stage.custom-theme-active #bg-anim{filter:saturate(.88) brightness(1.04);}
+#stage.custom-theme-active .bg-col.on{opacity:0;}
+#stage.custom-theme-active .home-desc,
+#stage.custom-theme-active .sys-desc,
+#stage.custom-theme-active .info-block,
+#stage.custom-theme-active .mkt-source-detail,
+#stage.custom-theme-active .games-detail-panel,
+#stage.custom-theme-active .mkt-scan-side{text-shadow:0 1px 0 rgba(255,255,255,.36),0 0 12px rgba(255,255,255,.18);}
+#stage.custom-theme-active .mitem,
+#stage.custom-theme-active .sitem,
+#stage.custom-theme-active .subnav-item,
+#stage.custom-theme-active .games-tab{text-shadow:0 1px 0 rgba(255,255,255,.32);}
 #bg-anim{position:absolute;left:0;top:0;width:1920px;height:1080px;z-index:0;object-fit:cover;}
 .bg-col{position:absolute;left:0;top:0;width:1920px;height:1080px;z-index:1;opacity:0;transition:opacity 200ms;background-size:cover;background-position:center;background-repeat:no-repeat;}
 .bg-col.on{opacity:1;}
@@ -42,7 +55,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'MC
 #run-l{position:absolute;left:-163px;top:0;width:341px;height:1268px;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/blades-runner-left.webp') no-repeat;background-size:100% 100%;z-index:25;}
 #run-r{position:absolute;left:1773px;top:0;width:341px;height:1268px;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/blades-runner-right.webp') no-repeat;background-size:100% 100%;z-index:25;}
 .blade{position:absolute;top:0;height:1268px;background-size:100% 100%;background-repeat:no-repeat;cursor:pointer;pointer-events:all;transition:left 180ms ease-out;z-index:21;}
-.blade-lbl{position:absolute;top:340px;width:100%;writing-mode:vertical-lr;font-family:'MC360','Segoe UI',Tahoma,sans-serif;font-size:22px;letter-spacing:3px;white-space:nowrap;pointer-events:none;text-transform:lowercase;padding:0 8px;box-sizing:border-box;}
+.blade-lbl{position:absolute;top:340px;width:100%;z-index:3;writing-mode:vertical-lr;font-family:'MC360','Segoe UI',Tahoma,sans-serif;font-size:22px;letter-spacing:3px;white-space:nowrap;pointer-events:none;text-transform:lowercase;padding:0 8px;box-sizing:border-box;}
 .blade.active .blade-lbl{color:#333;font-size:24px;font-weight:bold;}
 .blade.inactive .blade-lbl{color:#555;}
 #gamercard{position:absolute;top:152px;z-index:30;width:412px;height:200px;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/gamecard_home-silver.webp') no-repeat;background-size:100% 100%;transition:left 180ms ease-out;padding:0;}
@@ -898,18 +911,24 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'MC
 #btn-hints{position:absolute;bottom:30px;left:0;width:1220px;z-index:30;display:flex;align-items:center;justify-content:space-between;gap:24px;pointer-events:none;}
 .bhint-group{display:flex;align-items:center;gap:24px;}
 .bhint-group:empty{display:none;}
-.bhint{display:flex;align-items:center;gap:7px;font-size:19px;color:rgba(0,0,0,.6);}
+.bhint{display:flex;align-items:center;gap:7px;font-size:19px;color:rgba(255,255,255,.92);text-shadow:0 1px 2px rgba(0,0,0,.62),0 0 5px rgba(0,0,0,.18);}
 .bhint img{width:28px;height:28px;object-fit:contain;}
 .bhint-icons{display:flex;align-items:center;gap:4px;}
 .bhint .bhint-icons img{width:26px;height:26px;}
 .bhint .bhint-icons img.control-icon-bumper{width:39px;height:39px;}
-#guide{position:absolute;inset:0;z-index:50;display:none;pointer-events:none;}
+#guide{position:fixed;left:0;top:0;width:1920px;height:1080px;z-index:120;display:none;pointer-events:none;}
 #guide.on{display:block;pointer-events:all;}
-#g-black{position:absolute;inset:0;background:rgba(0,0,0,.82);}
-#g-panel{position:absolute;left:843px;top:0;width:1077px;height:1080px;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/background-grey.webp') no-repeat center/cover;transform:translateX(1077px);transition:transform 250ms ease-out;z-index:50;}
-#g-tile{position:absolute;left:1035px;top:0;width:885px;height:1080px;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/guide-blade-overlay-tile.webp') repeat;transform:translateX(1077px);transition:transform 250ms ease-out;opacity:.35;z-index:51;}
-#g-edge{position:absolute;left:576px;top:0;width:267px;height:1080px;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/guide-blade-overlay-edge-right.webp') no-repeat;background-size:100% 100%;transform:translateX(1077px);transition:transform 250ms ease-out;z-index:54;pointer-events:none;}
-#g-content{position:absolute;left:880px;top:80px;width:960px;transform:translateX(1077px);transition:transform 250ms ease-out;z-index:52;}
+body.guide-main-open #blade-layer{visibility:hidden;}
+#stage:has(#guide.on) + #blade-layer,
+body:has(#guide.on) #blade-layer{visibility:hidden;}
+#g-black{position:absolute;inset:0;z-index:70;background:rgba(0,0,0,.76);}
+#guide{--guide-drawer-w:760px;--guide-tile-w:568px;--guide-edge-w:267px;--guide-content-left:8px;--guide-content-w:540px;}
+#g-panel{position:absolute;left:0;top:0;width:var(--guide-drawer-w);height:1080px;background:#d9d9d6 url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/background-grey.webp') no-repeat center/cover;transform:translateX(calc(var(--guide-drawer-w) * -1));transition:transform 250ms ease-out;z-index:71;}
+#g-tile{position:absolute;left:0;top:0;width:var(--guide-tile-w);height:1080px;background:#d9d9d6 url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/guide-blade-overlay-tile.webp') repeat-x left top;background-size:auto 100%;transform:translateX(calc(var(--guide-drawer-w) * -1));transition:transform 250ms ease-out;opacity:1;z-index:72;}
+#g-edge{position:absolute;left:var(--guide-tile-w);top:0;width:var(--guide-edge-w);height:1080px;background:none;transform:translateX(calc(var(--guide-drawer-w) * -1));transition:transform 250ms ease-out;z-index:74;pointer-events:none;overflow:hidden;}
+#g-edge::before{content:'';position:absolute;inset:0;background:#d9d9d6;clip-path:polygon(0 0,64% 0,75% 10%,72% 31%,74% 45%,72% 61%,75% 90%,64% 100%,0 100%);z-index:0;}
+#g-edge::after{content:'';position:absolute;inset:0;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/guide-blade-overlay-edge-left.webp') no-repeat;background-size:100% 100%;z-index:1;}
+#g-content{position:absolute;left:var(--guide-content-left);top:44px;width:var(--guide-content-w);height:982px;transform:translateX(calc(var(--guide-drawer-w) * -1));transition:transform 250ms ease-out;z-index:73;color:#1f1f1f;}
 #guide.on #g-panel,#guide.on #g-tile,#guide.on #g-edge,#guide.on #g-content{transform:translateX(0);}
 #guide2{position:absolute;inset:0;z-index:56;display:none;pointer-events:none;}
 #guide2.on{display:block;pointer-events:all;}
@@ -941,17 +960,52 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'MC
 #g2-account-foot{position:absolute;left:0;right:0;bottom:0;height:56px;padding:0 26px;display:flex;align-items:center;justify-content:flex-end;gap:28px;background:transparent;box-shadow:none;}
 #g2-account-foot .gaf-hint{display:flex;align-items:center;gap:8px;font-size:18px;color:#fff;}
 #g2-account-foot .gaf-hint img{width:24px;height:24px;object-fit:contain;}
-#g-gamerpic{width:100px;height:100px;float:left;margin-right:18px;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/gamercard_defaultgamerpic.webp') no-repeat center/cover;}
-#g-tag{font-size:30px;color:#fff;margin-bottom:4px;}
-#g-gscore{font-size:18px;color:rgba(255,255,255,.65);margin-bottom:6px;}
-#g-rep{width:132px;height:20px;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/gamercard_rep_12.webp') no-repeat;background-size:auto 100%;margin-bottom:24px;clear:left;}
-.g-div{width:100%;height:2px;background:rgba(255,255,255,.12);margin-bottom:6px;}
-.gbtn{display:flex;align-items:center;gap:16px;padding:14px 18px;cursor:pointer;font-size:21px;color:#ccc;border-bottom:1px solid rgba(255,255,255,.07);transition:background 60ms;position:relative;}
-.gbtn:hover,.gbtn.sel{background:rgba(255,255,255,.1);color:#fff;}
-.gbtn.sel::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:rgba(255,255,255,.5);}
+#guide-edge-name{position:absolute;left:112px;top:356px;writing-mode:vertical-rl;text-orientation:mixed;font-size:25px;letter-spacing:.6px;color:rgba(0,0,0,.82);text-shadow:0 1px 0 rgba(255,255,255,.45);opacity:.94;}
+#g-main{position:relative;width:100%;height:100%;font-family:'Segoe UI',Tahoma,sans-serif;color:#1f1f1f;display:flex;flex-direction:column;}
+#g-gamerpic{width:96px;height:96px;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/gamercard_defaultgamerpic.webp') no-repeat center/cover;border:2px solid rgba(58,58,58,.34);box-shadow:inset 0 1px 0 rgba(255,255,255,.72),0 1px 4px rgba(0,0,0,.22);flex:0 0 auto;}
+#g-tag{font-size:25px;color:#1d1d1d;margin:0;text-shadow:0 1px 0 rgba(255,255,255,.65);}
+#g-gscore{font-size:19px;color:rgba(0,0,0,.66);margin:0;}
+#g-rep{width:124px;height:19px;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/gamercard_rep_12.webp') no-repeat;background-size:auto 100%;}
+.guide-topbar{height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 8px;color:rgba(255,255,255,.92);font-size:20px;text-shadow:0 1px 2px rgba(0,0,0,.62),0 0 5px rgba(0,0,0,.18);}
+.guide-content-stack{width:470px;margin:0 auto;flex:1;display:flex;flex-direction:column;justify-content:center;padding-bottom:54px;box-sizing:border-box;}
+.guide-top-icons{display:flex;align-items:center;gap:10px;}
+.guide-status-icon{width:30px;height:22px;background:linear-gradient(180deg,#f6f6f3,#bfbfb8);border:2px solid rgba(74,74,74,.42);box-shadow:inset 0 1px 0 rgba(255,255,255,.72),0 1px 2px rgba(0,0,0,.15);opacity:.9;}
+.guide-battery{border-radius:4px;position:relative;}
+.guide-battery::after{content:'';position:absolute;right:-7px;top:5px;width:5px;height:9px;background:rgba(74,74,74,.45);border-radius:0 2px 2px 0;}
+.guide-controller{width:34px;height:24px;border-radius:14px 14px 9px 9px;position:relative;}
+.guide-controller::before,.guide-controller::after{content:'';position:absolute;top:8px;width:5px;height:5px;background:rgba(50,50,50,.48);border-radius:50%;}
+.guide-controller::before{left:9px;}
+.guide-controller::after{right:9px;}
+.guide-profile-card{display:flex;align-items:center;gap:16px;margin:12px 0 18px;padding:12px 16px;min-height:118px;background:linear-gradient(180deg,rgba(232,234,229,.88),rgba(188,191,184,.74));border:2px solid rgba(73,73,69,.5);border-radius:10px;box-shadow:inset 0 2px 1px rgba(255,255,255,.62),inset 0 -2px 3px rgba(75,75,70,.22),0 1px 2px rgba(0,0,0,.18);position:relative;cursor:pointer;overflow:hidden;}
+.guide-profile-card::after{content:'';position:absolute;left:0;right:0;bottom:0;height:5px;background:linear-gradient(90deg,rgba(96,164,54,.9),rgba(150,209,90,.72));}
+.guide-profile-card.sel{filter:brightness(1.04) contrast(1.04);}
+.guide-profile-copy{display:flex;flex-direction:column;gap:8px;flex:1;min-width:0;}
+.guide-stat-line{display:grid;grid-template-columns:1fr auto;gap:18px;align-items:baseline;font-size:19px;color:rgba(0,0,0,.62);}
+.guide-stat-line strong{font-size:24px;font-weight:600;color:#1a1a1a;}
+.guide-section-title{font-size:21px;color:rgba(24,24,24,.7);margin:0 0 8px 4px;text-shadow:0 1px 0 rgba(255,255,255,.7);}
+.guide-community-card{margin-bottom:16px;padding:12px 12px 14px;background:linear-gradient(180deg,rgba(226,228,223,.82),rgba(176,180,172,.64));border:2px solid rgba(73,73,69,.46);border-radius:10px;box-shadow:inset 0 2px 1px rgba(255,255,255,.56),inset 0 -2px 3px rgba(72,72,68,.2),0 1px 2px rgba(0,0,0,.16);}
+.guide-community-card .guide-section-title{margin-left:2px;}
+.guide-community-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.guide-community-btn{height:56px;display:flex;align-items:center;justify-content:flex-start;padding:0 8px 0 16px;position:relative;cursor:pointer;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/guide-media-button-nofocus.webp') no-repeat center/100% 100%;border:none;box-shadow:none;}
+.guide-community-btn.sel{background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/guide-media-button-focus.webp');}
+.guide-community-btn .gicon{width:32px;height:32px;opacity:.72;filter:grayscale(.18) contrast(.9);transform:translateY(-5px);}
+.guide-menu-list{margin:3px 0 16px;border-top:1px solid rgba(78,78,78,.28);}
+.guide-menu-row{position:relative;display:flex;align-items:center;justify-content:space-between;min-height:58px;padding:0 14px;font-size:23px;color:#202020;border-bottom:1px solid rgba(78,78,78,.28);cursor:pointer;text-shadow:0 1px 0 rgba(255,255,255,.65);}
+.guide-menu-row.sel{background:linear-gradient(180deg,rgba(255,255,255,.72),rgba(206,206,199,.54));}
+.guide-menu-note{font-size:16px;color:rgba(32,32,32,.48);}
+.guide-music-card{margin-top:4px;padding:12px 14px 15px;background:linear-gradient(180deg,rgba(220,222,216,.76),rgba(171,175,168,.58));border:2px solid rgba(73,73,69,.42);border-radius:10px;box-shadow:inset 0 2px 1px rgba(255,255,255,.5),inset 0 -2px 3px rgba(72,72,68,.2),0 1px 2px rgba(0,0,0,.14);opacity:.88;}
+.guide-music-controls{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:10px;}
+.guide-music-btn{height:38px;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/guide-media-button-small-nofocus.webp') no-repeat center/100% 100%;border:none;display:flex;align-items:center;justify-content:center;color:rgba(60,60,60,.48);font-size:18px;text-shadow:0 1px 0 rgba(255,255,255,.52);}
+.guide-select-music{height:42px;display:flex;align-items:center;padding:0 12px;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/guide-selectmediabutton-nofocus.webp') no-repeat center/100% 100%;font-size:20px;color:rgba(50,50,50,.44);}
+.guide-skald-logo{width:250px;height:94px;margin:22px auto 0;background:url('file:///C:/Projects/SKALD/assets/icons/Systems/SKALD-LOGO.webp') no-repeat center/contain;filter:drop-shadow(0 1px 2px rgba(0,0,0,.28));opacity:.94;}
+.guide-footer-legend{position:absolute;left:0;right:0;bottom:2px;height:42px;display:flex;align-items:center;justify-content:space-between;font-size:18px;color:rgba(255,255,255,.93);text-shadow:0 1px 2px rgba(0,0,0,.7);}
+.guide-footer-group{display:flex;align-items:center;gap:20px;}
+.guide-footer-hint{display:flex;align-items:center;gap:7px;white-space:nowrap;}
+.guide-footer-hint img{width:25px;height:25px;object-fit:contain;}
+.gbtn{transition:background 60ms,filter 60ms;}
 .gicon{width:34px;height:34px;background-size:contain;background-repeat:no-repeat;background-position:center;opacity:.8;flex-shrink:0;}
 #g-main{display:none;}
-#guide[data-mode="main"] #g-main{display:block;}
+#guide[data-mode="main"] #g-main{display:flex;}
 .debug-panels .panel.on{outline:3px solid rgba(80,200,255,.9);outline-offset:-3px;}
 .debug-panels .panel.on>.blade-home,
 .debug-panels .panel.on>.sys-home,
@@ -1979,7 +2033,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'MC
   </div>
   <div id="ctrl-hint"></div>
   <div id="btn-hints"></div>
-<div id="guide" data-mode="main"><div id="g-black"></div><div id="g-panel"></div><div id="g-tile"></div><div id="g-edge"></div><div id="g-content"><div id="g-main"><div id="g-gamerpic"></div><div id="g-tag">RetroPlayer</div><div id="g-gscore">0 Gamerscore</div><div id="g-rep"></div><div class="g-div"></div><div class="gbtn sel" data-gact="profile"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-profile.webp')"></div>Gamer Profile</div><div class="gbtn" data-gact="friends"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-friends.webp')"></div>Friends</div><div class="gbtn" data-gact="messages"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-messages.webp')"></div>Messages</div><div class="gbtn" data-gact="achievements"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-trophy.webp')"></div>Achievements</div><div class="gbtn" data-gact="settings"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-system.webp')"></div>Settings</div><div class="gbtn" data-gact="exit"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-power.webp')"></div>Exit Blades Mode</div></div></div></div>
+<div id="guide" data-mode="main"><div id="g-black"></div><div id="g-panel"></div><div id="g-tile"></div><div id="g-edge"><div id="guide-edge-name">RetroPlayer</div></div><div id="g-content"><div id="g-main"><div class="guide-topbar"><div class="guide-top-icons"><div class="guide-status-icon guide-battery" aria-hidden="true"></div><div class="guide-status-icon guide-controller" aria-hidden="true"></div></div><div class="guide-clock">4:00 PM</div></div><div class="guide-content-stack"><div class="guide-profile-card gbtn sel" data-gact="profile"><div id="g-gamerpic"></div><div class="guide-profile-copy"><div id="g-tag">RetroPlayer</div><div class="guide-stat-line"><span>Gamerscore</span><strong>0</strong></div><div class="guide-stat-line"><span>Achievements</span><strong>0</strong></div><div id="g-rep"></div></div></div><div class="guide-community-card"><div class="guide-section-title">Community</div><div class="guide-community-row"><div class="guide-community-btn gbtn" data-gact="messages" title="Messages"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-messages.webp')"></div></div><div class="guide-community-btn gbtn" data-gact="friends" title="Friends"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-friends.webp')"></div></div><div class="guide-community-btn gbtn" data-gact="achievements" title="Games"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-games.webp')"></div></div></div></div><div class="guide-menu-list"><div class="guide-menu-row gbtn" data-gact="messages"><span>Chat and IM</span><span class="guide-menu-note">Coming soon</span></div><div class="guide-menu-row gbtn" data-gact="settings"><span>Personal Settings</span></div></div><div class="guide-music-card"><div class="guide-music-controls"><div class="guide-music-btn">&#9664;&#9664;</div><div class="guide-music-btn">&#9654;</div><div class="guide-music-btn">II</div><div class="guide-music-btn">&#9632;</div><div class="guide-music-btn">&#9654;&#9654;</div></div><div class="guide-select-music">Select Music</div></div><div class="guide-skald-logo" aria-label="SKALD"></div></div><div class="guide-footer-legend"><div class="guide-footer-group"><span class="guide-footer-hint"><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-y.webp" alt="">Xbox Dashboard</span><span class="guide-footer-hint"><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-x.webp" alt="">Sign Out</span></div><div class="guide-footer-group"><span class="guide-footer-hint"><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-b.webp" alt="">Back</span><span class="guide-footer-hint"><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-a.webp" alt="">Select</span></div></div></div></div></div>
   <div id="guide2" data-mode="account"><div id="g2-black"></div><div id="g2-panel"></div><div id="g2-tile"></div><div id="g2-edge"></div><div id="g2-content"><div id="g2-account-head"><img id="g2-account-head-icon" src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-profile.webp" alt=""><div id="g2-account-title">Archive.org</div></div><div id="g2-account-shell"><div id="g2-account-body"><div id="g2-account-desc"></div><div id="g2-account-status"></div><input id="g2a-login-input" type="text" autocomplete="off" style="display:none;"/><input id="g2a-secret-input" type="password" autocomplete="new-password" style="display:none;"/><div id="g2-account-list"><div class="g2a-item sel" data-vk-target="g2a-login-input"><div class="gicon" id="g2a-login-icon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-profile.webp')"></div><div class="g2a-copy"><div class="g2a-label" id="g2a-login-label">Login</div><div class="g2a-value dim" id="g2a-login-display">Not set</div></div></div><div class="g2a-item" data-vk-target="g2a-secret-input"><div class="gicon" id="g2a-secret-icon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-system.webp')"></div><div class="g2a-copy"><div class="g2a-label" id="g2a-secret-label">Secret</div><div class="g2a-value dim" id="g2a-secret-display">Not set</div></div></div><div class="g2a-item" data-ga-action="toggle-save"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-system.webp')"></div><div class="g2a-copy"><div class="g2a-label">Save to Stoat Profile</div><div class="g2a-value" id="g2a-save-display">On</div></div></div><div class="g2a-item" data-ga-action="primary"><div class="gicon" id="g2a-primary-icon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-a.webp')"></div><div class="g2a-copy"><div class="g2a-label" id="g2a-primary-label">Save</div><div class="g2a-meta" id="g2a-primary-meta">Apply changes for this provider.</div></div></div><div class="g2a-item" data-ga-action="secondary"><div class="gicon" id="g2a-secondary-icon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-x.webp')"></div><div class="g2a-copy"><div class="g2a-label" id="g2a-secondary-label">Clear Saved</div><div class="g2a-meta" id="g2a-secondary-meta">Remove stored credentials for this Stoat profile.</div></div></div></div></div></div><div id="g2-account-foot"><div class="gaf-hint"><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-b.webp" alt="">Back</div><div class="gaf-hint"><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-a.webp" alt="">Select</div></div></div></div></div>
   <div id="vk-overlay">
     <div id="vk-panel">
@@ -2240,7 +2294,7 @@ const bgImg=document.getElementById('bg-anim');
 let bgFrameTimer=null;
 function themedStageBackgroundForBlade(bladeId=BLADES[activeIdx]?.id,theme=appliedSkaldTheme){
   if(!theme || theme.reset) return '';
-  return skaldThemeBackgroundForBlade(bladeId,theme);
+  return skaldCustomThemeBackgroundForBlade(bladeId,theme);
 }
 function setAnimatedBackgroundEnabled(enabled){
   if(enabled){
@@ -2305,6 +2359,8 @@ function buildBlades(){
   // Move content panel, gamercard, ctrl-hint to follow the active blade
   const activeX = LEFT_ANCHOR + activeIdx * OFFSET;
   const contentLeft = activeX + CONTENT_OFFSET;
+  stage?.style.setProperty('--active-blade-left', activeX + 'px');
+  stage?.style.setProperty('--active-blade-width', BLADE_W + 'px');
   document.getElementById('content').style.left = contentLeft + 'px';
   document.getElementById('gamercard').style.left = (contentLeft + 54) + 'px';
   const homeLogo=document.getElementById('home-panel-logo');
@@ -2347,15 +2403,19 @@ function normalizeThemeAssetUrl(value){
 function encodeThemeFileUrl(url){
   return String(url||'').trim();
 }
-function skaldThemeBackgroundForBlade(bladeId,theme=appliedSkaldTheme){
-  if(!theme || theme.reset) return SKALD_DEFAULT_BACKGROUNDS[bladeId] || '';
+function skaldCustomThemeBackgroundForBlade(bladeId,theme=appliedSkaldTheme){
+  if(!theme || theme.reset) return '';
   const bg=theme.backgrounds || {};
   const slot=SKALD_THEME_BACKGROUND_SLOTS[bladeId];
   const fallback=bg.image4 || bg.main4 || bg.system || bg.marketplace || '';
   const candidate=bg[bladeId] || bg[slot] || bg[`main${String(slot||'').replace('image','')}`] || fallback;
-  return encodeThemeFileUrl(normalizeThemeAssetUrl(candidate)) || SKALD_DEFAULT_BACKGROUNDS[bladeId] || '';
+  return encodeThemeFileUrl(normalizeThemeAssetUrl(candidate)) || '';
+}
+function skaldThemeBackgroundForBlade(bladeId,theme=appliedSkaldTheme){
+  return skaldCustomThemeBackgroundForBlade(bladeId,theme) || SKALD_DEFAULT_BACKGROUNDS[bladeId] || '';
 }
 function applySkaldThemeBackgrounds(theme=appliedSkaldTheme){
+  document.getElementById('stage')?.classList.toggle('custom-theme-active', !!theme && !theme.reset);
   const stageThemeUrl=themedStageBackgroundForBlade(BLADES[activeIdx]?.id,theme);
   if(bgImg){
     if(stageThemeUrl){
@@ -2368,8 +2428,8 @@ function applySkaldThemeBackgrounds(theme=appliedSkaldTheme){
   BLADES.forEach(blade=>{
     const el=document.getElementById(blade.bg);
     if(!el) return;
-    const url=skaldThemeBackgroundForBlade(blade.id,theme);
-    el.style.backgroundImage=url ? cssImageUrl(url) : (SKALD_DEFAULT_BACKGROUNDS[blade.id] ? cssImageUrl(SKALD_DEFAULT_BACKGROUNDS[blade.id]) : '');
+    const url=SKALD_DEFAULT_BACKGROUNDS[blade.id] || '';
+    el.style.backgroundImage=url ? cssImageUrl(url) : '';
   });
 }
 function applyBg(){
@@ -3316,7 +3376,11 @@ let guide2Open=false;
 let debugPanels=false;
 function getGuideItems(){
   if(guide2Open)return[...document.querySelectorAll('#guide2 .g2a-item')];
-  return[...document.querySelectorAll('.gbtn')];
+  return[...document.querySelectorAll('#guide .gbtn')];
+}
+function updateGuideClock(){
+  const clock=document.querySelector('#guide .guide-clock');
+  if(clock)clock.textContent=new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
 }
 function getGuideAccountRefs(){
   return{
@@ -3393,11 +3457,11 @@ async function loadGuideAccount(providerId){
   document.querySelectorAll('#guide2 .g2a-item').forEach(el=>el.classList.toggle('disabled',!result?.stoatUserId && el.dataset.gaAction!=='secondary' && !el.dataset.vkTarget));
   syncGuideAccountDisplays();
 }
-function openGuide(){if(!guideOpen){guideOpen=true;guideSelIdx=0;playSfx('guide_open.wav');guideEl.classList.add('on');applyGSel();updateControlLegend();}}
+function openGuide(){if(!guideOpen){guideOpen=true;guideSelIdx=0;updateGuideClock();playSfx('guide_open.wav');document.body.classList.add('guide-main-open');guideEl.classList.add('on');applyGSel();updateControlLegend();}}
 function openGuide2(){if(!guide2Open){guide2Open=true;guideSelIdx=0;playSfx('guide_open.wav');guide2El.classList.add('on');applyGSel();updateControlLegend();}}
 function closeGuide(){
   if(guide2Open){guide2Open=false;playSfx('guide_close.wav');guide2El.classList.remove('on');refreshMarketplaceArchiveStatus();updateControlLegend();return;}
-  if(!guideOpen)return;guideOpen=false;playSfx('guide_close.wav');guideEl.classList.remove('on');updateControlLegend();
+  if(!guideOpen)return;guideOpen=false;playSfx('guide_close.wav');document.body.classList.remove('guide-main-open');guideEl.classList.remove('on');updateControlLegend();
 }
 function toggleDebugPanels(){
   debugPanels=!debugPanels;
@@ -3408,6 +3472,42 @@ async function openThirdPartyGuide(providerId){openGuide2();await loadGuideAccou
 function applyGSel(){getGuideItems().forEach((b,i)=>b.classList.toggle('sel',i===guideSelIdx));}
 function guideUp(){const items=getGuideItems();if(!items.length)return;guideSelIdx=(guideSelIdx-1+items.length)%items.length;applyGSel();playSfx('cursor.wav');}
 function guideDown(){const items=getGuideItems();if(!items.length)return;guideSelIdx=(guideSelIdx+1)%items.length;applyGSel();playSfx('cursor.wav');}
+function guideMoveDirectional(dx,dy){
+  const items=getGuideItems();
+  const current=items[guideSelIdx];
+  if(!items.length||!current)return;
+  const cur=current.getBoundingClientRect();
+  const curX=cur.left+cur.width/2;
+  const curY=cur.top+cur.height/2;
+  let bestIdx=-1;
+  let bestScore=Infinity;
+  items.forEach((item,idx)=>{
+    if(idx===guideSelIdx)return;
+    const rect=item.getBoundingClientRect();
+    const x=rect.left+rect.width/2;
+    const y=rect.top+rect.height/2;
+    const deltaX=x-curX;
+    const deltaY=y-curY;
+    if(dx<0 && deltaX>=-6)return;
+    if(dx>0 && deltaX<=6)return;
+    if(dy<0 && deltaY>=-6)return;
+    if(dy>0 && deltaY<=6)return;
+    const major=dx?Math.abs(deltaX):Math.abs(deltaY);
+    const minor=dx?Math.abs(deltaY):Math.abs(deltaX);
+    const score=major+(minor*.45);
+    if(score<bestScore){bestScore=score;bestIdx=idx;}
+  });
+  if(bestIdx<0){
+    if(dy<0)guideUp();
+    else if(dy>0)guideDown();
+    return;
+  }
+  guideSelIdx=bestIdx;
+  applyGSel();
+  playSfx('cursor.wav');
+}
+function guideLeft(){guideMoveDirectional(-1,0);}
+function guideRight(){guideMoveDirectional(1,0);}
 async function saveGuideAccount(){
   const refs=getGuideAccountRefs();
   const login=refs.loginInput?.value.trim()||'';
@@ -3471,7 +3571,7 @@ document.addEventListener('keydown',e=>{
     if(e.key==='ArrowLeft')vkMove(-1);else if(e.key==='ArrowRight')vkMove(1);else if(e.key==='ArrowUp')vkMove(-10);else if(e.key==='ArrowDown')vkMove(10);else if(e.key==='Enter'||e.key===' ')vkActivate();else if(e.key==='Backspace')vkBackspace();else if(e.key==='Escape'||e.key==='b')closeKeyboard(true);
     e.preventDefault();return;
   }
-  if(guide2Open||guideOpen){if(handlePhysicalTextKey(e)){e.preventDefault();return;}if(e.key==='ArrowUp')guideUp();else if(e.key==='ArrowDown')guideDown();else if(e.key==='Enter'||e.key===' ')guideSelect();else if(e.key==='Escape'||e.key==='b')closeGuide();e.preventDefault();return;}
+  if(guide2Open||guideOpen){if(handlePhysicalTextKey(e)){e.preventDefault();return;}if(e.key==='ArrowUp')guideMoveDirectional(0,-1);else if(e.key==='ArrowDown')guideMoveDirectional(0,1);else if(e.key==='ArrowLeft')guideLeft();else if(e.key==='ArrowRight')guideRight();else if(e.key==='Enter'||e.key===' ')guideSelect();else if(e.key==='Escape'||e.key==='b')closeGuide();e.preventDefault();return;}
   if(folderBrowserState.open){
     if(e.key==='ArrowUp')moveFolderBrowserSelection(-1);else if(e.key==='ArrowDown')moveFolderBrowserSelection(1);else if(e.key==='Enter'||e.key===' ')openSelectedFolderBrowserEntry();else if(e.key==='y'||e.key==='Y')chooseCurrentFolderBrowserPath();else if(e.key==='Escape'||e.key==='Backspace'||e.key==='b')folderBrowserBack();
     e.preventDefault();return;
@@ -3561,8 +3661,10 @@ function padPoll(){
     if(just(PAD.B)||just(PAD.GUIDE))closeKeyboard(true);
   }else if(guide2Open||guideOpen){
     updatePadVerticalHold(0);
-    if(just(PAD.DU)||(axU<-DEAD&&!padPrev._aU))guideUp();
-    if(just(PAD.DD)||(axU>DEAD&&!padPrev._aD))guideDown();
+    if(just(PAD.DL)||(axL<-DEAD&&!padPrev._aL))guideLeft();
+    if(just(PAD.DR)||(axL>DEAD&&!padPrev._aR))guideRight();
+    if(just(PAD.DU)||(axU<-DEAD&&!padPrev._aU))guideMoveDirectional(0,-1);
+    if(just(PAD.DD)||(axU>DEAD&&!padPrev._aD))guideMoveDirectional(0,1);
     if(just(PAD.A))guideSelect();
     if(just(PAD.B)||just(PAD.GUIDE))closeGuide();
   }else if(folderBrowserState.open){
