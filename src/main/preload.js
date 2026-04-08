@@ -46,6 +46,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   downloadCancel: (opts)  => ipcRenderer.invoke('download-cancel', opts),
   marketplaceInstall: (opts) => ipcRenderer.invoke('marketplace-install', opts),
   archiveProbeDownload: (opts) => ipcRenderer.invoke('archiveorg-probe-download', opts),
+  fetchMarketplaceThemesCatalog: (opts) => ipcRenderer.invoke('marketplace-themes-catalog', opts),
+  inspectMarketplaceThemeFolder: (opts) => ipcRenderer.invoke('marketplace-theme-folder-inspect', opts),
+  downloadMarketplaceThemeFolder: (opts) => ipcRenderer.invoke('marketplace-theme-folder-download', opts),
+  listDownloadedMarketplaceThemes: () => ipcRenderer.invoke('marketplace-themes-downloaded'),
+  deleteMarketplaceTheme: (opts) => ipcRenderer.invoke('marketplace-theme-delete', opts),
   onDownloadProgress: (cb) => ipcRenderer.on('download-progress', (_, data) => cb(data)),
 
   // Extract / Install / Delete

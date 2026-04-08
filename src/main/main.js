@@ -8,6 +8,7 @@ const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path   = require('path');
 const fs     = require('fs');
 const https  = require('https');
+const { pathToFileURL } = require('url');
 const { execFile, spawn } = require('child_process');
 const extractZip = require('extract-zip');
 const stoat = require('./stoat');
@@ -43,6 +44,8 @@ const ART_PROVIDER_RA_DIR   = path.join(ART_PROVIDERS_DIR, 'retroachievements');
 const ART_PROVIDER_ARCHIVE_DIR = path.join(ART_PROVIDERS_DIR, 'archiveorg');
 const THUMB_CACHE_DIR   = path.join(ART_PROVIDER_ARCHIVE_DIR, 'thumbs');
 const SGDB_CACHE_DIR    = ART_PROVIDER_SGDB_DIR;
+const MARKETPLACE_DIR   = path.join(USER_DATA, 'marketplace');
+const MARKETPLACE_THEMES_DIR = path.join(MARKETPLACE_DIR, 'themes', 'xbox360');
 const MARKETPLACE_METADATA_CACHE = Object.create(null);
 
 [
@@ -62,6 +65,8 @@ const MARKETPLACE_METADATA_CACHE = Object.create(null);
   ART_PROVIDER_ARCHIVE_DIR,
   THUMB_CACHE_DIR,
   SGDB_CACHE_DIR,
+  MARKETPLACE_DIR,
+  MARKETPLACE_THEMES_DIR,
 ].forEach(d => {
   if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });
 });
@@ -1556,6 +1561,523 @@ function archiveDownloadHeaders(cookieHeader = '', referer = 'https://archive.or
   return headers;
 }
 
+const MARKETPLACE_THEME_SOURCES = [
+  {
+    id: 'xbox360-themes',
+    label: 'Xbox 360 Themes',
+    url: 'https://archive.org/download/Xbox_360_Themes_Archivev.1/Xbox%20360%20Themes/',
+    isCustom: false,
+  },
+  {
+    id: 'xbox360-custom-themes',
+    label: 'Xbox 360 Custom Themes',
+    url: 'https://archive.org/download/Xbox_360_Themes_Archivev.1/Xbox%20360%20Themes/Custom%20Themes/',
+    isCustom: true,
+  },
+];
+let marketplaceThemesCatalogCache = null;
+let marketplaceThemesCatalogCacheAt = 0;
+
+function decodeHtmlEntityText(value = '') {
+  return String(value)
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>');
+}
+
+function safeDecodeUriComponent(value = '') {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
+async function fetchArchiveText(url, referer = 'https://archive.org/details/Xbox_360_Themes_Archivev.1') {
+  const cookieHeader = archiveUrlRequiresAuth(url) ? await buildArchiveCookieHeader() : '';
+  return new Promise((resolve, reject) => {
+    const doRequest = (requestUrl, redirectCount) => {
+      if (redirectCount > 10) return reject(new Error('Too many redirects'));
+      let parsed;
+      try {
+        parsed = new URL(requestUrl);
+      } catch (err) {
+        return reject(err);
+      }
+      const protocol = parsed.protocol === 'https:' ? https : http;
+      const req = protocol.request({
+        hostname: parsed.hostname,
+        path: parsed.pathname + parsed.search,
+        method: 'GET',
+        headers: archiveDownloadHeaders(cookieHeader, referer),
+        timeout: 30000,
+      }, (res) => {
+        const { statusCode, headers } = res;
+        if ([301, 302, 303, 307, 308].includes(statusCode) && headers.location) {
+          res.resume();
+          let next = headers.location;
+          if (next.startsWith('/')) next = `${parsed.protocol}//${parsed.host}${next}`;
+          doRequest(next, redirectCount + 1);
+          return;
+        }
+        if (statusCode !== 200) {
+          res.resume();
+          reject(new Error(`HTTP ${statusCode} from ${parsed.hostname}`));
+          return;
+        }
+        let data = '';
+        res.setEncoding('utf8');
+        res.on('data', chunk => { data += chunk; });
+        res.on('end', () => resolve(data));
+      });
+      req.on('timeout', () => {
+        req.destroy();
+        reject(new Error('Connection timed out'));
+      });
+      req.on('error', reject);
+      req.end();
+    };
+    doRequest(url, 0);
+  });
+}
+
+function parseArchiveThemeDirectory(html, source) {
+  const items = [];
+  const seen = new Set();
+  const hrefRe = /<a\s+[^>]*href=["']([^"']+)["'][^>]*>/gi;
+  let match;
+  while ((match = hrefRe.exec(html))) {
+    const rawHref = decodeHtmlEntityText(match[1] || '').trim();
+    if (!rawHref || rawHref === '../' || rawHref.startsWith('?') || rawHref.startsWith('#')) continue;
+    let url;
+    try {
+      url = new URL(rawHref, source.url);
+    } catch {
+      continue;
+    }
+    if (!url.href.startsWith(source.url)) continue;
+    if (!url.pathname.endsWith('/')) continue;
+    const folderName = safeDecodeUriComponent(path.posix.basename(url.pathname.replace(/\/+$/, '')));
+    if (!folderName || folderName === '.' || folderName === '..') continue;
+    if (!source.isCustom && /^custom themes$/i.test(folderName)) continue;
+    if (seen.has(url.href)) continue;
+    seen.add(url.href);
+    const titleIdMatch = folderName.match(/\(([0-9A-Fa-f]{8})\)\s*$/);
+    const titleId = titleIdMatch?.[1]?.toUpperCase() || '';
+    const title = folderName.replace(/\s*\(([0-9A-Fa-f]{8})\)\s*$/, '').trim() || folderName;
+    items.push({
+      id: `${source.id}:${folderName}`,
+      title,
+      folderName,
+      titleId,
+      type: source.isCustom ? 'Custom Theme' : 'Theme',
+      meta: source.isCustom ? 'Custom theme' : (titleId ? `Title ID ${titleId}` : 'Official theme folder'),
+      isCustom: !!source.isCustom,
+      source: source.id,
+      sourceLabel: source.label,
+      folderUrl: url.href,
+      thumbnailUrl: '',
+      previewImageUrls: [],
+      status: source.isCustom
+        ? 'Custom Xbox 360 dashboard theme from the Archive.org custom theme folder.'
+        : 'Xbox 360 dashboard theme from the Archive.org themes archive.',
+      notes: 'Individual theme file and preview-image detection will be wired after we inspect this folder.',
+    });
+  }
+  return items.sort((a, b) => a.title.localeCompare(b.title));
+}
+
+function parseArchiveFolderListing(html, folderUrl) {
+  const directories = [];
+  const files = [];
+  const seen = new Set();
+  const hrefRe = /<a\s+[^>]*href=["']([^"']+)["'][^>]*>/gi;
+  let match;
+  while ((match = hrefRe.exec(html))) {
+    const rawHref = decodeHtmlEntityText(match[1] || '').trim();
+    if (!rawHref || rawHref === '../' || rawHref.startsWith('?') || rawHref.startsWith('#')) continue;
+    let url;
+    try {
+      url = new URL(rawHref, folderUrl);
+    } catch {
+      continue;
+    }
+    if (!url.href.startsWith(folderUrl)) continue;
+    if (seen.has(url.href)) continue;
+    seen.add(url.href);
+    const isDir = url.pathname.endsWith('/');
+    const name = safeDecodeUriComponent(path.posix.basename(url.pathname.replace(/\/+$/, '')));
+    if (!name || name === '.' || name === '..') continue;
+    const entry = {
+      name,
+      url: url.href,
+      extension: isDir ? '' : path.extname(name).toLowerCase(),
+    };
+    if (isDir) directories.push(entry);
+    else files.push(entry);
+  }
+  return {
+    directories: directories.sort((a, b) => a.name.localeCompare(b.name)),
+    files: files.sort((a, b) => a.name.localeCompare(b.name)),
+  };
+}
+
+function classifyThemeFolderFiles(files = []) {
+  const imageFiles = files.filter(file => ['.jpg', '.jpeg', '.png', '.webp', '.bmp'].includes(file.extension));
+  const thumbnail = imageFiles.find(file => /thumb|thumbnail/i.test(file.name)) || null;
+  const mainImages = imageFiles
+    .filter(file => file.url !== thumbnail?.url)
+    .sort((a, b) => {
+      const aName = a.name.toLowerCase();
+      const bName = b.name.toLowerCase();
+      const aNum = Number((aName.match(/\d+/) || [999])[0]);
+      const bNum = Number((bName.match(/\d+/) || [999])[0]);
+      if (aNum !== bNum) return aNum - bNum;
+      return a.name.localeCompare(b.name);
+    });
+  const themeFile = files.find(file => !imageFiles.some(image => image.url === file.url)) || null;
+  return {
+    thumbnail,
+    mainImages: mainImages.slice(0, 4),
+    images: imageFiles,
+    themeFile,
+  };
+}
+
+function filePathToFileUrl(filePath) {
+  return pathToFileURL(path.resolve(filePath)).href;
+}
+
+function safeThemeIdFromItem(item = {}, title = '') {
+  const raw = item.parentTitle && item.title
+    ? `${item.parentTitle} - ${item.title}`
+    : (title || item.title || item.id || 'Xbox 360 Theme');
+  return sanitizeFolderName(raw).slice(0, 120);
+}
+
+function sortThemeImages(files = []) {
+  return [...files].sort((a, b) => {
+    const aName = String(a.name || '').toLowerCase();
+    const bName = String(b.name || '').toLowerCase();
+    const aNum = Number((aName.match(/\d+/) || [999])[0]);
+    const bNum = Number((bName.match(/\d+/) || [999])[0]);
+    if (aNum !== bNum) return aNum - bNum;
+    return String(a.name || '').localeCompare(String(b.name || ''));
+  });
+}
+
+function rebuildDownloadedThemeManifest(manifest = {}, manifestDir = '') {
+  const files = Array.isArray(manifest.files) ? manifest.files.map(file => {
+    const name = file?.name || (file?.filePath ? path.basename(file.filePath) : '');
+    const filePath = file?.filePath || (name ? path.join(manifestDir, sanitizeFolderName(name)) : '');
+    const extension = String(file?.extension || path.extname(name || filePath)).toLowerCase();
+    return {
+      ...file,
+      name,
+      extension,
+      filePath,
+      fileUrl: filePath && fs.existsSync(filePath) ? filePathToFileUrl(filePath) : (file?.fileUrl || ''),
+    };
+  }) : [];
+
+  const imageFiles = files.filter(file => ['.jpg', '.jpeg', '.png', '.webp', '.bmp'].includes(file.extension));
+  const thumbnail = imageFiles.find(file => /thumb|thumbnail/i.test(file.name)) || null;
+  const mainImages = sortThemeImages(imageFiles.filter(file => file.filePath !== thumbnail?.filePath)).slice(0, 4);
+  const nonImageFiles = files.filter(file => !imageFiles.some(image => image.filePath === file.filePath));
+  const themeFile = nonImageFiles.find(file => file.fileUrl) || null;
+
+  return {
+    ...manifest,
+    installDir: manifest.installDir || manifestDir,
+    thumbnail: thumbnail?.fileUrl || mainImages[0]?.fileUrl || manifest.thumbnail || '',
+    themeFile: themeFile?.fileUrl || manifest.themeFile || '',
+    backgrounds: {
+      ...(manifest.backgrounds || {}),
+      image1: mainImages[0]?.fileUrl || manifest.backgrounds?.image1 || '',
+      image2: mainImages[1]?.fileUrl || manifest.backgrounds?.image2 || '',
+      image3: mainImages[2]?.fileUrl || manifest.backgrounds?.image3 || '',
+      image4: mainImages[3]?.fileUrl || manifest.backgrounds?.image4 || '',
+    },
+    files,
+  };
+}
+
+function migrateDownloadedThemeManifest(rawManifest = {}, manifestDir = '') {
+  const cleanId = safeThemeIdFromItem({}, rawManifest.title || rawManifest.id || path.basename(manifestDir));
+  const cleanDir = path.join(MARKETPLACE_THEMES_DIR, cleanId);
+  if (!cleanId || path.resolve(cleanDir) === path.resolve(manifestDir)) {
+    return { manifest: rawManifest, manifestDir };
+  }
+
+  const legacyDirName = path.basename(manifestDir);
+  const shouldMigrate = legacyDirName.length > 120 || /%[0-9A-Fa-f]{2}/.test(legacyDirName) || legacyDirName.startsWith('theme-child_');
+  if (!shouldMigrate) return { manifest: rawManifest, manifestDir };
+
+  if (!fs.existsSync(cleanDir)) fs.mkdirSync(cleanDir, { recursive: true });
+  const files = Array.isArray(rawManifest.files) ? rawManifest.files.map(file => {
+    const name = file?.name || (file?.filePath ? path.basename(file.filePath) : '');
+    if (!name) return file;
+    const destFile = path.join(cleanDir, sanitizeFolderName(name));
+    const sourceFile = file?.filePath && fs.existsSync(file.filePath)
+      ? file.filePath
+      : path.join(manifestDir, sanitizeFolderName(name));
+    try {
+      if (fs.existsSync(sourceFile) && !fs.existsSync(destFile)) {
+        fs.copyFileSync(sourceFile, destFile);
+      }
+    } catch {}
+    return {
+      ...file,
+      filePath: destFile,
+      fileUrl: '',
+    };
+  }) : [];
+
+  return {
+    manifestDir: cleanDir,
+    manifest: {
+      ...rawManifest,
+      id: cleanId,
+      installDir: cleanDir,
+      thumbnail: '',
+      themeFile: '',
+      backgrounds: {},
+      files,
+    },
+  };
+}
+
+async function downloadArchiveFileToPath(url, destFile, referer = 'https://archive.org/details/Xbox_360_Themes_Archivev.1') {
+  const cookieHeader = archiveUrlRequiresAuth(url) ? await buildArchiveCookieHeader() : '';
+  if (!fs.existsSync(path.dirname(destFile))) fs.mkdirSync(path.dirname(destFile), { recursive: true });
+  return new Promise((resolve) => {
+    const doRequest = (requestUrl, redirectCount) => {
+      if (redirectCount > 10) return resolve({ ok: false, error: 'Too many redirects', url });
+      let parsed;
+      try {
+        parsed = new URL(requestUrl);
+      } catch (err) {
+        return resolve({ ok: false, error: err.message, url });
+      }
+      const protocol = parsed.protocol === 'https:' ? https : http;
+      const req = protocol.request({
+        hostname: parsed.hostname,
+        path: parsed.pathname + parsed.search,
+        method: 'GET',
+        headers: archiveDownloadHeaders(cookieHeader, referer),
+        timeout: 30000,
+      }, (res) => {
+        const { statusCode, headers } = res;
+        if ([301, 302, 303, 307, 308].includes(statusCode) && headers.location) {
+          res.resume();
+          let next = headers.location;
+          if (next.startsWith('/')) next = `${parsed.protocol}//${parsed.host}${next}`;
+          doRequest(next, redirectCount + 1);
+          return;
+        }
+        if (statusCode !== 200) {
+          res.resume();
+          return resolve({ ok: false, error: `HTTP ${statusCode} from ${parsed.hostname}`, url });
+        }
+        const file = fs.createWriteStream(destFile);
+        res.pipe(file);
+        file.on('finish', () => {
+          file.close();
+          resolve({ ok: true, filePath: destFile, url });
+        });
+        file.on('error', err => {
+          fs.unlink(destFile, () => {});
+          resolve({ ok: false, error: err.message, url });
+        });
+      });
+      req.on('timeout', () => {
+        req.destroy();
+        resolve({ ok: false, error: 'Connection timed out', url });
+      });
+      req.on('error', err => resolve({ ok: false, error: err.message, url }));
+      req.end();
+    };
+    doRequest(url, 0);
+  });
+}
+
+async function inspectMarketplaceThemeFolder({ folderUrl } = {}) {
+  if (!folderUrl) return { ok: false, error: 'Missing theme folder URL.' };
+  const html = await fetchArchiveText(folderUrl);
+  const listing = parseArchiveFolderListing(html, folderUrl.endsWith('/') ? folderUrl : `${folderUrl}/`);
+  const classified = classifyThemeFolderFiles(listing.files);
+  return {
+    ok: true,
+    folderUrl,
+    directories: listing.directories,
+    files: listing.files,
+    ...classified,
+    mapping: {
+      live: classified.mainImages[0]?.url || '',
+      games: classified.mainImages[1]?.url || '',
+      media: classified.mainImages[2]?.url || '',
+      system: classified.mainImages[3]?.url || '',
+      marketplace: classified.mainImages[3]?.url || '',
+    },
+  };
+}
+
+async function downloadMarketplaceThemeFolder({ item = {}, folderUrl = '', title = '', force = false } = {}) {
+  const effectiveFolderUrl = folderUrl || item.folderUrl || item.sourceUrl || '';
+  if (!effectiveFolderUrl) return { ok: false, error: 'Missing theme folder URL.' };
+  const displayTitle = title || item.title || 'Xbox 360 Theme';
+  const detail = await inspectMarketplaceThemeFolder({ folderUrl: effectiveFolderUrl });
+  if (!detail?.ok) return detail;
+  if (detail.directories?.length && !detail.files?.length) {
+    return {
+      ok: false,
+      error: 'This is a parent folder. Open one of the child theme folders before downloading.',
+      requiresChildFolder: true,
+      detail,
+    };
+  }
+  const files = detail.files || [];
+  if (!files.length) return { ok: false, error: 'No downloadable files were found in this theme folder.', detail };
+
+  const themeId = safeThemeIdFromItem(item, displayTitle);
+  const destDir = path.join(MARKETPLACE_THEMES_DIR, themeId);
+  if (!fs.existsSync(destDir)) fs.mkdirSync(destDir, { recursive: true });
+
+  const downloaded = [];
+  for (const file of files) {
+    const destFile = path.join(destDir, sanitizeFolderName(file.name || path.basename(file.url)));
+    if (!force && fs.existsSync(destFile)) {
+      downloaded.push({ ...file, filePath: destFile, fileUrl: filePathToFileUrl(destFile), cached: true });
+      continue;
+    }
+    const result = await downloadArchiveFileToPath(file.url, destFile, effectiveFolderUrl);
+    if (!result?.ok) return { ok: false, error: result?.error || 'Could not download theme file.', failedFile: file, downloaded, detail };
+    downloaded.push({ ...file, filePath: destFile, fileUrl: filePathToFileUrl(destFile), cached: false });
+  }
+
+  const downloadedByUrl = new Map(downloaded.map(file => [file.url, file]));
+  const localFor = source => source?.url ? downloadedByUrl.get(source.url)?.fileUrl || '' : '';
+  const localMainImages = (detail.mainImages || []).map(localFor);
+  const theme = {
+    id: themeId,
+    title: displayTitle,
+    source: 'archiveorg',
+    folderUrl: effectiveFolderUrl,
+    installDir: destDir,
+    thumbnail: localFor(detail.thumbnail) || localMainImages[0] || '',
+    themeFile: localFor(detail.themeFile) || '',
+    backgrounds: {
+      image1: localMainImages[0] || '',
+      image2: localMainImages[1] || '',
+      image3: localMainImages[2] || '',
+      image4: localMainImages[3] || '',
+    },
+  };
+
+  fs.writeFileSync(path.join(destDir, 'skald-theme.json'), JSON.stringify({
+    ...theme,
+    downloadedAt: Date.now(),
+    files: downloaded.map(file => ({
+      name: file.name,
+      url: file.url,
+      filePath: file.filePath,
+      fileUrl: file.fileUrl,
+      extension: file.extension,
+    })),
+  }, null, 2));
+
+  return { ok: true, theme, installDir: destDir, files: downloaded, detail };
+}
+
+function listDownloadedMarketplaceThemes() {
+  if (!fs.existsSync(MARKETPLACE_THEMES_DIR)) {
+    return { ok: true, themes: [], baseDir: MARKETPLACE_THEMES_DIR };
+  }
+  const themesById = new Map();
+  for (const entry of fs.readdirSync(MARKETPLACE_THEMES_DIR, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const manifestPath = path.join(MARKETPLACE_THEMES_DIR, entry.name, 'skald-theme.json');
+    if (!fs.existsSync(manifestPath)) continue;
+    try {
+      const rawManifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+      const migrated = migrateDownloadedThemeManifest(rawManifest, path.dirname(manifestPath));
+      const manifestDir = migrated.manifestDir;
+      const manifest = rebuildDownloadedThemeManifest(migrated.manifest, manifestDir);
+      if (!manifest?.id || !manifest?.backgrounds) continue;
+      try {
+        fs.writeFileSync(path.join(manifestDir, 'skald-theme.json'), JSON.stringify(manifest, null, 2));
+      } catch {}
+      themesById.set(manifest.id, {
+        id: manifest.id,
+        title: manifest.title || entry.name,
+        source: manifest.source || 'local',
+        folderUrl: manifest.folderUrl || '',
+        installDir: manifest.installDir || path.join(MARKETPLACE_THEMES_DIR, entry.name),
+        thumbnail: manifest.thumbnail || '',
+        themeFile: manifest.themeFile || '',
+        backgrounds: manifest.backgrounds || {},
+        downloadedAt: manifest.downloadedAt || 0,
+      });
+    } catch {}
+  }
+  const themes = [...themesById.values()];
+  themes.sort((a, b) => (b.downloadedAt || 0) - (a.downloadedAt || 0) || a.title.localeCompare(b.title));
+  return { ok: true, themes, baseDir: MARKETPLACE_THEMES_DIR };
+}
+
+function deleteDownloadedMarketplaceTheme({ themeId = '', installDir = '' } = {}) {
+  const requestedPath = installDir || (themeId ? path.join(MARKETPLACE_THEMES_DIR, themeId) : '');
+  if (!requestedPath) return { ok: false, error: 'Missing theme to delete.' };
+  let resolved;
+  try {
+    resolved = path.resolve(requestedPath);
+  } catch (err) {
+    return { ok: false, error: err.message || 'Invalid theme path.' };
+  }
+  const root = path.resolve(MARKETPLACE_THEMES_DIR);
+  if (resolved !== root && !resolved.startsWith(`${root}${path.sep}`)) {
+    return { ok: false, error: 'Theme folder is outside the SKALD theme cache.' };
+  }
+  const manifestPath = path.join(resolved, 'skald-theme.json');
+  if (!fs.existsSync(resolved) || !fs.existsSync(manifestPath)) {
+    return { ok: false, error: 'Downloaded theme was not found.' };
+  }
+  fs.rmSync(resolved, { recursive: true, force: true });
+  return { ok: true, deleted: resolved };
+}
+
+async function fetchMarketplaceThemesCatalog({ force = false } = {}) {
+  const maxAgeMs = 1000 * 60 * 15;
+  if (!force && marketplaceThemesCatalogCache && Date.now() - marketplaceThemesCatalogCacheAt < maxAgeMs) {
+    return { ...marketplaceThemesCatalogCache, cached: true };
+  }
+  const sourceResults = await Promise.allSettled(MARKETPLACE_THEME_SOURCES.map(async source => {
+    const html = await fetchArchiveText(source.url);
+    return { source, items: parseArchiveThemeDirectory(html, source) };
+  }));
+  const items = [];
+  const errors = [];
+  sourceResults.forEach(result => {
+    if (result.status === 'fulfilled') {
+      items.push(...result.value.items);
+    } else {
+      errors.push(result.reason?.message || String(result.reason || 'Unknown error'));
+    }
+  });
+  const payload = {
+    ok: items.length > 0 || errors.length === 0,
+    items,
+    errors,
+    sources: MARKETPLACE_THEME_SOURCES.map(({ id, label, url, isCustom }) => ({ id, label, url, isCustom })),
+    fetchedAt: Date.now(),
+  };
+  marketplaceThemesCatalogCache = payload;
+  marketplaceThemesCatalogCacheAt = Date.now();
+  return { ...payload, cached: false };
+}
+
 async function probeArchiveDownloadAccess(downloadUrl) {
   if (!downloadUrl) return { ok: false, error: 'Missing download URL.' };
   const cookieHeader = archiveUrlRequiresAuth(downloadUrl) ? await buildArchiveCookieHeader() : '';
@@ -1908,6 +2430,11 @@ ipcMain.handle('download-start', async (event, { identifier, downloadUrl, fileNa
 });
 
 ipcMain.handle('archiveorg-probe-download', async (_, { downloadUrl }) => probeArchiveDownloadAccess(downloadUrl));
+ipcMain.handle('marketplace-themes-catalog', async (_, opts = {}) => fetchMarketplaceThemesCatalog(opts));
+ipcMain.handle('marketplace-theme-folder-inspect', async (_, opts = {}) => inspectMarketplaceThemeFolder(opts));
+ipcMain.handle('marketplace-theme-folder-download', async (_, opts = {}) => downloadMarketplaceThemeFolder(opts));
+ipcMain.handle('marketplace-themes-downloaded', async () => listDownloadedMarketplaceThemes());
+ipcMain.handle('marketplace-theme-delete', async (_, opts = {}) => deleteDownloadedMarketplaceTheme(opts));
 
 ipcMain.handle('download-cancel', (_, { identifier }) => {
   const dl = activeDownloads.get(identifier);
