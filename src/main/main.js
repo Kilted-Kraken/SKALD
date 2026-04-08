@@ -647,6 +647,36 @@ function saveSettings(data) {
   fs.writeFileSync(SETTINGS_PATH, JSON.stringify(data, null, 2));
 }
 
+const PROFILE_GAMERPICS_DIR = 'C:\\Projects\\RG-THEMES\\X360 BLADES\\XBMC360\\XBMC360\\03.Extras\\GamerPics';
+function normalizeStoatProfiles(settings) {
+  if (!Array.isArray(settings.stoatProfiles)) settings.stoatProfiles = [];
+  settings.stoatProfiles = settings.stoatProfiles
+    .filter(profile => profile && typeof profile === 'object' && profile.id && profile.session)
+    .map(profile => ({
+      id: String(profile.id),
+      username: String(profile.username || ''),
+      displayName: String(profile.displayName || profile.display_name || profile.username || ''),
+      avatar: String(profile.avatar || ''),
+      session: profile.session,
+    }));
+  return settings.stoatProfiles;
+}
+function upsertStoatProfile(settings, user, session) {
+  const profiles = normalizeStoatProfiles(settings);
+  const id = String(user?.id || user?.username || user?.email || Date.now());
+  const next = {
+    id,
+    username: String(user?.username || ''),
+    displayName: String(user?.displayName || user?.display_name || user?.username || ''),
+    avatar: String(user?.avatar || ''),
+    session,
+  };
+  const idx = profiles.findIndex(profile => String(profile.id) === id);
+  if (idx >= 0) profiles[idx] = { ...profiles[idx], ...next };
+  else profiles.push(next);
+  return next;
+}
+
 const DEFAULT_METADATA_SERVICE_URL = 'https://skald-metadata-worker.uberbeau.workers.dev';
 
 function getMetadataServiceSettings(settings = loadSettings()) {
@@ -1073,6 +1103,29 @@ ipcMain.handle('thirdparty-clear-account', (_, { provider }) => {
 
 ipcMain.handle('settings-get',  ()      => loadSettings());
 ipcMain.handle('settings-save', (_, s)  => { saveSettings(s); return { ok: true }; });
+ipcMain.handle('profile-gamerpics-list', async () => {
+  try {
+    if (!fs.existsSync(PROFILE_GAMERPICS_DIR)) return [];
+    const files = fs.readdirSync(PROFILE_GAMERPICS_DIR, { withFileTypes: true })
+      .filter(entry => entry.isFile())
+      .map(entry => entry.name)
+      .filter(name => /\.(png|jpe?g|webp|bmp)$/i.test(name))
+      .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+    return files.map(name => {
+      const fullPath = path.join(PROFILE_GAMERPICS_DIR, name);
+      const normalized = fullPath.replace(/\\/g, '/');
+      return {
+        id: path.parse(name).name.toLowerCase(),
+        title: path.parse(name).name,
+        fileName: name,
+        path: fullPath,
+        url: `file:///${normalized}`,
+      };
+    });
+  } catch {
+    return [];
+  }
+});
 ipcMain.handle('choose-folder', async () => {
   const res = await dialog.showOpenDialog(mainWindow, { properties: ['openDirectory'] });
   return res.canceled ? null : res.filePaths[0];
@@ -4558,9 +4611,9 @@ app.whenReady().then(async () => {
 ipcMain.handle('stoat-login', async (_, { email, password }) => {
   const result = await stoat.login(email, password);
   if (result.ok && result.session) {
-    // Persist session token in settings
     const settings = loadSettings();
     settings.stoatSession = result.session;
+    if (result.user) upsertStoatProfile(settings, result.user, result.session);
     saveSettings(settings);
   }
   return result;
@@ -4574,6 +4627,23 @@ ipcMain.handle('stoat-logout', () => {
 });
 
 ipcMain.handle('stoat-status', () => stoat.getStatus());
+ipcMain.handle('stoat-list-profiles', () => {
+  const settings = loadSettings();
+  return normalizeStoatProfiles(settings);
+});
+ipcMain.handle('stoat-switch-profile', async (_, { profileId }) => {
+  const settings = loadSettings();
+  const profiles = normalizeStoatProfiles(settings);
+  const profile = profiles.find(entry => String(entry.id) === String(profileId || ''));
+  if (!profile) return { ok: false, error: 'Profile not found' };
+  const result = await stoat.useExistingSession(profile.session);
+  if (result.ok) {
+    settings.stoatSession = profile.session;
+    if (result.user) upsertStoatProfile(settings, result.user, profile.session);
+    saveSettings(settings);
+  }
+  return result;
+});
 
 ipcMain.handle('stoat-servers', () => stoat.getServers());
 
