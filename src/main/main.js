@@ -373,6 +373,32 @@ function buildGameSlug(value) {
     .replace(/^_+|_+$/g, '') || 'game';
 }
 
+function normalizeHltbTitle(value) {
+  return String(value || '')
+    .replace(/\.(zip|7z|rar|sfc|smc|snes|nes|gba|gbc|gb|md|gen|smd|n64|z64|v64|nds|pce|chd|cue|bin|img|iso|cso|pbp)$/i, '')
+    .replace(/\[[^\]]*\]/g, ' ')
+    .replace(/\([^)]*\)/g, ' ')
+    .replace(/\b(disc|disk|track)\s*\d+\b/gi, ' ')
+    .replace(/\b(cd|dvd)\s*\d+\b/gi, ' ')
+    .replace(/\s+-\s+disc\s+\d+$/i, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function hltbTitleVariants(value) {
+  const variants = [];
+  const add = (candidate) => {
+    const clean = String(candidate || '').replace(/\s+/g, ' ').trim();
+    if (!clean) return;
+    if (!variants.some(existing => existing.toLowerCase() === clean.toLowerCase())) variants.push(clean);
+  };
+  add(value);
+  add(normalizeHltbTitle(value));
+  add(normalizeHltbTitle(value).replace(/\s*:\s*/g, ' '));
+  add(normalizeHltbTitle(value).replace(/\s+-\s+/g, ' '));
+  return variants;
+}
+
 function fileUrlFromPath(filePath) {
   return filePath ? 'file:///' + filePath.replace(/\\/g, '/') : null;
 }
@@ -1045,6 +1071,38 @@ ipcMain.handle('settings-save', (_, s)  => { saveSettings(s); return { ok: true 
 ipcMain.handle('choose-folder', async () => {
   const res = await dialog.showOpenDialog(mainWindow, { properties: ['openDirectory'] });
   return res.canceled ? null : res.filePaths[0];
+});
+ipcMain.handle('folder-browser-list', async (_, { dir } = {}) => {
+  const home = app.getPath('home');
+  if (!dir) {
+    const roots = [];
+    if (process.platform === 'win32') {
+      for (let code = 65; code <= 90; code += 1) {
+        const drive = `${String.fromCharCode(code)}:\\`;
+        if (fs.existsSync(drive)) roots.push({ name: drive, path: drive, type: 'drive' });
+      }
+    } else {
+      roots.push({ name: '/', path: '/', type: 'drive' });
+      if (home && home !== '/') roots.push({ name: 'Home', path: home, type: 'folder' });
+    }
+    return { ok: true, dir: '', parent: null, roots: true, entries: roots };
+  }
+  const resolved = path.resolve(dir);
+  if (!fs.existsSync(resolved)) return { ok: false, error: 'Folder does not exist.' };
+  const stat = fs.statSync(resolved);
+  if (!stat.isDirectory()) return { ok: false, error: 'Path is not a folder.' };
+  let entries = [];
+  try {
+    entries = fs.readdirSync(resolved, { withFileTypes: true })
+      .filter(entry => entry.isDirectory())
+      .map(entry => ({ name: entry.name, path: path.join(resolved, entry.name), type: 'folder' }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  } catch (e) {
+    return { ok: false, error: e.message || 'Could not read folder.' };
+  }
+  const parent = path.dirname(resolved);
+  const isRoot = parent === resolved;
+  return { ok: true, dir: resolved, parent: isRoot ? null : parent, roots: false, entries };
 });
 ipcMain.handle('storage-rerun-art-migration', async () => {
   const settings = loadSettings();
@@ -3005,10 +3063,10 @@ ipcMain.handle('hltb-prefetch-next', async (_, { cleanName }) => {
   const cachePath = path.join(HLTB_CACHE_DIR, `${slug}.json`);
   if (fs.existsSync(cachePath)) return { ok: true, skipped: true };
 
-  const token = await getHltbToken();
-  if (!token) return { ok: false, skipped: false, error: 'no token' };
+  const auth = await getHltbAuth();
+  if (!auth?.token) return { ok: false, skipped: false, error: 'no token' };
 
-  const body = JSON.stringify({
+  const bodyPayload = {
     searchType: 'games', searchTerms: cleanName.split(' ').filter(Boolean),
     searchPage: 1, size: 5,
     searchOptions: {
@@ -3019,16 +3077,21 @@ ipcMain.handle('hltb-prefetch-next', async (_, { cleanName }) => {
       filter: '', sort: 0, randomizer: 0,
     },
     useCache: true,
-  });
+  };
+  if (auth.hpKey) bodyPayload[auth.hpKey] = auth.hpVal;
+  const body = JSON.stringify(bodyPayload);
 
   return new Promise((resolve) => {
     const req = https.request({
-      hostname: 'howlongtobeat.com', path: '/api/finder', method: 'POST',
+      hostname: 'howlongtobeat.com', path: '/api/find', method: 'POST',
       headers: {
         'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body),
         'Referer': 'https://howlongtobeat.com/',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36',
-        'Accept': '*/*', 'x-auth-token': token,
+        'Accept': '*/*',
+        'x-auth-token': auth.token,
+        'x-hp-key': auth.hpKey || '',
+        'x-hp-val': auth.hpVal || '',
       },
     }, (res) => {
       let data = '';
@@ -3087,13 +3150,13 @@ ipcMain.handle('hltb-prefetch-next', async (_, { cleanName }) => {
 });
 
 // HLTB token cache — valid for 55 minutes
-let _hltbToken = null;
+let _hltbAuth = null;
 let _hltbTokenExpiry = 0;
 
-function getHltbToken() {
-  if (_hltbToken && Date.now() < _hltbTokenExpiry) return Promise.resolve(_hltbToken);
+function getHltbAuth() {
+  if (_hltbAuth?.token && Date.now() < _hltbTokenExpiry) return Promise.resolve(_hltbAuth);
   return new Promise((resolve) => {
-    https.get(`https://howlongtobeat.com/api/finder/init?t=${Date.now()}`, {
+    https.get(`https://howlongtobeat.com/api/find/init?t=${Date.now()}`, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36',
         'Referer':    'https://howlongtobeat.com/',
@@ -3103,17 +3166,22 @@ function getHltbToken() {
       res.on('data', c => data += c);
       res.on('end', () => {
         try {
-          _hltbToken       = JSON.parse(data).token || null;
+          const parsed = JSON.parse(data);
+          _hltbAuth        = parsed.token ? { token: parsed.token, hpKey: parsed.hpKey || null, hpVal: parsed.hpVal || null } : null;
           _hltbTokenExpiry = Date.now() + 55 * 60 * 1000;
-          console.log('[hltb] token ok:', !!_hltbToken);
-        } catch { _hltbToken = null; }
-        resolve(_hltbToken);
+          console.log('[hltb] token ok:', !!_hltbAuth?.token);
+        } catch { _hltbAuth = null; }
+        resolve(_hltbAuth);
       });
     }).on('error', () => resolve(null));
   });
 }
 
-ipcMain.handle('hltb-search', async (_, { cleanName }) => fetchHltbMetadata(cleanName));
+function getHltbToken() {
+  return getHltbAuth().then(auth => auth?.token || null);
+}
+
+ipcMain.handle('hltb-search', async (_, { cleanName, force = false } = {}) => fetchHltbMetadata(cleanName, { force }));
 
 // ─── RetroAchievements ──────────────────────────────────────────────────────
 // SNES console ID on RA is 3. We cache the full game list for 24h to avoid
@@ -3143,24 +3211,41 @@ function getLibretroSystems() {
   return LIBRETRO_SYSTEMS.map(system => ({ ...system }));
 }
 
-async function fetchHltbMetadata(cleanName) {
+async function fetchHltbMetadata(cleanName, { force = false } = {}) {
+  const variants = hltbTitleVariants(cleanName);
+  let lastResult = null;
+  for (const variant of variants) {
+    const result = await fetchHltbMetadataSingle(variant, { force });
+    lastResult = result;
+    if (result?.ok && result?.data) return { ...result, query: variant };
+    if (result?.cached && result?.error === 'Cached miss') {
+      const forced = await fetchHltbMetadataSingle(variant, { force: true });
+      lastResult = forced;
+      if (forced?.ok && forced?.data) return { ...forced, query: variant };
+    }
+  }
+  return lastResult || { ok: false, error: 'No HLTB query variants available' };
+}
+
+async function fetchHltbMetadataSingle(cleanName, { force = false } = {}) {
   const slug      = buildGameSlug(cleanName);
   const cachePath = path.join(HLTB_CACHE_DIR, `${slug}.json`);
 
-  if (fs.existsSync(cachePath)) {
+  if (!force && fs.existsSync(cachePath)) {
     try {
       const cached = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
-      return { ok: cached !== null, data: cached, cached: true };
+      if (cached !== null) return { ok: true, data: cached, cached: true };
+      const ageMs = Date.now() - fs.statSync(cachePath).mtimeMs;
+      if (ageMs < 10 * 60 * 1000) return { ok: false, data: null, cached: true, error: 'Cached miss' };
     } catch {}
   }
 
-  const token = await getHltbToken();
-  if (!token) {
-    fs.writeFileSync(cachePath, JSON.stringify(null));
+  const auth = await getHltbAuth();
+  if (!auth?.token) {
     return { ok: false, error: 'Could not get HLTB auth token' };
   }
 
-  const body = JSON.stringify({
+  const bodyPayload = {
     searchType: 'games',
     searchTerms: cleanName.split(' ').filter(Boolean),
     searchPage: 1,
@@ -3177,12 +3262,14 @@ async function fetchHltbMetadata(cleanName) {
       filter: '', sort: 0, randomizer: 0,
     },
     useCache: true,
-  });
+  };
+  if (auth.hpKey) bodyPayload[auth.hpKey] = auth.hpVal;
+  const body = JSON.stringify(bodyPayload);
 
   return new Promise((resolve) => {
     const req = https.request({
       hostname: 'howlongtobeat.com',
-      path:     '/api/finder',
+      path:     '/api/find',
       method:   'POST',
       headers: {
         'Content-Type':   'application/json',
@@ -3190,7 +3277,9 @@ async function fetchHltbMetadata(cleanName) {
         'Referer':        'https://howlongtobeat.com/',
         'User-Agent':     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36',
         'Accept':         '*/*',
-        'x-auth-token':   token,
+        'x-auth-token':   auth.token,
+        'x-hp-key':       auth.hpKey || '',
+        'x-hp-val':       auth.hpVal || '',
       },
     }, (res) => {
       let data = '';

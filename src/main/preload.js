@@ -11,6 +11,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getSettings:    ()      => ipcRenderer.invoke('settings-get'),
   saveSettings:   (s)     => ipcRenderer.invoke('settings-save', s),
   chooseFolder:   ()      => ipcRenderer.invoke('choose-folder'),
+  listFolders:    (opts)  => ipcRenderer.invoke('folder-browser-list', opts),
   rerunArtMigration: ()   => ipcRenderer.invoke('storage-rerun-art-migration'),
   clearCatalogCache: ()   => ipcRenderer.invoke('storage-clear-catalog-cache'),
   clearArtCache:    ()    => ipcRenderer.invoke('storage-clear-art-cache'),

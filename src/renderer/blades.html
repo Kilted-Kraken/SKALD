@@ -45,7 +45,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'MC
 .blade-lbl{position:absolute;top:340px;width:100%;writing-mode:vertical-lr;font-family:'MC360','Segoe UI',Tahoma,sans-serif;font-size:22px;letter-spacing:3px;white-space:nowrap;pointer-events:none;text-transform:lowercase;padding:0 8px;box-sizing:border-box;}
 .blade.active .blade-lbl{color:#333;font-size:24px;font-weight:bold;}
 .blade.inactive .blade-lbl{color:#555;}
-#gamercard{position:absolute;top:140px;z-index:30;width:412px;height:200px;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/gamecard_home-silver.webp') no-repeat;background-size:100% 100%;transition:left 180ms ease-out;padding:0;}
+#gamercard{position:absolute;top:152px;z-index:30;width:412px;height:200px;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/gamecard_home-silver.webp') no-repeat;background-size:100% 100%;transition:left 180ms ease-out;padding:0;}
+#home-panel-logo{position:absolute;top:180px;z-index:30;width:450px;height:168px;background-repeat:no-repeat;background-position:center;background-size:contain;filter:drop-shadow(0 8px 14px rgba(0,0,0,.16));transition:left 180ms ease-out;}
 #gc-pic-wrap{position:absolute;left:18px;top:65px;width:100px;height:100px;}
 #gc-pic{width:100px;height:100px;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/gamercard_defaultgamerpic.webp') no-repeat center/cover;}
 #gc-outline{position:absolute;inset:-6px;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/gamercard_iconoutline.webp') no-repeat;background-size:100% 100%;}
@@ -104,7 +105,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'MC
 .games-installed-item{max-width:none;width:100%;min-height:76px;padding:0 12px 0 12px;border:none;border-bottom:2px solid rgba(104,132,74,.24);gap:14px;}
 .games-installed-item::before,.games-installed-item::after{display:none !important;}
 .games-installed-item .micon{width:54px;height:54px;border-radius:0;background-color:transparent;background-size:contain;background-position:center;background-repeat:no-repeat;box-shadow:none;}
-#sub-library-games.achievements-view .games-installed-item .micon{display:none;}
 .games-installed-item.sel{background:linear-gradient(180deg,rgba(255,255,255,.42),rgba(255,255,255,.14));}
 .games-item-index{font-size:14px;color:rgba(0,0,0,.46);margin-top:4px;}
 .games-library-count{align-self:center;margin-top:auto;padding-top:10px;font-size:18px;color:rgba(0,0,0,.56);}
@@ -131,23 +131,75 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'MC
 .games-score-label{display:flex;align-items:center;gap:10px;}
 .games-score-label .micon{width:28px;height:28px;opacity:.95;}
 .games-score-value{font-size:24px;}
-.games-detail-ach-head{padding:10px 18px;border-top:2px solid rgba(118,118,118,.16);border-bottom:2px solid rgba(118,118,118,.16);font-size:21px;color:#111;}
+.games-detail-ach-head{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:10px 18px;border-top:2px solid rgba(118,118,118,.16);border-bottom:2px solid rgba(118,118,118,.16);font-size:21px;color:#111;}
+.games-detail-ach-count{font-size:16px;color:rgba(0,0,0,.58);text-align:right;}
 .games-ach-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:18px;}
 .games-ach-grid.scrollable{max-height:330px;overflow-y:auto;scrollbar-width:none;}
 .games-ach-grid.scrollable::-webkit-scrollbar{display:none;}
-.games-ach-item{display:flex;align-items:center;justify-content:center;position:relative;padding:6px;border-radius:50%;}
+.games-ach-item{display:flex;align-items:center;justify-content:center;position:relative;padding:6px;border-radius:14px;}
 .games-ach-item.sel{background:rgba(255,255,255,.46);box-shadow:inset 0 0 0 2px rgba(64,92,34,.42);}
 .games-ach-badge{width:78px;height:78px;border-radius:50%;background:center/cover no-repeat;box-shadow:0 2px 8px rgba(0,0,0,.18);}
 .games-ach-item.unlocked .games-ach-badge{filter:grayscale(1) brightness(.88);opacity:.62;}
 .games-ach-empty{padding:18px;font-size:18px;line-height:1.4;color:rgba(0,0,0,.58);}
-.games-ach-modal{position:absolute;inset:14px;z-index:8;display:none;align-items:center;justify-content:center;padding:28px;border-radius:14px;background:linear-gradient(180deg,rgba(238,238,231,.96),rgba(205,205,197,.96));box-shadow:0 14px 36px rgba(0,0,0,.28),inset 0 2px 0 rgba(255,255,255,.55);border:3px solid rgba(118,118,118,.32);}
+.games-ach-modal{position:absolute;left:50%;top:50%;z-index:8;display:none;align-items:center;justify-content:center;width:min(520px,calc(100% - 44px));min-height:210px;max-height:calc(100% - 44px);padding:24px 26px 38px;border-radius:14px;background:linear-gradient(180deg,rgba(238,238,231,.96),rgba(205,205,197,.96));box-shadow:0 14px 36px rgba(0,0,0,.28),inset 0 2px 0 rgba(255,255,255,.55);border:3px solid rgba(118,118,118,.32);transform:translate(-50%,-50%);overflow:hidden;}
 .games-ach-modal.on{display:flex;}
 .games-ach-modal-card{display:grid;grid-template-columns:112px 1fr;gap:22px;align-items:center;width:100%;}
 .games-ach-modal-badge{width:104px;height:104px;border-radius:50%;background:center/cover no-repeat;box-shadow:0 3px 12px rgba(0,0,0,.24);}
 .games-ach-modal-title{font-size:28px;line-height:1.1;color:#111;margin-bottom:8px;}
 .games-ach-modal-points{font-size:18px;color:rgba(0,0,0,.58);margin-bottom:14px;}
 .games-ach-modal-desc{font-size:18px;line-height:1.45;color:rgba(0,0,0,.74);white-space:pre-line;}
-.games-ach-modal-hint{position:absolute;right:20px;bottom:14px;font-size:15px;color:rgba(0,0,0,.54);}
+.games-ach-modal-hint{position:absolute;right:20px;bottom:14px;display:flex;align-items:center;gap:8px;font-size:15px;color:rgba(0,0,0,.54);}
+.games-ach-modal-hint img{width:24px;height:24px;object-fit:contain;}
+.games-ach-list-modal{position:absolute;inset:58px 22px 24px;z-index:18;display:none;flex-direction:column;padding:24px;border-radius:16px;background:linear-gradient(180deg,rgba(239,239,232,.98),rgba(205,205,198,.98));box-shadow:0 16px 42px rgba(0,0,0,.34),inset 0 2px 0 rgba(255,255,255,.55);border:3px solid rgba(118,118,118,.34);}
+.games-ach-list-modal.on{display:flex;}
+.games-ach-list-head{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;padding-bottom:16px;border-bottom:2px solid rgba(118,118,118,.18);}
+.games-ach-list-titleline{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;}
+.games-ach-list-title{font-size:30px;line-height:1.05;color:#111;}
+.games-ach-list-meta{font-size:17px;color:rgba(0,0,0,.58);}
+.games-ach-list-controls{display:flex;align-items:center;justify-content:flex-end;gap:20px;font-size:16px;color:rgba(0,0,0,.58);text-align:right;}
+.games-ach-list-control{display:flex;align-items:center;gap:8px;white-space:nowrap;}
+.games-ach-list-control img{width:26px;height:26px;object-fit:contain;}
+.games-ach-list-control img.stick-scroll-icon{filter:brightness(0) saturate(1);}
+.games-ach-list-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;overflow-y:auto;padding:18px 2px 4px;scrollbar-width:none;}
+.games-ach-list-grid::-webkit-scrollbar{display:none;}
+.games-ach-list-card{display:grid;grid-template-columns:58px minmax(0,1fr);gap:12px;align-items:start;min-height:159px;padding:12px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,.42),rgba(255,255,255,.14));border:2px solid rgba(118,118,118,.16);}
+.games-ach-list-badge{width:54px;height:54px;border-radius:50%;background:center/cover no-repeat;box-shadow:0 2px 8px rgba(0,0,0,.2);}
+.games-ach-list-card.locked .games-ach-list-badge{filter:grayscale(1) brightness(.88);opacity:.62;}
+.games-ach-list-card-title{font-size:16px;line-height:1.1;color:#111;margin-bottom:5px;}
+.games-ach-list-card-meta{font-size:13px;color:rgba(0,0,0,.5);margin-bottom:6px;}
+.games-ach-list-card-desc{font-size:13px;line-height:1.25;color:rgba(0,0,0,.68);}
+.games-ach-list-empty{font-size:20px;color:rgba(0,0,0,.62);padding:24px;}
+.games-ach-list-hint{position:absolute;right:22px;bottom:12px;font-size:15px;color:rgba(0,0,0,.54);}
+.game-search-modal{position:absolute;left:50%;top:50%;z-index:48;display:none;width:min(620px,calc(100% - 120px));max-height:min(620px,calc(100% - 140px));padding:22px;border-radius:16px;background:linear-gradient(180deg,rgba(241,241,234,.98),rgba(204,204,197,.98));box-shadow:0 18px 48px rgba(0,0,0,.36),inset 0 2px 0 rgba(255,255,255,.58);border:3px solid rgba(118,118,118,.35);transform:translate(-50%,-50%);}
+.game-search-modal.on{display:flex;flex-direction:column;}
+.game-search-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:14px;}
+.game-search-title{font-size:30px;line-height:1;color:#111;}
+.game-search-hints{display:flex;align-items:center;gap:16px;font-size:15px;color:rgba(0,0,0,.55);}
+.game-search-hint{display:flex;align-items:center;gap:7px;white-space:nowrap;}
+.game-search-hint img{width:24px;height:24px;object-fit:contain;}
+.game-search-input{width:100%;height:48px;box-sizing:border-box;border:2px solid rgba(91,91,91,.35);border-radius:11px;background:rgba(255,255,255,.78);color:#111;font-family:'MC360',sans-serif;font-size:24px;padding:6px 14px;outline:none;box-shadow:inset 0 2px 5px rgba(0,0,0,.12);}
+.game-search-input:focus,.game-search-modal.input-selected .game-search-input{border-color:rgba(78,139,45,.72);box-shadow:0 0 0 3px rgba(78,139,45,.2),inset 0 2px 5px rgba(0,0,0,.1);}
+.game-search-results{margin-top:14px;overflow:auto;display:flex;flex-direction:column;gap:8px;min-height:110px;}
+.game-search-result{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center;min-height:46px;padding:8px 12px;border-radius:11px;background:rgba(255,255,255,.36);color:#111;box-shadow:inset 0 1px 0 rgba(255,255,255,.55);}
+.game-search-result.sel{background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(221,221,214,.92));box-shadow:0 4px 12px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.8);}
+.game-search-result-title{font-size:20px;line-height:1.08;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.game-search-result-meta{font-size:14px;color:rgba(0,0,0,.56);white-space:nowrap;}
+.game-search-empty{padding:24px 12px;font-size:20px;color:rgba(0,0,0,.55);text-align:center;}
+.folder-browser-modal{position:absolute;left:50%;top:50%;z-index:49;display:none;width:min(760px,calc(100% - 120px));height:min(660px,calc(100% - 120px));padding:22px;border-radius:16px;background:linear-gradient(180deg,rgba(241,241,234,.98),rgba(204,204,197,.98));box-shadow:0 18px 48px rgba(0,0,0,.36),inset 0 2px 0 rgba(255,255,255,.58);border:3px solid rgba(118,118,118,.35);transform:translate(-50%,-50%);box-sizing:border-box;}
+.folder-browser-modal.on{display:flex;flex-direction:column;}
+.folder-browser-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:14px;}
+.folder-browser-title{font-size:30px;line-height:1;color:#111;margin-bottom:8px;}
+.folder-browser-path{font-size:15px;line-height:1.25;color:rgba(0,0,0,.58);max-width:470px;word-break:break-all;}
+.folder-browser-hints{display:flex;align-items:center;justify-content:flex-end;gap:14px;font-size:15px;color:rgba(0,0,0,.55);white-space:nowrap;}
+.folder-browser-hint{display:flex;align-items:center;gap:7px;}
+.folder-browser-hint img{width:24px;height:24px;object-fit:contain;}
+.folder-browser-list{min-height:0;overflow:auto;display:flex;flex-direction:column;gap:8px;padding-right:4px;}
+.folder-browser-item{display:grid;grid-template-columns:36px minmax(0,1fr);gap:12px;align-items:center;min-height:52px;padding:7px 12px;border-radius:11px;background:rgba(255,255,255,.36);color:#111;box-shadow:inset 0 1px 0 rgba(255,255,255,.55);}
+.folder-browser-item.sel{background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(221,221,214,.92));box-shadow:0 4px 12px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.8);}
+.folder-browser-icon{width:30px;height:30px;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-folder.webp') center/contain no-repeat;opacity:.85;}
+.folder-browser-item.drive .folder-browser-icon{background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-system.webp');}
+.folder-browser-name{font-size:21px;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.folder-browser-empty{padding:34px 12px;font-size:21px;color:rgba(0,0,0,.55);text-align:center;}
 .games-detail-actions{margin-top:auto;border-top:2px solid rgba(118,118,118,.18);}
 #sub-archive-games .games-detail-actions,
 #sub-library-games .games-detail-actions{margin-bottom:0;transform:translateY(-76px);}
@@ -204,6 +256,33 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'MC
   background-size:contain;
   opacity:.96;
 }
+.games-system-flow{
+  display:grid;
+  grid-template-columns:86px 132px 86px;
+  align-items:center;
+  justify-content:end;
+  gap:12px;
+  min-width:340px;
+  height:62px;
+}
+.games-system-flow-slot{
+  height:40px;
+  border-radius:10px;
+  background-position:center;
+  background-repeat:no-repeat;
+  background-size:contain;
+  opacity:.42;
+  transform:scale(.84);
+  transition:opacity .16s ease, transform .16s ease, filter .16s ease;
+  filter:saturate(.8);
+}
+.games-system-flow-slot.active{
+  height:58px;
+  opacity:1;
+  transform:scale(1);
+  filter:saturate(1.06) drop-shadow(0 4px 7px rgba(0,0,0,.2));
+}
+.games-system-flow-slot.clickable{cursor:pointer;}
 .mkt-source-row{
   display:grid;
   grid-template-columns:64px minmax(0,1fr) 84px;
@@ -534,6 +613,41 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'MC
 #sub-library-games .games-library-main{flex:0 0 auto;height:calc(100% - 190px);padding-bottom:0;box-sizing:border-box;margin-bottom:0;}
 #sub-library-games .games-library-left,
 #sub-library-games .games-library-right{height:calc(100% + 8px);max-height:calc(100% + 8px);min-width:0;}
+#sub-library-games.mygames-view .games-tabs{display:none;}
+#sub-library-games.achievements-view .games-tabs{display:none;}
+#sub-library-games.mygames-view .games-library-main{height:calc(100% - 236px);grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:24px;padding-top:16px;}
+#sub-library-games.mygames-view .games-library-left,
+#sub-library-games.mygames-view .games-library-right{max-height:calc(100% - 104px);min-width:0;}
+#sub-library-games.mygames-view .games-detail-panel{border:none;background:none;box-shadow:none;border-radius:0;}
+#sub-library-games.mygames-view .games-detail-head{border-bottom:none;padding:16px 18px 12px;}
+#sub-library-games.mygames-view .games-detail-headactions{display:none;}
+#sub-library-games.mygames-view .games-detail-top{display:block;min-height:74px;margin:0 18px 12px;padding:0;border:none;background:none;overflow:hidden;}
+#sub-library-games.mygames-view .games-media-strip{display:flex;align-items:center;gap:12px;height:74px;overflow:hidden;}
+#sub-library-games.mygames-view .games-media-thumb{flex:0 0 92px;height:66px;border-radius:10px;border:2px solid rgba(118,118,118,.2);background:rgba(255,255,255,.3) center/contain no-repeat;box-shadow:inset 0 1px 0 rgba(255,255,255,.5);position:relative;}
+#sub-library-games.mygames-view .games-media-thumb.cover{background-size:contain;}
+#sub-library-games.mygames-view .games-media-thumb.shot{background-size:cover;}
+#sub-library-games.mygames-view .games-media-thumb.sel{border-color:rgba(66,104,34,.7);box-shadow:0 4px 12px rgba(0,0,0,.18),inset 0 0 0 2px rgba(255,255,255,.8);}
+#sub-library-games.mygames-view .games-media-thumb-label{position:absolute;left:6px;right:6px;bottom:4px;padding:2px 5px;border-radius:5px;background:rgba(0,0,0,.48);color:#fff;font-size:10px;letter-spacing:.3px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#sub-library-games.mygames-view .games-media-empty{height:66px;display:flex;align-items:center;padding:0 12px;border-radius:10px;background:rgba(255,255,255,.24);font-size:15px;color:rgba(0,0,0,.58);}
+#sub-library-games.mygames-view .games-detail-icon{width:92px;height:66px;border-radius:0;background:transparent center/contain no-repeat;box-shadow:none;}
+#sub-library-games.mygames-view .games-score-line,
+#sub-library-games.mygames-view .games-detail-ach-head,
+#sub-library-games.mygames-view .games-ach-grid{display:none;}
+#sub-library-games.achievements-view .games-ach-grid.scrollable{max-height:306px;}
+#sub-library-games.achievements-view #games-installed-detail{height:calc(100% - 24px);}
+#sub-library-games.mygames-view #games-installed-status{padding:0 20px 16px !important;font-size:16px;line-height:1.5;color:rgba(0,0,0,.7);}
+#sub-library-games.mygames-view .games-hltb-panel{margin:0 20px 16px;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.28);box-shadow:inset 0 1px 0 rgba(255,255,255,.5);color:#111;}
+.games-hltb-title{font-size:15px;letter-spacing:.8px;text-transform:uppercase;color:rgba(0,0,0,.58);margin-bottom:7px;}
+.games-hltb-times{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+.games-hltb-time{padding:7px 8px;border-radius:8px;background:rgba(255,255,255,.38);}
+.games-hltb-label{font-size:12px;color:rgba(0,0,0,.52);text-transform:uppercase;letter-spacing:.5px;}
+.games-hltb-value{font-size:18px;color:#111;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.games-media-modal{position:absolute;left:50%;top:50%;z-index:49;display:none;width:min(860px,calc(100% - 90px));height:min(660px,calc(100% - 100px));padding:24px 24px 46px;border-radius:16px;background:linear-gradient(180deg,rgba(239,239,232,.98),rgba(205,205,198,.98));box-shadow:0 18px 48px rgba(0,0,0,.36),inset 0 2px 0 rgba(255,255,255,.55);border:3px solid rgba(118,118,118,.34);transform:translate(-50%,-50%);}
+.games-media-modal.on{display:flex;flex-direction:column;}
+.games-media-modal-image{flex:1;min-height:0;border-radius:12px;background:rgba(0,0,0,.18) center/contain no-repeat;box-shadow:inset 0 1px 0 rgba(255,255,255,.25);}
+.games-media-modal-title{font-size:24px;color:#111;margin-bottom:14px;}
+.games-media-modal-hint{position:absolute;right:22px;bottom:14px;display:flex;align-items:center;gap:8px;font-size:15px;color:rgba(0,0,0,.54);}
+.games-media-modal-hint img{width:24px;height:24px;object-fit:contain;}
 #sub-library-games #games-installed-list{max-height:calc(100% - 54px);}
 #sub-library-games #games-installed-detail{height:100%;}
 #sub-library-games .games-library-count{margin-top:10px;padding-top:0;}
@@ -889,6 +1003,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'MC
   <div class="ov" id="ov-wl"></div><div class="ov" id="ov-wm"></div><div class="ov" id="ov-wr"></div>
   <div id="hz-l"></div><div id="hz-r"></div>
   <div id="gamercard"><div id="gc-tag">RetroPlayer</div><div id="gc-pic-wrap"><div id="gc-pic"></div><div id="gc-outline"></div></div><div id="gc-stats"><div class="gc-stat"><span>Games</span><span id="gc-games-count">0</span></div><div class="gc-stat"><span>Gamerscore</span><span id="gc-gscore-val">0</span></div><div class="gc-stat"><span>Achievements</span><span id="gc-achieve-val">0</span></div></div><div id="gc-rep"></div></div>
+  <div id="home-panel-logo"></div>
   <div id="content">
     <div id="p-mkt" class="panel">
       <div class="blade-home mkt-home">
@@ -1088,7 +1203,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'MC
         <div class="games-library-view">
           <div class="mkt-source-header">
             <div class="mkt-source-header-title">Select a Game</div>
-            <div id="mkt-archive-system-logo" class="mkt-source-header-system"></div>
+            <div id="mkt-archive-system-flow" class="games-system-flow" aria-label="System selector"></div>
           </div>
           <div class="games-library-main">
             <div class="games-library-left">
@@ -1366,7 +1481,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'MC
         </div>
       </div>
     </div>
-      <div id="p-games" class="panel"><div class="blade-home"><div class="home-menu-wrap"><div class="home-menu-shadow"></div><div class="home-menu-frame"></div><ul class="menu home-menu"><li class="mitem home-row r1 sel" data-sub="library" data-home-title="Game Library" data-home-desc="Choose a system and browse your installed and scanned-in games from the Games blade."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-games.webp')"></div>Game Library</li><li class="mitem home-row r2" data-sub="achievements" data-home-title="Achievements" data-home-desc="Track RetroAchievements progress, badge sync, and future gamerscore-style milestone views."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-trophy.webp')"></div>Achievements</li><li class="mitem home-row r3" data-sub="played" data-home-title="Played Games" data-home-desc="Review your recent play history and the games you have launched most often across supported systems."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-gamescore.webp')"></div>Played Games</li><li class="mitem home-row r4" data-sub="demos" data-home-title="Demos &amp; More" data-home-desc="Reserve space for future demos, bonus content, and special promotional downloads in the Games blade."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-apps.webp')"></div>Demos &amp; More</li></ul></div><div class="home-desc"><div class="home-desc-title">Game Library</div><div class="home-desc-body">Choose a system and browse your installed and scanned-in games from the Games blade.</div></div></div><div class="subpanel" id="sub-library"><div class="subpanel-title">GAMES LIBRARY</div><div class="blade-home games-library-home"><div class="home-menu-wrap"><ul class="menu mkt-home-list games-library-list" id="games-library-menu"><li class="subnav-item games-lib-item mkt-home-row sel" data-games-lib-action="mygames" style="--mkt-card-art:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-games.webp')" data-games-lib-title="My Games" data-games-lib-desc="Browse your installed and scanned-in library.\nSelect a system to see the games SKALD already knows about."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-games.webp')"></div><div class="mkt-home-label">My Games</div></li><li class="subnav-item games-lib-item mkt-home-row" data-games-lib-action="lastplayed" style="--mkt-card-art:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-gamescore.webp')" data-games-lib-title="Last Played Game" data-games-lib-desc="Jump back into the last game you launched once your recent play history is populated."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-gamescore.webp')"></div><div class="mkt-home-label">Last Played Game</div></li><li class="subnav-item games-lib-item mkt-home-row" data-games-lib-action="friends" style="--mkt-card-art:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-friends.webp')" data-games-lib-title="Friends Playing Now" data-games-lib-desc="Friends Playing Now will light up once SKALD LIVE presence and in-game activity are fully wired."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-friends.webp')"></div><div class="mkt-home-label">Friends Playing Now</div></li><li class="subnav-item games-lib-item mkt-home-row" data-games-lib-action="gamestore" style="--mkt-card-art:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-marketplace.webp')" data-games-lib-title="Game Store" data-games-lib-desc="Jump into the Marketplace blade to discover and download new games for your library."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-marketplace.webp')"></div><div class="mkt-home-label">Game Store</div></li><li class="subnav-item games-lib-item mkt-home-row" data-games-lib-action="autodownloads" style="--mkt-card-art:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-downloads.webp')" data-games-lib-title="Auto Downloads" data-games-lib-desc="Automatic downloads are currently off. Later this can watch for updates or background content for your library."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-downloads.webp')"></div><div class="mkt-home-label">Auto Downloads</div><div class="games-lib-tail">Off</div></li></ul></div><div class="home-desc games-library-copy"><div id="games-library-title" class="home-desc-title">My Games</div><div id="games-library-body" class="home-desc-body">Browse your installed and scanned-in library.\nSelect a system to see the games SKALD already knows about.</div></div></div></div><div class="subpanel" id="sub-library-systems"><div class="subpanel-title">SELECT SYSTEM</div><div class="mkt-scan-layout games-system-layout"><div class="mkt-scan-left"><div class="mkt-scan-list" id="games-system-list"><div class="subnav-item games-system-item sel" data-system="snes" data-games-title="Super Nintendo" data-games-desc="Browse your installed and scanned-in Super Nintendo library from the Games blade."><div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/CONTROLLER-snes.svg')"></div><div class="mkt-account-copy"><div class="mkt-scan-label">Super Nintendo</div><div class="mkt-action-meta" id="cnt-snes2">Loading…</div></div></div><div class="subnav-item games-system-item" data-system="psx" data-games-title="PlayStation" data-games-desc="Browse your installed and scanned-in PlayStation library from the Games blade."><div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/CONTROLLER-playstation1.svg')"></div><div class="mkt-account-copy"><div class="mkt-scan-label">PlayStation</div><div class="mkt-action-meta" id="cnt-psx2">Loading…</div></div></div></div></div><div class="mkt-scan-side"><div id="games-system-title" class="mkt-scan-title">Super Nintendo</div><div id="games-system-meta" class="mkt-scan-meta">Browse your installed and scanned-in Super Nintendo library from the Games blade.</div><div id="games-system-status" class="mkt-scan-status">Loading library status…</div></div></div></div><div class="subpanel" id="sub-library-games"><div class="subpanel-title">MY GAMES</div><div class="games-library-view"><div class="games-tabs"><div class="games-tab sel" data-games-filter="all">All Games</div><div class="games-tab" data-games-filter="recent">Recently Downloaded</div><div class="games-tab" data-games-filter="played">Recently Played</div></div><div class="games-library-main"><div class="games-library-left"><div id="games-installed-list" class="games-games-list"><div class="mkt-empty">No games installed yet.</div></div><div id="games-library-count" class="games-library-count"></div></div><div class="games-library-right"><div class="games-detail-panel" id="games-installed-detail"><div class="games-detail-head"><div class="games-detail-headrow"><div class="games-detail-copy"><div class="games-detail-title" id="games-installed-title">Select a game</div><div class="mkt-detail-meta" id="games-installed-meta">Choose an installed game to view details.</div></div><div class="games-detail-headactions"><div class="subnav-item games-ready-action" data-games-action="launch"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-a.webp')"></div><div class="mkt-account-copy"><div class="mkt-action-label">Launch</div><div class="mkt-action-meta">Start the selected installed game.</div></div></div><div class="subnav-item games-ready-action" data-games-action="delete"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-x.webp')"></div><div class="mkt-account-copy"><div class="mkt-action-label">Delete Install</div><div class="mkt-action-meta" id="games-delete-meta">Remove the selected installed game from disk.</div></div></div></div></div></div><div class="games-detail-top"><div id="games-detail-icon" class="games-detail-icon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/gamercard_defaultgamerpic.webp')"></div><div class="games-score-line"><div class="games-score-label"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-gamescore.webp')"></div><span>Gamerscore</span></div><div id="games-score-value" class="games-score-value">0/0</div></div></div><div class="games-detail-ach-head">Achievements</div><div id="games-ach-grid" class="games-ach-grid"><div class="games-ach-empty">RetroAchievements data will appear here when a matching game is found.</div></div><div id="games-installed-status" class="mkt-detail-status" style="padding:0 18px 16px;"></div></div></div></div></div><div class="subpanel" id="sub-achievements"><div class="subpanel-title">ACHIEVEMENTS</div><div class="info-block">Set your RetroAchievements API key in Settings to track achievements.</div></div><div class="subpanel" id="sub-played"><div class="subpanel-title">PLAYED GAMES</div><div class="info-block">No games played yet.</div></div><div class="subpanel" id="sub-demos"><div class="subpanel-title">DEMOS &amp; MORE</div><div class="info-block">Coming soon.</div></div></div>
+      <div id="p-games" class="panel"><div class="blade-home"><div class="home-menu-wrap"><div class="home-menu-shadow"></div><div class="home-menu-frame"></div><ul class="menu home-menu"><li class="mitem home-row r1 sel" data-sub="library" data-home-title="Game Library" data-home-desc="Choose a system and browse your installed and scanned-in games from the Games blade."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-games.webp')"></div>Game Library</li><li class="mitem home-row r2" data-sub="achievements" data-home-title="Achievements" data-home-desc="Track RetroAchievements progress, badge sync, and future gamerscore-style milestone views."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-trophy.webp')"></div>Achievements</li><li class="mitem home-row r3" data-sub="played" data-home-title="Played Games" data-home-desc="Review your recent play history and the games you have launched most often across supported systems."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-gamescore.webp')"></div>Played Games</li><li class="mitem home-row r4" data-sub="demos" data-home-title="Demos &amp; More" data-home-desc="Reserve space for future demos, bonus content, and special promotional downloads in the Games blade."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-apps.webp')"></div>Demos &amp; More</li></ul></div><div class="home-desc"><div class="home-desc-title">Game Library</div><div class="home-desc-body">Choose a system and browse your installed and scanned-in games from the Games blade.</div></div></div><div class="subpanel" id="sub-library"><div class="subpanel-title">GAMES LIBRARY</div><div class="blade-home games-library-home"><div class="home-menu-wrap"><ul class="menu mkt-home-list games-library-list" id="games-library-menu"><li class="subnav-item games-lib-item mkt-home-row sel" data-games-lib-action="mygames" style="--mkt-card-art:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-games.webp')" data-games-lib-title="My Games" data-games-lib-desc="Browse your installed and scanned-in library.\nSelect a system to see the games SKALD already knows about."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-games.webp')"></div><div class="mkt-home-label">My Games</div></li><li class="subnav-item games-lib-item mkt-home-row" data-games-lib-action="lastplayed" style="--mkt-card-art:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-gamescore.webp')" data-games-lib-title="Last Played Game" data-games-lib-desc="Jump back into the last game you launched once your recent play history is populated."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-gamescore.webp')"></div><div class="mkt-home-label">Last Played Game</div></li><li class="subnav-item games-lib-item mkt-home-row" data-games-lib-action="friends" style="--mkt-card-art:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-friends.webp')" data-games-lib-title="Friends Playing Now" data-games-lib-desc="Friends Playing Now will light up once SKALD LIVE presence and in-game activity are fully wired."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-friends.webp')"></div><div class="mkt-home-label">Friends Playing Now</div></li><li class="subnav-item games-lib-item mkt-home-row" data-games-lib-action="gamestore" style="--mkt-card-art:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-marketplace.webp')" data-games-lib-title="Game Store" data-games-lib-desc="Jump into the Marketplace blade to discover and download new games for your library."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-marketplace.webp')"></div><div class="mkt-home-label">Game Store</div></li><li class="subnav-item games-lib-item mkt-home-row" data-games-lib-action="autodownloads" style="--mkt-card-art:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-downloads.webp')" data-games-lib-title="Auto Downloads" data-games-lib-desc="Automatic downloads are currently off. Later this can watch for updates or background content for your library."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-downloads.webp')"></div><div class="mkt-home-label">Auto Downloads</div><div class="games-lib-tail">Off</div></li></ul></div><div class="home-desc games-library-copy"><div id="games-library-title" class="home-desc-title">My Games</div><div id="games-library-body" class="home-desc-body">Browse your installed and scanned-in library.\nSelect a system to see the games SKALD already knows about.</div></div></div></div><div class="subpanel" id="sub-library-systems"><div class="subpanel-title">SELECT SYSTEM</div><div class="mkt-scan-layout games-system-layout"><div class="mkt-scan-left"><div class="mkt-scan-list" id="games-system-list"><div class="subnav-item games-system-item sel" data-system="snes" data-games-title="Super Nintendo" data-games-desc="Browse your installed and scanned-in Super Nintendo library from the Games blade."><div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/CONTROLLER-snes.svg')"></div><div class="mkt-account-copy"><div class="mkt-scan-label">Super Nintendo</div><div class="mkt-action-meta" id="cnt-snes2">Loading…</div></div></div><div class="subnav-item games-system-item" data-system="psx" data-games-title="PlayStation" data-games-desc="Browse your installed and scanned-in PlayStation library from the Games blade."><div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/CONTROLLER-playstation1.svg')"></div><div class="mkt-account-copy"><div class="mkt-scan-label">PlayStation</div><div class="mkt-action-meta" id="cnt-psx2">Loading…</div></div></div></div></div><div class="mkt-scan-side"><div id="games-system-title" class="mkt-scan-title">Super Nintendo</div><div id="games-system-meta" class="mkt-scan-meta">Browse your installed and scanned-in Super Nintendo library from the Games blade.</div><div id="games-system-status" class="mkt-scan-status">Loading library status…</div></div></div></div><div class="subpanel" id="sub-library-games"><div class="subpanel-title">MY GAMES</div><div class="games-library-view"><div class="games-tabs"><div class="games-tab sel" data-games-filter="all">All Games</div><div class="games-tab" data-games-filter="recent">Recently Downloaded</div><div class="games-tab" data-games-filter="played">Recently Played</div></div><div class="games-library-main"><div class="games-library-left"><div id="games-installed-list" class="games-games-list"><div class="mkt-empty">No games installed yet.</div></div><div id="games-library-count" class="games-library-count"></div></div><div class="games-library-right"><div class="games-detail-panel" id="games-installed-detail"><div class="games-detail-head"><div class="games-detail-headrow"><div class="games-detail-copy"><div class="games-detail-title" id="games-installed-title">Select a game</div><div class="mkt-detail-meta" id="games-installed-meta">Choose an installed game to view details.</div></div><div class="games-detail-headactions"><div class="subnav-item games-ready-action" data-games-action="launch"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-a.webp')"></div><div class="mkt-account-copy"><div class="mkt-action-label">Launch</div><div class="mkt-action-meta">Start the selected installed game.</div></div></div><div class="subnav-item games-ready-action" data-games-action="delete"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-x.webp')"></div><div class="mkt-account-copy"><div class="mkt-action-label">Delete Install</div><div class="mkt-action-meta" id="games-delete-meta">Remove the selected installed game from disk.</div></div></div></div></div></div><div class="games-detail-top"><div id="games-detail-icon" class="games-detail-icon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/gamercard_defaultgamerpic.webp')"></div><div class="games-score-line"><div class="games-score-label"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-gamescore.webp')"></div><span>Gamerscore</span></div><div id="games-score-value" class="games-score-value">0/0</div></div></div><div class="games-detail-ach-head"><span>Achievements</span><span id="games-ach-count" class="games-detail-ach-count"></span></div><div id="games-ach-grid" class="games-ach-grid"><div class="games-ach-empty">RetroAchievements data will appear here when a matching game is found.</div></div><div id="games-installed-status" class="mkt-detail-status" style="padding:0 18px 16px;"></div></div></div></div></div><div class="subpanel" id="sub-achievements"><div class="subpanel-title">ACHIEVEMENTS</div><div class="info-block">Set your RetroAchievements API key in Settings to track achievements.</div></div><div class="subpanel" id="sub-played"><div class="subpanel-title">PLAYED GAMES</div><div class="info-block">No games played yet.</div></div><div class="subpanel" id="sub-demos"><div class="subpanel-title">DEMOS &amp; MORE</div><div class="info-block">Coming soon.</div></div></div>
     </div>
     <div id="p-media" class="panel"><div class="blade-home"><div class="home-menu-wrap"><div class="home-menu-shadow"></div><div class="home-menu-frame"></div><ul class="menu home-menu"><li class="mitem home-row r1 sel" data-sub="music" data-home-title="Music" data-home-desc="Future music playback and soundtrack browsing will live here, matching the original Media blade rhythm."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-music.webp')"></div>Music</li><li class="mitem home-row r2" data-sub="pictures" data-home-title="Pictures" data-home-desc="Open image galleries, screenshots, and future media libraries from the Pictures section of the Media blade."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-pictures.webp')"></div>Pictures</li><li class="mitem home-row r3" data-sub="videos" data-home-title="Videos" data-home-desc="Video playback, previews, and trailer-style presentation can be surfaced here later in development."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-videos.webp')"></div>Videos</li><li class="mitem home-row r4" data-sub="mc" data-home-title="Media Center" data-home-desc="Reserve the classic Media Center slot for future companion apps or a modern streaming equivalent."><div class="micon"></div>Media Center</li></ul></div><div class="home-desc"><div class="home-desc-title">Music</div><div class="home-desc-body">Future music playback and soundtrack browsing will live here, matching the original Media blade rhythm.</div></div></div><div class="subpanel" id="sub-music"><div class="subpanel-title">MUSIC</div><div class="info-block">Music playback coming soon.</div></div><div class="subpanel" id="sub-pictures"><div class="subpanel-title">PICTURES</div><div class="info-block">Picture viewer coming soon.</div></div><div class="subpanel" id="sub-videos"><div class="subpanel-title">VIDEOS</div><div class="info-block">Video playback coming soon.</div></div><div class="subpanel" id="sub-mc"><div class="subpanel-title">MEDIA CENTER</div><div class="info-block">Media Center coming soon.</div></div></div>
     <div id="p-sys" class="panel">
@@ -1892,6 +2007,8 @@ const gamesRaPending=new Set();
 const gamesArtCache=new Map();
 const gamesArtPending=new Set();
 const gamesMetaPending=new Set();
+const gamesHltbCache=new Map();
+const gamesHltbPending=new Set();
 let gamesAchievementAutoTimer=null;
 const marketplaceArtCache=new Map();
 const marketplaceArtPending=new Set();
@@ -2034,7 +2151,12 @@ function buildBlades(){
   const activeX = LEFT_ANCHOR + activeIdx * OFFSET;
   const contentLeft = activeX + CONTENT_OFFSET;
   document.getElementById('content').style.left = contentLeft + 'px';
-  document.getElementById('gamercard').style.left = contentLeft + 'px';
+  document.getElementById('gamercard').style.left = (contentLeft + 54) + 'px';
+  const homeLogo=document.getElementById('home-panel-logo');
+  if(homeLogo){
+    const logoOffset=BLADES[activeIdx]?.id==='mkt'?698:624;
+    homeLogo.style.left=(contentLeft+logoOffset)+'px';
+  }
   document.getElementById('ctrl-hint').style.left = contentLeft + 'px';
   document.getElementById('btn-hints').style.left = contentLeft + 'px';
   // Reposition whitewash/glass overlays to track the active blade content area
@@ -2056,10 +2178,17 @@ function navBlade(idx){if(idx<0||idx>=BLADES.length||idx===activeIdx)return;play
 function applyBg(){const b=BLADES[activeIdx];document.querySelectorAll('.bg-col').forEach(e=>e.classList.remove('on'));document.getElementById(b.bg)?.classList.add('on');document.getElementById('hz-l').style.backgroundImage=`url('${b.hazeL}')`;document.getElementById('hz-r').style.backgroundImage=`url('${b.hazeR}')`;}
 function updateGamercardVisibility(){
   const gc=document.getElementById('gamercard');
+  const homeLogo=document.getElementById('home-panel-logo');
   const content=document.getElementById('content');
   if(!gc) return;
   const hide=!!subOpen[activeIdx];
   gc.style.display=hide?'none':'';
+  if(homeLogo){
+    homeLogo.style.display=hide?'none':'';
+    homeLogo.style.backgroundImage=BLADES[activeIdx]?.id==='live'
+      ? "url('file:///C:/Projects/SKALD/assets/icons/Systems/SKALD_LIVE.webp')"
+      : "url('file:///C:/Projects/SKALD/assets/icons/Systems/SKALD-LOGO.webp')";
+  }
   if(content){
     content.style.top=hide?'165px':'400px';
     content.style.height=hide?'885px':'650px';
@@ -2782,12 +2911,13 @@ function menuSelect(){
     if(BLADES[activeIdx]?.id==='mkt'&&sub==='discover-sources'){
       playSfx('tier2_enter.wav');
       marketplaceState.provider='archiveorg';
-      openMarketplaceSourceSystemSelector('archiveorg');
+      openMarketplaceSourceGamesLibrary(marketplaceState.system || 'snes','archiveorg');
       return;
     }
     if(BLADES[activeIdx]?.id==='games'&&sub==='achievements'){
       playSfx('tier2_enter.wav');
-      openGamesSystemSelector('achievements');
+      gamesState.systemSelectorSource='achievements';
+      openGamesInstalledLibrary(gamesState.system && gamesState.system!==GAMES_ALL_SYSTEM ? gamesState.system : 'snes');
       return;
     }
     if(BLADES[activeIdx]?.id==='sys'){systemNestedFromConsole=false;systemNestedReturnSubpanel='';}
@@ -2806,6 +2936,7 @@ function menuSelect(){
 }
 function menuBack(){
   if(vkOpen){closeKeyboard(true);return;}
+  if(closeGameSearchModal()) return;
   if(subOpen[activeIdx]){
     const sub=getActiveSubpanel();
 if(BLADES[activeIdx]?.id==='mkt' && sub?.id==='sub-archive-games' && cancelMarketplaceDownloadConfirm()){
@@ -2844,27 +2975,35 @@ if(BLADES[activeIdx]?.id==='mkt' && sub?.id==='sub-archive-games' && cancelMarke
       return;
     }
 if(BLADES[activeIdx]?.id==='mkt' && sub?.id==='sub-archive-games'){
-document.getElementById('sub-archive-games')?.classList.remove('on');
-document.getElementById('sub-archive-systems')?.classList.add('on');
-      subSelIdx=0;
-      playSfx('tier2_exit.wav');
-      applySubSel();
-      return;
-    }
-if(BLADES[activeIdx]?.id==='mkt' && sub?.id==='sub-archive-systems'){
-document.getElementById('sub-archive-systems')?.classList.remove('on');
       exitCurrentSubpanel();menuSel[activeIdx]=0;applyMenuSel();
       return;
     }
     if(BLADES[activeIdx]?.id==='games' && sub?.id==='sub-library-games'){
+      if(closeGamesMediaModal()){
+        playSfx('tier2_exit.wav');
+        return;
+      }
+      if(closeGamesAchievementListModal()){
+        playSfx('tier2_exit.wav');
+        return;
+      }
       if(closeGamesAchievementModal()){
         playSfx('tier2_exit.wav');
         return;
       }
       stopGamesAchievementAutoScroll();
-      document.getElementById('sub-library-games')?.classList.remove('on');
-      document.getElementById('sub-library-games')?.classList.remove('achievements-view');
-      document.getElementById('sub-library-systems')?.classList.add('on');
+      const gamesPanel=document.getElementById('sub-library-games');
+      gamesPanel?.classList.remove('on');
+      gamesPanel?.classList.remove('achievements-view');
+      gamesPanel?.classList.remove('mygames-view');
+      if(gamesState.systemSelectorSource==='achievements'){
+        subOpen[activeIdx]=false;
+        const panel=document.getElementById(BLADES[activeIdx].panel);
+        panel?.classList.remove('sub-open');
+        updateGamercardVisibility();
+      }else{
+        document.getElementById('sub-library')?.classList.add('on');
+      }
       subSelIdx=0;
       playSfx('tier2_exit.wav');
       applySubSel();
@@ -2873,6 +3012,7 @@ document.getElementById('sub-archive-systems')?.classList.remove('on');
     if(BLADES[activeIdx]?.id==='games' && sub?.id==='sub-library-systems'){
       document.getElementById('sub-library-systems')?.classList.remove('on');
       if(gamesState.systemSelectorSource==='achievements'){
+        closeGamesAchievementListModal();
         closeGamesAchievementModal();
         stopGamesAchievementAutoScroll();
         subOpen[activeIdx]=false;
@@ -2929,7 +3069,11 @@ function getGuideAccountRefs(){
     saveDisplay:document.getElementById('g2a-save-display')
   };
 }
-const gamesState={system:'snes',selectedId:null,filter:'all',pane:'list',actionIdx:0,systemSelectorSource:'library',achievementIdx:0,achievementGameId:null,achievementModalOpen:false,currentAchievements:[]};
+const GAMES_ALL_SYSTEM='all';
+const GAMES_LIBRARY_SYSTEMS=['snes','psx'];
+const gamesState={system:'snes',selectedId:null,filter:'all',pane:'list',actionIdx:0,systemSelectorSource:'library',achievementIdx:0,achievementGameId:null,achievementModalOpen:false,achievementListModalOpen:false,currentAchievements:[],mediaIdx:0,mediaModalOpen:false};
+const gameSearchState={open:false,context:null,query:'',focus:'input',resultIdx:0,results:[]};
+const folderBrowserState={open:false,title:'Select Folder',currentPath:'',parentPath:null,entries:[],selectedIdx:0,resolve:null,error:''};
 const bladeAssetPreloadRefs=[];
 function syncGuideAccountDisplays(){
   const refs=getGuideAccountRefs();
@@ -3058,15 +3202,37 @@ document.addEventListener('keydown',e=>{
     e.preventDefault();return;
   }
   if(guide2Open||guideOpen){if(handlePhysicalTextKey(e)){e.preventDefault();return;}if(e.key==='ArrowUp')guideUp();else if(e.key==='ArrowDown')guideDown();else if(e.key==='Enter'||e.key===' ')guideSelect();else if(e.key==='Escape'||e.key==='b')closeGuide();e.preventDefault();return;}
+  if(folderBrowserState.open){
+    if(e.key==='ArrowUp')moveFolderBrowserSelection(-1);else if(e.key==='ArrowDown')moveFolderBrowserSelection(1);else if(e.key==='Enter'||e.key===' ')openSelectedFolderBrowserEntry();else if(e.key==='y'||e.key==='Y')chooseCurrentFolderBrowserPath();else if(e.key==='Escape'||e.key==='Backspace'||e.key==='b')folderBrowserBack();
+    e.preventDefault();return;
+  }
+  if(gameSearchState.open){
+    const isSearchInput=document.activeElement?.id==='game-search-input';
+    if(isSearchInput && (e.key==='ArrowDown' || e.key==='Enter' || e.key===' ')){
+      gameSearchState.focus=e.key==='ArrowDown'?'results':'input';
+      if(handleGameSearchKey(e)) e.preventDefault();
+      return;
+    }
+    if(!isSearchInput && handleGameSearchKey(e)) e.preventDefault();
+    return;
+  }
   if(handlePhysicalTextKey(e)){e.preventDefault();return;}
   if(e.key==='Tab' && subOpen[activeIdx]){
     if(isGamesInstalledOpen()){
       if(gamesInstalledMoveColumn(e.shiftKey?-1:1)) playSfx('cursor.wav');
     }else if(e.shiftKey) subLeft(); else subRight();
+  }else if(isArchiveGamesOpen() && (e.key==='[' || e.key==='PageUp')){
+    archiveGamesCycleSystem(-1);
+  }else if(isArchiveGamesOpen() && (e.key===']' || e.key==='PageDown')){
+    archiveGamesCycleSystem(1);
   }else if(isGamesAchievementsOpen() && (e.key==='[' || e.key==='PageUp')){
-    gamesInstalledCycleFilter(-1);
+    gamesInstalledCycleSystem(-1);
   }else if(isGamesAchievementsOpen() && (e.key===']' || e.key==='PageDown')){
-    gamesInstalledCycleFilter(1);
+    gamesInstalledCycleSystem(1);
+  }else if(isGamesInstalledOpen() && (e.key==='[' || e.key==='PageUp')){
+    gamesInstalledCycleSystem(-1);
+  }else if(isGamesInstalledOpen() && (e.key===']' || e.key==='PageDown')){
+    gamesInstalledCycleSystem(1);
   }else if(e.key==='ArrowLeft'){
     if(subOpen[activeIdx]){
       if(!handleMarketplaceMediaNav(-1)) subLeft();
@@ -3075,16 +3241,42 @@ document.addEventListener('keydown',e=>{
     if(subOpen[activeIdx]){
       if(!handleMarketplaceMediaNav(1)) subRight();
     }else navBlade(activeIdx+1);
-  }else if(e.key==='ArrowUp')subOpen[activeIdx]?subUp():menuUp();else if(e.key==='ArrowDown')subOpen[activeIdx]?subDown():menuDown();else if(e.key==='Enter'||e.key===' ')menuSelect();else if(e.key==='Backspace'||e.key==='b')menuBack();else if(e.key==='Escape')exitBlades(false);else if(e.key==='g'||e.key==='G')openGuide();
+  }else if(e.key==='ArrowUp')subOpen[activeIdx]?subUp():menuUp();else if(e.key==='ArrowDown')subOpen[activeIdx]?subDown():menuDown();else if(e.key==='Enter'||e.key===' ')menuSelect();else if(e.key==='Backspace'||e.key==='b')menuBack();else if(e.key==='y'||e.key==='Y'){if(!openGameSearchModal()) return;}else if(e.key==='Escape')exitBlades(false);else if(e.key==='g'||e.key==='G')openGuide();
   e.preventDefault();
 });
 const PAD={A:0,B:1,X:2,Y:3,LB:4,RB:5,LT:6,RT:7,SELECT:8,START:9,DU:12,DD:13,DL:14,DR:15,GUIDE:16};const padPrev={};const DEAD=0.5;
+const padVerticalHold={dir:0,nextAt:0,delay:360};
+function activateVerticalNav(dir){
+  if(dir<0)(subOpen[activeIdx]?subUp():menuUp());
+  else if(dir>0)(subOpen[activeIdx]?subDown():menuDown());
+}
+function updatePadVerticalHold(dir){
+  const now=performance.now();
+  if(!dir){
+    padVerticalHold.dir=0;
+    padVerticalHold.nextAt=0;
+    padVerticalHold.delay=360;
+    return;
+  }
+  if(padVerticalHold.dir!==dir){
+    padVerticalHold.dir=dir;
+    padVerticalHold.delay=360;
+    padVerticalHold.nextAt=now+padVerticalHold.delay;
+    activateVerticalNav(dir);
+    return;
+  }
+  if(now<padVerticalHold.nextAt) return;
+  activateVerticalNav(dir);
+  padVerticalHold.delay=Math.max(70,padVerticalHold.delay*0.72);
+  padVerticalHold.nextAt=now+padVerticalHold.delay;
+}
 function padPoll(){
   const pad=[...navigator.getGamepads()].find(p=>p&&p.connected);
   if(!pad)return;
   const just=i=>pad.buttons[i]?.pressed&&!padPrev[i];
-  const axL=pad.axes[0]??0,axU=pad.axes[1]??0;
+  const axL=pad.axes[0]??0,axU=pad.axes[1]??0,axRY=pad.axes[3]??0;
   if(vkOpen){
+    updatePadVerticalHold(0);
     if(just(PAD.DL)||(axL<-DEAD&&!padPrev._aL))vkMove(-1);
     if(just(PAD.DR)||(axL>DEAD&&!padPrev._aR))vkMove(1);
     if(just(PAD.DU)||(axU<-DEAD&&!padPrev._aU))vkMove(-10);
@@ -3094,18 +3286,39 @@ function padPoll(){
     if(just(PAD.Y))vkSpace();
     if(just(PAD.B)||just(PAD.GUIDE))closeKeyboard(true);
   }else if(guide2Open||guideOpen){
+    updatePadVerticalHold(0);
     if(just(PAD.DU)||(axU<-DEAD&&!padPrev._aU))guideUp();
     if(just(PAD.DD)||(axU>DEAD&&!padPrev._aD))guideDown();
     if(just(PAD.A))guideSelect();
     if(just(PAD.B)||just(PAD.GUIDE))closeGuide();
+  }else if(folderBrowserState.open){
+    updatePadVerticalHold(0);
+    if(just(PAD.DU)||(axU<-DEAD&&!padPrev._aU))moveFolderBrowserSelection(-1);
+    if(just(PAD.DD)||(axU>DEAD&&!padPrev._aD))moveFolderBrowserSelection(1);
+    if(just(PAD.A))openSelectedFolderBrowserEntry();
+    if(just(PAD.Y))chooseCurrentFolderBrowserPath();
+    if(just(PAD.B)||just(PAD.GUIDE))folderBrowserBack();
+  }else if(gameSearchState.open){
+    updatePadVerticalHold(0);
+    if(just(PAD.DU)||(axU<-DEAD&&!padPrev._aU))moveGameSearchResult(-1);
+    if(just(PAD.DD)||(axU>DEAD&&!padPrev._aD))moveGameSearchResult(1);
+    if(just(PAD.A))applyGameSearchSelection();
+    if(just(PAD.B)||just(PAD.GUIDE))closeGameSearchModal();
   }else{
+    if(gamesState.achievementListModalOpen && Math.abs(axRY)>DEAD){
+      scrollGamesAchievementListModal(axRY*42);
+    }
     if(just(PAD.LB)){
-      if(isGamesAchievementsOpen())gamesInstalledCycleFilter(-1);
+      if(isArchiveGamesOpen())archiveGamesCycleSystem(-1);
+      else if(isGamesAchievementsOpen())gamesInstalledCycleSystem(-1);
+      else if(isGamesInstalledOpen())gamesInstalledCycleSystem(-1);
       else if(subOpen[activeIdx])subLeft();
       else navBlade(activeIdx-1);
     }
     if(just(PAD.RB)){
-      if(isGamesAchievementsOpen())gamesInstalledCycleFilter(1);
+      if(isArchiveGamesOpen())archiveGamesCycleSystem(1);
+      else if(isGamesAchievementsOpen())gamesInstalledCycleSystem(1);
+      else if(isGamesInstalledOpen())gamesInstalledCycleSystem(1);
       else if(subOpen[activeIdx])subRight();
       else navBlade(activeIdx+1);
     }
@@ -3123,10 +3336,11 @@ function padPoll(){
     if((just(PAD.DR)||(axL>DEAD&&!padPrev._aR)) && !(subOpen[activeIdx]&&handleMarketplaceMediaNav(1))){
       if(subOpen[activeIdx])subRight();else navBlade(activeIdx+1);
     }
-    if(just(PAD.DU)||(axU<-DEAD&&!padPrev._aU))(subOpen[activeIdx]?subUp():menuUp());
-    if(just(PAD.DD)||(axU>DEAD&&!padPrev._aD))(subOpen[activeIdx]?subDown():menuDown());
+    const verticalDir=(pad.buttons[PAD.DU]?.pressed || axU<-DEAD) ? -1 : ((pad.buttons[PAD.DD]?.pressed || axU>DEAD) ? 1 : 0);
+    updatePadVerticalHold(verticalDir);
     if(just(PAD.A))menuSelect();
     if(just(PAD.B))menuBack();
+    if(just(PAD.Y))openGameSearchModal();
     if(just(PAD.GUIDE))openGuide();
     if(just(PAD.START))exitBlades(true);
     if(just(PAD.SELECT))exitBlades(false);
@@ -3136,6 +3350,7 @@ function padPoll(){
   padPrev._aR=axL>DEAD;
   padPrev._aU=axU<-DEAD;
   padPrev._aD=axU>DEAD;
+  padPrev._aRY=axRY;
 }
 setInterval(padPoll,100);window.addEventListener('gamepadconnected',e=>{toast(`Controller: ${e.gamepad.id.slice(0,28)}`);});
 document.querySelectorAll('.mitem').forEach(el=>el.addEventListener('click',()=>{const items=[...el.parentElement.querySelectorAll('.mitem')];menuSel[activeIdx]=items.indexOf(el);applyMenuSel();menuSelect();}));
@@ -3366,7 +3581,8 @@ syncGamesLibraryScanButton();
     const idx=items.indexOf(item);
     if(idx>=0){subSelIdx=idx;applySubSel();}
     if(item.dataset.gamesLibAction==='mygames'){
-      toast('My Games redesign coming soon');
+      gamesState.systemSelectorSource='library';
+      openGamesInstalledLibrary(GAMES_ALL_SYSTEM);
       return;
     }
     if(item.dataset.gamesLibAction==='scan'){
@@ -3395,7 +3611,7 @@ syncGamesLibraryScanButton();
   document.querySelectorAll('#p-mkt .home-menu [data-sub="discover-sources"]').forEach(item=>item.addEventListener('click',async()=>{
     playSfx('select.wav');
     marketplaceState.provider='archiveorg';
-    await openMarketplaceSourceSystemSelector('archiveorg');
+    await openMarketplaceSourceGamesLibrary(marketplaceState.system || 'snes','archiveorg');
   }));
 document.getElementById('sub-archive-systems')?.addEventListener('click',async(e)=>{
     const item=e.target.closest('.games-system-item');
@@ -3468,6 +3684,7 @@ function marketplaceSystemLogoUrl(system){
   return '';
 }
 function marketplaceSystemBadgeUrl(system){
+  if(system===GAMES_ALL_SYSTEM) return "file:///C:/Projects/SKALD/assets/icons/Systems/All_Games.webp";
   const logo=marketplaceSystemLogoUrl(system);
   if(system==='snes') return logo || "file:///C:/Projects/SKALD/assets/icons/CONTROLLER-snes.svg";
   if(system==='psx') return logo || "file:///C:/Projects/SKALD/assets/icons/CONTROLLER-playstation1.svg";
@@ -3900,6 +4117,7 @@ async function loadMarketplacePreview(rom,{priority=false,force=false}={}){
   return promise;
 }
 function marketplaceSystemLabel(system){
+  if(system===GAMES_ALL_SYSTEM) return 'All Games';
   if(system==='snes') return 'Super Nintendo';
   if(system==='psx') return 'PlayStation';
   return String(system || '').toUpperCase();
@@ -3976,8 +4194,29 @@ function controlLegendForContext(){
       ],
     };
   }
+  if(gameSearchState.open){
+    return {
+      title:'Control Legend',
+      entries:[
+        { icons:['dpadVertical','leftStickVertical'], label:'Results' },
+        { icons:['a'], label:'Select' },
+        { icons:['b'], label:'Back' },
+      ],
+    };
+  }
+  if(folderBrowserState.open){
+    return {
+      title:'Control Legend',
+      entries:[
+        { icons:['dpadVertical','leftStickVertical'], label:'Folders' },
+        { icons:['a'], label:'Open' },
+        { icons:['y'], label:'Select Folder' },
+        { icons:['b'], label:'Back' },
+      ],
+    };
+  }
   if(isGamesAchievementsOpen()){
-    if(gamesState.achievementModalOpen){
+    if(gamesState.achievementModalOpen || gamesState.achievementListModalOpen){
       return {
         title:'Control Legend',
         entries:[
@@ -3988,10 +4227,58 @@ function controlLegendForContext(){
     return {
       title:'Control Legend',
       entries:[
-        { icons:['lb','rb'], label:'Cycle Tabs' },
+        { icons:['lb','rb'], label:'Switch System' },
         { icons:['lt','rt'], label:'Change Column' },
         { icons:['dpadVertical','leftStickVertical'], label:'Scroll' },
         { icons:['a'], label:'Select' },
+        { icons:['y'], label:'Search' },
+        { icons:['b'], label:'Back' },
+      ],
+    };
+  }
+  if(isGamesInstalledOpen()){
+    if(gamesState.mediaModalOpen){
+      return {
+        title:'Control Legend',
+        entries:[
+          { icons:['b'], label:'Back' },
+        ],
+      };
+    }
+    return {
+      title:'Control Legend',
+      entries:[
+        { icons:['lb','rb'], label:'Switch System' },
+        { icons:['lt','rt'], label:'Change Column' },
+        { icons:['dpadVertical','leftStickVertical'], label:'Scroll Games' },
+        { icons:['dpadHorizontal'], label:'Select Image' },
+        { icons:['a'], label:(gamesState.pane||'list')==='actions'?'View Image':'Launch Game' },
+        { icons:['y'], label:'Search' },
+        { icons:['b'], label:'Back' },
+      ],
+    };
+  }
+  if(isArchiveGamesOpen()){
+    return {
+      title:'Control Legend',
+      entries:[
+        { icons:['lb','rb'], label:'Switch System' },
+        { icons:['lt','rt'], label:'Change Column' },
+        { icons:['dpadVertical','leftStickVertical'], label:'Scroll Games' },
+        { icons:['dpadHorizontal'], label:'Cycle Media' },
+        { icons:['a'], label:marketplaceState.archiveConfirmDownload?'Confirm':'Download' },
+        { icons:['y'], label:'Search' },
+        { icons:['b'], label:'Back' },
+      ],
+    };
+  }
+  if(isGameSearchAvailable()){
+    return {
+      title:'Control Legend',
+      entries:[
+        { icons:['dpadVertical','leftStickVertical'], label:'Scroll' },
+        { icons:['a'], label:'Select' },
+        { icons:['y'], label:'Search' },
         { icons:['b'], label:'Back' },
       ],
     };
@@ -4113,8 +4400,49 @@ function renderArchiveSystemCounts(provider=marketplaceState.provider){
   const snesEl=document.getElementById('cnt-archive-snes'); if(snesEl) snesEl.textContent=snesText;
   const psxEl=document.getElementById('cnt-archive-psx'); if(psxEl) psxEl.textContent=psxText;
 }
+function marketplaceArchiveSystems(){
+  return GAMES_LIBRARY_SYSTEMS.filter(Boolean);
+}
+function marketplaceArchiveSystemFlowSlots(){
+  return systemFlowSlots(marketplaceArchiveSystems(),marketplaceState.system);
+}
+function updateMarketplaceArchiveHeader(){
+  const flow=document.getElementById('mkt-archive-system-flow');
+  if(!flow) return;
+  flow.innerHTML=marketplaceArchiveSystemFlowSlots().map(slot=>{
+    const label=esc(marketplaceSystemLabel(slot.system));
+    const logo=esc(marketplaceSystemBadgeUrl(slot.system));
+    return `<div class="games-system-flow-slot ${slot.active?'active':'clickable'}" data-system="${esc(slot.system)}" data-flow-offset="${slot.offset}" title="${label}" style="background-image:url('${logo}')"></div>`;
+  }).join('');
+  flow.querySelectorAll('.games-system-flow-slot.clickable').forEach(slot=>slot.addEventListener('click',()=>{
+    const offset=Number(slot.dataset.flowOffset||0);
+    if(offset) archiveGamesCycleSystem(offset);
+  }));
+}
+async function archiveGamesCycleSystem(delta){
+  if(!isArchiveGamesOpen()) return false;
+  const systems=marketplaceArchiveSystems();
+  if(!systems.length) return false;
+  let idx=systems.indexOf(marketplaceState.system);
+  if(idx<0) idx=0;
+  const next=systems[(idx+delta+systems.length)%systems.length];
+  if(!next || next===marketplaceState.system){
+    updateMarketplaceArchiveHeader();
+    return false;
+  }
+  marketplaceState.archivePane='list';
+  marketplaceState.archiveMediaIdx=0;
+  marketplaceState.archiveConfirmDownload=false;
+  marketplaceState.selectedRomId=null;
+  await openMarketplaceSourceGamesLibrary(next,marketplaceState.provider);
+  playSfx('cursor.wav');
+  return true;
+}
 function isMarketplaceBrowseOpen(){
   return BLADES[activeIdx]?.id==='mkt' && !!subOpen[activeIdx] && getActiveSubpanel()?.id==='sub-browse';
+}
+function isMarketplaceReadyOpen(){
+  return BLADES[activeIdx]?.id==='mkt' && !!subOpen[activeIdx] && getActiveSubpanel()?.id==='sub-ready';
 }
 function getMarketplaceSystemCards(){
   return [...document.querySelectorAll('#sub-browse .mkt-system-card')].filter(el=>el.offsetParent!==null);
@@ -4129,7 +4457,7 @@ function isGamesInstalledOpen(){
   return BLADES[activeIdx]?.id==='games' && !!subOpen[activeIdx] && getActiveSubpanel()?.id==='sub-library-games';
 }
 function isGamesAchievementsOpen(){
-  return isGamesInstalledOpen() && gamesState.systemSelectorSource==='achievements';
+  return isGamesInstalledOpen() && (gamesState.systemSelectorSource==='achievements' || document.getElementById('sub-library-games')?.classList.contains('achievements-view'));
 }
 function isArchiveGamesOpen(){
   return BLADES[activeIdx]?.id==='mkt' && !!subOpen[activeIdx] && getActiveSubpanel()?.id==='sub-archive-games';
@@ -4211,7 +4539,7 @@ function ensureGamesAchievementModal(){
   modal=document.createElement('div');
   modal.id='games-ach-modal';
   modal.className='games-ach-modal';
-  modal.innerHTML='<div class="games-ach-modal-card"><div class="games-ach-modal-badge"></div><div><div class="games-ach-modal-title">Achievement</div><div class="games-ach-modal-points">0 points</div><div class="games-ach-modal-desc"></div></div></div><div class="games-ach-modal-hint">B Back</div>';
+  modal.innerHTML=`<div class="games-ach-modal-card"><div class="games-ach-modal-badge"></div><div><div class="games-ach-modal-title">Achievement</div><div class="games-ach-modal-points">0 points</div><div class="games-ach-modal-desc"></div></div></div><div class="games-ach-modal-hint"><img src="${CONTROL_ICONS.b}" alt=""/>Back</div>`;
   panel?.appendChild(modal);
   return modal;
 }
@@ -4222,6 +4550,388 @@ function closeGamesAchievementModal(){
   updateControlLegend();
   return true;
 }
+function ensureGamesAchievementListModal(){
+  let modal=document.getElementById('games-ach-list-modal');
+  if(modal) return modal;
+  const panel=document.getElementById('sub-library-games');
+  modal=document.createElement('div');
+  modal.id='games-ach-list-modal';
+  modal.className='games-ach-list-modal';
+  modal.innerHTML=`<div class="games-ach-list-head"><div class="games-ach-list-titleline"><div class="games-ach-list-title">Achievements</div><div class="games-ach-list-meta"></div></div><div class="games-ach-list-controls"><div class="games-ach-list-control"><img src="${CONTROL_ICONS.b}" alt=""/>Back</div><div class="games-ach-list-control"><img class="stick-scroll-icon" src="${CONTROL_ICONS.rightStickVertical}" alt=""/>Scroll</div></div></div><div class="games-ach-list-grid"></div>`;
+  panel?.appendChild(modal);
+  return modal;
+}
+function renderGamesAchievementListModal(){
+  const modal=ensureGamesAchievementListModal();
+  const selected=gamesSelectedEntry();
+  const achievements=gamesState.currentAchievements||[];
+  modal.querySelector('.games-ach-list-title').textContent=selected?.entry?.title||selected?.identifier||'Achievements';
+  modal.querySelector('.games-ach-list-meta').textContent=achievements.length ? `${achievements.length} achievement${achievements.length===1?'':'s'}` : 'Loading achievements...';
+  const grid=modal.querySelector('.games-ach-list-grid');
+  if(!achievements.length){
+    grid.innerHTML='<div class="games-ach-list-empty">Achievement details are still loading for this title.</div>';
+    return;
+  }
+  grid.innerHTML=achievements.map(a=>{
+    const badge=a.badgeName?`https://media.retroachievements.org/Badge/${a.badgeName}.png`:'file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-trophy.webp';
+    return `<div class="games-ach-list-card ${a.dateEarned?'unlocked':'locked'}"><div class="games-ach-list-badge" style="background-image:url('${badge}')"></div><div><div class="games-ach-list-card-title">${esc(a.title||'Achievement')}</div><div class="games-ach-list-card-meta">${Number(a.points||0)} point${Number(a.points||0)===1?'':'s'}${a.dateEarned?' · Unlocked':' · Locked'}</div><div class="games-ach-list-card-desc">${esc(a.description||'No description available.')}</div></div></div>`;
+  }).join('');
+}
+function openGamesAchievementListModal(){
+  if(!isGamesAchievementsOpen()) return false;
+  closeGamesAchievementModal();
+  gamesState.achievementListModalOpen=true;
+  renderGamesAchievementListModal();
+  ensureGamesAchievementListModal().classList.add('on');
+  updateControlLegend();
+  return true;
+}
+function closeGamesAchievementListModal(){
+  if(!gamesState.achievementListModalOpen) return false;
+  gamesState.achievementListModalOpen=false;
+  document.getElementById('games-ach-list-modal')?.classList.remove('on');
+  updateControlLegend();
+  return true;
+}
+function scrollGamesAchievementListModal(delta){
+  if(!gamesState.achievementListModalOpen) return false;
+  const grid=document.querySelector('#games-ach-list-modal .games-ach-list-grid');
+  if(!grid) return false;
+  grid.scrollTop+=delta;
+  return true;
+}
+function gameSearchContext(){
+  if(isArchiveGamesOpen()){
+    const rows=mktCatalogForSystem(marketplaceState.provider,marketplaceState.system).map(rom=>({
+      id:mktRomId(rom),
+      title:mktRomTitle(rom),
+      meta:[marketplaceSystemLabel(rom.system||marketplaceState.system),rom.region,formatMktSize(rom)].filter(Boolean).join(' · '),
+      search:[mktRomTitle(rom),rom.name,rom.region].filter(Boolean).join(' '),
+    }));
+    return {id:'archive-games',title:'Search Marketplace Games',placeholder:'Search downloadable games...',rows};
+  }
+  if(isMarketplaceBrowseOpen()){
+    const rows=mktCatalogForSystem(marketplaceState.provider,marketplaceState.system).map(rom=>({
+      id:mktRomId(rom),
+      title:mktRomTitle(rom),
+      meta:[marketplaceSystemLabel(rom.system||marketplaceState.system),rom.region,formatMktSize(rom)].filter(Boolean).join(' · '),
+      search:[mktRomTitle(rom),rom.name,rom.region].filter(Boolean).join(' '),
+    }));
+    return {id:'marketplace-browse',title:'Search Marketplace Games',placeholder:'Search downloadable games...',rows};
+  }
+  if(isMarketplaceReadyOpen()){
+    const rows=mktReadyEntries().map(({identifier,entry})=>({
+      id:identifier,
+      title:entry.title||identifier,
+      meta:[marketplaceSystemLabel(entry.system||''),entry.source_type==='local_scan'?'Imported locally':'Installed'].filter(Boolean).join(' · '),
+      search:[entry.title,identifier,entry.system].filter(Boolean).join(' '),
+    }));
+    return {id:'marketplace-ready',title:'Search Ready Games',placeholder:'Search installed games...',rows};
+  }
+  if(isGamesInstalledOpen()){
+    const rows=gamesFilteredEntries().map(({identifier,entry})=>({
+      id:identifier,
+      title:entry.title||identifier,
+      meta:gamesMetadataMetaLine(entry)||[entry.source_type==='local_scan'?'Imported locally':'Installed',entry.install_dir?'Ready':''].filter(Boolean).join(' · '),
+      search:[entry.title,identifier,entry.publisher,entry.developer,Array.isArray(entry.genres)?entry.genres.join(' '):'',entry.system].filter(Boolean).join(' '),
+    }));
+    return {id:isGamesAchievementsOpen()?'achievements-games':'my-games',title:isGamesAchievementsOpen()?'Search Achievement Games':'Search My Games',placeholder:'Search installed games...',rows};
+  }
+  return null;
+}
+function isGameSearchAvailable(){
+  const ctx=gameSearchContext();
+  return !!ctx && Array.isArray(ctx.rows) && ctx.rows.length>0 && !gamesState.achievementModalOpen && !gamesState.achievementListModalOpen;
+}
+function ensureGameSearchModal(){
+  let modal=document.getElementById('game-search-modal');
+  if(modal) return modal;
+  modal=document.createElement('div');
+  modal.id='game-search-modal';
+  modal.className='game-search-modal';
+  modal.innerHTML=`<div class="game-search-head"><div class="game-search-title">Search Games</div><div class="game-search-hints"><div class="game-search-hint"><img src="${CONTROL_ICONS.a}" alt=""/>Select</div><div class="game-search-hint"><img src="${CONTROL_ICONS.b}" alt=""/>Back</div></div></div><input id="game-search-input" class="game-search-input" type="text" autocomplete="off" spellcheck="false"/><div class="game-search-results"></div>`;
+  document.getElementById('stage')?.appendChild(modal);
+  modal.querySelector('.game-search-input')?.addEventListener('input',event=>{
+    gameSearchState.query=event.target.value||'';
+    gameSearchState.resultIdx=0;
+    renderGameSearchResults();
+  });
+  modal.querySelector('.game-search-input')?.addEventListener('click',()=>{
+    gameSearchState.focus='input';
+    renderGameSearchResults();
+    openKeyboard('game-search-input');
+  });
+  return modal;
+}
+function renderGameSearchResults(){
+  const modal=ensureGameSearchModal();
+  const ctx=gameSearchContext();
+  const resultsEl=modal.querySelector('.game-search-results');
+  if(!ctx || !resultsEl) return;
+  const query=(gameSearchState.query||'').trim().toLowerCase();
+  const rows=query
+    ? ctx.rows.filter(row=>(row.search||row.title||'').toLowerCase().includes(query))
+    : ctx.rows;
+  modal.classList.toggle('input-selected',gameSearchState.focus==='input');
+  gameSearchState.context=ctx.id;
+  gameSearchState.results=rows.slice(0,18);
+  gameSearchState.resultIdx=Math.max(0,Math.min(gameSearchState.resultIdx,Math.max(0,gameSearchState.results.length-1)));
+  modal.querySelector('.game-search-title').textContent=ctx.title;
+  const input=modal.querySelector('.game-search-input');
+  if(input) input.placeholder=ctx.placeholder||'Search games...';
+  if(!gameSearchState.results.length){
+    resultsEl.innerHTML=`<div class="game-search-empty">${query?'No matching games found.':'Type to search this list.'}</div>`;
+    return;
+  }
+  resultsEl.innerHTML=gameSearchState.results.map((row,idx)=>`
+    <div class="game-search-result ${gameSearchState.focus==='results' && idx===gameSearchState.resultIdx?'sel':''}" data-search-idx="${idx}">
+      <div class="game-search-result-title">${esc(row.title||row.id||'Unknown')}</div>
+      <div class="game-search-result-meta">${esc(row.meta||'')}</div>
+    </div>
+  `).join('');
+  resultsEl.querySelectorAll('.game-search-result').forEach(item=>item.addEventListener('click',()=>{
+    gameSearchState.resultIdx=Number(item.dataset.searchIdx||0);
+    applyGameSearchSelection();
+  }));
+  const selected=resultsEl.querySelector('.game-search-result.sel');
+  scrollSelectionIntoView(selected);
+}
+function openGameSearchModal(){
+  if(!isGameSearchAvailable()) return false;
+  const ctx=gameSearchContext();
+  const selectedId=isArchiveGamesOpen()||isMarketplaceBrowseOpen()
+    ? marketplaceState.selectedRomId
+    : (isMarketplaceReadyOpen()?marketplaceState.selectedReadyId:gamesState.selectedId);
+  gameSearchState.open=true;
+  gameSearchState.context=ctx?.id||null;
+  gameSearchState.query='';
+  gameSearchState.focus='input';
+  gameSearchState.resultIdx=Math.max(0,(ctx?.rows||[]).findIndex(row=>row.id===selectedId));
+  if(gameSearchState.resultIdx<0) gameSearchState.resultIdx=0;
+  const modal=ensureGameSearchModal();
+  modal.classList.add('on');
+  const input=modal.querySelector('.game-search-input');
+  if(input) input.value='';
+  renderGameSearchResults();
+  setTimeout(()=>input?.focus?.(),0);
+  updateControlLegend();
+  playSfx('select.wav');
+  return true;
+}
+function closeGameSearchModal(){
+  if(!gameSearchState.open) return false;
+  gameSearchState.open=false;
+  gameSearchState.context=null;
+  gameSearchState.query='';
+  gameSearchState.focus='input';
+  gameSearchState.results=[];
+  document.getElementById('game-search-modal')?.classList.remove('on');
+  updateControlLegend();
+  return true;
+}
+function moveGameSearchResult(delta){
+  if(!gameSearchState.open || !gameSearchState.results.length) return false;
+  if(gameSearchState.focus==='input'){
+    if(delta>0) gameSearchState.focus='results';
+    renderGameSearchResults();
+    playSfx('cursor.wav');
+    return true;
+  }
+  if(delta<0 && gameSearchState.resultIdx===0){
+    gameSearchState.focus='input';
+    renderGameSearchResults();
+    playSfx('cursor.wav');
+    return true;
+  }
+  gameSearchState.resultIdx=(gameSearchState.resultIdx+delta+gameSearchState.results.length)%gameSearchState.results.length;
+  renderGameSearchResults();
+  playSfx('cursor.wav');
+  return true;
+}
+function applyGameSearchSelection(){
+  if(!gameSearchState.open) return false;
+  if(gameSearchState.focus==='input'){
+    openKeyboard('game-search-input');
+    return true;
+  }
+  const row=gameSearchState.results[gameSearchState.resultIdx];
+  if(!row) return false;
+  const context=gameSearchState.context;
+  closeGameSearchModal();
+  if(context==='archive-games'){
+    marketplaceState.archiveConfirmDownload=false;
+    marketplaceState.archivePane='list';
+    marketplaceState.archiveMediaIdx=0;
+    marketplaceState.selectedRomId=row.id;
+    renderArchiveGamesDetail();
+    syncArchiveGamesSelection();
+    return true;
+  }
+  if(context==='marketplace-browse'){
+    marketplaceState.browsePane='list';
+    marketplaceState.selectedRomId=row.id;
+    renderMarketplaceDetail();
+    syncMarketplaceBrowseSelection();
+    return true;
+  }
+  if(context==='marketplace-ready'){
+    marketplaceState.selectedReadyId=row.id;
+    renderMarketplaceReadyDetail();
+    syncMarketplaceNav();
+    const item=document.querySelector(`#mkt-ready-list .mkt-ready-item[data-ready-id="${CSS.escape(row.id)}"]`);
+    scrollSelectionIntoView(item);
+    return true;
+  }
+  if(context==='achievements-games' || context==='my-games'){
+    gamesState.pane='list';
+    gamesState.selectedId=row.id;
+    closeGamesAchievementModal();
+    closeGamesAchievementListModal();
+    renderGamesInstalledDetail();
+    syncGamesInstalledSelection();
+    return true;
+  }
+  return false;
+}
+function handleGameSearchKey(event){
+  if(!gameSearchState.open) return false;
+  if(event.key==='Escape' || event.key==='Backspace'){
+    closeGameSearchModal();
+    return true;
+  }
+  if(event.key==='ArrowUp'){
+    moveGameSearchResult(-1);
+    return true;
+  }
+  if(event.key==='ArrowDown'){
+    moveGameSearchResult(1);
+    return true;
+  }
+  if(event.key==='Enter'){
+    applyGameSearchSelection();
+    return true;
+  }
+  return false;
+}
+function ensureFolderBrowserModal(){
+  let modal=document.getElementById('folder-browser-modal');
+  if(modal) return modal;
+  modal=document.createElement('div');
+  modal.id='folder-browser-modal';
+  modal.className='folder-browser-modal';
+  modal.innerHTML=`<div class="folder-browser-head"><div><div class="folder-browser-title">Select Folder</div><div class="folder-browser-path"></div></div><div class="folder-browser-hints"><div class="folder-browser-hint"><img src="${CONTROL_ICONS.a}" alt=""/>Open</div><div class="folder-browser-hint"><img src="${CONTROL_ICONS.y}" alt=""/>Select</div><div class="folder-browser-hint"><img src="${CONTROL_ICONS.b}" alt=""/>Back</div></div></div><div class="folder-browser-list"></div>`;
+  document.getElementById('stage')?.appendChild(modal);
+  return modal;
+}
+function renderFolderBrowser(){
+  const modal=ensureFolderBrowserModal();
+  modal.querySelector('.folder-browser-title').textContent=folderBrowserState.title||'Select Folder';
+  modal.querySelector('.folder-browser-path').textContent=folderBrowserState.error || folderBrowserState.currentPath || 'Choose a drive';
+  const list=modal.querySelector('.folder-browser-list');
+  if(!list) return;
+  if(!folderBrowserState.entries.length){
+    list.innerHTML=`<div class="folder-browser-empty">${esc(folderBrowserState.error || 'This folder has no subfolders. Press Y to select it.')}</div>`;
+    return;
+  }
+  folderBrowserState.selectedIdx=Math.max(0,Math.min(folderBrowserState.selectedIdx,folderBrowserState.entries.length-1));
+  list.innerHTML=folderBrowserState.entries.map((entry,idx)=>`
+    <div class="folder-browser-item ${entry.type==='drive'?'drive':''} ${idx===folderBrowserState.selectedIdx?'sel':''}" data-folder-idx="${idx}">
+      <div class="folder-browser-icon"></div>
+      <div class="folder-browser-name">${esc(entry.name||entry.path||'Folder')}</div>
+    </div>
+  `).join('');
+  list.querySelectorAll('.folder-browser-item').forEach(item=>item.addEventListener('click',()=>{
+    folderBrowserState.selectedIdx=Number(item.dataset.folderIdx||0);
+    openSelectedFolderBrowserEntry();
+  }));
+  scrollSelectionIntoView(list.querySelector('.folder-browser-item.sel'));
+}
+async function loadFolderBrowserPath(dir,preserveSelection=false){
+  const result=await window.electronAPI?.listFolders?.({dir:dir||null});
+  if(!result?.ok){
+    folderBrowserState.error=result?.error || 'Could not read this folder.';
+    folderBrowserState.entries=[];
+    renderFolderBrowser();
+    return false;
+  }
+  folderBrowserState.currentPath=result.dir||'';
+  folderBrowserState.parentPath=result.parent||null;
+  folderBrowserState.entries=Array.isArray(result.entries)?result.entries:[];
+  folderBrowserState.error='';
+  if(!preserveSelection) folderBrowserState.selectedIdx=0;
+  renderFolderBrowser();
+  return true;
+}
+async function openSkaldFolderBrowser({title='Select Folder',startPath=''}={}){
+  if(folderBrowserState.open) closeFolderBrowser(false);
+  folderBrowserState.open=true;
+  folderBrowserState.title=title;
+  folderBrowserState.currentPath='';
+  folderBrowserState.parentPath=null;
+  folderBrowserState.entries=[];
+  folderBrowserState.selectedIdx=0;
+  folderBrowserState.error='';
+  const modal=ensureFolderBrowserModal();
+  modal.classList.add('on');
+  updateControlLegend();
+  await loadFolderBrowserPath(startPath||null);
+  return new Promise(resolve=>{
+    folderBrowserState.resolve=resolve;
+  });
+}
+function closeFolderBrowser(value=null){
+  if(!folderBrowserState.open) return false;
+  const resolve=folderBrowserState.resolve;
+  folderBrowserState.open=false;
+  folderBrowserState.resolve=null;
+  document.getElementById('folder-browser-modal')?.classList.remove('on');
+  updateControlLegend();
+  if(resolve) resolve(value);
+  return true;
+}
+async function openSelectedFolderBrowserEntry(){
+  if(!folderBrowserState.open) return false;
+  const entry=folderBrowserState.entries[folderBrowserState.selectedIdx];
+  if(!entry?.path) return false;
+  await loadFolderBrowserPath(entry.path);
+  playSfx('select.wav');
+  return true;
+}
+function moveFolderBrowserSelection(delta){
+  if(!folderBrowserState.open || !folderBrowserState.entries.length) return false;
+  folderBrowserState.selectedIdx=(folderBrowserState.selectedIdx+delta+folderBrowserState.entries.length)%folderBrowserState.entries.length;
+  renderFolderBrowser();
+  playSfx('cursor.wav');
+  return true;
+}
+async function folderBrowserBack(){
+  if(!folderBrowserState.open) return false;
+  if(folderBrowserState.parentPath){
+    await loadFolderBrowserPath(folderBrowserState.parentPath);
+    playSfx('tier2_exit.wav');
+    return true;
+  }
+  if(folderBrowserState.currentPath){
+    await loadFolderBrowserPath(null);
+    playSfx('tier2_exit.wav');
+    return true;
+  }
+  closeFolderBrowser(null);
+  return true;
+}
+function chooseCurrentFolderBrowserPath(){
+  if(!folderBrowserState.open) return false;
+  if(!folderBrowserState.currentPath){
+    const entry=folderBrowserState.entries[folderBrowserState.selectedIdx];
+    if(entry?.path){
+      closeFolderBrowser(entry.path);
+      return true;
+    }
+    return false;
+  }
+  closeFolderBrowser(folderBrowserState.currentPath);
+  return true;
+}
 function syncGamesInstalledSelection(){
   if(!isGamesInstalledOpen()) return;
   const pane=gamesState.pane||'list';
@@ -4229,6 +4939,7 @@ function syncGamesInstalledSelection(){
   const actions=getGamesActionItems();
   items.forEach(item=>item.classList.toggle('sel',pane==='list' && item.dataset.gamesId===gamesState.selectedId));
   actions.forEach((item,idx)=>item.classList.toggle('sel',pane==='actions' && idx===gamesState.actionIdx));
+  document.querySelectorAll('#sub-library-games .games-media-thumb').forEach((item,idx)=>item.classList.toggle('sel',pane==='actions' && !isGamesAchievementsOpen() && idx===(gamesState.mediaIdx||0)));
   const selectedItem=items.find(item=>item.dataset.gamesId===gamesState.selectedId);
   if(selectedItem) scrollSelectionIntoView(selectedItem);
   syncGamesAchievementSelection();
@@ -4296,6 +5007,14 @@ function archiveGamesMoveVertical(delta){
 }
 function gamesInstalledMoveHorizontal(delta){
   if(!isGamesInstalledOpen()) return false;
+  if(!isGamesAchievementsOpen() && (gamesState.pane||'list')==='actions'){
+    const media=gamesSelectedMediaAssets();
+    if(!media.length) return false;
+    gamesState.mediaIdx=(Math.max(0,Math.min(gamesState.mediaIdx||0,media.length-1))+delta+media.length)%media.length;
+    syncGamesInstalledSelection();
+    updateControlLegend();
+    return true;
+  }
   if(isGamesAchievementsOpen() && (gamesState.pane||'list')==='actions'){
     const achievements=gamesState.currentAchievements||[];
     if(!achievements.length) return false;
@@ -4309,11 +5028,16 @@ function gamesInstalledMoveColumn(delta){
   if(!isGamesInstalledOpen()) return false;
   gamesState.pane=(delta<0)?'list':'actions';
   if(gamesState.pane==='actions') gamesState.actionIdx=0;
+  if(!isGamesAchievementsOpen() && gamesState.pane==='actions'){
+    const media=gamesSelectedMediaAssets();
+    gamesState.mediaIdx=Math.max(0,Math.min(gamesState.mediaIdx||0,Math.max(0,media.length-1)));
+  }
   if(isGamesAchievementsOpen()){
     if(gamesState.pane==='actions') stopGamesAchievementAutoScroll();
     else startGamesAchievementAutoScroll();
   }
   syncGamesInstalledSelection();
+  updateControlLegend();
   return true;
 }
 function gamesInstalledCycleFilter(delta){
@@ -4334,6 +5058,35 @@ function gamesInstalledCycleFilter(delta){
   renderGamesInstalledList();
   return true;
 }
+function gamesInstalledCycleSystem(delta){
+  if(!isGamesInstalledOpen()) return false;
+  const systems=gamesLibrarySystems();
+  if(!systems.length) return false;
+  let idx=systems.indexOf(gamesState.system);
+  if(idx<0) idx=0;
+  const next=systems[(idx+delta+systems.length)%systems.length];
+  if(!next || next===gamesState.system){
+    updateGamesInstalledHeader();
+    return false;
+  }
+  closeGamesAchievementListModal();
+  closeGamesAchievementModal();
+  closeGamesMediaModal();
+  stopGamesAchievementAutoScroll();
+  gamesState.system=next;
+  gamesState.selectedId=null;
+  if(!isGamesAchievementsOpen()) gamesState.filter='all';
+  gamesState.pane='list';
+  gamesState.actionIdx=0;
+  gamesState.achievementIdx=0;
+  gamesState.achievementGameId=null;
+  gamesState.currentAchievements=[];
+  renderGamesInstalledList();
+  updateGamesInstalledHeader();
+  syncGamesInstalledSelection();
+  playSfx('cursor.wav');
+  return true;
+}
 function archiveGamesMoveHorizontal(delta){
   if(!isArchiveGamesOpen()) return false;
   marketplaceState.archivePane=(delta<0)?'list':'detail';
@@ -4343,6 +5096,8 @@ function archiveGamesMoveHorizontal(delta){
 }
 function gamesInstalledSelect(){
   if(!isGamesInstalledOpen()) return false;
+  if(gamesState.mediaModalOpen) return true;
+  if(closeGamesAchievementListModal()) return true;
   if(closeGamesAchievementModal()) return true;
   if(isGamesAchievementsOpen()){
     if((gamesState.pane||'list')==='actions'){
@@ -4350,12 +5105,20 @@ function gamesInstalledSelect(){
       return true;
     }
     const item=getGamesInstalledItems().find(item=>item.dataset.gamesId===gamesState.selectedId);
-    item?.click?.();
+    if(item){
+      gamesState.pane='list';
+      gamesState.selectedId=item.dataset.gamesId || gamesState.selectedId;
+      renderGamesInstalledDetail();
+      syncGamesInstalledSelection();
+      setTimeout(()=>openGamesAchievementListModal(),0);
+    }
     return true;
   }
+  if((gamesState.pane||'list')==='actions'){
+    return openGamesMediaModal();
+  }
   if((gamesState.pane||'list')==='list'){
-    const item=getGamesInstalledItems().find(item=>item.dataset.gamesId===gamesState.selectedId);
-    item?.click?.();
+    gamesLaunchSelected();
     return true;
   }
   const item=getGamesActionItems()[gamesState.actionIdx||0];
@@ -4460,7 +5223,7 @@ function marketplaceBrowseSelect(){
       .map(([identifier,entry])=>({identifier,entry}))
       .sort((a,b)=>(a.entry?.title||a.identifier).localeCompare(b.entry?.title||b.identifier));
   }
-function gamesSelectedEntry(){return installedEntriesBySystem(gamesState.system).find(({identifier})=>identifier===gamesState.selectedId)||null;}
+function gamesSelectedEntry(){return installedEntriesBySystem(gamesState.system===GAMES_ALL_SYSTEM ? '' : gamesState.system).find(({identifier})=>identifier===gamesState.selectedId)||null;}
 function mktSelectedRom(){return mktCatalogForSystem(marketplaceState.provider,marketplaceState.system).find(r=>mktRomId(r)===marketplaceState.selectedRomId)||null;}
 function mktFeatureKey(item){return item?`${item.system}::${mktRomId(item)}`:'';}
 function mktAllCatalogGames(){
@@ -4621,9 +5384,12 @@ async function ensureMarketplaceCatalogSystem(provider, system){
   return mktCatalogForSystem(marketplaceState.provider,marketplaceState.system);
 }
 async function saveMarketplaceSystemScanFolder(system){
-  const picked=await window.electronAPI?.chooseFolder?.();
-  if(!picked) return false;
   const settings=await window.electronAPI.getSettings();
+  const picked=await openSkaldFolderBrowser({
+    title:`Select ${getScanSystemLabel(system)} Scan Folder`,
+    startPath:settings?.systemScanPaths?.[system] || settings?.installPath || settings?.downloadPath || '',
+  });
+  if(!picked) return false;
   const nextPaths={...(settings?.systemScanPaths||{}),[system]:picked};
   await window.electronAPI.saveSettings({...settings,systemScanPaths:nextPaths});
   marketplaceState.scanSystemPaths=nextPaths;
@@ -4772,8 +5538,54 @@ function renderGamesSystemCounts(){
   const psxEl=document.getElementById('cnt-psx2'); if(psxEl) psxEl.textContent=psxText;
   syncGamesLibraryNav();
 }
+function ensureGamesInstalledHeader(){
+  const view=document.querySelector('#sub-library-games .games-library-view');
+  if(!view || document.getElementById('games-installed-header')) return;
+  const header=document.createElement('div');
+  header.id='games-installed-header';
+  header.className='mkt-source-header';
+  header.innerHTML='<div class="mkt-source-header-title">Select a Game</div><div id="games-installed-system-flow" class="games-system-flow" aria-label="System selector"></div>';
+  view.insertBefore(header,view.firstChild);
+}
+function gamesLibrarySystems(){
+  const systems=GAMES_LIBRARY_SYSTEMS.filter(Boolean);
+  return gamesState.systemSelectorSource==='achievements' ? systems : [GAMES_ALL_SYSTEM,...systems];
+}
+function systemFlowSlots(systems,currentSystem){
+  if(!systems.length) return [];
+  let idx=systems.indexOf(currentSystem);
+  if(idx<0) idx=0;
+  if(systems.length===1) return [{system:systems[0],offset:0,active:true}];
+  return [-1,0,1].map(offset=>({
+    system:systems[(idx+offset+systems.length)%systems.length],
+    offset,
+    active:offset===0,
+  }));
+}
+function gamesSystemFlowSlots(){
+  return systemFlowSlots(gamesLibrarySystems(),gamesState.system);
+}
+function updateGamesInstalledHeader(){
+  ensureGamesInstalledHeader();
+  const panel=document.getElementById('sub-library-games');
+  const header=document.getElementById('games-installed-header');
+  const flow=document.getElementById('games-installed-system-flow');
+  const isAchievements=isGamesAchievementsOpen();
+  panel?.classList.toggle('mygames-view',!isAchievements);
+  if(flow){
+    flow.innerHTML=gamesSystemFlowSlots().map(slot=>{
+      const label=esc(marketplaceSystemLabel(slot.system));
+      const logo=esc(marketplaceSystemBadgeUrl(slot.system));
+      return `<div class="games-system-flow-slot ${slot.active?'active':'clickable'}" data-system="${esc(slot.system)}" data-flow-offset="${slot.offset}" title="${label}" style="background-image:url('${logo}')"></div>`;
+    }).join('');
+    flow.querySelectorAll('.games-system-flow-slot.clickable').forEach(slot=>slot.addEventListener('click',()=>{
+      const offset=Number(slot.dataset.flowOffset||0);
+      if(offset) gamesInstalledCycleSystem(offset);
+    }));
+  }
+}
 function gamesFilteredEntries(){
-  const entries=installedEntriesBySystem(gamesState.system);
+  const entries=installedEntriesBySystem(gamesState.system===GAMES_ALL_SYSTEM ? '' : gamesState.system);
   if(gamesState.filter==='recent'){
     return [...entries].sort((a,b)=>(b.entry?.added_at||0)-(a.entry?.added_at||0));
   }
@@ -4798,6 +5610,98 @@ function gamesDefaultIcon(){
 function applyGamesListArt(identifier,url){
   const el=document.querySelector(`#games-installed-list .games-installed-item[data-games-id="${CSS.escape(identifier)}"] .micon`);
   if(el && url) el.style.backgroundImage=`url('${url}')`;
+}
+function gameAssetUrl(value){
+  if(!value) return '';
+  const text=String(value);
+  if(/^https?:\/\//i.test(text) || /^file:\/\//i.test(text)) return text;
+  if(/^[A-Za-z]:[\\/]/.test(text) || text.startsWith('\\\\')) return `file:///${text.replace(/\\/g,'/')}`;
+  return text;
+}
+function gamesMediaAssetsForEntry(identifier,entry){
+  const assets=[];
+  const seen=new Set();
+  const add=(url,label,type='cover')=>{
+    const src=gameAssetUrl(url);
+    if(!src || seen.has(src)) return;
+    seen.add(src);
+    assets.push({url:src,label,type});
+  };
+  const cached=gamesArtCache.get(gamesArtKey(identifier,entry));
+  add(entry?.cover_path,'Box Art','cover');
+  add(entry?.background_path,'Background','shot');
+  if(Array.isArray(entry?.screenshot_paths)) entry.screenshot_paths.forEach((url,idx)=>add(url,`Screenshot ${idx+1}`,'shot'));
+  add(entry?.logo_path,'Logo','cover');
+  add(entry?.icon_path,'Icon','cover');
+  add(entry?.ra_badge_path,'RA','cover');
+  add(cached,'Artwork','cover');
+  if(!assets.length) add(gamesDefaultIcon(),'Artwork','cover');
+  return assets;
+}
+function gamesSelectedMediaAssets(){
+  const selected=gamesSelectedEntry();
+  return selected ? gamesMediaAssetsForEntry(selected.identifier,selected.entry) : [];
+}
+function ensureGamesDetailShell(isAchievements){
+  const top=document.querySelector('#sub-library-games .games-detail-top');
+  if(!top) return;
+  const mode=isAchievements?'achievements':'mygames';
+  if(top.dataset.detailMode===mode) return;
+  top.dataset.detailMode=mode;
+  if(isAchievements){
+    top.innerHTML=`<div id="games-detail-icon" class="games-detail-icon" style="background-image:url('${gamesDefaultIcon()}')"></div><div class="games-score-line"><div class="games-score-label"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-gamescore.webp')"></div><span>Gamerscore</span></div><div id="games-score-value" class="games-score-value">0/0</div></div>`;
+  }else{
+    top.innerHTML='<div id="games-media-strip" class="games-media-strip"></div>';
+  }
+}
+function renderGamesMediaStrip(selected){
+  const strip=document.getElementById('games-media-strip');
+  if(!strip) return;
+  const media=selected ? gamesMediaAssetsForEntry(selected.identifier,selected.entry) : [];
+  gamesState.mediaIdx=Math.max(0,Math.min(gamesState.mediaIdx||0,Math.max(0,media.length-1)));
+  if(!media.length){
+    strip.innerHTML='<div class="games-media-empty">No artwork cached yet.</div>';
+    return;
+  }
+  strip.innerHTML=media.map((item,idx)=>`<div class="games-media-thumb ${esc(item.type||'cover')} ${idx===(gamesState.mediaIdx||0) && (gamesState.pane||'list')==='actions'?'sel':''}" data-media-idx="${idx}" title="${esc(item.label||'Image')}" style="background-image:url('${esc(item.url)}')"><div class="games-media-thumb-label">${esc(item.label||'Image')}</div></div>`).join('');
+  strip.querySelectorAll('.games-media-thumb').forEach(item=>item.addEventListener('click',()=>{
+    gamesState.pane='actions';
+    gamesState.mediaIdx=Number(item.dataset.mediaIdx||0);
+    syncGamesInstalledSelection();
+    openGamesMediaModal();
+  }));
+  const focused=strip.querySelector('.games-media-thumb.sel');
+  if(focused) scrollSelectionIntoView(focused);
+}
+function ensureGamesMediaModal(){
+  let modal=document.getElementById('games-media-modal');
+  if(modal) return modal;
+  modal=document.createElement('div');
+  modal.id='games-media-modal';
+  modal.className='games-media-modal';
+  modal.innerHTML=`<div class="games-media-modal-title"></div><div class="games-media-modal-image"></div><div class="games-media-modal-hint"><img src="${CONTROL_ICONS.b}" alt=""/>Back</div>`;
+  document.getElementById('stage')?.appendChild(modal);
+  return modal;
+}
+function openGamesMediaModal(){
+  if(!isGamesInstalledOpen() || isGamesAchievementsOpen()) return false;
+  const media=gamesSelectedMediaAssets();
+  if(!media.length) return false;
+  const item=media[Math.max(0,Math.min(gamesState.mediaIdx||0,media.length-1))];
+  const modal=ensureGamesMediaModal();
+  modal.querySelector('.games-media-modal-title').textContent=item.label||'Artwork';
+  modal.querySelector('.games-media-modal-image').style.backgroundImage=`url('${item.url}')`;
+  gamesState.mediaModalOpen=true;
+  modal.classList.add('on');
+  updateControlLegend();
+  return true;
+}
+function closeGamesMediaModal(){
+  if(!gamesState.mediaModalOpen) return false;
+  gamesState.mediaModalOpen=false;
+  document.getElementById('games-media-modal')?.classList.remove('on');
+  updateControlLegend();
+  return true;
 }
 async function loadGamesArt(identifier,entry){
   if(!identifier || !entry) return null;
@@ -4838,6 +5742,7 @@ async function loadGamesArt(identifier,entry){
   if(selected?.identifier===identifier){
     const iconEl=document.getElementById('games-detail-icon');
     if(iconEl) iconEl.style.backgroundImage=`url('${finalUrl}')`;
+    renderGamesMediaStrip(selected);
   }
   return finalUrl;
 }
@@ -4862,6 +5767,69 @@ function gamesMetadataStatusText(entry, deletePending){
   if(Array.isArray(entry.genres) && entry.genres.length) parts.push(`Genres: ${entry.genres.join(', ')}`);
   if(entry.platform_name) parts.push(`Platform: ${entry.platform_name}`);
   return parts.join(' ');
+}
+function ensureGamesHltbPanel(){
+  const status=document.getElementById('games-installed-status');
+  if(!status) return null;
+  let panel=document.getElementById('games-hltb-panel');
+  if(panel) return panel;
+  panel=document.createElement('div');
+  panel.id='games-hltb-panel';
+  panel.className='games-hltb-panel';
+  status.insertAdjacentElement('afterend',panel);
+  return panel;
+}
+function renderGamesHltbPanel(identifier,entry){
+  const panel=ensureGamesHltbPanel();
+  if(!panel) return;
+  if(isGamesAchievementsOpen()){
+    panel.hidden=true;
+    return;
+  }
+  panel.hidden=false;
+  const key=gamesArtKey(identifier,entry);
+  const cached=gamesHltbCache.get(key);
+  if(gamesHltbPending.has(key)){
+    panel.innerHTML='<div class="games-hltb-title">HowLongToBeat</div><div class="games-hltb-value">Loading playtime data...</div>';
+    return;
+  }
+  if(!cached){
+    panel.innerHTML='<div class="games-hltb-title">HowLongToBeat</div><div class="games-hltb-value">Playtime data not loaded yet.</div>';
+    return;
+  }
+  if(!cached.ok || !cached.data){
+    panel.innerHTML='<div class="games-hltb-title">HowLongToBeat</div><div class="games-hltb-value">No playtime match found.</div>';
+    return;
+  }
+  const data=cached.data;
+  const matched=data.title ? ` · ${esc(data.title)}` : '';
+  panel.innerHTML=`<div class="games-hltb-title">HowLongToBeat${matched}</div><div class="games-hltb-times">
+    <div class="games-hltb-time"><div class="games-hltb-label">Main</div><div class="games-hltb-value">${esc(data.main||'--')}</div></div>
+    <div class="games-hltb-time"><div class="games-hltb-label">Main + Extra</div><div class="games-hltb-value">${esc(data.mainExtra||'--')}</div></div>
+    <div class="games-hltb-time"><div class="games-hltb-label">Completionist</div><div class="games-hltb-value">${esc(data.completionist||'--')}</div></div>
+  </div>`;
+}
+async function loadGamesHltb(selected){
+  if(!selected || !window.electronAPI?.hltbSearch || isGamesAchievementsOpen()) return;
+  const {identifier,entry}=selected;
+  const key=gamesArtKey(identifier,entry);
+  const existing=gamesHltbCache.get(key);
+  if(gamesHltbPending.has(key) || (existing && (existing.ok || existing.retryTried))) return;
+  gamesHltbPending.add(key);
+  renderGamesHltbPanel(identifier,entry);
+  try{
+    let result=await window.electronAPI.hltbSearch({cleanName:entry.title||identifier});
+    if(!result?.ok && result?.cached){
+      result=await window.electronAPI.hltbSearch({cleanName:entry.title||identifier,force:true});
+    }
+    gamesHltbCache.set(key,result?.ok ? {ok:true,data:result.data||null} : {ok:false,error:result?.error||'No match',retryTried:Boolean(existing)});
+  }catch(error){
+    gamesHltbCache.set(key,{ok:false,error:error?.message||'No match',retryTried:Boolean(existing)});
+  }finally{
+    gamesHltbPending.delete(key);
+    const current=gamesSelectedEntry();
+    if(current?.identifier===identifier) renderGamesHltbPanel(identifier,entry);
+  }
 }
 async function loadGamesLocalMetadata(selected){
   if(!selected || !window.electronAPI?.enrichLibraryGame) return;
@@ -4932,13 +5900,16 @@ function applyGamesRaDetail(data,error){
   const scoreEl=document.getElementById('games-score-value');
   const iconEl=document.getElementById('games-detail-icon');
   const gridEl=document.getElementById('games-ach-grid');
+  const achCountEl=document.getElementById('games-ach-count');
   const selected=gamesSelectedEntry();
   if(!data){
     gamesState.currentAchievements=[];
     gamesState.achievementIdx=0;
     closeGamesAchievementModal();
+    closeGamesAchievementListModal();
     stopGamesAchievementAutoScroll();
     if(scoreEl) scoreEl.textContent='0/0';
+    if(achCountEl) achCountEl.textContent='';
     const fallback=selected?gamesArtCache.get(gamesArtKey(selected.identifier,selected.entry)):null;
     if(iconEl) iconEl.style.backgroundImage=`url('${fallback||gamesDefaultIcon()}')`;
     if(gridEl){
@@ -4951,7 +5922,8 @@ function applyGamesRaDetail(data,error){
   const earnedPoints=(data.achievements||[]).reduce((sum,a)=>sum + (a.dateEarned ? Number(a.points||0) : 0),0);
   if(scoreEl) scoreEl.textContent=`${earnedPoints}/${Number(data.totalPoints||0)}`;
   const statusEl=document.getElementById('games-installed-status');
-  if(statusEl) statusEl.textContent=`RetroAchievements: ${data.title || data.matchedTitle || 'Matched game'}${data.id ? ` (#${data.id})` : ''} · ${Number(data.numAchievements||0)} achievements · ${Number(data.totalPoints||0)} points`;
+  if(achCountEl) achCountEl.textContent=`${Number(data.numAchievements||0)} achievements · ${Number(data.totalPoints||0)} points`;
+  if(statusEl) statusEl.textContent='';
   const currentSelected=gamesSelectedEntry();
   const key=currentSelected?gamesArtKey(currentSelected.identifier,currentSelected.entry):null;
   const preferred=(key&&gamesArtCache.get(key))||data.imageIcon||gamesDefaultIcon();
@@ -4980,10 +5952,14 @@ function applyGamesRaDetail(data,error){
     }
   }
   syncGamesAchievementSelection();
+  if(gamesState.achievementListModalOpen) renderGamesAchievementListModal();
   if(isGamesAchievementsOpen() && (gamesState.pane||'list')!=='actions') startGamesAchievementAutoScroll();
   else stopGamesAchievementAutoScroll();
 }
 function renderGamesInstalledDetail(){
+    updateGamesInstalledHeader();
+    const isAchievements=isGamesAchievementsOpen();
+    ensureGamesDetailShell(isAchievements);
     const selected=gamesSelectedEntry();
     const title=document.getElementById('games-installed-title');
     const meta=document.getElementById('games-installed-meta');
@@ -4993,16 +5969,22 @@ function renderGamesInstalledDetail(){
     const deleteLabel=deleteAction?.querySelector('.mkt-action-label');
     const deleteMeta=document.getElementById('games-delete-meta');
     const countEl=document.getElementById('games-library-count');
+    const hltbPanel=document.getElementById('games-hltb-panel');
+    if(hltbPanel) hltbPanel.hidden=isAchievements;
     if(actionWrap){
       actionWrap.hidden=false;
-      actionWrap.classList.toggle('achievements-mode', isGamesAchievementsOpen());
+      actionWrap.classList.toggle('achievements-mode', isAchievements);
       actionWrap.style.setProperty('--games-system-logo', `url('${marketplaceSystemBadgeUrl(selected?.entry?.system||gamesState.system)}')`);
     }
-    if(deleteAction) deleteAction.hidden=isGamesAchievementsOpen();
+    if(deleteAction) deleteAction.hidden=isAchievements;
     if(!selected){
       if(title) title.textContent='Select a game';
       if(meta) meta.textContent='Choose an installed game to view details.';
       if(status) status.textContent='';
+      renderGamesMediaStrip(null);
+      if(hltbPanel) hltbPanel.hidden=true;
+      const achCountEl=document.getElementById('games-ach-count');
+      if(achCountEl) achCountEl.textContent='';
       if(countEl) countEl.textContent='';
       if(deleteLabel) deleteLabel.textContent='Delete Install';
       if(deleteMeta) deleteMeta.textContent='Remove the selected installed game from disk.';
@@ -5013,8 +5995,11 @@ function renderGamesInstalledDetail(){
     if(gamesState.achievementGameId!==identifier){
       gamesState.achievementGameId=identifier;
       gamesState.achievementIdx=0;
+      gamesState.mediaIdx=0;
       gamesState.currentAchievements=[];
+      closeGamesMediaModal();
       closeGamesAchievementModal();
+      closeGamesAchievementListModal();
       stopGamesAchievementAutoScroll();
     }
     const deleteScope='games-installed';
@@ -5030,8 +6015,13 @@ function renderGamesInstalledDetail(){
     const cachedArt=gamesArtCache.get(gamesArtKey(identifier,entry));
     const iconEl=document.getElementById('games-detail-icon');
     if(iconEl) iconEl.style.backgroundImage=`url('${cachedArt||gamesDefaultIcon()}')`;
+    if(!isAchievements) renderGamesMediaStrip(selected);
     loadGamesArt(identifier,entry);
     loadGamesLocalMetadata(selected);
+    if(!isAchievements){
+      renderGamesHltbPanel(identifier,entry);
+      loadGamesHltb(selected);
+    }
     const filtered=gamesFilteredEntries();
     const idx=filtered.findIndex(item=>item.identifier===identifier);
     if(countEl && idx>=0) countEl.textContent=`${idx+1} of ${filtered.length}`;
@@ -5043,15 +6033,24 @@ function renderGamesInstalledDetail(){
       : (entry.source_type==='local_scan'
           ? 'Keep the files on disk and remove this entry from SKALD.'
           : 'Remove the selected installed game from disk.');
-    loadGamesRaDetail(selected);
+    if(isAchievements) loadGamesRaDetail(selected);
+    else{
+      closeGamesAchievementModal();
+      closeGamesAchievementListModal();
+      stopGamesAchievementAutoScroll();
+      const achCountEl=document.getElementById('games-ach-count');
+      if(achCountEl) achCountEl.textContent='';
+    }
   }
 function renderGamesInstalledList(){
     const list=document.getElementById('games-installed-list');
     if(!list) return;
+    updateGamesInstalledHeader();
     updateGamesFilterTabs();
     const entries=gamesFilteredEntries();
     if(!entries.length){
-      list.innerHTML=`<div class="mkt-empty">${gamesState.filter==='played'?'No recently played games for this system yet.':'No installed or scanned games found for this system.'}</div>`;
+      const scope=gamesState.system===GAMES_ALL_SYSTEM ? 'games' : 'games for this system';
+      list.innerHTML=`<div class="mkt-empty">${gamesState.filter==='played'?'No recently played games yet.':`No installed or scanned ${scope} found.`}</div>`;
       gamesState.selectedId=null;
       renderGamesInstalledDetail();
       return;
@@ -5060,16 +6059,30 @@ function renderGamesInstalledList(){
       gamesState.selectedId=entries[0].identifier;
     }
     if(!['list','actions'].includes(gamesState.pane)) gamesState.pane='list';
-    list.innerHTML=entries.map(({identifier,entry})=>`
-      <div class="subnav-item games-installed-item" data-games-id="${esc(identifier)}">
-        <div class="micon" style="background-image:url('${esc(isGamesAchievementsOpen()?marketplaceSystemBadgeUrl(entry.system||gamesState.system):(gamesArtCache.get(gamesArtKey(identifier,entry))||gamesDefaultIcon()))}')"></div>
+    list.innerHTML=entries.map(({identifier,entry})=>{
+      const art=esc(gamesArtCache.get(gamesArtKey(identifier,entry))||gamesDefaultIcon());
+      const meta=esc(gamesMetadataMetaLine(entry)||[entry.source_type==='local_scan'?'Imported locally':'Installed via Marketplace', entry.install_dir?'Ready to launch':''].filter(Boolean).join(' · '));
+      if(!isGamesAchievementsOpen()){
+        return `<div class="subnav-item games-installed-item" data-games-id="${esc(identifier)}">
+          <div class="mkt-source-row">
+            <div class="micon" style="background-image:url('${art}')"></div>
+            <div class="mkt-source-row-copy">
+              <div class="mkt-source-row-title">${esc(entry.title||identifier)}</div>
+              <div class="mkt-source-row-publisher">${meta}</div>
+            </div>
+            <div class="mkt-source-row-system" style="background-image:url('${esc(marketplaceSystemBadgeUrl(entry.system||gamesState.system))}')"></div>
+          </div>
+        </div>`;
+      }
+      return `<div class="subnav-item games-installed-item" data-games-id="${esc(identifier)}">
+        <div class="micon" style="background-image:url('${art}')"></div>
         <div class="mkt-rom-copy">
           <div class="mkt-rom-title">${esc(entry.title||identifier)}</div>
-          <div class="mkt-rom-meta">${esc(gamesMetadataMetaLine(entry)||[entry.source_type==='local_scan'?'Imported locally':'Installed via Marketplace', entry.install_dir?'Ready to launch':''].filter(Boolean).join(' · '))}</div>
+          <div class="mkt-rom-meta">${meta}</div>
         </div>
-      </div>
-    `).join('');
-    if(!isGamesAchievementsOpen()) entries.forEach(({identifier,entry})=>{ loadGamesArt(identifier,entry); });
+      </div>`;
+    }).join('');
+    entries.forEach(({identifier,entry})=>{ loadGamesArt(identifier,entry); });
     list.querySelectorAll('.games-installed-item').forEach(item=>item.addEventListener('click',()=>{
       gamesState.pane='list';
       gamesState.selectedId=item.dataset.gamesId;
@@ -5077,15 +6090,33 @@ function renderGamesInstalledList(){
       const idx=items.indexOf(item);
       if(idx>=0){subSelIdx=idx;applySubSel();}else{renderGamesInstalledDetail();}
     }));
+    list.querySelectorAll('.games-installed-item .mkt-rom-title').forEach(titleEl=>titleEl.addEventListener('click',(event)=>{
+      if(!isGamesAchievementsOpen()) return;
+      event.stopPropagation();
+      event.preventDefault();
+      const item=titleEl.closest('.games-installed-item');
+      gamesState.pane='list';
+      gamesState.selectedId=item?.dataset.gamesId || gamesState.selectedId;
+      const items=getSubItems();
+      const idx=items.indexOf(item);
+      if(idx>=0) subSelIdx=idx;
+      renderGamesInstalledDetail();
+      syncGamesInstalledSelection();
+      setTimeout(()=>openGamesAchievementListModal(),0);
+    },true));
     renderGamesInstalledDetail();
     syncGamesInstalledSelection();
   }
   function openGamesInstalledLibrary(system){
     gamesState.system=system||gamesState.system;
+    if(gamesState.systemSelectorSource!=='achievements') gamesState.filter='all';
     gamesState.pane='list';
     gamesState.achievementIdx=0;
     gamesState.achievementGameId=null;
     gamesState.currentAchievements=[];
+    gamesState.mediaIdx=0;
+    closeGamesMediaModal();
+    closeGamesAchievementListModal();
     closeGamesAchievementModal();
     stopGamesAchievementAutoScroll();
     const panel=document.getElementById('p-games');
@@ -5095,8 +6126,10 @@ function renderGamesInstalledList(){
     const gamesPanel=document.getElementById('sub-library-games');
     gamesPanel?.classList.add('on');
     gamesPanel?.classList.toggle('achievements-view',gamesState.systemSelectorSource==='achievements');
+    gamesPanel?.classList.toggle('mygames-view',gamesState.systemSelectorSource!=='achievements');
     const title=document.querySelector('#sub-library-games .subpanel-title');
     if(title) title.textContent=gamesState.systemSelectorSource==='achievements' ? 'ACHIEVEMENTS' : 'MY GAMES';
+    updateGamesInstalledHeader();
     renderGamesInstalledList();
     subSelIdx=0;
     applySubSel();
@@ -5309,7 +6342,6 @@ function renderArchiveGamesDetail(){
   const genresEl=panel?.querySelector('#mkt-archive-genres');
   const status=panel?.querySelector('#mkt-archive-status');
   const countEl=panel?.querySelector('#mkt-archive-count');
-  const systemLogo=panel?.querySelector('#mkt-archive-system-logo');
   const mediaImage=panel?.querySelector('#mkt-archive-media-image');
   const mediaLabel=panel?.querySelector('#mkt-archive-media-label');
   const mediaIndicators=panel?.querySelector('#mkt-archive-media-indicators');
@@ -5318,7 +6350,7 @@ function renderArchiveGamesDetail(){
   const ratingCaptionEl=panel?.querySelector('#mkt-archive-rating-caption');
   const infoEl=panel?.querySelector('#mkt-archive-info');
   const detail=panel?.querySelector('#mkt-archive-detail .mkt-source-detail');
-  if(systemLogo) systemLogo.style.backgroundImage=`url('${marketplaceSystemBadgeUrl(marketplaceState.system)}')`;
+  updateMarketplaceArchiveHeader();
   if(!rom){
     if(title) title.textContent='Select a game';
     if(meta) meta.textContent=`Choose a ${providerLabel} title to view box art, screenshots, metadata, and download details.`;
@@ -5391,6 +6423,7 @@ function renderArchiveGamesList(){
   const list=document.getElementById('mkt-archive-list');
   const countEl=document.getElementById('mkt-archive-count');
   if(!list) return;
+  updateMarketplaceArchiveHeader();
   const roms=mktCatalogForSystem(marketplaceState.provider,marketplaceState.system)||[];
   const error=mktErrorBucket(marketplaceState.provider)[marketplaceState.system];
   if(!roms.length){
@@ -5493,10 +6526,9 @@ async function openMarketplaceSourceGamesLibrary(system, provider=marketplaceSta
   const status=gamesPanel?.querySelector('#mkt-archive-status');
   const info=gamesPanel?.querySelector('#mkt-archive-info');
   const rating=gamesPanel?.querySelector('#mkt-archive-rating');
-  const systemLogo=gamesPanel?.querySelector('#mkt-archive-system-logo');
   const panelTitle=gamesPanel?.querySelector('.subpanel-title');
   if(panelTitle) panelTitle.textContent=mktProviderLabel(marketplaceState.provider).toUpperCase();
-  if(systemLogo) systemLogo.style.backgroundImage=`url('${marketplaceSystemBadgeUrl(marketplaceState.system)}')`;
+  updateMarketplaceArchiveHeader();
   if(title) title.textContent='Loading games…';
   if(meta) meta.textContent=`Opening the ${mktProviderLabel(marketplaceState.provider)} ${marketplaceSystemLabel(system||marketplaceState.system)} catalog.`;
   if(status) status.textContent='Loading system repository…';
@@ -5889,7 +6921,7 @@ document.getElementById('mkt-archive-detail')?.addEventListener('click',()=>{
     if(item.dataset.gamesAction==='launch') await gamesLaunchSelected();
     if(item.dataset.gamesAction==='delete') await gamesDeleteSelected();
   }));
-  document.querySelectorAll('.mkt-scan-action').forEach(item=>item.addEventListener('click',async()=>{
+  document.querySelectorAll('#sub-scan-games .mkt-scan-action').forEach(item=>item.addEventListener('click',async()=>{
     const items=getSubItems();
     const idx=items.indexOf(item);
     if(idx>=0){subSelIdx=idx;applySubSel();}
@@ -5977,8 +7009,12 @@ document.getElementById('mkt-archive-detail')?.addEventListener('click',()=>{
     if(action.dataset.scanAction==='system-set'){
       const ok=await saveMarketplaceSystemScanFolder(action.dataset.scanSystem || '');
       if(ok){
+        const status=document.getElementById('games-scan-status');
+        if(status) status.textContent=`Saved ${getScanSystemLabel(action.dataset.scanSystem || '')} scan folder.`;
+        await refreshStoragePanel();
         renderGamesScanResults();
         applySubSel();
+        toast(`${getScanSystemLabel(action.dataset.scanSystem || '')} scan folder saved`);
       }
       return;
     }
@@ -6060,6 +7096,7 @@ function openKeyboard(fieldId){
     'g2a-secret-input':'Secret',
     'emu-metadata-url':'Metadata Service URL',
     'emu-metadata-key':'Metadata Service API Key',
+    'game-search-input':'Game Search',
   };
   const label=labelMap[fieldId] || 'Text';
   if(vkTarget) vkTarget.textContent=(input?.value || '');
@@ -6085,6 +7122,11 @@ function updateKeyboardTarget(){
   if(!vkFieldId) return;
   const input=document.getElementById(vkFieldId);
   if(vkTarget) vkTarget.textContent=input?.value || '';
+  if(vkFieldId==='game-search-input'){
+    gameSearchState.query=input?.value || '';
+    gameSearchState.resultIdx=0;
+    renderGameSearchResults();
+  }
   if(guide2Open) syncGuideAccountDisplays();
   syncStoatFieldDisplays();
   syncMetadataServiceDisplays();
