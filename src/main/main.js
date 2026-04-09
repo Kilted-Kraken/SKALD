@@ -8,6 +8,7 @@ const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path   = require('path');
 const fs     = require('fs');
 const https  = require('https');
+const { Readable } = require('stream');
 const { pathToFileURL } = require('url');
 const { execFile, spawn } = require('child_process');
 const extractZip = require('extract-zip');
@@ -622,7 +623,7 @@ function getPackagedMarketplaceMetadataStats(provider, system, catalogIdentifier
 }
 
 function shouldUsePackagedMarketplaceOnly(provider, system) {
-  return provider === 'archiveorg' && String(system || '').toLowerCase() === 'snes';
+  return false;
 }
 
 // ─── Settings ────────────────────────────────────────────────────────────────
@@ -815,6 +816,27 @@ async function hasArchiveSession() {
   return cookies.some(c => c.name === 'logged-in-sig' || c.name === 'logged-in-user');
 }
 
+async function getArchiveSessionDebugInfo() {
+  try {
+    const cookies = await getArchiveSessionCookies();
+    const names = cookies.map(c => c.name).sort();
+    return {
+      cookieCount: cookies.length,
+      hasLoggedInUser: names.includes('logged-in-user'),
+      hasLoggedInSig: names.includes('logged-in-sig'),
+      cookieNames: names,
+    };
+  } catch (err) {
+    return {
+      cookieCount: 0,
+      hasLoggedInUser: false,
+      hasLoggedInSig: false,
+      cookieNames: [],
+      error: err?.message || String(err),
+    };
+  }
+}
+
 async function setArchiveResponseCookies(setCookieHeaders = []) {
   const ses = getSession();
   for (const cookieStr of (setCookieHeaders || [])) {
@@ -937,6 +959,7 @@ async function logoutArchiveSession() {
 }
 
 async function getArchiveStatus() {
+  await restoreArchiveSession().catch(() => {});
   const loggedIn = await hasArchiveSession();
   const s = loadSettings();
   return { loggedIn, username: s.archiveOrgUser || null };
@@ -1291,7 +1314,7 @@ ipcMain.handle('metadata-service-health', async () => {
 async function buildGameEnrichmentPreview({ title, system, provider = null, catalogIdentifier = null }) {
   const effectiveTitle = title || catalogIdentifier || 'Unknown Game';
   const effectiveSystem = system || null;
-  const packagedMetadata = provider === 'archiveorg' && effectiveSystem
+  const packagedMetadata = provider === 'archiveorg' && effectiveSystem && shouldUsePackagedMarketplaceOnly(provider, effectiveSystem)
     ? normalizePackagedMarketplaceMetadata(
         getPackagedMarketplaceMetadata(provider, effectiveSystem, catalogIdentifier, effectiveTitle),
         { title: effectiveTitle, system: effectiveSystem, provider, catalogIdentifier }
@@ -1312,7 +1335,7 @@ async function buildGameEnrichmentPreview({ title, system, provider = null, cata
       if (logo?.ok && !packagedMetadata.logo_path) packagedMetadata.logo_path = logo.path;
       if (cover?.ok && !packagedMetadata.cover_path) packagedMetadata.cover_path = cover.path;
     }
-    return { ok: true, data: packagedMetadata, source: 'packaged-metadata', cached: true };
+    return { ok: true, data: normalizeEnrichmentAssetUrls(packagedMetadata), source: 'packaged-metadata', cached: true };
   }
 
   if (shouldUsePackagedMarketplaceOnly(provider, effectiveSystem)) {
@@ -1338,7 +1361,7 @@ async function buildGameEnrichmentPreview({ title, system, provider = null, cata
       if (logo?.ok) payload.logo_path = logo.path;
       if (cover?.ok) payload.cover_path = cover.path;
     }
-    return { ok: true, data: payload, source: 'packaged-metadata', cached: true };
+    return { ok: true, data: normalizeEnrichmentAssetUrls(payload), source: 'packaged-metadata', cached: true };
   }
 
   const workerResult = await fetchWorkerGameEnrichment({
@@ -1354,7 +1377,7 @@ async function buildGameEnrichmentPreview({ title, system, provider = null, cata
       title: effectiveTitle,
       system: effectiveSystem,
     });
-    return { ok: true, data: localized, source: 'cloudflare-worker', cached: !!workerResult.cached };
+    return { ok: true, data: normalizeEnrichmentAssetUrls(localized), source: 'cloudflare-worker', cached: !!workerResult.cached };
   }
 
   const payload = {
@@ -1416,7 +1439,7 @@ async function buildGameEnrichmentPreview({ title, system, provider = null, cata
     payload.metadata_status = 'missing';
   }
 
-  return { ok: true, data: payload, source: 'local-providers', cached: false, workerError: workerResult?.skipped ? null : workerResult?.error || null };
+  return { ok: true, data: normalizeEnrichmentAssetUrls(payload), source: 'local-providers', cached: false, workerError: workerResult?.skipped ? null : workerResult?.error || null };
 }
 
 ipcMain.handle('metadata-preview-game', async (_, { title, system, provider = null, catalogIdentifier = null }) => {
@@ -1606,12 +1629,28 @@ async function buildArchiveCookieHeader() {
 function archiveDownloadHeaders(cookieHeader = '', referer = 'https://archive.org/details/ni-roms') {
   const headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,application/zip,application/octet-stream,*/*;q=0.8',
+    'Accept': 'application/octet-stream,application/zip,application/x-7z-compressed,*/*;q=0.8',
     'Accept-Language': 'en-US,en;q=0.9',
     'Referer': referer,
   };
   if (cookieHeader) headers.Cookie = cookieHeader;
   return headers;
+}
+
+function archiveDownloadReferer(downloadUrl = '') {
+  try {
+    const parsed = new URL(downloadUrl);
+    const parts = parsed.pathname.split('/').filter(Boolean);
+    const downloadIdx = parts.indexOf('download');
+    if (downloadIdx >= 0 && parts[downloadIdx + 1]) {
+      return `https://archive.org/details/${parts[downloadIdx + 1]}`;
+    }
+    const itemsIdx = parts.indexOf('items');
+    if (itemsIdx >= 0 && parts[itemsIdx + 1]) {
+      return `https://archive.org/details/${parts[itemsIdx + 1]}`;
+    }
+  } catch {}
+  return 'https://archive.org/';
 }
 
 const MARKETPLACE_THEME_SOURCES = [
@@ -1801,6 +1840,27 @@ function classifyThemeFolderFiles(files = []) {
 
 function filePathToFileUrl(filePath) {
   return pathToFileURL(path.resolve(filePath)).href;
+}
+
+function assetPathToRendererUrl(value) {
+  if (!value || typeof value !== 'string') return value;
+  if (/^(https?:|file:)/i.test(value)) return value;
+  try {
+    if (fs.existsSync(value)) return filePathToFileUrl(value);
+  } catch {}
+  return value;
+}
+
+function normalizeEnrichmentAssetUrls(payload) {
+  if (!payload || typeof payload !== 'object') return payload;
+  const next = { ...payload };
+  ['cover_path', 'logo_path', 'icon_path', 'background_path', 'ra_badge_path'].forEach(field => {
+    next[field] = assetPathToRendererUrl(next[field]);
+  });
+  if (Array.isArray(next.screenshot_paths)) {
+    next.screenshot_paths = next.screenshot_paths.map(assetPathToRendererUrl).filter(Boolean);
+  }
+  return next;
 }
 
 function safeThemeIdFromItem(item = {}, title = '') {
@@ -2133,9 +2193,13 @@ async function fetchMarketplaceThemesCatalog({ force = false } = {}) {
 
 async function probeArchiveDownloadAccess(downloadUrl) {
   if (!downloadUrl) return { ok: false, error: 'Missing download URL.' };
+  if (archiveUrlRequiresAuth(downloadUrl)) {
+    await restoreArchiveSession().catch(() => {});
+  }
   const cookieHeader = archiveUrlRequiresAuth(downloadUrl) ? await buildArchiveCookieHeader() : '';
   const status = archiveUrlRequiresAuth(downloadUrl) ? await getArchiveStatus() : { loggedIn: false };
   const redirects = [];
+  const referer = archiveDownloadReferer(downloadUrl);
 
   return new Promise((resolve) => {
     const doRequest = (url, redirectCount) => {
@@ -2150,7 +2214,7 @@ async function probeArchiveDownloadAccess(downloadUrl) {
         path: parsed.pathname + parsed.search,
         method: 'GET',
         headers: {
-          ...archiveDownloadHeaders(cookieHeader),
+          ...archiveDownloadHeaders(cookieHeader, referer),
           'Range': 'bytes=0-0',
         },
         timeout: 30000,
@@ -2187,10 +2251,10 @@ async function probeArchiveDownloadAccess(downloadUrl) {
 
       req.on('timeout', () => {
         req.destroy();
-        resolve({ ok: false, error: 'Connection timed out', loggedIn: !!status?.loggedIn, hasCookieHeader: !!cookieHeader, redirects });
+        resolve({ ok: false, error: `Connection timed out\n${downloadUrl}`, loggedIn: !!status?.loggedIn, hasCookieHeader: !!cookieHeader, redirects });
       });
       req.on('error', err => {
-        resolve({ ok: false, error: err.message, loggedIn: !!status?.loggedIn, hasCookieHeader: !!cookieHeader, redirects });
+        resolve({ ok: false, error: `${err.message}\n${downloadUrl}`, loggedIn: !!status?.loggedIn, hasCookieHeader: !!cookieHeader, redirects });
       });
       req.end();
     };
@@ -2199,15 +2263,215 @@ async function probeArchiveDownloadAccess(downloadUrl) {
   });
 }
 
+async function downloadArchiveViaBrowserWindow(event, { identifier, downloadUrl, destFile }) {
+  const ses = getSession();
+  return new Promise((resolve) => {
+    let finished = false;
+    let sawDownload = false;
+    let itemRef = null;
+    let win = null;
+    let timeout = null;
+
+    const cleanup = () => {
+      try { if (timeout) clearTimeout(timeout); } catch {}
+      try { ses.removeListener('will-download', onWillDownload); } catch {}
+      try { if (win && !win.isDestroyed()) win.close(); } catch {}
+      activeDownloads.delete(identifier);
+    };
+
+    const finalize = (result) => {
+      if (finished) return;
+      finished = true;
+      cleanup();
+      resolve(result);
+    };
+
+    const onWillDownload = (_evt, item, webContents) => {
+      if (!win || webContents !== win.webContents) return;
+      sawDownload = true;
+      itemRef = item;
+      item.setSavePath(destFile);
+
+      activeDownloads.set(identifier, {
+        cancel: () => {
+          try { item.cancel(); } catch {}
+          finalize({ ok: false, error: 'Cancelled' });
+        },
+        req: null,
+        file: null,
+      });
+
+      item.on('updated', (_event, state) => {
+        if (finished || state === 'interrupted') return;
+        const total = Number(item.getTotalBytes?.() || 0);
+        const received = Number(item.getReceivedBytes?.() || 0);
+        if (total > 0) {
+          try {
+            if (event?.sender && !event.sender.isDestroyed()) {
+              event.sender.send('download-progress', { identifier, percent: Math.round(received / total * 100) });
+            }
+          } catch {}
+        }
+      });
+
+      item.once('done', (_event, state) => {
+        if (state === 'completed') {
+          finalize({ ok: true, filePath: destFile, finalUrl: item.getURL?.() || downloadUrl });
+        } else {
+          finalize({ ok: false, error: `Browser download ${state}\n${item.getURL?.() || downloadUrl}` });
+        }
+      });
+    };
+
+    ses.on('will-download', onWillDownload);
+
+    win = new BrowserWindow({
+      show: false,
+      webPreferences: {
+        contextIsolation: true,
+        nodeIntegration: false,
+        session: ses,
+      },
+    });
+
+    timeout = setTimeout(() => {
+      if (finished) return;
+      finalize({ ok: false, error: `Timed out waiting for browser download\n${downloadUrl}` });
+    }, 45000);
+    try {
+      win.webContents.downloadURL(downloadUrl);
+    } catch (err) {
+      clearTimeout(timeout);
+      finalize({ ok: false, error: `${err.message}\n${downloadUrl}` });
+    }
+  });
+}
+
+async function downloadArchiveViaSessionFetch(event, { identifier, downloadUrl, destFile, cookieHeader = '', referer = 'https://archive.org/' }) {
+  const ses = getSession();
+  const headers = archiveDownloadHeaders(cookieHeader, referer);
+  let response;
+  try {
+    response = await ses.fetch(downloadUrl, {
+      method: 'GET',
+      headers,
+      redirect: 'follow',
+    });
+  } catch (err) {
+    return { ok: false, error: `${err.message}\n${downloadUrl}` };
+  }
+
+  if (!response || !response.ok || !response.body) {
+    return {
+      ok: false,
+      error: `HTTP ${response?.status || 0} from ${new URL(downloadUrl).hostname}\n${response?.url || downloadUrl}`,
+    };
+  }
+
+  const finalUrl = response.url || downloadUrl;
+  const total = parseInt(response.headers.get('content-length') || '0', 10);
+
+  return new Promise((resolve) => {
+    let cancelled = false;
+    let received = 0;
+    const file = fs.createWriteStream(destFile);
+    const bodyStream = Readable.fromWeb(response.body);
+
+    activeDownloads.set(identifier, {
+      cancel: () => {
+        if (cancelled) return;
+        cancelled = true;
+        try { bodyStream.destroy(); } catch {}
+        try { file.destroy(); } catch {}
+        activeDownloads.delete(identifier);
+        resolve({ ok: false, error: 'Cancelled' });
+      },
+      req: null,
+      file,
+    });
+
+    bodyStream.on('data', chunk => {
+      if (cancelled) return;
+      received += chunk.length;
+      if (total > 0) {
+        try {
+          if (event?.sender && !event.sender.isDestroyed()) {
+            event.sender.send('download-progress', { identifier, percent: Math.round(received / total * 100) });
+          }
+        } catch {}
+      }
+    });
+
+    bodyStream.on('error', err => {
+      if (cancelled) return;
+      try { file.destroy(); } catch {}
+      fs.unlink(destFile, () => {});
+      activeDownloads.delete(identifier);
+      resolve({ ok: false, error: `${err.message}\n${finalUrl}` });
+    });
+
+    file.on('finish', () => {
+      if (cancelled) return;
+      file.close();
+      activeDownloads.delete(identifier);
+      resolve({ ok: true, filePath: destFile, finalUrl });
+    });
+
+    file.on('error', err => {
+      if (cancelled) return;
+      try { bodyStream.destroy(); } catch {}
+      fs.unlink(destFile, () => {});
+      activeDownloads.delete(identifier);
+      resolve({ ok: false, error: `${err.message}\n${finalUrl}` });
+    });
+
+    bodyStream.pipe(file);
+  });
+}
+
 async function performDownloadJob(event, { identifier, downloadUrl, fileName }) {
   const settings    = loadSettings();
   const downloadDir = settings.downloadPath || DEFAULT_GAMES_DIR;
   const destDir     = path.join(downloadDir, sanitizeFolderName(identifier));
   if (!fs.existsSync(destDir)) fs.mkdirSync(destDir, { recursive: true });
+  const originalDownloadUrl = downloadUrl;
 
   const safeFileName = path.basename(fileName);
   const destFile     = path.join(destDir, safeFileName);
+  let archiveStatus = { loggedIn: false, username: null };
+  let archiveDebug = null;
+  if (archiveUrlRequiresAuth(downloadUrl)) {
+    await restoreArchiveSession().catch(() => {});
+    archiveStatus = await getArchiveStatus().catch(() => ({ loggedIn: false, username: null }));
+    archiveDebug = await getArchiveSessionDebugInfo().catch(() => null);
+  }
   const cookieHeader = archiveUrlRequiresAuth(downloadUrl) ? await buildArchiveCookieHeader() : '';
+  if (archiveUrlRequiresAuth(downloadUrl)) {
+    const probe = await probeArchiveDownloadAccess(downloadUrl);
+    if (probe?.ok && probe?.finalUrl) downloadUrl = probe.finalUrl;
+  }
+  const referer      = archiveDownloadReferer(downloadUrl);
+
+  if (archiveUrlRequiresAuth(downloadUrl)) {
+    const browserResult = await downloadArchiveViaBrowserWindow(event, { identifier, downloadUrl: originalDownloadUrl, destFile, referer: archiveDownloadReferer(originalDownloadUrl) });
+    if (browserResult?.ok) return browserResult;
+    const fetchResult = await downloadArchiveViaSessionFetch(event, { identifier, downloadUrl, destFile, cookieHeader, referer });
+    if (fetchResult?.ok) return fetchResult;
+    const authLines = [
+      `Archive login: ${archiveStatus?.loggedIn ? 'yes' : 'no'}`,
+      archiveStatus?.username ? `Archive user: ${archiveStatus.username}` : '',
+      archiveDebug ? `Archive cookies: ${archiveDebug.cookieCount || 0}` : '',
+      archiveDebug ? `logged-in-user cookie: ${archiveDebug.hasLoggedInUser ? 'yes' : 'no'}` : '',
+      archiveDebug ? `logged-in-sig cookie: ${archiveDebug.hasLoggedInSig ? 'yes' : 'no'}` : '',
+      archiveDebug?.cookieNames?.length ? `Cookie names: ${archiveDebug.cookieNames.join(', ')}` : '',
+    ].filter(Boolean).join('\n');
+    const combinedError = [[browserResult?.error, fetchResult?.error].filter(Boolean).join('\n\nFallback:\n'), authLines].filter(Boolean).join('\n\n');
+    console.error(`[archive-download-failed] ${identifier}\n${combinedError}`);
+    return {
+      ok: false,
+      error: combinedError,
+    };
+  }
 
   return new Promise((resolve) => {
     let cancelled = false;
@@ -2238,7 +2502,7 @@ async function performDownloadJob(event, { identifier, downloadUrl, fileName }) 
         hostname: parsed.hostname,
         path: parsed.pathname + parsed.search,
         method: 'GET',
-        headers: archiveDownloadHeaders(cookieHeader),
+        headers: archiveDownloadHeaders(cookieHeader, referer),
         timeout: 30000,
       }, (res) => {
         if (cancelled) { res.resume(); return; }
@@ -2257,7 +2521,7 @@ async function performDownloadJob(event, { identifier, downloadUrl, fileName }) 
         if (statusCode !== 200) {
           res.resume();
           activeDownloads.delete(identifier);
-          return resolve({ ok: false, error: `HTTP ${statusCode} from ${parsed.hostname}` });
+          return resolve({ ok: false, error: `HTTP ${statusCode} from ${parsed.hostname}\n${url}` });
         }
 
         const total  = parseInt(headers['content-length'] || '0', 10);
@@ -2292,7 +2556,7 @@ async function performDownloadJob(event, { identifier, downloadUrl, fileName }) 
           if (cancelled) return;
           fs.unlink(destFile, () => {});
           activeDownloads.delete(identifier);
-          resolve({ ok: false, error: err.message });
+          resolve({ ok: false, error: `${err.message}\n${url}` });
         });
       });
 
@@ -2303,13 +2567,13 @@ async function performDownloadJob(event, { identifier, downloadUrl, fileName }) 
         if (cancelled) return;
         req.destroy();
         activeDownloads.delete(identifier);
-        resolve({ ok: false, error: 'Connection timed out' });
+        resolve({ ok: false, error: `Connection timed out\n${url}` });
       });
 
       req.on('error', err => {
         if (cancelled) return;
         activeDownloads.delete(identifier);
-        resolve({ ok: false, error: err.message });
+        resolve({ ok: false, error: `${err.message}\n${url}` });
       });
 
       req.end();
@@ -3427,7 +3691,34 @@ const SYSTEM_CONFIGS = {
     archivePath: null,
     downloadBase: null,
   },
+  psp: {
+    label: 'PSP',
+    archivePath: null,
+    downloadBase: null,
+  },
+  dc: {
+    label: 'Sega Dreamcast',
+    archivePath: null,
+    downloadBase: null,
+  },
 };
+const LIVE_ARCHIVE_SYSTEM_SOURCES = Object.freeze({
+  psp: {
+    referer: 'https://archive.org/details/psp-chd-zstd-redump-part1',
+    extensions: ['.chd'],
+    urls: [
+      'https://archive.org/download/psp-chd-zstd-redump-part1/psp-chd-zstd/',
+      'https://archive.org/download/psp-chd-zstd-redump-part2/psp-chd-zstd/',
+    ],
+  },
+  dc: {
+    referer: 'https://archive.org/details/dc-chd-zstd-redump',
+    extensions: ['.chd'],
+    urls: [
+      'https://archive.org/download/dc-chd-zstd-redump/dc-chd-zstd/',
+    ],
+  },
+});
 
 const romListCache = {};
 const MARKETPLACE_PROVIDERS = {
@@ -3435,14 +3726,44 @@ const MARKETPLACE_PROVIDERS = {
     id: 'archiveorg',
     name: 'Archive.org',
     status: 'active',
-    systems: ['snes', 'psx'],
+    systems: ['snes', 'psx', 'psp', 'dc'],
   },
 };
 
 function romListCacheKey(provider, system) {
   return `${provider}::${system}`;
 }
-function loadArchiveOrgRomList(system) {
+async function loadArchiveOrgLiveRomList(system) {
+  const config = LIVE_ARCHIVE_SYSTEM_SOURCES[String(system || '').toLowerCase()];
+  if (!config) return { ok: false, error: `No live Archive.org source configured for ${system}.`, provider: 'archiveorg' };
+  const normalizedSystem = String(system || '').toLowerCase();
+  const cacheKey = romListCacheKey('archiveorg', normalizedSystem);
+  try {
+    try {
+      const p = getRomCachePath(normalizedSystem);
+      if (fs.existsSync(p)) fs.unlinkSync(p);
+    } catch {}
+    delete romListCache[cacheKey];
+    const pages = await Promise.all(config.urls.map(url => fetchArchiveText(url, config.referer)));
+    const merged = pages.flatMap((html, sourceIdx) => parseArchiveDirectoryHtml(html, {
+      extensions: config.extensions || ['.chd'],
+      system: normalizedSystem,
+      provider: 'archiveorg',
+      sourceUrl: config.urls[sourceIdx],
+    }));
+    merged.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
+    romListCache[cacheKey] = merged;
+    saveRomDiskCache(normalizedSystem, merged);
+    return { ok: true, roms: merged, cached: false, source: 'archive.org', provider: 'archiveorg' };
+  } catch (e) {
+    return { ok: false, error: e.message || `Failed to load ${normalizedSystem.toUpperCase()} catalog.`, provider: 'archiveorg' };
+  }
+}
+
+async function loadArchiveOrgRomList(system) {
+  if (LIVE_ARCHIVE_SYSTEM_SOURCES[String(system || '').toLowerCase()]) {
+    return loadArchiveOrgLiveRomList(system);
+  }
   const cacheKey = romListCacheKey('archiveorg', system);
   if (romListCache[cacheKey]) {
     return { ok: true, roms: romListCache[cacheKey], cached: true, source: 'memory', provider: 'archiveorg' };
@@ -3468,8 +3789,8 @@ function loadArchiveOrgRomList(system) {
   }
 }
 
-function fetchMarketplaceCatalog(provider, system) {
-  if (provider === 'archiveorg') return loadArchiveOrgRomList(system);
+async function fetchMarketplaceCatalog(provider, system) {
+  if (provider === 'archiveorg') return await loadArchiveOrgRomList(system);
   return { ok: false, error: `Unknown provider: ${provider}`, provider };
 }
 
@@ -3499,8 +3820,16 @@ ipcMain.handle('marketplace-fetch-catalog', async (_, { provider = 'archiveorg',
   return await fetchMarketplaceCatalog(provider, system);
 });
 
-function parseViewArchiveHtml(html, downloadBase) {
+function parseArchiveDirectoryHtml(html, { extensions = ['.zip'], system = '', provider = 'archiveorg', sourceUrl = '' } = {}) {
   const roms = [];
+  const allowed = new Set(extensions.map(ext => String(ext || '').toLowerCase()));
+  const baseHrefMatch = String(html || '').match(/<base\s+href="([^"]+)"/i);
+  let resolvedBaseHref = '';
+  if (baseHrefMatch?.[1]) {
+    try {
+      resolvedBaseHref = new URL(baseHrefMatch[1], sourceUrl || 'https://archive.org').toString();
+    } catch {}
+  }
   const trRe = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
   let trMatch;
   while ((trMatch = trRe.exec(html)) !== null) {
@@ -3510,7 +3839,8 @@ function parseViewArchiveHtml(html, downloadBase) {
     if (!linkMatch) continue;
     const href    = linkMatch[1];
     const rawName = decodeHtmlEntities(linkMatch[2].trim());
-    if (!rawName || !rawName.toLowerCase().endsWith('.zip')) continue;
+    const lowerName = String(rawName || '').toLowerCase();
+    if (!rawName || ![...allowed].some(ext => lowerName.endsWith(ext))) continue;
     if (rawName === '../' || rawName === 'Parent Directory') continue;
     const tdRe = /<td[^>]*>(.*?)<\/td>/gi;
     const cells = [];
@@ -3518,15 +3848,29 @@ function parseViewArchiveHtml(html, downloadBase) {
     while ((tdMatch = tdRe.exec(inner)) !== null) {
       cells.push(tdMatch[1].replace(/<[^>]+>/g, '').trim());
     }
-    const timestamp = cells[2] || '';
-    const sizeRaw   = cells[3] || '';
-    const downloadUrl = href.startsWith('//') ? 'https:' + href : href;
+    const timestamp = cells.length >= 2 ? (cells[cells.length - 2] || '') : (cells[1] || '');
+    const sizeRaw   = cells.length >= 1 ? (cells[cells.length - 1] || '') : '';
+    let downloadUrl = href.startsWith('//') ? 'https:' + href : href;
+    if (downloadUrl.startsWith('/')) {
+      try {
+        const base = new URL(sourceUrl || 'https://archive.org');
+        downloadUrl = `${base.protocol}//${base.host}${downloadUrl}`;
+      } catch {}
+    } else if (!/^https?:\/\//i.test(downloadUrl)) {
+      try {
+        downloadUrl = new URL(downloadUrl, resolvedBaseHref || sourceUrl || 'https://archive.org').toString();
+      } catch {}
+    }
     const { cleanName, region, tags } = parseRomFilename(rawName);
-    const sizeBytes = parseInt(sizeRaw, 10) || 0;
+    const sizeBytes = parseSizeString(sizeRaw) || parseInt(sizeRaw, 10) || 0;
     const size = sizeBytes ? formatSizeMain(sizeBytes) : '';
-    roms.push({ name: rawName, cleanName, region, tags, size, sizeBytes, timestamp, downloadUrl });
+    roms.push({ name: rawName, cleanName, region, tags, size, sizeBytes, timestamp, downloadUrl, system, provider });
   }
   return roms;
+}
+
+function parseViewArchiveHtml(html, downloadBase) {
+  return parseArchiveDirectoryHtml(html, { extensions: ['.zip'], sourceUrl: downloadBase });
 }
 
 function formatSizeMain(bytes) {
@@ -3541,7 +3885,7 @@ function parseRomFilename(filename) {
   const LANG    = 'En|Ja|De|Fr|Es|It|Nl|Pt|Sv|No|Da|Fi|Ru|Pl|Ko|Zh|Ar|He|Tr|Cs|Hu|Ro|Hr|Sr|Bg|Uk|El';
   const rBlk = `\\((?:(?:${REGIONS})(?:,\\s*(?:${REGIONS}))*|(?:${LANG})(?:,\\s*(?:${LANG}))*)\\)`;
   const tBlk = `\\((?:Beta|Proto|Sample|Demo|Rev\\s*\\d*|Hack|Alt|Unl|BIOS|Kiosk|Promo|Aftermarket|Pirate|Virtual Console|Switch Online|Classic Mini|v[\\d.]+)[^)]*\\)`;
-  let base = filename.replace(/\.zip$/i, '');
+  let base = filename.replace(/\.(zip|chd|cue|bin|img|iso|cso|pbp)$/i, '');
   const firstRegion = base.match(new RegExp(rBlk, 'i'));
   const region = firstRegion ? firstRegion[0].replace(/[()]/g, '').trim() : '';
   const tags = [];
@@ -3560,12 +3904,19 @@ function decodeHtmlEntities(str) {
 }
 
 function parseSizeString(str) {
-  const s = str.trim().toUpperCase();
-  const m = s.match(/^([\d.]+)\s*(B|KB|MB|GB|TB)?$/);
+  const s = String(str || '').trim().toUpperCase().replace(/,/g, '');
+  const m = s.match(/^([\d.]+)\s*(B|K|KB|M|MB|G|GB|T|TB)?$/);
   if (!m) return 0;
   const n = parseFloat(m[1]);
-  const mult = { B:1, KB:1024, MB:1024*1024, GB:1024*1024*1024, TB:1024*1024*1024*1024 };
-  return Math.round(n * (mult[m[2] || 'B'] || 1));
+  const unit = m[2] || 'B';
+  const mult = {
+    B: 1,
+    K: 1024, KB: 1024,
+    M: 1024 * 1024, MB: 1024 * 1024,
+    G: 1024 * 1024 * 1024, GB: 1024 * 1024 * 1024,
+    T: 1024 * 1024 * 1024 * 1024, TB: 1024 * 1024 * 1024 * 1024,
+  };
+  return Math.round(n * (mult[unit] || 1));
 }
 
 // ─── ROM launch via RetroArch ───────────────────────────────────────────────
@@ -3783,6 +4134,7 @@ const LIBRETRO_SYSTEMS = [
   { id: 'pce', label: 'PC Engine / TurboGrafx-16', coreExample: 'mednafen_pce_fast_libretro.dll' },
   { id: 'psx', label: 'PlayStation', coreExample: 'mednafen_psx_libretro.dll' },
   { id: 'psp', label: 'PSP', coreExample: 'ppsspp_libretro.dll' },
+  { id: 'dc', label: 'Sega Dreamcast', coreExample: 'flycast_libretro.dll' },
   { id: 'dolphin', label: 'GameCube / Wii (Dolphin core)', coreExample: 'dolphin_libretro.dll' },
   { id: 'pcsx2', label: 'PlayStation 2 (PCSX2 core)', coreExample: 'pcsx2_libretro.dll' },
 ];

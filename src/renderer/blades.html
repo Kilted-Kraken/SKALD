@@ -404,7 +404,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'MC
 .games-system-flow-slot.clickable{cursor:pointer;}
 .mkt-source-row{
   display:grid;
-  grid-template-columns:64px minmax(0,1fr) 84px;
+  grid-template-columns:64px minmax(0,1fr) auto 84px;
   align-items:center;
   gap:14px;
   width:100%;
@@ -458,6 +458,15 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'MC
   text-transform:uppercase;
   color:#5fdc6a;
   text-shadow:0 1px 2px rgba(0,0,0,.62),0 0 1px rgba(255,255,255,.08);
+}
+.mkt-source-row-download{
+  justify-self:end;
+  font-size:12px;
+  letter-spacing:.4px;
+  font-weight:700;
+  color:#8b5f12;
+  text-shadow:0 1px 2px rgba(0,0,0,.62),0 0 1px rgba(255,255,255,.08);
+  white-space:nowrap;
 }
 .mkt-source-row-state{
   justify-self:end;
@@ -954,7 +963,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'MC
   .profile-blades-home .home-desc{padding-top:86px;max-width:470px;}
   .profile-blade-tail{margin-left:auto;font-size:14px;letter-spacing:.8px;text-transform:uppercase;color:rgba(0,0,0,.44);}
   .profile-blade-tail.active{color:#2f89d0;}
-  .profile-choice-layout{display:grid;grid-template-columns:520px 1fr;column-gap:34px;width:100%;height:100%;padding:8px 0 0 0;}
+  .profile-choice-layout{display:grid;grid-template-columns:520px 1fr;column-gap:38px;width:100%;height:100%;padding:16px 0 0 0;}
   .profile-choice-wrap{position:relative;width:520px;height:360px;}
   .profile-choice-shadow,.profile-choice-frame{position:absolute;left:0;top:0;width:520px;height:360px;background-repeat:no-repeat;background-position:left top;background-size:100% 100%;pointer-events:none;}
   .profile-choice-shadow{opacity:.72;filter:blur(.25px);}
@@ -966,12 +975,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'MC
   .profile-choice-list .profile-choice-item::after{display:none !important;}
   .profile-choice-list .profile-choice-item.sel{color:#000;text-shadow:var(--skald-soft-text-shadow-strong);}
   .profile-choice-list .profile-choice-item .micon{width:32px;height:32px;opacity:.9;flex:0 0 32px;}
-  .profile-choice-side{padding-top:86px;max-width:470px;color:rgba(0,0,0,.84);}
-  .profile-choice-side.home-desc{padding-top:86px;max-width:470px;}
+  .profile-choice-side{padding-top:78px;max-width:470px;color:rgba(0,0,0,.84);}
+  .profile-choice-side.home-desc{padding-top:78px;max-width:470px;}
   .profile-choice-preview{width:168px;height:168px;border-radius:16px;background:rgba(255,255,255,.22) center/cover no-repeat;box-shadow:inset 0 1px 0 rgba(255,255,255,.52),0 8px 18px rgba(0,0,0,.14);margin-bottom:16px;}
-  .profile-choice-title{font-size:28px;line-height:1.1;margin-bottom:14px;}
-  .profile-choice-body{font-size:21px;line-height:1.35;white-space:pre-line;}
-  .profile-choice-meta{font-size:16px;line-height:1.4;color:rgba(0,0,0,.58);margin-top:12px;white-space:pre-line;}
+  .profile-choice-title{font-size:28px;line-height:1.08;margin-bottom:12px;}
+  .profile-choice-body{font-size:21px;line-height:1.38;white-space:pre-line;}
+  .profile-choice-meta{font-size:16px;line-height:1.45;color:rgba(0,0,0,.58);margin-top:16px;white-space:pre-line;}
   .profile-choice-tail{margin-left:auto;font-size:14px;letter-spacing:.8px;text-transform:uppercase;color:rgba(0,0,0,.44);}
   .profile-choice-tail.active{color:#2f89d0;}
   .profile-manager-add .profile-choice-tail{color:rgba(84,122,30,.9);}
@@ -1069,7 +1078,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'MC
     .profile-choice-tail.signout{color:#c55b4f;}
     .profile-choice-tail.use{color:#2f89d0;}
     .profile-choice-tail.add{color:#547a1e;}
-  .profile-manager-current-card{margin-bottom:18px;}
+  .profile-manager-current-card{margin-bottom:24px;}
   .profile-placeholder-panel{padding:18px 0;max-width:860px;}
   .profile-placeholder-title{font-size:28px;line-height:1.08;color:#111;margin-bottom:12px;}
   .profile-placeholder-copy{font-size:20px;line-height:1.42;color:rgba(0,0,0,.74);white-space:pre-line;}
@@ -1258,6 +1267,7 @@ body.guide-main-open #blade-layer{visibility:hidden;}
 body:has(#guide.on) #blade-layer{visibility:hidden;}
 #g-black{position:absolute;inset:0;z-index:70;background:rgba(0,0,0,.76);}
 #guide{--guide-drawer-w:760px;--guide-tile-w:568px;--guide-edge-w:267px;--guide-content-left:8px;--guide-content-w:540px;}
+#guide.guide-chat-open{--guide-drawer-w:980px;--guide-tile-w:788px;--guide-edge-w:267px;--guide-content-left:24px;--guide-content-w:720px;}
 #g-panel{position:absolute;left:0;top:0;width:var(--guide-drawer-w);height:1080px;background:#d9d9d6 url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/background-grey.webp') no-repeat center/cover;transform:translateX(calc(var(--guide-drawer-w) * -1));transition:transform 250ms ease-out;z-index:71;}
 #g-tile{position:absolute;left:0;top:0;width:var(--guide-tile-w);height:1080px;background:#d9d9d6 url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/guide-blade-overlay-tile.webp') repeat-x left top;background-size:auto 100%;transform:translateX(calc(var(--guide-drawer-w) * -1));transition:transform 250ms ease-out;opacity:1;z-index:72;}
 #g-edge{position:absolute;left:var(--guide-tile-w);top:0;width:var(--guide-edge-w);height:1080px;background:none;transform:translateX(calc(var(--guide-drawer-w) * -1));transition:transform 250ms ease-out;z-index:74;pointer-events:none;overflow:hidden;}
@@ -1302,6 +1312,8 @@ body:has(#guide.on) #blade-layer{visibility:hidden;}
 #g-gscore{font-size:19px;color:rgba(0,0,0,.66);margin:0;}
 #g-rep{width:124px;height:19px;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/gamercard_rep_12.webp') no-repeat;background-size:auto 100%;}
 .guide-topbar{height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 8px;color:rgba(255,255,255,.92);font-size:20px;text-shadow:0 1px 2px rgba(0,0,0,.62),0 0 5px rgba(0,0,0,.18);}
+.guide-topbar-left{display:flex;align-items:center;gap:18px;min-width:0;}
+.guide-top-title{font-size:27px;line-height:1;color:rgba(255,255,255,.92);text-shadow:0 1px 2px rgba(0,0,0,.62),0 0 5px rgba(0,0,0,.18);}
 .guide-content-stack{width:470px;margin:0 auto;flex:1;display:flex;flex-direction:column;justify-content:center;padding-bottom:54px;box-sizing:border-box;}
 .guide-top-icons{display:flex;align-items:center;gap:10px;}
 .guide-status-icon{width:30px;height:22px;background:linear-gradient(180deg,#f6f6f3,#bfbfb8);border:2px solid rgba(74,74,74,.42);box-shadow:inset 0 1px 0 rgba(255,255,255,.72),0 1px 2px rgba(0,0,0,.15);opacity:.9;}
@@ -1339,6 +1351,25 @@ body:has(#guide.on) #blade-layer{visibility:hidden;}
 .guide-footer-hint img{width:25px;height:25px;object-fit:contain;}
 .gbtn{transition:background 60ms,filter 60ms;}
 .gicon{width:34px;height:34px;background-size:contain;background-repeat:no-repeat;background-position:center;opacity:.8;flex-shrink:0;}
+.guide-page{display:none;position:relative;flex:1;min-height:0;}
+.guide-page.on{display:flex;}
+.guide-chat-page{flex-direction:column;min-height:0;padding:18px 0 54px;}
+.guide-chat-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0 0 16px;}
+.guide-chat-tab{min-height:46px;display:flex;align-items:center;justify-content:center;font-size:23px;color:rgba(40,40,40,.78);text-shadow:0 1px 0 rgba(255,255,255,.78);background:linear-gradient(180deg,rgba(234,236,232,.94),rgba(178,181,174,.86));border:2px solid rgba(86,86,82,.38);border-radius:12px 12px 9px 9px;box-shadow:inset 0 1px 0 rgba(255,255,255,.78),inset 0 -2px 3px rgba(80,80,76,.16);}
+.guide-chat-tab.sel{background:linear-gradient(180deg,rgba(252,252,248,.96),rgba(216,219,211,.94));color:#171717;box-shadow:0 2px 8px rgba(0,0,0,.14),inset 0 1px 0 rgba(255,255,255,.88),inset 0 -2px 3px rgba(80,80,76,.16);}
+.guide-chat-shell{display:grid;grid-template-columns:245px 1fr;gap:16px;min-height:0;flex:1;}
+.guide-chat-list{display:flex;flex-direction:column;gap:8px;min-height:0;overflow-y:auto;padding-right:2px;scrollbar-width:none;}
+.guide-chat-list::-webkit-scrollbar{display:none;}
+.guide-chat-row{min-height:54px;display:grid;grid-template-columns:32px minmax(0,1fr);gap:10px;align-items:center;padding:0 12px;border-radius:11px;background:linear-gradient(180deg,rgba(246,247,243,.9),rgba(208,211,204,.82));border:2px solid rgba(86,86,82,.26);box-shadow:inset 0 1px 0 rgba(255,255,255,.75),0 1px 2px rgba(0,0,0,.1);cursor:pointer;color:#1c1c1c;text-shadow:0 1px 0 rgba(255,255,255,.7);}
+.guide-chat-row.sel{background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(221,224,216,.94));border-color:rgba(95,120,63,.42);box-shadow:0 3px 10px rgba(0,0,0,.14),inset 0 1px 0 rgba(255,255,255,.88);}
+.guide-chat-row-icon{width:26px;height:26px;background:center/contain no-repeat;opacity:.82;}
+.guide-chat-row-copy{min-width:0;display:flex;flex-direction:column;gap:2px;}
+.guide-chat-row-title{font-size:22px;line-height:1.03;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.guide-chat-row-meta{font-size:14px;line-height:1.08;color:rgba(0,0,0,.56);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.guide-chat-detail{min-height:0;padding:14px 16px;border-radius:11px;background:linear-gradient(180deg,rgba(241,242,238,.92),rgba(214,216,209,.84));border:2px solid rgba(98,98,94,.26);box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 1px 2px rgba(0,0,0,.08);display:flex;flex-direction:column;}
+.guide-chat-detail-title{font-size:24px;line-height:1.04;color:#171717;margin-bottom:10px;text-shadow:0 1px 0 rgba(255,255,255,.72);}
+.guide-chat-detail-body{font-size:18px;line-height:1.36;color:rgba(0,0,0,.74);white-space:pre-line;}
+.guide-chat-empty{padding:18px 12px;font-size:19px;line-height:1.34;color:rgba(0,0,0,.58);text-align:center;}
 #g-main{display:none;}
 #guide[data-mode="main"] #g-main{display:flex;}
 .debug-panels .panel.on{outline:3px solid rgba(80,200,255,.9);outline-offset:-3px;}
@@ -1648,6 +1679,34 @@ body:has(#guide.on) #blade-layer{visibility:hidden;}
                   <div class="mkt-action-meta">Choose a dedicated folder</div>
                 </div>
               </div>
+              <div class="subnav-item mkt-scan-action" data-scan-action="system-run" data-scan-system="psp" data-scan-title="Scan PSP" data-scan-desc="Scan the configured SKALD folder for PSP installs only. This uses the system-specific path when one exists, and otherwise falls back to the main install or download folders.">
+                <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/CONTROLLER-playstation1.svg')"></div>
+                <div class="mkt-account-copy">
+                  <div class="mkt-scan-label">PSP</div>
+                  <div class="mkt-action-meta">Scan only PSP matches</div>
+                </div>
+              </div>
+              <div class="subnav-item mkt-scan-action" data-scan-action="system-set" data-scan-system="psp" data-scan-title="Set PSP Scan Folder" data-scan-desc="Choose a dedicated PSP scan folder. SKALD will use it before falling back to the general install or download folders.">
+                <div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-search.webp')"></div>
+                <div class="mkt-account-copy">
+                  <div class="mkt-scan-label">Set PSP Scan Folder</div>
+                  <div class="mkt-action-meta">Choose a dedicated folder</div>
+                </div>
+              </div>
+              <div class="subnav-item mkt-scan-action" data-scan-action="system-run" data-scan-system="dc" data-scan-title="Scan Dreamcast" data-scan-desc="Scan the configured SKALD folder for Sega Dreamcast installs only. This uses the system-specific path when one exists, and otherwise falls back to the main install or download folders.">
+                <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/Dreamcast.webp')"></div>
+                <div class="mkt-account-copy">
+                  <div class="mkt-scan-label">Dreamcast</div>
+                  <div class="mkt-action-meta">Scan only Dreamcast matches</div>
+                </div>
+              </div>
+              <div class="subnav-item mkt-scan-action" data-scan-action="system-set" data-scan-system="dc" data-scan-title="Set Dreamcast Scan Folder" data-scan-desc="Choose a dedicated Dreamcast scan folder. SKALD will use it before falling back to the general install or download folders.">
+                <div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-search.webp')"></div>
+                <div class="mkt-account-copy">
+                  <div class="mkt-scan-label">Set Dreamcast Scan Folder</div>
+                  <div class="mkt-action-meta">Choose a dedicated folder</div>
+                </div>
+              </div>
             </div>
           </div>
           <div class="mkt-scan-side">
@@ -1677,6 +1736,20 @@ body:has(#guide.on) #blade-layer{visibility:hidden;}
                 <div class="mkt-account-copy">
                   <div class="mkt-scan-label">PlayStation</div>
                   <div class="mkt-action-meta" id="cnt-archive-psx">Loading…</div>
+                </div>
+              </div>
+              <div class="subnav-item games-system-item" data-system="psp" data-archive-title="PSP" data-archive-desc="Browse the Archive.org PSP repository and see everything currently available to download from this source.">
+                <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/CONTROLLER-playstation1.svg')"></div>
+                <div class="mkt-account-copy">
+                  <div class="mkt-scan-label">PSP</div>
+                  <div class="mkt-action-meta" id="cnt-archive-psp">Loading…</div>
+                </div>
+              </div>
+              <div class="subnav-item games-system-item" data-system="dc" data-archive-title="Dreamcast" data-archive-desc="Browse the Archive.org Sega Dreamcast repository and see everything currently available to download from this source.">
+                <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/Dreamcast.webp')"></div>
+                <div class="mkt-account-copy">
+                  <div class="mkt-scan-label">Dreamcast</div>
+                  <div class="mkt-action-meta" id="cnt-archive-dc">Loading…</div>
                 </div>
               </div>
             </div>
@@ -1756,6 +1829,24 @@ body:has(#guide.on) #blade-layer{visibility:hidden;}
                     <div class="sys-card-text">
                       <div class="sys-card-title">PlayStation</div>
                       <div class="sys-card-count" id="cnt-psx">Loading…</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="sys-card mkt-system-card" data-system="psp">
+                  <div class="sys-card-copy">
+                    <div class="sys-card-icon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/CONTROLLER-playstation1.svg')"></div>
+                    <div class="sys-card-text">
+                      <div class="sys-card-title">PSP</div>
+                      <div class="sys-card-count" id="cnt-psp">Loading…</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="sys-card mkt-system-card" data-system="dc">
+                  <div class="sys-card-copy">
+                    <div class="sys-card-icon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/Dreamcast.webp')"></div>
+                    <div class="sys-card-text">
+                      <div class="sys-card-title">Dreamcast</div>
+                      <div class="sys-card-count" id="cnt-dc">Loading…</div>
                     </div>
                   </div>
                 </div>
@@ -2014,8 +2105,8 @@ SKALD LIVE uses Stoat for accounts. If you already have a Stoat account, sign in
                       <div class="profile-manager-current-stat"><span class="profile-manager-current-stat-label">Achievements</span><span id="profile-manager-achieve-val" class="profile-manager-current-stat-value">0</span></div>
                     </div>
                   </div>
-                <div id="profile-manager-title" class="home-desc-title profile-choice-title">Profile Manager</div>
-                <div id="profile-manager-body" class="home-desc-body profile-choice-body">Switch between saved Stoat-backed SKALD profiles, sign out of the current profile, or add a new one.</div>
+                  <div id="profile-manager-title" class="home-desc-title profile-choice-title">Profile Manager</div>
+                  <div id="profile-manager-body" class="home-desc-body profile-choice-body">Choose a saved SKALD profile, switch to another one, or add a new profile.</div>
                 <div id="profile-manager-meta" class="profile-choice-meta"></div>
               </div>
             </div>
@@ -2120,7 +2211,7 @@ SKALD LIVE uses Stoat for accounts. If you already have a Stoat account, sign in
         </div>
       </div>
     </div>
-      <div id="p-games" class="panel"><div class="blade-home"><div class="home-menu-wrap"><div class="home-menu-shadow"></div><div class="home-menu-frame"></div><ul class="menu home-menu"><li class="mitem home-row r1 sel" data-sub="library" data-home-title="Game Library" data-home-desc="Choose a system and browse your installed and scanned-in games from the Games blade."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-games.webp')"></div>Game Library</li><li class="mitem home-row r2" data-sub="achievements" data-home-title="Achievements" data-home-desc="Track RetroAchievements progress, badge sync, and future gamerscore-style milestone views."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-trophy.webp')"></div>Achievements</li><li class="mitem home-row r3" data-sub="played" data-home-title="Played Games" data-home-desc="Review your recent play history and the games you have launched most often across supported systems."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-gamescore.webp')"></div>Played Games</li><li class="mitem home-row r4" data-sub="demos" data-home-title="Demos &amp; More" data-home-desc="Reserve space for future demos, bonus content, and special promotional downloads in the Games blade."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-apps.webp')"></div>Demos &amp; More</li></ul></div><div class="home-desc"><div class="home-desc-title">Game Library</div><div class="home-desc-body">Choose a system and browse your installed and scanned-in games from the Games blade.</div></div></div><div class="subpanel" id="sub-library"><div class="subpanel-title">GAMES LIBRARY</div><div class="blade-home games-library-home"><div class="home-menu-wrap"><ul class="menu mkt-home-list games-library-list" id="games-library-menu"><li class="subnav-item games-lib-item mkt-home-row sel" data-games-lib-action="mygames" style="--mkt-card-art:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-games.webp')" data-games-lib-title="My Games" data-games-lib-desc="Browse your installed and scanned-in library.\nSelect a system to see the games SKALD already knows about."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-games.webp')"></div><div class="mkt-home-label">My Games</div></li><li class="subnav-item games-lib-item mkt-home-row" data-games-lib-action="lastplayed" style="--mkt-card-art:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-gamescore.webp')" data-games-lib-title="Last Played Game" data-games-lib-desc="Jump back into the last game you launched once your recent play history is populated."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-gamescore.webp')"></div><div class="mkt-home-label">Last Played Game</div></li><li class="subnav-item games-lib-item mkt-home-row" data-games-lib-action="friends" style="--mkt-card-art:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-friends.webp')" data-games-lib-title="Friends Playing Now" data-games-lib-desc="Friends Playing Now will light up once SKALD LIVE presence and in-game activity are fully wired."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-friends.webp')"></div><div class="mkt-home-label">Friends Playing Now</div></li><li class="subnav-item games-lib-item mkt-home-row" data-games-lib-action="gamestore" style="--mkt-card-art:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-marketplace.webp')" data-games-lib-title="Game Store" data-games-lib-desc="Jump into the Marketplace blade to discover and download new games for your library."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-marketplace.webp')"></div><div class="mkt-home-label">Game Store</div></li><li class="subnav-item games-lib-item mkt-home-row" data-games-lib-action="autodownloads" style="--mkt-card-art:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-downloads.webp')" data-games-lib-title="Auto Downloads" data-games-lib-desc="Automatic downloads are currently off. Later this can watch for updates or background content for your library."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-downloads.webp')"></div><div class="mkt-home-label">Auto Downloads</div><div class="games-lib-tail">Off</div></li></ul></div><div class="home-desc games-library-copy"><div id="games-library-title" class="home-desc-title">My Games</div><div id="games-library-body" class="home-desc-body">Browse your installed and scanned-in library.\nSelect a system to see the games SKALD already knows about.</div></div></div></div><div class="subpanel" id="sub-library-systems"><div class="subpanel-title">SELECT SYSTEM</div><div class="mkt-scan-layout games-system-layout"><div class="mkt-scan-left"><div class="mkt-scan-list" id="games-system-list"><div class="subnav-item games-system-item sel" data-system="snes" data-games-title="Super Nintendo" data-games-desc="Browse your installed and scanned-in Super Nintendo library from the Games blade."><div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/CONTROLLER-snes.svg')"></div><div class="mkt-account-copy"><div class="mkt-scan-label">Super Nintendo</div><div class="mkt-action-meta" id="cnt-snes2">Loading…</div></div></div><div class="subnav-item games-system-item" data-system="psx" data-games-title="PlayStation" data-games-desc="Browse your installed and scanned-in PlayStation library from the Games blade."><div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/CONTROLLER-playstation1.svg')"></div><div class="mkt-account-copy"><div class="mkt-scan-label">PlayStation</div><div class="mkt-action-meta" id="cnt-psx2">Loading…</div></div></div></div></div><div class="mkt-scan-side"><div id="games-system-title" class="mkt-scan-title">Super Nintendo</div><div id="games-system-meta" class="mkt-scan-meta">Browse your installed and scanned-in Super Nintendo library from the Games blade.</div><div id="games-system-status" class="mkt-scan-status">Loading library status…</div></div></div></div><div class="subpanel" id="sub-library-games"><div class="subpanel-title">MY GAMES</div><div class="games-library-view"><div class="games-tabs"><div class="games-tab sel" data-games-filter="all">All Games</div><div class="games-tab" data-games-filter="recent">Recently Downloaded</div><div class="games-tab" data-games-filter="played">Recently Played</div></div><div class="games-library-main"><div class="games-library-left"><div id="games-installed-list" class="games-games-list"><div class="mkt-empty">No games installed yet.</div></div><div id="games-library-count" class="games-library-count"></div></div><div class="games-library-right"><div class="games-detail-panel" id="games-installed-detail"><div class="games-detail-head"><div class="games-detail-headrow"><div class="games-detail-copy"><div class="games-detail-title" id="games-installed-title">Select a game</div><div class="mkt-detail-meta" id="games-installed-meta">Choose an installed game to view details.</div></div><div class="games-detail-headactions"><div class="subnav-item games-ready-action" data-games-action="launch"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-a.webp')"></div><div class="mkt-account-copy"><div class="mkt-action-label">Launch</div><div class="mkt-action-meta">Start the selected installed game.</div></div></div><div class="subnav-item games-ready-action" data-games-action="delete"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-x.webp')"></div><div class="mkt-account-copy"><div class="mkt-action-label">Delete Install</div><div class="mkt-action-meta" id="games-delete-meta">Remove the selected installed game from disk.</div></div></div></div></div></div><div class="games-detail-top"><div id="games-detail-icon" class="games-detail-icon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/gamercard_defaultgamerpic.webp')"></div><div class="games-score-line"><div class="games-score-label"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-gamescore.webp')"></div><span>Gamerscore</span></div><div id="games-score-value" class="games-score-value">0/0</div></div></div><div class="games-detail-ach-head"><span>Achievements</span><span id="games-ach-count" class="games-detail-ach-count"></span></div><div id="games-ach-grid" class="games-ach-grid"><div class="games-ach-empty">RetroAchievements data will appear here when a matching game is found.</div></div><div id="games-installed-status" class="mkt-detail-status" style="padding:0 18px 16px;"></div></div></div></div></div><div class="subpanel" id="sub-achievements"><div class="subpanel-title">ACHIEVEMENTS</div><div class="info-block">Set your RetroAchievements API key in Settings to track achievements.</div></div><div class="subpanel" id="sub-played"><div class="subpanel-title">PLAYED GAMES</div><div class="info-block">No games played yet.</div></div></div>
+      <div id="p-games" class="panel"><div class="blade-home"><div class="home-menu-wrap"><div class="home-menu-shadow"></div><div class="home-menu-frame"></div><ul class="menu home-menu"><li class="mitem home-row r1 sel" data-sub="library" data-home-title="Game Library" data-home-desc="Choose a system and browse your installed and scanned-in games from the Games blade."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-games.webp')"></div>Game Library</li><li class="mitem home-row r2" data-sub="achievements" data-home-title="Achievements" data-home-desc="Track RetroAchievements progress, badge sync, and future gamerscore-style milestone views."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-trophy.webp')"></div>Achievements</li><li class="mitem home-row r3" data-sub="played" data-home-title="Played Games" data-home-desc="Review your recent play history and the games you have launched most often across supported systems."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-gamescore.webp')"></div>Played Games</li><li class="mitem home-row r4" data-sub="demos" data-home-title="Demos &amp; More" data-home-desc="Reserve space for future demos, bonus content, and special promotional downloads in the Games blade."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-apps.webp')"></div>Demos &amp; More</li></ul></div><div class="home-desc"><div class="home-desc-title">Game Library</div><div class="home-desc-body">Choose a system and browse your installed and scanned-in games from the Games blade.</div></div></div><div class="subpanel" id="sub-library"><div class="subpanel-title">GAMES LIBRARY</div><div class="blade-home games-library-home"><div class="home-menu-wrap"><ul class="menu mkt-home-list games-library-list" id="games-library-menu"><li class="subnav-item games-lib-item mkt-home-row sel" data-games-lib-action="mygames" style="--mkt-card-art:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-games.webp')" data-games-lib-title="My Games" data-games-lib-desc="Browse your installed and scanned-in library.\nSelect a system to see the games SKALD already knows about."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-games.webp')"></div><div class="mkt-home-label">My Games</div></li><li class="subnav-item games-lib-item mkt-home-row" data-games-lib-action="lastplayed" style="--mkt-card-art:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-gamescore.webp')" data-games-lib-title="Last Played Game" data-games-lib-desc="Jump back into the last game you launched once your recent play history is populated."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-gamescore.webp')"></div><div class="mkt-home-label">Last Played Game</div></li><li class="subnav-item games-lib-item mkt-home-row" data-games-lib-action="friends" style="--mkt-card-art:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-friends.webp')" data-games-lib-title="Friends Playing Now" data-games-lib-desc="Friends Playing Now will light up once SKALD LIVE presence and in-game activity are fully wired."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-friends.webp')"></div><div class="mkt-home-label">Friends Playing Now</div></li><li class="subnav-item games-lib-item mkt-home-row" data-games-lib-action="gamestore" style="--mkt-card-art:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-marketplace.webp')" data-games-lib-title="Game Store" data-games-lib-desc="Jump into the Marketplace blade to discover and download new games for your library."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-marketplace.webp')"></div><div class="mkt-home-label">Game Store</div></li><li class="subnav-item games-lib-item mkt-home-row" data-games-lib-action="autodownloads" style="--mkt-card-art:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-downloads.webp')" data-games-lib-title="Auto Downloads" data-games-lib-desc="Automatic downloads are currently off. Later this can watch for updates or background content for your library."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-downloads.webp')"></div><div class="mkt-home-label">Auto Downloads</div><div class="games-lib-tail">Off</div></li></ul></div><div class="home-desc games-library-copy"><div id="games-library-title" class="home-desc-title">My Games</div><div id="games-library-body" class="home-desc-body">Browse your installed and scanned-in library.\nSelect a system to see the games SKALD already knows about.</div></div></div></div><div class="subpanel" id="sub-library-systems"><div class="subpanel-title">SELECT SYSTEM</div><div class="mkt-scan-layout games-system-layout"><div class="mkt-scan-left"><div class="mkt-scan-list" id="games-system-list"><div class="subnav-item games-system-item sel" data-system="snes" data-games-title="Super Nintendo" data-games-desc="Browse your installed and scanned-in Super Nintendo library from the Games blade."><div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/CONTROLLER-snes.svg')"></div><div class="mkt-account-copy"><div class="mkt-scan-label">Super Nintendo</div><div class="mkt-action-meta" id="cnt-snes2">Loading…</div></div></div><div class="subnav-item games-system-item" data-system="psx" data-games-title="PlayStation" data-games-desc="Browse your installed and scanned-in PlayStation library from the Games blade."><div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/CONTROLLER-playstation1.svg')"></div><div class="mkt-account-copy"><div class="mkt-scan-label">PlayStation</div><div class="mkt-action-meta" id="cnt-psx2">Loading…</div></div></div><div class="subnav-item games-system-item" data-system="psp" data-games-title="PSP" data-games-desc="Browse your installed and scanned-in PSP library from the Games blade."><div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/CONTROLLER-playstation1.svg')"></div><div class="mkt-account-copy"><div class="mkt-scan-label">PSP</div><div class="mkt-action-meta" id="cnt-psp2">Loading…</div></div></div><div class="subnav-item games-system-item" data-system="dc" data-games-title="Dreamcast" data-games-desc="Browse your installed and scanned-in Sega Dreamcast library from the Games blade."><div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/Dreamcast.webp')"></div><div class="mkt-account-copy"><div class="mkt-scan-label">Dreamcast</div><div class="mkt-action-meta" id="cnt-dc2">Loading…</div></div></div></div></div><div class="mkt-scan-side"><div id="games-system-title" class="mkt-scan-title">Super Nintendo</div><div id="games-system-meta" class="mkt-scan-meta">Browse your installed and scanned-in Super Nintendo library from the Games blade.</div><div id="games-system-status" class="mkt-scan-status">Loading library status…</div></div></div></div><div class="subpanel" id="sub-library-games"><div class="subpanel-title">MY GAMES</div><div class="games-library-view"><div class="games-tabs"><div class="games-tab sel" data-games-filter="all">All Games</div><div class="games-tab" data-games-filter="recent">Recently Downloaded</div><div class="games-tab" data-games-filter="played">Recently Played</div></div><div class="games-library-main"><div class="games-library-left"><div id="games-installed-list" class="games-games-list"><div class="mkt-empty">No games installed yet.</div></div><div id="games-library-count" class="games-library-count"></div></div><div class="games-library-right"><div class="games-detail-panel" id="games-installed-detail"><div class="games-detail-head"><div class="games-detail-headrow"><div class="games-detail-copy"><div class="games-detail-title" id="games-installed-title">Select a game</div><div class="mkt-detail-meta" id="games-installed-meta">Choose an installed game to view details.</div></div><div class="games-detail-headactions"><div class="subnav-item games-ready-action" data-games-action="launch"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-a.webp')"></div><div class="mkt-account-copy"><div class="mkt-action-label">Launch</div><div class="mkt-action-meta">Start the selected installed game.</div></div></div><div class="subnav-item games-ready-action" data-games-action="delete"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-x.webp')"></div><div class="mkt-account-copy"><div class="mkt-action-label">Delete Install</div><div class="mkt-action-meta" id="games-delete-meta">Remove the selected installed game from disk.</div></div></div></div></div></div><div class="games-detail-top"><div id="games-detail-icon" class="games-detail-icon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/gamercard_defaultgamerpic.webp')"></div><div class="games-score-line"><div class="games-score-label"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-gamescore.webp')"></div><span>Gamerscore</span></div><div id="games-score-value" class="games-score-value">0/0</div></div></div><div class="games-detail-ach-head"><span>Achievements</span><span id="games-ach-count" class="games-detail-ach-count"></span></div><div id="games-ach-grid" class="games-ach-grid"><div class="games-ach-empty">RetroAchievements data will appear here when a matching game is found.</div></div><div id="games-installed-status" class="mkt-detail-status" style="padding:0 18px 16px;"></div></div></div></div></div><div class="subpanel" id="sub-achievements"><div class="subpanel-title">ACHIEVEMENTS</div><div class="info-block">Set your RetroAchievements API key in Settings to track achievements.</div></div><div class="subpanel" id="sub-played"><div class="subpanel-title">PLAYED GAMES</div><div class="info-block">No games played yet.</div></div></div>
     </div>
     <div id="p-media" class="panel"><div class="blade-home"><div class="home-menu-wrap"><div class="home-menu-shadow"></div><div class="home-menu-frame"></div><ul class="menu home-menu"><li class="mitem home-row r1 sel" data-sub="music" data-home-title="Music" data-home-desc="Future music playback and soundtrack browsing will live here, matching the original Media blade rhythm."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-music.webp')"></div>Music</li><li class="mitem home-row r2" data-sub="pictures" data-home-title="Pictures" data-home-desc="Open image galleries, screenshots, and future media libraries from the Pictures section of the Media blade."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-pictures.webp')"></div>Pictures</li><li class="mitem home-row r3" data-sub="videos" data-home-title="Videos" data-home-desc="Video playback, previews, and trailer-style presentation can be surfaced here later in development."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-videos.webp')"></div>Videos</li><li class="mitem home-row r4" data-sub="mc" data-home-title="Media Center" data-home-desc="Reserve the classic Media Center slot for future companion apps or a modern streaming equivalent."><div class="micon"></div>Media Center</li></ul></div><div class="home-desc"><div class="home-desc-title">Music</div><div class="home-desc-body">Future music playback and soundtrack browsing will live here, matching the original Media blade rhythm.</div></div></div><div class="subpanel" id="sub-music"><div class="subpanel-title">MUSIC</div><div class="info-block">Music playback coming soon.</div></div><div class="subpanel" id="sub-pictures"><div class="subpanel-title">PICTURES</div><div class="info-block">Picture viewer coming soon.</div></div><div class="subpanel" id="sub-videos"><div class="subpanel-title">VIDEOS</div><div class="info-block">Video playback coming soon.</div></div><div class="subpanel" id="sub-mc"><div class="subpanel-title">MEDIA CENTER</div><div class="info-block">Media Center coming soon.</div></div></div>
     <div id="p-sys" class="panel">
@@ -2428,6 +2519,20 @@ SKALD LIVE uses Stoat for accounts. If you already have a Stoat account, sign in
                   <div class="mkt-action-meta" id="emu-psx-display">Not set</div>
                 </div>
               </div>
+              <div class="subnav-item emu-item" data-emu-key="psp" data-emu-title="PSP Core" data-emu-desc="Choose the libretro core DLL SKALD should load for PSP games." data-emu-picker="core">
+                <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/CONTROLLER-playstation1.svg')"></div>
+                <div class="mkt-account-copy">
+                  <div class="mkt-scan-label">PSP Core</div>
+                  <div class="mkt-action-meta" id="emu-psp-display">Not set</div>
+                </div>
+              </div>
+              <div class="subnav-item emu-item" data-emu-key="dc" data-emu-title="Dreamcast Core" data-emu-desc="Choose the libretro core DLL SKALD should load for Sega Dreamcast games." data-emu-picker="core">
+                <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/Dreamcast.webp')"></div>
+                <div class="mkt-account-copy">
+                  <div class="mkt-scan-label">Dreamcast Core</div>
+                  <div class="mkt-action-meta" id="emu-dc-display">Not set</div>
+                </div>
+              </div>
             </div>
           </div>
           <div class="mkt-scan-side">
@@ -2463,7 +2568,7 @@ SKALD LIVE uses Stoat for accounts. If you already have a Stoat account, sign in
                   <div class="mkt-action-meta" id="storage-download-display">Not set</div>
                 </div>
               </div>
-              <div class="subnav-item emu-item storage-item" data-storage-title="System Scan Folders" data-storage-desc="Review the dedicated scan folders SKALD will prefer when importing existing games by system. Right now this shows the Super Nintendo and PlayStation scan paths.">
+              <div class="subnav-item emu-item storage-item" data-storage-title="System Scan Folders" data-storage-desc="Review the dedicated scan folders SKALD will prefer when importing existing games by system, including Super Nintendo, PlayStation, PSP, and Dreamcast paths when they are configured.">
                 <div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-search.webp')"></div>
                 <div class="mkt-account-copy">
                   <div class="mkt-scan-label">System Scan Folders</div>
@@ -2518,7 +2623,7 @@ SKALD LIVE uses Stoat for accounts. If you already have a Stoat account, sign in
   </div>
   <div id="ctrl-hint"></div>
   <div id="btn-hints"></div>
-<div id="guide" data-mode="main"><div id="g-black"></div><div id="g-panel"></div><div id="g-tile"></div><div id="g-edge"><div id="guide-edge-name">RetroPlayer</div></div><div id="g-content"><div id="g-main"><div class="guide-topbar"><div class="guide-top-icons"><div class="guide-status-icon guide-battery" aria-hidden="true"></div><div class="guide-status-icon guide-controller" aria-hidden="true"></div></div><div class="guide-clock">4:00 PM</div></div><div class="guide-content-stack"><div class="guide-profile-card gbtn sel" data-gact="profile"><div id="g-gamerpic"></div><div class="guide-profile-copy"><div id="g-tag">RetroPlayer</div><div class="guide-stat-line"><span>Gamerscore</span><strong>0</strong></div><div class="guide-stat-line"><span>Achievements</span><strong>0</strong></div><div id="g-rep"></div></div></div><div class="guide-community-card"><div class="guide-section-title">Community</div><div class="guide-community-row"><div class="guide-community-btn gbtn" data-gact="messages" title="Messages"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-messages.webp')"></div></div><div class="guide-community-btn gbtn" data-gact="friends" title="Friends"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-friends.webp')"></div></div><div class="guide-community-btn gbtn" data-gact="achievements" title="Games"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-games.webp')"></div></div></div></div><div class="guide-menu-list"><div class="guide-menu-row gbtn" data-gact="messages"><span>Chat and IM</span><span class="guide-menu-note">Coming soon</span></div><div class="guide-menu-row gbtn" data-gact="settings"><span>Personal Settings</span></div></div><div class="guide-music-card"><div class="guide-music-controls"><div class="guide-music-btn">&#9664;&#9664;</div><div class="guide-music-btn">&#9654;</div><div class="guide-music-btn">II</div><div class="guide-music-btn">&#9632;</div><div class="guide-music-btn">&#9654;&#9654;</div></div><div class="guide-select-music">Select Music</div></div><div class="guide-skald-logo" aria-label="SKALD"></div></div><div class="guide-footer-legend"><div class="guide-footer-group"><span class="guide-footer-hint"><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-y.webp" alt="">Xbox Dashboard</span><span class="guide-footer-hint"><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-x.webp" alt="">Sign Out</span></div><div class="guide-footer-group"><span class="guide-footer-hint"><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-b.webp" alt="">Back</span><span class="guide-footer-hint"><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-a.webp" alt="">Select</span></div></div></div></div></div>
+<div id="guide" data-mode="main"><div id="g-black"></div><div id="g-panel"></div><div id="g-tile"></div><div id="g-edge"><div id="guide-edge-name">RetroPlayer</div></div><div id="g-content"><div id="g-main"><div class="guide-topbar"><div class="guide-topbar-left"><div class="guide-top-icons"><div class="guide-status-icon guide-battery" aria-hidden="true"></div><div class="guide-status-icon guide-controller" aria-hidden="true"></div></div><div id="guide-top-title" class="guide-top-title"></div></div><div class="guide-clock">4:00 PM</div></div><div id="guide-home-page" class="guide-page on"><div class="guide-content-stack"><div class="guide-profile-card gbtn sel" data-gact="profile"><div id="g-gamerpic"></div><div class="guide-profile-copy"><div id="g-tag">RetroPlayer</div><div class="guide-stat-line"><span>Gamerscore</span><strong>0</strong></div><div class="guide-stat-line"><span>Achievements</span><strong>0</strong></div><div id="g-rep"></div></div></div><div class="guide-community-card"><div class="guide-section-title">Community</div><div class="guide-community-row"><div class="guide-community-btn gbtn" data-gact="messages" title="Messages"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-messages.webp')"></div></div><div class="guide-community-btn gbtn" data-gact="friends" title="Friends"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-friends.webp')"></div></div><div class="guide-community-btn gbtn" data-gact="achievements" title="Games"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-games.webp')"></div></div></div></div><div class="guide-menu-list"><div class="guide-menu-row gbtn" data-gact="messages"><span>Chat and IM</span><span class="guide-menu-note">Open</span></div><div class="guide-menu-row gbtn" data-gact="settings"><span>Personal Settings</span></div></div><div class="guide-music-card"><div class="guide-music-controls"><div class="guide-music-btn">&#9664;&#9664;</div><div class="guide-music-btn">&#9654;</div><div class="guide-music-btn">II</div><div class="guide-music-btn">&#9632;</div><div class="guide-music-btn">&#9654;&#9654;</div></div><div class="guide-select-music">Select Music</div></div><div class="guide-skald-logo" aria-label="SKALD"></div></div></div><div id="guide-chat-page" class="guide-page guide-chat-page"><div class="guide-chat-tabs"><div id="guide-chat-tab-private" class="guide-chat-tab">Private Chat</div><div id="guide-chat-tab-messenger" class="guide-chat-tab sel">Messenger</div></div><div class="guide-chat-shell"><div id="guide-chat-list" class="guide-chat-list"></div><div class="guide-chat-detail"><div id="guide-chat-detail-title" class="guide-chat-detail-title">Messenger</div><div id="guide-chat-detail-body" class="guide-chat-detail-body"></div></div></div></div><div class="guide-footer-legend"><div class="guide-footer-group"><span class="guide-footer-hint"><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-y.webp" alt="">Xbox Dashboard</span><span class="guide-footer-hint"><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-x.webp" alt="">Sign Out</span></div><div class="guide-footer-group"><span class="guide-footer-hint"><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-b.webp" alt="">Back</span><span class="guide-footer-hint"><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-a.webp" alt="">Select</span></div></div></div></div></div>
   <div id="guide2" data-mode="account"><div id="g2-black"></div><div id="g2-panel"></div><div id="g2-tile"></div><div id="g2-edge"></div><div id="g2-content"><div id="g2-account-head"><img id="g2-account-head-icon" src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-profile.webp" alt=""><div id="g2-account-title">Archive.org</div></div><div id="g2-account-shell"><div id="g2-account-body"><div id="g2-account-desc"></div><div id="g2-account-status"></div><input id="g2a-login-input" type="text" autocomplete="off" style="display:none;"/><input id="g2a-secret-input" type="password" autocomplete="new-password" style="display:none;"/><div id="g2-account-list"><div class="g2a-item sel" data-vk-target="g2a-login-input"><div class="gicon" id="g2a-login-icon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-profile.webp')"></div><div class="g2a-copy"><div class="g2a-label" id="g2a-login-label">Login</div><div class="g2a-value dim" id="g2a-login-display">Not set</div></div></div><div class="g2a-item" data-vk-target="g2a-secret-input"><div class="gicon" id="g2a-secret-icon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-system.webp')"></div><div class="g2a-copy"><div class="g2a-label" id="g2a-secret-label">Secret</div><div class="g2a-value dim" id="g2a-secret-display">Not set</div></div></div><div class="g2a-item" data-ga-action="toggle-save"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-system.webp')"></div><div class="g2a-copy"><div class="g2a-label">Save to Stoat Profile</div><div class="g2a-value" id="g2a-save-display">On</div></div></div><div class="g2a-item" data-ga-action="primary"><div class="gicon" id="g2a-primary-icon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-a.webp')"></div><div class="g2a-copy"><div class="g2a-label" id="g2a-primary-label">Save</div><div class="g2a-meta" id="g2a-primary-meta">Apply changes for this provider.</div></div></div><div class="g2a-item" data-ga-action="secondary"><div class="gicon" id="g2a-secondary-icon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-x.webp')"></div><div class="g2a-copy"><div class="g2a-label" id="g2a-secondary-label">Clear Saved</div><div class="g2a-meta" id="g2a-secondary-meta">Remove stored credentials for this Stoat profile.</div></div></div></div></div></div><div id="g2-account-foot"><div class="gaf-hint"><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-b.webp" alt="">Back</div><div class="gaf-hint"><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-a.webp" alt="">Select</div></div></div></div></div>
   <div id="vk-overlay">
     <div id="vk-panel">
@@ -2549,37 +2654,43 @@ const SND='file:///C:/Projects/RG-THEMES/X360 BLADES/XBMC360/XBMC360/01.Main Fil
 const FR='file:///C:/Projects/RG-THEMES/X360 BLADES/blades/bkgd_frames';
 const FALLBACK_AVATAR=`${A}/gamercard_defaultgamerpic.webp`;
 const BLADE_STYLE_DEFS=Object.freeze({
-  default:{
-    id:'default',
-    title:'Xbox 360 Default',
-    desc:'The original silver Blades shell with the standard animated background and the current SKALD default look.',
-    assetBase:BLADE_STYLE_ASSET_BASES.default,
-    frameBase:`${BLADE_STYLE_ASSET_BASES.default}/bkgd_frames`,
-    backgrounds:{mkt:'background-red-alpha.webp',live:'background-orange-alpha.webp',games:'background-green-alpha.webp',media:'background-blue-alpha.webp',sys:'background-purple.webp'},
-    useStyleWhitewash:true,
-    useStyleGlassTrim:true,
-  },
-  carbon:{
+    default:{
+      id:'default',
+      title:'Xbox 360 Default',
+      desc:'The original silver Blades shell with the standard animated background and the current SKALD default look.',
+      assetBase:BLADE_STYLE_ASSET_BASES.default,
+      frameBase:`${BLADE_STYLE_ASSET_BASES.default}/bkgd_frames`,
+      framePattern:'background-{nn}.webp',
+      frameCount:61,
+      backgrounds:{mkt:'background-red-alpha.webp',live:'background-orange-alpha.webp',games:'background-green-alpha.webp',media:'background-blue-alpha.webp',sys:'background-purple.webp'},
+      useStyleWhitewash:true,
+      useStyleGlassTrim:true,
+    },
+    carbon:{
     id:'carbon',
-    title:'Carbon',
-    desc:'A darker carbon-style Blades shell with its own blade art, color set, and animated background frames.',
-    assetBase:BLADE_STYLE_ASSET_BASES.carbon,
-    frameBase:`${BLADE_STYLE_ASSET_BASES.carbon}/bkgd_frames`,
-    backgrounds:{mkt:'background-red.webp',live:'background-orange-alpha.webp',games:'background-green-alpha.webp',media:'background-blue-alpha.webp',sys:'background-purple-alpha.webp'},
-    useStyleWhitewash:true,
-    useStyleGlassTrim:false,
-  },
-  glass:{
+      title:'Carbon',
+      desc:'A darker carbon-style Blades shell with its own blade art, color set, and animated background frames.',
+      assetBase:BLADE_STYLE_ASSET_BASES.carbon,
+      frameBase:`${BLADE_STYLE_ASSET_BASES.carbon}/bkgd_frames`,
+      framePattern:'background- {nn}.jpg',
+      frameCount:60,
+      backgrounds:{mkt:'background-red.webp',live:'background-orange-alpha.webp',games:'background-green-alpha.webp',media:'background-blue-alpha.webp',sys:'background-purple-alpha.webp'},
+      useStyleWhitewash:true,
+      useStyleGlassTrim:false,
+    },
+    glass:{
     id:'glass',
-    title:'Glass',
-    desc:'A brighter glass-style shell with cleaner blade art and its own animated background frames and blade colors.',
-    assetBase:BLADE_STYLE_ASSET_BASES.glass,
-    frameBase:`${BLADE_STYLE_ASSET_BASES.glass}/bkgd_frames`,
-    backgrounds:{mkt:'background-red.webp',live:'background-orange-alpha.webp',games:'background-green-alpha.webp',media:'background-blue-alpha.webp',sys:'background-purple-alpha.webp'},
-    useStyleWhitewash:false,
-    useStyleGlassTrim:false,
-  },
-});
+      title:'Glass',
+      desc:'A brighter glass-style shell with cleaner blade art and its own animated background frames and blade colors.',
+      assetBase:BLADE_STYLE_ASSET_BASES.glass,
+      frameBase:`${BLADE_STYLE_ASSET_BASES.glass}/bkgd_frames`,
+      framePattern:'background-glass-{nn}.jpg',
+      frameCount:60,
+      backgrounds:{mkt:'background-red.webp',live:'background-orange-alpha.webp',games:'background-green-alpha.webp',media:'background-blue-alpha.webp',sys:'background-purple-alpha.webp'},
+      useStyleWhitewash:false,
+      useStyleGlassTrim:false,
+    },
+  });
 const BLADES=[
   {id:'mkt',label:'MARKETPLACE',panel:'p-mkt',bg:'bc-mkt',hazeL:`${A}/haze-purple-left.webp`,hazeR:`${A}/haze-purple-right.webp`},
   {id:'live',label:'SKALD LIVE',panel:'p-live',bg:'bc-live',hazeL:`${A}/haze-orange-left.webp`,hazeR:`${A}/haze-orange-right.webp`},
@@ -2666,6 +2777,11 @@ let appliedGamerPic=null;
 let profileGamerPicItems=[];
 let savedStoatProfiles=[];
 let guideSelIdx=0;
+let guidePage='home';
+let guideChatTab='messenger';
+let guideChatItems=[];
+let guideChatLoading=false;
+let guideChatError='';
 let guideAccountProvider='archiveorg';
 let guideAccountState={provider:null,stoatUserId:null,saveToProfile:true,login:'',secret:'',providerMeta:null,status:''};
 const marketplaceState={
@@ -2841,14 +2957,24 @@ function bladeStyleDef(style=appliedBladeStyle){
 function bladeStyleBase(style=appliedBladeStyle){
   return bladeStyleDef(style).assetBase || A;
 }
-function bladeStyleFrameBase(style=appliedBladeStyle){
-  return bladeStyleDef(style).frameBase || FR;
-}
-function bladeStyleBackgroundUrl(bladeId,style=appliedBladeStyle){
-  const def=bladeStyleDef(style);
-  const filename=def.backgrounds?.[bladeId];
-  if(filename) return `${def.assetBase}/${filename}`;
-  return SKALD_DEFAULT_BACKGROUNDS[bladeId] || '';
+  function bladeStyleFrameBase(style=appliedBladeStyle){
+    return bladeStyleDef(style).frameBase || FR;
+  }
+  function bladeStyleFrameCount(style=appliedBladeStyle){
+    return Math.max(1, Number(bladeStyleDef(style).frameCount || 61));
+  }
+  function bladeStyleFrameUrl(index,style=appliedBladeStyle){
+    const def=bladeStyleDef(style);
+    const frameBase=def.frameBase || FR;
+    const frameNumber=String(Math.max(1, Number(index||1))).padStart(2,'0');
+    const pattern=String(def.framePattern || 'background-{nn}.webp');
+    return `${frameBase}/${pattern.replace('{nn}', frameNumber)}`;
+  }
+  function bladeStyleBackgroundUrl(bladeId,style=appliedBladeStyle){
+    const def=bladeStyleDef(style);
+    const filename=def.backgrounds?.[bladeId];
+    if(filename) return `${def.assetBase}/${filename}`;
+    return SKALD_DEFAULT_BACKGROUNDS[bladeId] || '';
 }
 function bladeStyleShellAsset(name,style=appliedBladeStyle){
   return `${bladeStyleBase(style)}/${name}`;
@@ -2898,19 +3024,22 @@ function themedStageBackgroundForBlade(bladeId=BLADES[activeIdx]?.id,theme=appli
   if(!theme || theme.reset) return '';
   return skaldCustomThemeBackgroundForBlade(bladeId,theme);
 }
-function setAnimatedBackgroundEnabled(enabled){
-  const frameBase=bladeStyleFrameBase();
-  if(enabled){
-    if(!bgImg.src || !String(bgImg.src).startsWith(frameBase)) bgImg.src=`${frameBase}/background-${String(frameIdx+1).padStart(2,'0')}.webp`;
-    if(!bgFrameTimer){
-      bgFrameTimer=setInterval(()=>{
-        if(themedStageBackgroundForBlade()) return;
-        frameIdx=(frameIdx+1)%61;
-        bgImg.src=`${bladeStyleFrameBase()}/background-${String(frameIdx+1).padStart(2,'0')}.webp`;
-      },70);
+  function setAnimatedBackgroundEnabled(enabled){
+    const frameBase=bladeStyleFrameBase();
+    const frameCount=bladeStyleFrameCount();
+    if(enabled){
+      frameIdx=((frameIdx%frameCount)+frameCount)%frameCount;
+      if(!bgImg.src || !String(bgImg.src).startsWith(frameBase)) bgImg.src=bladeStyleFrameUrl(frameIdx+1);
+      if(!bgFrameTimer){
+        bgFrameTimer=setInterval(()=>{
+          if(themedStageBackgroundForBlade()) return;
+          const currentCount=bladeStyleFrameCount();
+          frameIdx=(frameIdx+1)%currentCount;
+          bgImg.src=bladeStyleFrameUrl(frameIdx+1);
+        },70);
+      }
+      return;
     }
-    return;
-  }
   if(bgFrameTimer){
     clearInterval(bgFrameTimer);
     bgFrameTimer=null;
@@ -3069,7 +3198,9 @@ async function saveAppliedBladeStyle(style){
   appliedBladeStyle=nextStyle;
   buildBlades();
   applyBg();
+  startFrames();
   updateBladeStylesPanel();
+  if(getActiveSubpanel()?.id==='sub-profile-blades') applySubSel();
   try{
     const settings=await window.electronAPI?.getSettings?.() || {};
     settings.bladeStyle=nextStyle;
@@ -3228,20 +3359,11 @@ async function loadSavedStoatProfiles(){
 function currentSavedProfileId(){
   return String(stoatUser?.id || '');
 }
-function renderProfileManagerPanel(){
-  const list=document.getElementById('profile-manager-list');
-  if(!list) return;
-  const activeId=currentSavedProfileId();
-  const rows=[
-      ...(stoatConnected ? [{
-        id:'signout-current',
-        kind:'signout',
-        title:'Sign Out Current Profile',
-        subtitle:getStoatDisplayName(),
-        tail:'SIGN OUT',
-      icon:`${A}/button-b.webp`,
-      avatar:'',
-    }] : []),
+  function renderProfileManagerPanel(){
+    const list=document.getElementById('profile-manager-list');
+    if(!list) return;
+    const activeId=currentSavedProfileId();
+    const rows=[
       ...savedStoatProfiles.map(profile=>({
         id:String(profile.id||''),
         kind:'profile',
@@ -3252,22 +3374,22 @@ function renderProfileManagerPanel(){
         icon:'',
         avatar:profile.avatar || FALLBACK_AVATAR,
       })),
-      {
-        id:'add-profile',
-        kind:'add',
-        title:'Add New Profile',
-        subtitle:'Create or sign into another SKALD profile',
-        tail:'ADD PROFILE',
-        icon:`${A}/icon-profile.webp`,
-        avatar:'',
-      },
+        {
+          id:'add-profile',
+          kind:'add',
+          title:'Add New Profile',
+          subtitle:'Sign in with Stoat or create a new account',
+          tail:'ADD PROFILE',
+          icon:`${A}/icon-profile.webp`,
+          avatar:'',
+        },
   ];
-  list.innerHTML=rows.map((row,idx)=>{
-    const isAdd=row.kind==='add';
-    const isAction=row.kind==='add' || row.kind==='signout';
-    const iconStyle=isAction
-      ? `background-image:${cssInlineImageUrl(row.icon)}`
-      : `background-image:${cssInlineImageUrl(row.avatar)};`;
+    list.innerHTML=rows.map((row,idx)=>{
+      const isAdd=row.kind==='add';
+      const isAction=row.kind==='add';
+      const iconStyle=isAction
+        ? `background-image:${cssInlineImageUrl(row.icon)}`
+        : `background-image:${cssInlineImageUrl(row.avatar)};`;
       return `<div class="subnav-item profile-choice-item profile-manager-item profile-kind-${esc(row.kind)} ${row.active?'profile-active':''} ${isAdd?'profile-manager-add':''} ${isAction?'profile-manager-action':''} ${idx===0?'sel':''}" data-profile-row-id="${esc(row.id)}" data-profile-row-kind="${esc(row.kind)}">
         <div class="profile-manager-avatar" style="${iconStyle}"></div>
         <div class="profile-manager-copy">
@@ -3279,7 +3401,7 @@ function renderProfileManagerPanel(){
     }).join('');
   }
   function updateProfileManagerPanel(){
-  const panel=document.getElementById('sub-profile-manager'); if(!panel) return;
+    const panel=document.getElementById('sub-profile-manager'); if(!panel) return;
   const frame=document.getElementById('profile-manager-frame');
   const shadow=document.getElementById('profile-manager-shadow');
   renderProfileManagerPanel();
@@ -3295,40 +3417,60 @@ function renderProfileManagerPanel(){
   const currentGames=document.getElementById('profile-manager-games-count');
   const currentScore=document.getElementById('profile-manager-gscore-val');
   const currentAchieve=document.getElementById('profile-manager-achieve-val');
-  const title=document.getElementById('profile-manager-title');
-  const body=document.getElementById('profile-manager-body');
-  const meta=document.getElementById('profile-manager-meta');
-  const activeId=currentSavedProfileId();
-  if(currentName) currentName.textContent=stoatConnected ? getStoatDisplayName() : 'No Active Profile';
-  if(currentPic) currentPic.style.backgroundImage=cssImageUrl(currentStoatAvatarUrl());
-  if(currentGames) currentGames.textContent=document.getElementById('gc-games-count')?.textContent || '0';
-  if(currentScore) currentScore.textContent=document.getElementById('gc-gscore-val')?.textContent || '0';
-  if(currentAchieve) currentAchieve.textContent=document.getElementById('gc-achieve-val')?.textContent || '0';
-  const kind=selected?.dataset.profileRowKind || 'add';
-  const id=selected?.dataset.profileRowId || '';
-    if(kind==='signout'){
-      if(title) title.textContent='Sign Out Current Profile';
-      if(body) body.textContent='Sign out of the currently active profile. Saved profiles will stay available so you can switch back later.';
-      if(meta) meta.textContent=stoatConnected
-        ? `Current profile: ${getStoatDisplayName()}\n${savedStoatProfiles.length} saved profile${savedStoatProfiles.length===1?'':'s'} available.`
-        : 'No profile is currently signed in.';
-      return;
+    const title=document.getElementById('profile-manager-title');
+      const body=document.getElementById('profile-manager-body');
+      const meta=document.getElementById('profile-manager-meta');
+      const activeId=currentSavedProfileId();
+      const kind=selected?.dataset.profileRowKind || 'add';
+      const id=selected?.dataset.profileRowId || '';
+      const selectedProfile=savedStoatProfiles.find(entry=>String(entry.id||'')===String(id));
+      const cardName=stoatConnected
+        ? getStoatDisplayName()
+        : (kind==='profile' && selectedProfile
+          ? (selectedProfile.displayName || selectedProfile.username || 'Saved Profile')
+          : (savedStoatProfiles.length ? `${savedStoatProfiles.length} Saved Profile${savedStoatProfiles.length===1?'':'s'}` : 'No Saved Profiles'));
+      const cardAvatar=stoatConnected
+        ? currentStoatAvatarUrl()
+        : ((kind==='profile' && selectedProfile?.avatar) ? selectedProfile.avatar : FALLBACK_AVATAR);
+      if(currentName) currentName.textContent=cardName;
+    if(currentPic) currentPic.style.backgroundImage=cssImageUrl(cardAvatar);
+    if(currentGames) currentGames.textContent=document.getElementById('gc-games-count')?.textContent || '0';
+    if(currentScore) currentScore.textContent=document.getElementById('gc-gscore-val')?.textContent || '0';
+    if(currentAchieve) currentAchieve.textContent=document.getElementById('gc-achieve-val')?.textContent || '0';
+      if(!stoatConnected && !savedStoatProfiles.length){
+        if(title) title.textContent='Get Started';
+        if(body) body.textContent='Create your first SKALD profile or sign in with an existing Stoat account to begin using SKALD LIVE.';
+        if(meta) meta.textContent='No saved profiles yet.\nChoose Add New Profile to get started.';
+        return;
     }
-    if(kind==='add'){
-      if(title) title.textContent='Add New Profile';
-      if(body) body.textContent='Open the Stoat sign-in flow to add another saved SKALD profile.';
-      if(meta) meta.textContent=`${savedStoatProfiles.length} saved profile${savedStoatProfiles.length===1?'':'s'} available.\nPress A to open the add profile flow.`;
-      return;
-    }
-    const profile=savedStoatProfiles.find(entry=>String(entry.id||'')===String(id));
-    if(title) title.textContent=profile?.displayName || profile?.username || 'Saved Profile';
-    const active=String(profile?.id||'')===currentSavedProfileId() && stoatConnected;
+    if(!stoatConnected && savedStoatProfiles.length){
+      if(title) title.textContent='Choose a Profile';
+      if(body) body.textContent='Select one of your saved profiles to sign in to SKALD LIVE, or add another profile.';
+      if(meta) meta.textContent=`${savedStoatProfiles.length} saved profile${savedStoatProfiles.length===1?'':'s'} available.`;
+      }else{
+        if(title) title.textContent='Profile Manager';
+        if(body) body.textContent='Choose a saved SKALD profile, switch to another one, or add a new profile.';
+        if(meta) meta.textContent=`Current profile: ${getStoatDisplayName()}\n${savedStoatProfiles.length} saved profile${savedStoatProfiles.length===1?'':'s'} available.`;
+      }
+      if(kind==='add'){
+        if(title) title.textContent='Add New Profile';
+        if(body) body.textContent=savedStoatProfiles.length
+          ? 'Open the add profile flow to sign in with Stoat or create a brand new account.'
+          : 'Add your first SKALD profile by signing in with Stoat or creating a new account.';
+        if(meta) meta.textContent=savedStoatProfiles.length
+          ? `${savedStoatProfiles.length} saved profile${savedStoatProfiles.length===1?'':'s'} available.\nPress A to continue.`
+          : 'No saved profiles yet.\nPress A to get started.';
+        return;
+      }
+      const profile=selectedProfile;
+      if(title) title.textContent=profile?.displayName || profile?.username || 'Saved Profile';
+      const active=String(profile?.id||'')===currentSavedProfileId() && stoatConnected;
     if(body) body.textContent=active
-      ? 'This is the currently active profile. It is also shown on the gamer card above.'
-      : 'Press A to switch into this saved profile.';
+      ? 'This is the profile currently signed in to SKALD LIVE. It is also shown on the gamer card above.'
+      : (stoatConnected ? 'Press A to switch into this saved profile.' : 'Press A to sign in with this saved profile.');
     if(meta) meta.textContent=profile?.username
-      ? `${profile.username}${active ? '\nCurrently active profile.' : '\nSaved profile ready to use.'}`
-      : (active ? 'Currently active profile.' : 'Saved profile ready to use.');
+      ? `${profile.username}${active ? '\nCurrently active profile. Press X to sign out.' : '\nSaved profile ready to use.'}`
+      : (active ? 'Currently active profile. Press X to sign out.' : 'Saved profile ready to use.');
     }
   function updateProfileAddPanel(){
     const panel=document.getElementById('sub-profile-add'); if(!panel) return;
@@ -3387,8 +3529,7 @@ function renderProfileManagerPanel(){
     }
     return false;
   }
-  async function activateSelectedProfileManagerRow(rowId,rowKind){
-  if(rowKind==='signout'){
+  async function signOutCurrentProfileFromManager(){
     await window.electronAPI.stoatLogout();
     stoatConnected=false;
     stoatUser=null;
@@ -3403,28 +3544,18 @@ function renderProfileManagerPanel(){
     toast('Signed out of profile');
     return true;
   }
+  async function activateSelectedProfileManagerRow(rowId,rowKind){
     if(rowKind==='add'){
       openStoatProfileSubpanel('sub-profile-add');
       return true;
     }
-  const profile=savedStoatProfiles.find(entry=>String(entry.id||'')===String(rowId||''));
-  if(!profile) return false;
-  const isActive=String(profile.id||'')===currentSavedProfileId() && stoatConnected;
-  if(isActive){
-    await window.electronAPI.stoatLogout();
-    stoatConnected=false;
-    stoatUser=null;
-    showStoatSignedOut();
-    syncStoatDisplayName();
-    setGamercardRaStats(0,0);
-    applyProfileIdentityArt();
-    await loadSavedStoatProfiles();
-    exitCurrentSubpanel();
-    menuSel[activeIdx]=0;
-    applyMenuSel();
-    toast('Signed out of profile');
-    return true;
-  }
+    const profile=savedStoatProfiles.find(entry=>String(entry.id||'')===String(rowId||''));
+    if(!profile) return false;
+    const isActive=String(profile.id||'')===currentSavedProfileId() && stoatConnected;
+    if(isActive){
+      toast(`Already signed in as ${profile.displayName || profile.username || 'this profile'}`);
+      return true;
+    }
   const result=await window.electronAPI.stoatSwitchProfile({profileId:profile.id});
   if(result?.ok){
     stoatConnected=true;
@@ -3653,15 +3784,15 @@ async function activateSelectedProfileGamerPic(picId){
   }else if(panelId==='sub-profile-blades'){
     const styles=['default','carbon','glass'];
     subSelIdx=Math.max(0,styles.indexOf(appliedBladeStyle));
-  }else if(panelId==='sub-profile-manager'){
-    const activeIdx=savedStoatProfiles.findIndex(item=>String(item.id||'')===currentSavedProfileId() && stoatConnected);
-    if(stoatConnected){
-      subSelIdx=activeIdx>=0 ? activeIdx+1 : 0;
-    }else if(savedStoatProfiles.length){
-      subSelIdx=0;
-    }else{
-      subSelIdx=0;
-    }
+    }else if(panelId==='sub-profile-manager'){
+      const activeIdx=savedStoatProfiles.findIndex(item=>String(item.id||'')===currentSavedProfileId() && stoatConnected);
+      if(stoatConnected){
+        subSelIdx=activeIdx>=0 ? activeIdx : 0;
+      }else if(savedStoatProfiles.length){
+        subSelIdx=0;
+      }else{
+        subSelIdx=0;
+      }
   }else if(panelId==='sub-profile-themes'){
     const items=profileThemeItems();
     const idx=items.findIndex(item=>item.theme?.reset ? !appliedSkaldTheme : (appliedSkaldTheme?.id && item.theme?.id===appliedSkaldTheme.id));
@@ -3942,13 +4073,13 @@ async function refreshInitialSetupPanel(){
     const setText=(id,value)=>{ const el=document.getElementById(id); if(el) el.textContent=value; };
     setText('setup-install-display', settings.installPath || 'Not set');
     setText('setup-download-display', settings.downloadPath || 'Not set');
-    setText('setup-emulators-display', settings.retroarchPath && cores.snes && cores.psx ? 'RetroArch ready' : 'Needs RetroArch + cores');
+    setText('setup-emulators-display', settings.retroarchPath && cores.snes && cores.psx && cores.psp && cores.dc ? 'RetroArch ready' : 'Needs RetroArch + cores');
     setText('setup-accounts-display', archive?.loggedIn || (raAccount?.secret) || (sgdbAccount?.secret) ? 'Some providers configured' : 'No providers configured');
     setText('setup-network-display', settings?.metadataService?.enabled ? 'Cloud metadata reviewed' : 'Review service status');
     const missing=[];
     if(!settings.installPath) missing.push('Install Folder');
     if(!settings.downloadPath) missing.push('Download Folder');
-    if(!settings.retroarchPath || !cores.snes || !cores.psx) missing.push('Emulators');
+    if(!settings.retroarchPath || !cores.snes || !cores.psx || !cores.psp || !cores.dc) missing.push('Emulators');
     const status=document.getElementById('setup-status');
     if(status){
       status.textContent=missing.length
@@ -3980,14 +4111,20 @@ async function refreshEmulatorSettingsPanel(){
     const raDisplay=document.getElementById('emu-retroarch-display');
     const snesDisplay=document.getElementById('emu-snes-display');
     const psxDisplay=document.getElementById('emu-psx-display');
+    const pspDisplay=document.getElementById('emu-psp-display');
+    const dcDisplay=document.getElementById('emu-dc-display');
     if(raDisplay) raDisplay.textContent=s.retroarchPath || 'Not set';
     if(snesDisplay) snesDisplay.textContent=cores.snes || 'Not set';
     if(psxDisplay) psxDisplay.textContent=cores.psx || 'Not set';
+    if(pspDisplay) pspDisplay.textContent=cores.psp || 'Not set';
+    if(dcDisplay) dcDisplay.textContent=cores.dc || 'Not set';
     const status=document.getElementById('emu-status');
     const missing=[];
     if(!s.retroarchPath) missing.push('RetroArch executable');
     if(!cores.snes) missing.push('SNES core');
     if(!cores.psx) missing.push('PlayStation core');
+    if(!cores.psp) missing.push('PSP core');
+    if(!cores.dc) missing.push('Dreamcast core');
     if(status){
       const emulatorStatus=missing.length
         ? `Missing: ${missing.join(', ')}.`
@@ -4057,6 +4194,8 @@ async function refreshStoragePanel(){
     const scanParts=[];
     if(s.systemScanPaths?.snes) scanParts.push(`SNES`);
     if(s.systemScanPaths?.psx) scanParts.push(`PSX`);
+      if(s.systemScanPaths?.psp) scanParts.push(`PSP`);
+      if(s.systemScanPaths?.dc) scanParts.push(`Dreamcast`);
     if(artDisplay) artDisplay.textContent=artText;
     if(installDisplay) installDisplay.textContent=s.installPath || 'Not set';
     if(downloadDisplay) downloadDisplay.textContent=s.downloadPath || 'Not set';
@@ -4140,9 +4279,7 @@ function syncGamesLibraryScanButton(){
 function renderGamesScanResults(){
   const status=document.getElementById('games-scan-status');
   const results=document.getElementById('games-scan-results');
-  const systemLabel=marketplaceState.scanSystem==='snes'
-    ? 'Super Nintendo'
-    : (marketplaceState.scanSystem==='psx' ? 'PlayStation' : (marketplaceState.scanSystem==='all' ? 'all systems' : ''));
+  const systemLabel=marketplaceState.scanSystem==='all' ? 'all systems' : marketplaceSystemLabel(marketplaceState.scanSystem);
   const sourceLabel=marketplaceState.scanSource==='system'
     ? (systemLabel ? `${systemLabel} library folders` : 'system folders')
     : (marketplaceState.scanSource==='download'
@@ -4193,10 +4330,14 @@ function getStoatProfileMenuItems(){
     return style.display!=='none' && style.visibility!=='hidden';
   });
 }
-function getProfileManagerItems(){
-  const list=document.getElementById('profile-manager-list');
-  return list ? [...list.querySelectorAll(':scope > .profile-manager-item')].filter(el=>el.offsetParent!==null) : [];
-}
+  function getProfileManagerItems(){
+    const list=document.getElementById('profile-manager-list');
+    return list ? [...list.querySelectorAll(':scope > .profile-manager-item')].filter(el=>el.offsetParent!==null) : [];
+  }
+  function selectedProfileManagerRow(){
+    const items=getProfileManagerItems();
+    return items[Math.max(0,Math.min(subSelIdx,items.length-1))] || null;
+  }
   function getProfileAddItems(){
     const menu=document.getElementById('profile-add-menu');
     return menu ? [...menu.querySelectorAll(':scope > .profile-add-item')].filter(el=>el.offsetParent!==null) : [];
@@ -4204,6 +4345,10 @@ function getProfileManagerItems(){
   function getProfileCreateItems(){
     const menu=document.getElementById('profile-create-menu');
     return menu ? [...menu.querySelectorAll(':scope > .profile-create-item')].filter(el=>el.offsetParent!==null) : [];
+  }
+  function getProfileBladeItems(){
+    const menu=document.getElementById('profile-blades-menu');
+    return menu ? [...menu.querySelectorAll(':scope > .profile-blade-item')].filter(el=>el.offsetParent!==null) : [];
   }
   function getProfileSigninItems(){
     const panel=document.getElementById('sub-profile-signin');
@@ -4215,6 +4360,7 @@ function getProfileManagerItems(){
     if(subId==='sub-profile-manager') return getProfileManagerItems();
     if(subId==='sub-profile-add') return getProfileAddItems();
     if(subId==='sub-profile-create') return getProfileCreateItems();
+    if(subId==='sub-profile-blades') return getProfileBladeItems();
     if(subId==='sub-profile-signin') return getProfileSigninItems();
     return null;
   }
@@ -4293,16 +4439,43 @@ if(isArchiveGamesOpen()){
       updateControlLegend();
       return;
     }
-    if(getActiveSubpanel()?.id==='sub-profile-create'){
+  if(getActiveSubpanel()?.id==='sub-profile-create'){
       updateProfileCreatePanel();
       updateControlLegend();
       return;
     }
-    if(getActiveSubpanel()?.id==='sub-profile-signin'){
+    if(getActiveSubpanel()?.id==='sub-profile-blades'){
+      const items=getProfileBladeItems();
+      if(!items.length) return;
+      subSelIdx=Math.max(0,Math.min(subSelIdx,items.length-1));
+      items.forEach((el,i)=>el.classList.toggle('sel',i===subSelIdx));
+      updateBladeStylesPanel();
+      updateControlLegend();
+      return;
+    }
+  if(getActiveSubpanel()?.id==='sub-profile-signin'){
       const items=getProfileSigninItems();
       if(!items.length) return;
     subSelIdx=Math.max(0,Math.min(subSelIdx,items.length-1));
     items.forEach((el,i)=>el.classList.toggle('sel',i===subSelIdx));
+    updateControlLegend();
+    return;
+  }
+  const systemItems=getSystemSubmenuItems();
+  if(systemItems){
+    if(systemItems.length){
+      subSelIdx=Math.max(0,Math.min(subSelIdx,systemItems.length-1));
+      systemItems.forEach((el,i)=>el.classList.toggle('sel',i===subSelIdx));
+      const selected=systemItems[subSelIdx];
+      if(selected) scrollSelectionIntoView(selected);
+    }
+    updateThirdPartyAccountsPanel();
+    updateConsoleSettingsPanel();
+    updateMetadataServicePanel();
+    updateFamilySettingsPanel();
+    updateInitialSetupPanel();
+    updateEmulatorsPanel();
+    updateStoragePanel();
     updateControlLegend();
     return;
   }
@@ -4336,6 +4509,37 @@ function getSelectedTextFieldId(){
 }
 function isNetworkSettingsOpen(){
   return BLADES[activeIdx]?.id==='sys' && !!subOpen[activeIdx] && getActiveSubpanel()?.id==='sub-network-settings';
+}
+function getSystemSubmenuItems(){
+  if(BLADES[activeIdx]?.id!=='sys' || !subOpen[activeIdx]) return null;
+  const sub=getActiveSubpanel();
+  if(!sub) return null;
+  switch(sub.id){
+    case 'sub-thirdparty-accounts':
+      return [...sub.querySelectorAll('.tp-account-item')];
+    case 'sub-metadata-service':
+      return [...sub.querySelectorAll('.metadata-service-item')];
+    case 'sub-family-settings':
+      return [...sub.querySelectorAll('.family-item')];
+    case 'sub-initial-setup':
+      return [...sub.querySelectorAll('.setup-item')];
+    case 'sub-emulators':
+      return [...sub.querySelectorAll('.emu-item')];
+    case 'sub-storage':
+      return [...sub.querySelectorAll('.storage-item')];
+    default:
+      return null;
+  }
+}
+function moveSystemSubmenu(delta){
+  const items=getSystemSubmenuItems();
+  if(!items || !items.length) return false;
+  const current=Math.max(0,Math.min(subSelIdx,items.length-1));
+  const next=Math.max(0,Math.min(items.length-1,current+delta));
+  if(next===current) return false;
+  subSelIdx=next;
+  applySubSel();
+  return true;
 }
 function getNetworkItems(){ return [...document.querySelectorAll('#sub-network-settings .network-item')]; }
 function getNetworkActionItems(){ return [...document.querySelectorAll('#sub-network-settings .network-action-btn')]; }
@@ -4387,8 +4591,8 @@ function networkSelect(){
 }
 function menuUp(){const items=getMenuItems();if(!items.length)return;menuSel[activeIdx]=(menuSel[activeIdx]-1+items.length)%items.length;applyMenuSel();playSfx('cursor.wav');}
 function menuDown(){const items=getMenuItems();if(!items.length)return;menuSel[activeIdx]=(menuSel[activeIdx]+1)%items.length;applyMenuSel();playSfx('cursor.wav');}
-function subUp(){if(isMarketplaceBrowseOpen()){if(marketplaceBrowseMoveVertical(-1))playSfx('cursor.wav');return;}if(isMarketplaceCosmeticsOpen()){if(marketplaceCosmeticsMoveVertical(-1))playSfx('cursor.wav');return;}if(isGamesInstalledOpen()){if(gamesInstalledMoveVertical(-1))playSfx('cursor.wav');return;}if(isArchiveGamesOpen()){if(archiveGamesMoveVertical(-1))playSfx('cursor.wav');return;}if(isNetworkSettingsOpen()){if(networkMoveVertical(-1))playSfx('cursor.wav');return;}if(getActiveProfileFlowItems()){if(moveProfileFlow(-1))playSfx('cursor.wav');return;}const items=getSubItems();if(!items.length)return;subSelIdx=(subSelIdx-1+items.length)%items.length;applySubSel();playSfx('cursor.wav');}
-function subDown(){if(isMarketplaceBrowseOpen()){if(marketplaceBrowseMoveVertical(1))playSfx('cursor.wav');return;}if(isMarketplaceCosmeticsOpen()){if(marketplaceCosmeticsMoveVertical(1))playSfx('cursor.wav');return;}if(isGamesInstalledOpen()){if(gamesInstalledMoveVertical(1))playSfx('cursor.wav');return;}if(isArchiveGamesOpen()){if(archiveGamesMoveVertical(1))playSfx('cursor.wav');return;}if(isNetworkSettingsOpen()){if(networkMoveVertical(1))playSfx('cursor.wav');return;}if(getActiveProfileFlowItems()){if(moveProfileFlow(1))playSfx('cursor.wav');return;}const items=getSubItems();if(!items.length)return;subSelIdx=(subSelIdx+1)%items.length;applySubSel();playSfx('cursor.wav');}
+function subUp(){if(isMarketplaceBrowseOpen()){if(marketplaceBrowseMoveVertical(-1))playSfx('cursor.wav');return;}if(isMarketplaceCosmeticsOpen()){if(marketplaceCosmeticsMoveVertical(-1))playSfx('cursor.wav');return;}if(isGamesInstalledOpen()){if(gamesInstalledMoveVertical(-1))playSfx('cursor.wav');return;}if(isArchiveGamesOpen()){if(archiveGamesMoveVertical(-1))playSfx('cursor.wav');return;}if(isNetworkSettingsOpen()){if(networkMoveVertical(-1))playSfx('cursor.wav');return;}if(getActiveProfileFlowItems()){if(moveProfileFlow(-1))playSfx('cursor.wav');return;}if(moveSystemSubmenu(-1)){playSfx('cursor.wav');return;}const items=getSubItems();if(!items.length)return;subSelIdx=(subSelIdx-1+items.length)%items.length;applySubSel();playSfx('cursor.wav');}
+function subDown(){if(isMarketplaceBrowseOpen()){if(marketplaceBrowseMoveVertical(1))playSfx('cursor.wav');return;}if(isMarketplaceCosmeticsOpen()){if(marketplaceCosmeticsMoveVertical(1))playSfx('cursor.wav');return;}if(isGamesInstalledOpen()){if(gamesInstalledMoveVertical(1))playSfx('cursor.wav');return;}if(isArchiveGamesOpen()){if(archiveGamesMoveVertical(1))playSfx('cursor.wav');return;}if(isNetworkSettingsOpen()){if(networkMoveVertical(1))playSfx('cursor.wav');return;}if(getActiveProfileFlowItems()){if(moveProfileFlow(1))playSfx('cursor.wav');return;}if(moveSystemSubmenu(1)){playSfx('cursor.wav');return;}const items=getSubItems();if(!items.length)return;subSelIdx=(subSelIdx+1)%items.length;applySubSel();playSfx('cursor.wav');}
 function subLeft(){if(isMarketplaceBrowseOpen()){if(marketplaceBrowseMoveHorizontal(-1))playSfx('cursor.wav');return;}if(isMarketplaceCosmeticsOpen()){if(marketplaceCosmeticsMoveHorizontal(-1))playSfx('cursor.wav');return;}if(isGamesInstalledOpen()){if(gamesInstalledMoveHorizontal(-1))playSfx('cursor.wav');return;}if(isArchiveGamesOpen()){if(archiveGamesMoveHorizontal(-1))playSfx('cursor.wav');return;}if(isNetworkSettingsOpen()){if(networkMoveHorizontal(-1))playSfx('cursor.wav');return;}}
 function subRight(){if(isMarketplaceBrowseOpen()){if(marketplaceBrowseMoveHorizontal(1))playSfx('cursor.wav');return;}if(isMarketplaceCosmeticsOpen()){if(marketplaceCosmeticsMoveHorizontal(1))playSfx('cursor.wav');return;}if(isGamesInstalledOpen()){if(gamesInstalledMoveHorizontal(1))playSfx('cursor.wav');return;}if(isArchiveGamesOpen()){if(archiveGamesMoveHorizontal(1))playSfx('cursor.wav');return;}if(isNetworkSettingsOpen()){if(networkMoveHorizontal(1))playSfx('cursor.wav');return;}}
 function handleMarketplaceMediaNav(delta){
@@ -4648,7 +4852,130 @@ let guide2Open=false;
 let debugPanels=false;
 function getGuideItems(){
   if(guide2Open)return[...document.querySelectorAll('#guide2 .g2a-item')];
-  return[...document.querySelectorAll('#guide .gbtn')];
+  return[...document.querySelectorAll('#guide .gbtn')].filter(el=>el.offsetParent!==null);
+}
+function getGuideChatItemsData(){
+  if(guideChatTab==='private'){
+    return [
+      { id:'start-private-chat', type:'private', title:'Start Private Chat', meta:'Voice chat', detailTitle:'Private Chat', detailBody:'Start a private voice chat session from the Guide.\n\nThis is the future home for party-style voice features inside SKALD.', icon:`${A}/icon-friends.webp` },
+      { id:'invite-friends', type:'private', title:'Invite Friends', meta:'Coming soon', detailTitle:'Invite Friends', detailBody:'Invite friends from your SKALD LIVE profile into a private voice chat session.\n\nFriend presence and voice invitations will hook in here later.', icon:`${A}/icon-profile.webp` },
+      { id:'voice-settings', type:'private', title:'Voice Settings', meta:'Microphone and output', detailTitle:'Voice Settings', detailBody:'Review microphone, output, and future push-to-talk preferences for private chat.\n\nThese controls are not wired yet, but this is the native Guide location for them.', icon:`${A}/icon-system.webp` },
+    ];
+  }
+  if(!stoatConnected){
+    return [
+      { id:'signin-messenger', type:'signin', title:'Sign In to SKALD LIVE', meta:'Messenger unavailable', detailTitle:'Messenger', detailBody:'Sign in to SKALD LIVE to unlock direct messages from the Guide.\n\nOnce signed in, your Stoat conversations will appear here and you can jump into them without leaving the blade.', icon:`${A}/icon-profile.webp` },
+    ];
+  }
+  const rows=[{ id:'new-conversation', type:'new', title:'New Conversation', meta:'Start a direct message', detailTitle:'New Conversation', detailBody:'Start a new direct message with a friend from SKALD LIVE.\n\nConversation creation will be wired directly into this Guide panel next.', icon:`${A}/icon-messages.webp` }];
+  if(guideChatLoading){
+    rows.push({ id:'loading', type:'loading', title:'Loading Conversations', meta:'Please wait', detailTitle:'Messenger', detailBody:'Loading your direct message conversations from Stoat.', icon:`${A}/icon-messages.webp` });
+    return rows;
+  }
+  if(guideChatError){
+    rows.push({ id:'error', type:'error', title:'Could Not Load Messages', meta:'Try again later', detailTitle:'Messenger', detailBody:guideChatError, icon:`${A}/icon-system.webp` });
+    return rows;
+  }
+  if(!guideChatItems.length){
+    rows.push({ id:'empty', type:'empty', title:'No Conversations Yet', meta:'Messenger is ready', detailTitle:'Messenger', detailBody:'You do not have any direct message conversations yet.\n\nWhen you start chatting in SKALD LIVE, those conversations will appear here.', icon:`${A}/icon-messages.webp` });
+    return rows;
+  }
+  return rows.concat(guideChatItems.map(dm=>({
+    id:`dm-${dm.id}`,
+    type:'dm',
+    channelId:dm.id,
+    title:dm.name||'Direct Message',
+    meta:'Direct message',
+    detailTitle:dm.name||'Direct Message',
+    detailBody:'Jump straight into this direct message conversation from the Guide.\n\nSelecting it will open the full SKALD LIVE messenger panel.',
+    icon:dm.icon || `${A}/icon-messages.webp`,
+  })));
+}
+function syncGuideHeader(){
+  const title=document.getElementById('guide-top-title');
+  if(title) title.textContent=guidePage==='chat' ? 'Chat and IM' : '';
+  document.getElementById('guide-home-page')?.classList.toggle('on',guidePage==='home');
+  document.getElementById('guide-chat-page')?.classList.toggle('on',guidePage==='chat');
+  guideEl?.classList.toggle('guide-chat-open',guidePage==='chat');
+}
+function renderGuideChatPanel(){
+  const privateTab=document.getElementById('guide-chat-tab-private');
+  const messengerTab=document.getElementById('guide-chat-tab-messenger');
+  if(privateTab) privateTab.classList.toggle('sel',guideChatTab==='private');
+  if(messengerTab) messengerTab.classList.toggle('sel',guideChatTab==='messenger');
+  const list=document.getElementById('guide-chat-list');
+  const detailTitle=document.getElementById('guide-chat-detail-title');
+  const detailBody=document.getElementById('guide-chat-detail-body');
+  const items=getGuideChatItemsData();
+  if(!list || !detailTitle || !detailBody) return;
+  if(!items.length){
+    list.innerHTML='<div class="guide-chat-empty">Nothing to show here yet.</div>';
+    detailTitle.textContent='Chat and IM';
+    detailBody.textContent='This page is preparing your chat and messaging shortcuts.';
+    return;
+  }
+  guideSelIdx=Math.max(0,Math.min(guideSelIdx,items.length-1));
+  list.innerHTML=items.map((item,idx)=>`
+    <div class="guide-chat-row gbtn ${idx===guideSelIdx?'sel':''}" data-gchat-idx="${idx}">
+      <div class="guide-chat-row-icon" style="background-image:url('${item.icon}')"></div>
+      <div class="guide-chat-row-copy">
+        <div class="guide-chat-row-title">${esc(item.title)}</div>
+        <div class="guide-chat-row-meta">${esc(item.meta||'')}</div>
+      </div>
+    </div>
+  `).join('');
+  const selected=items[guideSelIdx] || items[0];
+  detailTitle.textContent=selected?.detailTitle || selected?.title || 'Chat and IM';
+  detailBody.textContent=selected?.detailBody || '';
+  list.querySelectorAll('[data-gchat-idx]').forEach((el,idx)=>{
+    el.addEventListener('click',()=>{ guideSelIdx=idx; renderGuideChatPanel(); playSfx('cursor.wav'); });
+  });
+}
+async function loadGuideChatDMs(){
+  if(!stoatConnected){
+    guideChatItems=[];
+    guideChatLoading=false;
+    guideChatError='';
+    return;
+  }
+  guideChatLoading=true;
+  guideChatError='';
+  if(guidePage==='chat' && guideChatTab==='messenger') renderGuideChatPanel();
+  try{
+    const dms=await window.electronAPI?.stoatDMChannels?.();
+    guideChatItems=Array.isArray(dms) ? dms : [];
+  }catch(err){
+    guideChatItems=[];
+    guideChatError=err?.message || 'Messenger is not available right now.';
+  }
+  guideChatLoading=false;
+  if(guidePage==='chat' && guideChatTab==='messenger') renderGuideChatPanel();
+}
+async function setGuideChatTab(tab){
+  if(tab!=='private' && tab!=='messenger') return;
+  guideChatTab=tab;
+  guideSelIdx=0;
+  if(tab==='messenger') await loadGuideChatDMs();
+  renderGuideChatPanel();
+  applyGSel();
+  updateControlLegend();
+}
+async function openGuideChatPage(){
+  guidePage='chat';
+  syncGuideHeader();
+  await setGuideChatTab(guideChatTab || 'messenger');
+}
+function guideBack(){
+  if(guide2Open){ closeGuide(); return; }
+  if(guidePage==='chat'){
+    guidePage='home';
+    guideSelIdx=0;
+    syncGuideHeader();
+    applyGSel();
+    updateControlLegend();
+    return;
+  }
+  closeGuide();
 }
 function updateGuideClock(){
   const clock=document.querySelector('#guide .guide-clock');
@@ -4676,7 +5003,8 @@ function getGuideAccountRefs(){
   };
 }
 const GAMES_ALL_SYSTEM='all';
-const GAMES_LIBRARY_SYSTEMS=['snes','psx'];
+const GAMES_LIBRARY_SYSTEMS=['snes','psx','psp','dc'];
+const ACHIEVEMENT_SYSTEMS=['snes','psx'];
   const gamesState={system:'snes',selectedId:null,filter:'all',pane:'list',actionIdx:0,systemSelectorSource:'library',achievementIdx:0,achievementGameId:null,achievementModalOpen:false,achievementListModalOpen:false,currentAchievements:[],mediaIdx:0,mediaModalOpen:false,deleteModalOpen:false,filterRegion:[],filterRating:[],filterGenre:[],filterTab:'region'};
 const gameSearchState={open:false,context:null,query:'',focus:'input',resultIdx:0,results:[]};
 const folderBrowserState={open:false,title:'Select Folder',currentPath:'',parentPath:null,entries:[],selectedIdx:0,resolve:null,error:''};
@@ -4729,11 +5057,11 @@ async function loadGuideAccount(providerId){
   document.querySelectorAll('#guide2 .g2a-item').forEach(el=>el.classList.toggle('disabled',!result?.stoatUserId && el.dataset.gaAction!=='secondary' && !el.dataset.vkTarget));
   syncGuideAccountDisplays();
 }
-function openGuide(){if(!guideOpen){guideOpen=true;guideSelIdx=0;updateGuideClock();syncStoatDisplayName();playSfx('guide_open.wav');document.body.classList.add('guide-main-open');guideEl.classList.add('on');applyGSel();updateControlLegend();updatePanelTitleLayer();}}
+function openGuide(){if(!guideOpen){guideOpen=true;guidePage='home';guideSelIdx=0;updateGuideClock();syncStoatDisplayName();syncGuideHeader();playSfx('guide_open.wav');document.body.classList.add('guide-main-open');guideEl.classList.add('on');applyGSel();updateControlLegend();updatePanelTitleLayer();}}
 function openGuide2(){if(!guide2Open){guide2Open=true;guideSelIdx=0;playSfx('guide_open.wav');guide2El.classList.add('on');applyGSel();updateControlLegend();}}
 function closeGuide(){
   if(guide2Open){guide2Open=false;playSfx('guide_close.wav');guide2El.classList.remove('on');refreshMarketplaceArchiveStatus();updateControlLegend();updatePanelTitleLayer();return;}
-  if(!guideOpen)return;guideOpen=false;playSfx('guide_close.wav');document.body.classList.remove('guide-main-open');guideEl.classList.remove('on');updateControlLegend();updatePanelTitleLayer();
+  if(!guideOpen)return;guideOpen=false;guidePage='home';guideSelIdx=0;syncGuideHeader();playSfx('guide_close.wav');document.body.classList.remove('guide-main-open');guideEl.classList.remove('on');updateControlLegend();updatePanelTitleLayer();
 }
 function toggleDebugPanels(){
   debugPanels=!debugPanels;
@@ -4741,7 +5069,12 @@ function toggleDebugPanels(){
   toast(debugPanels?'Debug colors on':'Debug colors off');
 }
 async function openThirdPartyGuide(providerId){openGuide2();await loadGuideAccount(providerId);applyGSel();}
-function applyGSel(){getGuideItems().forEach((b,i)=>b.classList.toggle('sel',i===guideSelIdx));}
+function applyGSel(){
+  const items=getGuideItems();
+  guideSelIdx=Math.max(0,Math.min(guideSelIdx,Math.max(0,items.length-1)));
+  items.forEach((b,i)=>b.classList.toggle('sel',i===guideSelIdx));
+  if(guidePage==='chat') renderGuideChatPanel();
+}
 function guideUp(){const items=getGuideItems();if(!items.length)return;guideSelIdx=(guideSelIdx-1+items.length)%items.length;applyGSel();playSfx('cursor.wav');}
 function guideDown(){const items=getGuideItems();if(!items.length)return;guideSelIdx=(guideSelIdx+1)%items.length;applyGSel();playSfx('cursor.wav');}
 function guideMoveDirectional(dx,dy){
@@ -4778,8 +5111,8 @@ function guideMoveDirectional(dx,dy){
   applyGSel();
   playSfx('cursor.wav');
 }
-function guideLeft(){guideMoveDirectional(-1,0);}
-function guideRight(){guideMoveDirectional(1,0);}
+function guideLeft(){if(!guide2Open && guidePage==='chat'){setGuideChatTab('private');playSfx('cursor.wav');return;}guideMoveDirectional(-1,0);}
+function guideRight(){if(!guide2Open && guidePage==='chat'){setGuideChatTab('messenger');playSfx('cursor.wav');return;}guideMoveDirectional(1,0);}
 async function saveGuideAccount(){
   const refs=getGuideAccountRefs();
   const login=refs.loginInput?.value.trim()||'';
@@ -4824,11 +5157,26 @@ async function guideSelect(){
     if(action==='secondary'){if(guideAccountProvider==='archiveorg')await signOutGuideArchive();else await clearGuideAccount();return;}
     return;
   }
-  const a=btn.dataset.gact;if(a==='exit'){exitBlades(false);return;}if(a==='settings'){exitBlades(true);return;}closeGuide();
+  if(guidePage==='chat'){
+    const item=getGuideChatItemsData()[guideSelIdx];
+    if(!item) return;
+    if(item.type==='dm' && item.channelId){ closeGuide(); await switchToDM(item.channelId); return; }
+    if(item.type==='signin'){ toast('Sign in to SKALD LIVE from the SKALD LIVE blade to use Messenger.'); return; }
+    if(item.type==='new'){ toast('New conversation creation will be wired into this Guide page next.'); return; }
+    toast(`${item.title} is not wired yet.`);
+    return;
+  }
+  const a=btn.dataset.gact;
+  if(a==='messages'){await openGuideChatPage();return;}
+  if(a==='exit'){exitBlades(false);return;}
+  if(a==='settings'){exitBlades(true);return;}
+  closeGuide();
 }
 document.getElementById('g-black').addEventListener('click',closeGuide);
 document.getElementById('g2-black').addEventListener('click',closeGuide);
-document.querySelectorAll('.gbtn').forEach((btn,i)=>btn.addEventListener('click',()=>{guideSelIdx=i;guideSelect();}));
+document.querySelectorAll('#guide-home-page .gbtn').forEach((btn,i)=>btn.addEventListener('click',()=>{guideSelIdx=i;guideSelect();}));
+document.getElementById('guide-chat-tab-private')?.addEventListener('click',()=>{ setGuideChatTab('private'); playSfx('cursor.wav'); });
+document.getElementById('guide-chat-tab-messenger')?.addEventListener('click',()=>{ setGuideChatTab('messenger'); playSfx('cursor.wav'); });
 document.querySelectorAll('#guide2 .g2a-item').forEach((btn,i)=>btn.addEventListener('click',()=>{guideSelIdx=i;guideSelect();}));
 const toastEl=document.getElementById('toast');let toastTmr=null;
 function toast(msg){toastEl.textContent=msg;toastEl.classList.add('on');playSfx('notification.wav');clearTimeout(toastTmr);toastTmr=setTimeout(()=>toastEl.classList.remove('on'),3500);}
@@ -4843,7 +5191,7 @@ document.addEventListener('keydown',e=>{
     if(e.key==='ArrowLeft')vkMove(-1);else if(e.key==='ArrowRight')vkMove(1);else if(e.key==='ArrowUp')vkMove(-10);else if(e.key==='ArrowDown')vkMove(10);else if(e.key==='Enter'||e.key===' ')vkActivate();else if(e.key==='Backspace')vkBackspace();else if(e.key==='Escape'||e.key==='b')closeKeyboard(true);
     e.preventDefault();return;
   }
-  if(guide2Open||guideOpen){if(handlePhysicalTextKey(e)){e.preventDefault();return;}if(e.key==='ArrowUp')guideMoveDirectional(0,-1);else if(e.key==='ArrowDown')guideMoveDirectional(0,1);else if(e.key==='ArrowLeft')guideLeft();else if(e.key==='ArrowRight')guideRight();else if(e.key==='Enter'||e.key===' ')guideSelect();else if(e.key==='Escape'||e.key==='b')closeGuide();e.preventDefault();return;}
+  if(guide2Open||guideOpen){if(handlePhysicalTextKey(e)){e.preventDefault();return;}if(e.key==='ArrowUp')guideMoveDirectional(0,-1);else if(e.key==='ArrowDown')guideMoveDirectional(0,1);else if(e.key==='ArrowLeft')guideLeft();else if(e.key==='ArrowRight')guideRight();else if(e.key==='Enter'||e.key===' ')guideSelect();else if(e.key==='Escape'||e.key==='b')guideBack();e.preventDefault();return;}
   if(folderBrowserState.open){
     if(e.key==='ArrowUp')moveFolderBrowserSelection(-1);else if(e.key==='ArrowDown')moveFolderBrowserSelection(1);else if(e.key==='Enter'||e.key===' ')openSelectedFolderBrowserEntry();else if(e.key==='y'||e.key==='Y')chooseCurrentFolderBrowserPath();else if(e.key==='Escape'||e.key==='Backspace'||e.key==='b')folderBrowserBack();
     e.preventDefault();return;
@@ -4887,7 +5235,7 @@ document.addEventListener('keydown',e=>{
     if(subOpen[activeIdx]){
       if(!handleMarketplaceMediaNav(1)) subRight();
     }else navBlade(activeIdx+1);
-  }else if(e.key==='ArrowUp')subOpen[activeIdx]?subUp():menuUp();else if(e.key==='ArrowDown')subOpen[activeIdx]?subDown():menuDown();else if(e.key==='Enter'||e.key===' ')menuSelect();else if(e.key==='Backspace'||e.key==='b')menuBack();else if(e.key==='x'||e.key==='X'){if(isArchiveGamesOpen()) toggleArchiveHideInstalled(); else if(isGamesInstalledOpen() && !isGamesAchievementsOpen()) openGamesDeleteModal(); else if(isMarketplaceCosmeticsOpen()) marketplaceCosmeticsDeleteSelected();}else if(e.key==='y'||e.key==='Y'){if(!openGameSearchModal()) return;}else if((e.key==='v'||e.key==='V')&&isArchiveGamesOpen()){openMarketplaceFiltersModal();}else if((e.key==='v'||e.key==='V')&&isGamesInstalledOpen()&&!isGamesAchievementsOpen()&&!isGamesDemosOpen()){openGamesFiltersModal();}else if(e.key==='Escape')exitBlades(false);else if(e.key==='g'||e.key==='G')openGuide();
+  }else if(e.key==='ArrowUp')subOpen[activeIdx]?subUp():menuUp();else if(e.key==='ArrowDown')subOpen[activeIdx]?subDown():menuDown();else if(e.key==='Enter'||e.key===' ')menuSelect();else if(e.key==='Backspace'||e.key==='b')menuBack();else if(e.key==='x'||e.key==='X'){if(getActiveSubpanel()?.id==='sub-profile-manager' && selectedProfileManagerRow()?.classList.contains('profile-active')) signOutCurrentProfileFromManager(); else if(isArchiveGamesOpen()) toggleArchiveHideInstalled(); else if(isGamesInstalledOpen() && !isGamesAchievementsOpen()) openGamesDeleteModal(); else if(isMarketplaceCosmeticsOpen()) marketplaceCosmeticsDeleteSelected();}else if(e.key==='y'||e.key==='Y'){if(!openGameSearchModal()) return;}else if((e.key==='v'||e.key==='V')&&isArchiveGamesOpen()){openMarketplaceFiltersModal();}else if((e.key==='v'||e.key==='V')&&isGamesInstalledOpen()&&!isGamesAchievementsOpen()&&!isGamesDemosOpen()){openGamesFiltersModal();}else if(e.key==='Escape')exitBlades(false);else if(e.key==='g'||e.key==='G')openGuide();
   e.preventDefault();
 });
 const PAD={A:0,B:1,X:2,Y:3,LB:4,RB:5,LT:6,RT:7,SELECT:8,START:9,DU:12,DD:13,DL:14,DR:15,GUIDE:16};const padPrev={};const DEAD=0.5;
@@ -4938,7 +5286,7 @@ function padPoll(){
     if(just(PAD.DU)||(axU<-DEAD&&!padPrev._aU))guideMoveDirectional(0,-1);
     if(just(PAD.DD)||(axU>DEAD&&!padPrev._aD))guideMoveDirectional(0,1);
     if(just(PAD.A))guideSelect();
-    if(just(PAD.B)||just(PAD.GUIDE))closeGuide();
+    if(just(PAD.B)||just(PAD.GUIDE))guideBack();
   }else if(folderBrowserState.open){
     updatePadVerticalHold(0);
     if(just(PAD.DU)||(axU<-DEAD&&!padPrev._aU))moveFolderBrowserSelection(-1);
@@ -4999,7 +5347,8 @@ function padPoll(){
     updatePadVerticalHold(verticalDir);
     if(just(PAD.A))menuSelect();
     if(just(PAD.B))menuBack();
-    if(just(PAD.X) && isArchiveGamesOpen())toggleArchiveHideInstalled();
+    if(just(PAD.X) && getActiveSubpanel()?.id==='sub-profile-manager' && selectedProfileManagerRow()?.classList.contains('profile-active'))signOutCurrentProfileFromManager();
+    else if(just(PAD.X) && isArchiveGamesOpen())toggleArchiveHideInstalled();
     else if(just(PAD.X) && isGamesInstalledOpen() && !isGamesAchievementsOpen())openGamesDeleteModal();
     else if(just(PAD.X) && isMarketplaceCosmeticsOpen())marketplaceCosmeticsDeleteSelected();
       if(just(PAD.Y))openGameSearchModal();
@@ -5375,12 +5724,16 @@ document.getElementById('btn-exit').addEventListener('click',()=>exitBlades(fals
   async function loadRomCounts(){
     if(!window.electronAPI?.fetchMarketplaceCatalog) return;
     try{
-      const [sR,pR]=await Promise.all([
+      const [sR,pR,pspR,dcR]=await Promise.all([
         window.electronAPI.fetchMarketplaceCatalog({provider:'archiveorg',system:'snes'}),
-        window.electronAPI.fetchMarketplaceCatalog({provider:'archiveorg',system:'psx'})
+        window.electronAPI.fetchMarketplaceCatalog({provider:'archiveorg',system:'psx'}),
+        window.electronAPI.fetchMarketplaceCatalog({provider:'archiveorg',system:'psp'}),
+        window.electronAPI.fetchMarketplaceCatalog({provider:'archiveorg',system:'dc'})
       ]);
       mktCatalogBucket('archiveorg').snes=sR.ok?sR.roms:[];
       mktCatalogBucket('archiveorg').psx=pR.ok?pR.roms:[];
+      mktCatalogBucket('archiveorg').psp=pspR.ok?pspR.roms:[];
+      mktCatalogBucket('archiveorg').dc=dcR.ok?dcR.roms:[];
       renderMarketplaceSystemCounts('archiveorg');
     }catch{}
   }
@@ -5420,6 +5773,8 @@ function marketplaceSystemLogoUrl(system){
   const base='file:///C:/Projects/SKALD/assets/icons/Systems';
   if(system==='snes') return `${base}/Super_Nintendo.webp`;
   if(system==='psx') return `${base}/PlayStation.webp`;
+  if(system==='psp') return `${base}/PSP.webp`;
+  if(system==='dc') return `${base}/Dreamcast.webp`;
   if(system){
     const title=marketplaceSystemLabel(system).replace(/[^A-Za-z0-9]+/g,'_');
     return `${base}/${title}.webp`;
@@ -5431,6 +5786,8 @@ function marketplaceSystemBadgeUrl(system){
   const logo=marketplaceSystemLogoUrl(system);
   if(system==='snes') return logo || "file:///C:/Projects/SKALD/assets/icons/CONTROLLER-snes.svg";
   if(system==='psx') return logo || "file:///C:/Projects/SKALD/assets/icons/CONTROLLER-playstation1.svg";
+  if(system==='psp') return logo || "file:///C:/Projects/SKALD/assets/icons/CONTROLLER-playstation1.svg";
+  if(system==='dc') return logo || marketplaceDefaultIcon();
   return logo || marketplaceDefaultIcon();
 }
 function marketplacePreviewPublisher(preview){
@@ -5690,6 +6047,10 @@ function marketplaceListMetaLine(rom){
 }
 function marketplaceArchiveRowHtml(rom){
   const installed=mktInstalled(rom);
+  const queue=marketplaceState.downloads.get(mktRomId(rom));
+  const queueLabel=queue
+    ? `${queue.statusLabel||queue.status||'Downloading'}${queue.percent!=null?` ${queue.percent}%`:''}`
+    : '';
   return `
     <div class="subnav-item games-installed-item mkt-archive-rom-item" data-rom-id="${esc(mktRomId(rom))}">
       <div class="mkt-source-row">
@@ -5698,6 +6059,7 @@ function marketplaceArchiveRowHtml(rom){
           <div class="mkt-source-row-title">${esc(mktRomTitle(rom))}</div>
           <div class="mkt-source-row-publisher">${esc(marketplacePreviewPublisherDisplay(marketplacePreviewCache.get(marketplacePreviewKey(rom))))}</div>
         </div>
+        ${queueLabel ? `<div class="mkt-source-row-download">${esc(queueLabel)}</div>` : ''}
         <div class="mkt-source-row-systemwrap">
           <div class="mkt-source-row-system" style="background-image:url('${esc(marketplaceSystemBadgeUrl(rom.system||marketplaceState.system))}')"></div>
           ${installed ? `<div class="mkt-source-row-install">INSTALLED</div>` : ''}
@@ -5859,7 +6221,7 @@ function marketplacePreviewStatusText(preview){
   return parts.join(' ');
 }
 function marketplaceUsesPackagedOnly(provider=marketplaceState.provider,system=marketplaceState.system){
-  return provider==='archiveorg' && String(system||'').toLowerCase()==='snes';
+  return false;
 }
 async function primeMarketplacePackagedMetadata(provider=marketplaceState.provider,system=marketplaceState.system){
   if(!marketplaceUsesPackagedOnly(provider,system) || !window.electronAPI?.getPackagedMarketplaceMetadata) return false;
@@ -6032,6 +6394,8 @@ function marketplaceSystemLabel(system){
   if(system===GAMES_ALL_SYSTEM) return 'All Games';
   if(system==='snes') return 'Super Nintendo';
   if(system==='psx') return 'PlayStation';
+  if(system==='psp') return 'PSP';
+  if(system==='dc') return 'Dreamcast';
   return String(system || '').toUpperCase();
 }
 const CONTROL_ICON_BASE='file:///C:/Projects/SKALD/assets/icons/Controls';
@@ -6101,6 +6465,37 @@ function renderControlLegend(entries=[],title='Control Legend'){
 }
 function controlLegendForContext(){
   const isHomePanel=!subOpen[activeIdx] && !guideOpen && !guide2Open && !vkOpen;
+  if(guide2Open){
+    return {
+      title:'Control Legend',
+      entries:[
+        { icons:['dpadVertical','leftStickVertical'], label:'Scroll' },
+        { icons:['a'], label:'Select' },
+        { icons:['b'], label:'Back' },
+      ],
+    };
+  }
+  if(guideOpen){
+    if(guidePage==='chat'){
+      return {
+        title:'Control Legend',
+        entries:[
+          { icons:['dpadHorizontal','leftStickHorizontal'], label:'Switch Tabs' },
+          { icons:['dpadVertical','leftStickVertical'], label:'Browse' },
+          { icons:['a'], label:'Select' },
+          { icons:['b'], label:'Back' },
+        ],
+      };
+    }
+    return {
+      title:'Control Legend',
+      entries:[
+        { icons:['dpadAll','leftStick'], label:'Move' },
+        { icons:['a'], label:'Select' },
+        { icons:['b'], label:'Back' },
+      ],
+    };
+  }
   if(isHomePanel){
     return {
       title:'Control Legend',
@@ -6248,16 +6643,19 @@ function controlLegendForContext(){
       ],
     };
   }
-    if(getActiveSubpanel()?.id==='sub-profile-manager'){
-      const items=getProfileManagerItems();
-      const selected=items[Math.max(0,Math.min(subSelIdx,items.length-1))];
+  if(getActiveSubpanel()?.id==='sub-profile-manager'){
+      const selected=selectedProfileManagerRow();
       const kind=selected?.dataset?.profileRowKind || 'profile';
-      const aLabel=kind==='signout' ? 'Sign Out' : (kind==='add' ? 'Add Profile' : 'Use Profile');
+      const isActive=kind==='profile' && selected?.classList.contains('profile-active');
       return {
         title:'Control Legend',
         entries:[
           { icons:['dpadVertical','leftStickVertical'], label:'Scroll Profiles' },
-          { icons:['a'], label:aLabel },
+          ...(kind==='add'
+            ? [{ icons:['a'], label:'Add Profile' }]
+            : (isActive
+              ? [{ icons:['x'], label:'Sign Out' }]
+              : [{ icons:['a'], label:'Use Profile' }])),
           { icons:['b'], label:'Back' },
         ],
       };
@@ -6537,26 +6935,23 @@ function mktArchiveBaseCatalogForSystem(provider=marketplaceState.provider,syste
   return roms.filter(rom=>mode==='demos' ? marketplaceIsDemoRom(rom) : !marketplaceIsDemoRom(rom));
 }
 function renderMarketplaceSystemCounts(provider=marketplaceState.provider){
-  const snes=mktCatalogForSystem(provider,'snes');
-  const psx=mktCatalogForSystem(provider,'psx');
-  const snesText=Array.isArray(snes)&&snes.length?`${snes.length.toLocaleString()} ROMs`:'—';
-  const psxText=Array.isArray(psx)&&psx.length?`${psx.length.toLocaleString()} ROMs`:'—';
-  const snesEl=document.getElementById('cnt-snes'); if(snesEl) snesEl.textContent=snesText;
-  const psxEl=document.getElementById('cnt-psx'); if(psxEl) psxEl.textContent=psxText;
+  ['snes','psx','psp','dc'].forEach(system=>{
+    const roms=mktCatalogForSystem(provider,system);
+    const text=Array.isArray(roms)&&roms.length?`${roms.length.toLocaleString()} ROMs`:'—';
+    const el=document.getElementById(`cnt-${system}`);
+    if(el) el.textContent=text;
+  });
 }
 function renderArchiveSystemCounts(provider=marketplaceState.provider){
-  const snes=mktCatalogForSystem(provider,'snes');
-  const psx=mktCatalogForSystem(provider,'psx');
-  const snesStats=marketplacePackStatsCache.get(`${provider}::snes`);
-  const psxStats=marketplacePackStatsCache.get(`${provider}::psx`);
-  const snesText=Array.isArray(snes)&&snes.length
-    ? (snesStats?.matchedCatalogEntries!=null ? `${snes.length.toLocaleString()} games · ${snesStats.matchedCatalogEntries.toLocaleString()} local` : `${snes.length.toLocaleString()} games`)
-    : 'Unavailable';
-  const psxText=Array.isArray(psx)&&psx.length
-    ? (psxStats?.matchedCatalogEntries!=null ? `${psx.length.toLocaleString()} games · ${psxStats.matchedCatalogEntries.toLocaleString()} local` : `${psx.length.toLocaleString()} games`)
-    : 'Unavailable';
-  const snesEl=document.getElementById('cnt-archive-snes'); if(snesEl) snesEl.textContent=snesText;
-  const psxEl=document.getElementById('cnt-archive-psx'); if(psxEl) psxEl.textContent=psxText;
+  ['snes','psx','psp','dc'].forEach(system=>{
+    const roms=mktCatalogForSystem(provider,system);
+    const stats=marketplacePackStatsCache.get(`${provider}::${system}`);
+    const text=Array.isArray(roms)&&roms.length
+      ? (stats?.matchedCatalogEntries!=null ? `${roms.length.toLocaleString()} games · ${stats.matchedCatalogEntries.toLocaleString()} local` : `${roms.length.toLocaleString()} games`)
+      : 'Unavailable';
+    const el=document.getElementById(`cnt-archive-${system}`);
+    if(el) el.textContent=text;
+  });
 }
 function marketplaceArchiveSystems(){
   return GAMES_LIBRARY_SYSTEMS.filter(Boolean);
@@ -8442,7 +8837,7 @@ function renderMarketplaceFeatured(){
   }
   if(heroTitle) heroTitle.textContent=hero?mktRomTitle(hero):'Featured download coming soon';
   if(heroMeta) heroMeta.textContent=hero
-    ? `${hero.system==='psx'?'PlayStation':'Super Nintendo'}\n${hero.region||'Marketplace spotlight'}`
+    ? `${marketplaceSystemLabel(hero.system)}\n${hero.region||'Marketplace spotlight'}`
     : 'Pulling in a spotlight title from the Marketplace catalog.';
   if(!list) return;
   if(!marketplaceState.featuredGames.length){
@@ -8452,16 +8847,14 @@ function renderMarketplaceFeatured(){
   list.innerHTML=marketplaceState.featuredGames.map(item=>`
     <div class="mkt-featured-card">
       <div class="mkt-featured-title">${esc(mktRomTitle(item))}</div>
-      <div class="mkt-featured-meta">${esc([item.system==='psx'?'PlayStation':'Super Nintendo',item.region||'',formatMktSize(item)].filter(Boolean).join(' · '))}</div>
+      <div class="mkt-featured-meta">${esc([marketplaceSystemLabel(item.system),item.region||'',formatMktSize(item)].filter(Boolean).join(' · '))}</div>
     </div>
   `).join('');
 }
 function renderMarketplaceScanResults(){
   const status=document.getElementById('mkt-scan-status');
   const results=document.getElementById('mkt-scan-results');
-  const systemLabel=marketplaceState.scanSystem==='snes'
-    ? 'Super Nintendo'
-    : (marketplaceState.scanSystem==='psx' ? 'PlayStation' : (marketplaceState.scanSystem==='all' ? 'all systems' : ''));
+  const systemLabel=marketplaceState.scanSystem==='all' ? 'all systems' : marketplaceSystemLabel(marketplaceState.scanSystem);
   const sourceLabel=marketplaceState.scanSource==='system'
     ? (systemLabel ? `${systemLabel} library folders` : 'system folders')
     : (marketplaceState.scanSource==='download'
@@ -8503,7 +8896,7 @@ function setMarketplaceScanView(view){
   if(system) system.hidden=view!=='system';
 }
 function getScanSystemLabel(system){
-  return system==='snes' ? 'Super Nintendo' : (system==='psx' ? 'PlayStation' : system || 'System');
+  return marketplaceSystemLabel(system) || system || 'System';
 }
 function getMarketplaceScanDir(settings, system){
   const systemFolders=settings?.systemScanPaths || {};
@@ -8555,7 +8948,7 @@ async function marketplaceScanAllSystems(){
   if(marketplaceState.scanBusy) return;
   const status=document.getElementById('mkt-scan-status');
   const settings=await window.electronAPI.getSettings();
-  const systems=['snes','psx'];
+  const systems=GAMES_LIBRARY_SYSTEMS.filter(Boolean);
   marketplaceState.scanSource='system';
   marketplaceState.scanSystem='all';
   marketplaceState.scanBusy=true;
@@ -8599,7 +8992,7 @@ async function marketplaceScanAllSystems(){
   }
 }
 async function loadMarketplaceFeatured(){
-  const systems=['snes','psx'];
+  const systems=GAMES_LIBRARY_SYSTEMS.filter(Boolean);
   await ensureMarketplaceCatalogSystems(systems);
   const featured=shuffleArray(mktAllCatalogGames()).slice(0,6);
   marketplaceState.featuredGames=featured;
@@ -8643,7 +9036,7 @@ async function marketplaceScanForGames(source='install', system=''){
     renderMarketplaceScanResults();
     return;
   }
-  const systems=['snes','psx'];
+  const systems=GAMES_LIBRARY_SYSTEMS.filter(Boolean);
   await ensureMarketplaceCatalogSystems(systems);
   const allGames=source==='system' && system
     ? (mktCatalogForSystem(marketplaceState.provider,system) || []).map(rom=>({...rom,system}))
@@ -8667,7 +9060,7 @@ async function marketplaceScanForGames(source='install', system=''){
         ...found,
         title:found.title || (matched ? mktRomTitle(matched) : found.identifier),
         system:found.system || matched?.system || system || '',
-        systemLabel:(found.system || matched?.system)==='snes' ? 'Super Nintendo' : (((found.system || matched?.system)==='psx') ? 'PlayStation' : '')
+        systemLabel:marketplaceSystemLabel(found.system || matched?.system || system || '')
       };
     });
     await refreshMarketplaceLibrary();
@@ -8689,12 +9082,12 @@ async function marketplaceScanForGames(source='install', system=''){
     if(profileEl) profileEl.textContent=String(count);
   }
 function renderGamesSystemCounts(){
-  const snes=installedEntriesBySystem('snes').length;
-  const psx=installedEntriesBySystem('psx').length;
-  const snesText=snes?`${snes.toLocaleString()} installed`:'No games';
-  const psxText=psx?`${psx.toLocaleString()} installed`:'No games';
-  const snesEl=document.getElementById('cnt-snes2'); if(snesEl) snesEl.textContent=snesText;
-  const psxEl=document.getElementById('cnt-psx2'); if(psxEl) psxEl.textContent=psxText;
+  GAMES_LIBRARY_SYSTEMS.filter(Boolean).forEach(system=>{
+    const count=installedEntriesBySystem(system).length;
+    const text=count?`${count.toLocaleString()} installed`:'No games';
+    const el=document.getElementById(`cnt-${system}2`);
+    if(el) el.textContent=text;
+  });
   syncGamesLibraryNav();
 }
 function ensureGamesInstalledHeader(){
@@ -8707,7 +9100,7 @@ function ensureGamesInstalledHeader(){
   view.insertBefore(header,view.firstChild);
 }
 function gamesLibrarySystems(){
-  const systems=GAMES_LIBRARY_SYSTEMS.filter(Boolean);
+  const systems=(gamesState.systemSelectorSource==='achievements' ? ACHIEVEMENT_SYSTEMS : GAMES_LIBRARY_SYSTEMS).filter(Boolean);
   return gamesState.systemSelectorSource==='achievements' ? systems : [GAMES_ALL_SYSTEM,...systems];
 }
 function systemFlowSlots(systems,currentSystem){
@@ -9490,7 +9883,7 @@ function renderMarketplaceDetail(){
   if(!rom){
     if(title)title.textContent=catalogError ? `${mktProviderLabel(marketplaceState.provider)} unavailable` : 'Select a game';
     if(meta)meta.textContent=catalogError
-      ? `SKALD could not load the ${mktProviderLabel(marketplaceState.provider)} catalog for ${marketplaceState.system==='psx'?'PlayStation':'Super Nintendo'}.`
+      ? `SKALD could not load the ${mktProviderLabel(marketplaceState.provider)} catalog for ${marketplaceSystemLabel(marketplaceState.system)}.`
       : 'Choose a system on the left, then pick a ROM to download or launch.';
     if(status)status.textContent=catalogError || '';
     if(downloadLabel)downloadLabel.textContent='Download';
@@ -9705,7 +10098,7 @@ async function openMarketplaceSourceSystemSelector(provider=marketplaceState.pro
   marketplaceState.provider=provider;
   marketplaceState.archivePane='list';
   await refreshMarketplaceSources();
-  const systems=['snes','psx'];
+  const systems=GAMES_LIBRARY_SYSTEMS.filter(Boolean);
   if(systems.length && !systems.includes(marketplaceState.system)) marketplaceState.system=systems[0];
   if(systems.length) await ensureMarketplaceCatalogSystems(systems);
   if(systems.length) await Promise.all(systems.map(system=>updateMarketplacePackagedStats(provider, system)));
@@ -9855,7 +10248,7 @@ async function openSelectedMarketplaceSourceSystem(item){
 function renderMarketplaceRomList(){
   const list=document.getElementById('mkt-rom-list');
   const title=document.getElementById('mkt-rom-pane-title');
-  const systemLabel=marketplaceState.system==='psx'?'PlayStation':'Super Nintendo';
+  const systemLabel=marketplaceSystemLabel(marketplaceState.system);
   if(title)title.textContent=`${mktProviderLabel(marketplaceState.provider)} · ${systemLabel}`;
   if(!list)return;
   const roms=mktCatalogForSystem(marketplaceState.provider,marketplaceState.system)||[];
@@ -10015,7 +10408,7 @@ function syncGamesLibraryNav(){
   const title=document.getElementById('games-system-title');
   const meta=document.getElementById('games-system-meta');
   const status=document.getElementById('games-system-status');
-  const systemLabel=system==='psx' ? 'PlayStation' : 'Super Nintendo';
+  const systemLabel=marketplaceSystemLabel(system);
   if(title) title.textContent=item.dataset.gamesTitle || systemLabel;
   if(meta) meta.textContent=item.dataset.gamesDesc || `Browse your installed and scanned-in ${systemLabel} library from the Games blade.`;
   if(status){
@@ -10059,6 +10452,7 @@ async function marketplaceDownloadSelected(){
     : document.getElementById('mkt-rom-status');
   marketplaceState.downloads.set(id,{identifier:id,title:mktRomTitle(rom),status:'downloading',statusLabel:'Downloading',percent:0,startedAt:Date.now()});
   renderMarketplaceQueue();
+  if(getActiveSubpanel()?.id==='sub-archive-games') renderArchiveGamesList();
   refreshActiveMarketplaceDetail();
   const result=await window.electronAPI.marketplaceInstall({
     identifier:id,
@@ -10325,6 +10719,7 @@ async function initMarketplace(){
       statusLabel:stage==='extracting' ? 'Extracting' : 'Downloading'
     });
     renderMarketplaceQueue();
+    if(getActiveSubpanel()?.id==='sub-archive-games') renderArchiveGamesList();
     if(identifier===marketplaceState.selectedRomId)refreshActiveMarketplaceDetail();
   });
 }
@@ -10816,7 +11211,16 @@ async function loadStoatDMs(){
   const el=document.getElementById('stoat-dm-list');
   if(!el)return;
   const dms=await window.electronAPI.stoatDMChannels();
-  if(!dms.length){el.innerHTML='<div class="info-block">No direct messages.</div>';return;}
+  if(!dms.length){
+    el.innerHTML='<div class="info-block">No direct messages.</div>';
+    if(guideOpen && guidePage==='chat' && guideChatTab==='messenger'){
+      guideChatItems=[];
+      guideChatLoading=false;
+      guideChatError='';
+      renderGuideChatPanel();
+    }
+    return;
+  }
   el.innerHTML=dms.map(dm=>`
     <div class="stoat-dm-item" data-chid="${dm.id}">
       <img src="${dm.icon||''}" onerror="this.style.display='none'" alt=""/>
@@ -10826,6 +11230,12 @@ async function loadStoatDMs(){
   el.querySelectorAll('.stoat-dm-item[data-chid]').forEach(dmEl=>{
     dmEl.addEventListener('click',()=>switchToDM(dmEl.dataset.chid));
   });
+  if(guideOpen && guidePage==='chat' && guideChatTab==='messenger'){
+    guideChatItems=dms;
+    guideChatLoading=false;
+    guideChatError='';
+    renderGuideChatPanel();
+  }
 }
 
 async function switchToDM(channelId){
