@@ -24,6 +24,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   upsertLibraryMetadata: (opts) => ipcRenderer.invoke('library-upsert-metadata', opts),
   enrichLibraryGame: (opts) => ipcRenderer.invoke('library-enrich-game', opts),
   previewGameMetadata: (opts) => ipcRenderer.invoke('metadata-preview-game', opts),
+  exportSystemMetadataPack: (opts) => ipcRenderer.invoke('metadata-export-system-pack', opts),
   getPackagedMarketplaceMetadata: (opts) => ipcRenderer.invoke('marketplace-packaged-metadata', opts),
   getPackagedMarketplaceMetadataStats: (opts) => ipcRenderer.invoke('marketplace-packaged-metadata-stats', opts),
   markLibraryPlayed: (opts) => ipcRenderer.invoke('library-mark-played', opts),

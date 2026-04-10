@@ -1,0 +1,15 @@
+<game romname="Battle vs. Chess (Europe)">
+  <name>Battle Vs Chess (Europe)</name>
+  <rating>0.55</rating>
+  <rating_esrb></rating_esrb>
+  <rating_acb></rating_acb>
+  <rating_cero></rating_cero>
+  <rating_pegi></rating_pegi>
+  <rating_usk></rating_usk>
+  <desc>Battle vs Chess on Xbox 360 is a chess game mixing action and reflection. Each move can trigger a fight between one or more pieces. More classic games, two campaigns and various mini-games are also included. The AI is based on the Fritz algorithm, a programme used by professionals.</desc>
+  <releasedate>2012-03-17</releasedate>
+  <developer>Topware Interactive</developer>
+  <publisher>Zuxxez</publisher>
+  <genre>Puzzle</genre>
+  <players>2</players>
+</game>

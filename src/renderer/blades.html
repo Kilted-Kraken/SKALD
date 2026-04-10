@@ -155,6 +155,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'MC
 .mkt-scan-meta,
 .mkt-scan-status,
 .mkt-source-row-publisher,
+.mkt-source-row-variants-text,
 .games-ach-empty,
 .games-hltb-label,
 .games-hltb-value,
@@ -208,10 +209,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'MC
 .games-games-list{display:flex;flex-direction:column;min-height:0;overflow-y:auto;border-top:2px solid rgba(104,132,74,.22);}
 .games-installed-item{max-width:none;width:100%;min-height:76px;padding:0 12px 0 12px;border:none;border-bottom:2px solid rgba(104,132,74,.24);gap:14px;}
 .games-installed-item::before,.games-installed-item::after{display:none !important;}
-.games-installed-item .micon{width:54px;height:54px;border-radius:0;background-color:transparent;background-size:contain;background-position:center;background-repeat:no-repeat;box-shadow:none;}
+.games-installed-item .micon{width:92px;height:56px;border-radius:0;background-color:transparent;background-size:contain;background-position:center;background-repeat:no-repeat;box-shadow:none;}
 .games-installed-item.sel{background:linear-gradient(180deg,rgba(255,255,255,.42),rgba(255,255,255,.14));}
 .games-item-index{font-size:14px;color:rgba(0,0,0,.46);margin-top:4px;}
 .games-library-count{align-self:center;margin-top:auto;padding-top:10px;font-size:18px;color:rgba(0,0,0,.56);}
+.games-library-filters{align-self:center;margin-top:4px;font-size:14px;color:rgba(0,0,0,.5);text-align:center;min-height:18px;}
 .games-library-right{display:flex;flex-direction:column;min-height:0;}
 .games-detail-panel{min-height:0;height:100%;border-radius:14px;border:3px solid rgba(118,118,118,.34);background:linear-gradient(180deg,rgba(225,225,219,.82),rgba(200,198,191,.76));box-shadow:inset 0 2px 0 rgba(255,255,255,.32);}
 .games-detail-head{padding:16px 18px 14px;border-bottom:2px solid rgba(118,118,118,.22);}
@@ -376,15 +378,22 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'MC
   opacity:.96;
 }
 .games-system-flow{
+  flex:1 1 100%;
   display:grid;
-  grid-template-columns:86px 132px 86px;
+  grid-template-columns:repeat(7,minmax(0,1fr));
   align-items:center;
-  justify-content:end;
+  justify-content:stretch;
   gap:12px;
-  min-width:340px;
-  height:62px;
+  width:100%;
+  min-width:0;
+  height:78px;
+}
+#sub-archive-games .mkt-source-header,
+#games-installed-header{
+  justify-content:flex-start;
 }
 .games-system-flow-slot{
+  width:100%;
   height:40px;
   border-radius:10px;
   background-position:center;
@@ -396,7 +405,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'MC
   filter:saturate(.8);
 }
 .games-system-flow-slot.active{
-  height:58px;
+  height:72px;
   opacity:1;
   transform:scale(1);
   filter:saturate(1.06) drop-shadow(0 4px 7px rgba(0,0,0,.2));
@@ -404,14 +413,17 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'MC
 .games-system-flow-slot.clickable{cursor:pointer;}
 .mkt-source-row{
   display:grid;
-  grid-template-columns:64px minmax(0,1fr) auto 84px;
+  grid-template-columns:102px minmax(0,1fr) auto;
   align-items:center;
   gap:14px;
   width:100%;
+  position:relative;
+  padding-right:92px;
 }
 .mkt-source-row .micon{
-  width:54px;
-  height:54px;
+  width:92px;
+  height:56px;
+  background-size:contain;
 }
 .mkt-source-row-copy{
   display:flex;
@@ -428,9 +440,37 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'MC
   text-overflow:ellipsis;
 }
 .mkt-source-row-publisher{
+  display:flex;
+  align-items:center;
+  gap:10px;
   font-size:15px;
   color:rgba(0,0,0,.56);
+  min-width:0;
   white-space:nowrap;
+}
+.mkt-source-row-publisher-main{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.mkt-source-row-variants{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-width:0;
+  flex:0 0 auto;
+}
+.mkt-source-row-variants-icon{
+  width:18px;
+  height:18px;
+  background:center/contain no-repeat;
+  flex:0 0 auto;
+  opacity:.9;
+}
+.mkt-source-row-variants-text{
+  font-size:15px;
+  color:rgba(0,0,0,.62);
+  min-width:0;
   overflow:hidden;
   text-overflow:ellipsis;
 }
@@ -444,7 +484,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'MC
   opacity:.88;
 }
 .mkt-source-row-systemwrap{
-  justify-self:end;
+  position:absolute;
+  right:0;
+  top:50%;
+  transform:translateY(-50%);
   display:flex;
   flex-direction:column;
   align-items:flex-end;
@@ -557,11 +600,20 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'MC
   min-height:0;
   flex:1;
 }
+.mkt-source-detail-topline{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:18px;
+  margin-bottom:6px;
+}
 .mkt-source-detail-title{
   font-size:28px;
   line-height:1.02;
   color:#111;
-  margin-bottom:6px;
+  margin-bottom:0;
+  flex:1 1 auto;
+  min-width:0;
 }
 .mkt-source-detail-metarow{
   display:flex;
@@ -612,6 +664,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'MC
   display:flex;
   flex-direction:column;
   gap:4px;
+  justify-content:flex-end;
 }
 .mkt-source-rating-label,
 .mkt-source-info-label{
@@ -625,9 +678,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'MC
   color:#111;
 }
 .mkt-source-rating-badge{
-  width:76px;
-  height:104px;
-  background-position:left center;
+  width:57px;
+  height:78px;
+  background-position:left bottom;
   background-repeat:no-repeat;
   background-size:contain;
 }
@@ -771,7 +824,26 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'MC
 #sub-archive-games .mkt-source-detail{
   padding:6px 6px 0 0;
 }
-#sub-archive-games .mkt-source-detail-footer{transform:translateY(-58px);}
+#sub-archive-games .mkt-source-detail-topline{
+  align-items:flex-start;
+}
+#sub-archive-games .mkt-source-info{
+  min-width:0;
+  margin-left:auto;
+  align-self:flex-start;
+}
+#sub-archive-games .mkt-source-detail-footer{
+  transform:translateY(-18px);
+  grid-template-columns:auto;
+  justify-content:start;
+}
+#sub-archive-games .mkt-source-rating{
+  min-height:132px;
+}
+#sub-archive-games .mkt-source-rating-value:empty,
+#sub-archive-games .mkt-source-rating-caption:empty{
+  display:none;
+}
 #sub-market-themes .games-library-view{transform:none;height:100%;}
 #sub-market-themes .games-library-main{flex:0 0 auto;height:calc(100% - 156px);padding-bottom:0;box-sizing:border-box;margin-bottom:0;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:24px;padding-top:16px;}
 #sub-market-themes .games-library-left,
@@ -836,6 +908,21 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'MC
 .games-delete-modal-hints{position:absolute;right:20px;bottom:14px;display:flex;align-items:center;gap:16px;font-size:15px;color:rgba(0,0,0,.56);}
 .games-delete-modal-hint{display:flex;align-items:center;gap:8px;}
 .games-delete-modal-hint img{width:24px;height:24px;object-fit:contain;}
+.archive-variant-modal{position:absolute;left:50%;top:50%;z-index:49;display:none;width:min(720px,calc(100% - 110px));max-height:min(720px,calc(100% - 120px));padding:22px 22px 58px;border-radius:16px;background:linear-gradient(180deg,rgba(241,241,234,.98),rgba(204,204,197,.98));box-shadow:0 18px 48px rgba(0,0,0,.36),inset 0 2px 0 rgba(255,255,255,.58);border:3px solid rgba(118,118,118,.35);transform:translate(-50%,-50%);box-sizing:border-box;}
+.archive-variant-modal.on{display:flex;flex-direction:column;}
+.archive-variant-modal-title{font-size:28px;line-height:1.05;color:#111;margin-bottom:10px;}
+.archive-variant-modal-copy{font-size:18px;line-height:1.45;color:rgba(0,0,0,.72);white-space:pre-line;margin-bottom:16px;}
+.archive-variant-list{display:flex;flex-direction:column;gap:8px;min-height:0;max-height:420px;overflow:auto;padding-right:4px;}
+.archive-variant-list::-webkit-scrollbar{display:none;}
+.archive-variant-row{display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.54),rgba(219,219,211,.54));border:2px solid rgba(118,118,118,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.35);}
+.archive-variant-row.sel{border-color:rgba(87,141,54,.72);box-shadow:0 0 0 2px rgba(87,141,54,.18), inset 0 1px 0 rgba(255,255,255,.45);}
+.archive-variant-row-main{flex:1;min-width:0;}
+.archive-variant-row-title{font-size:22px;line-height:1.1;color:#111;}
+.archive-variant-row-meta{font-size:16px;line-height:1.35;color:rgba(0,0,0,.62);margin-top:4px;white-space:pre-line;}
+.archive-variant-row-state{font-size:16px;line-height:1.2;color:rgba(45,104,30,.88);text-align:right;min-width:104px;}
+.archive-variant-modal-hints{position:absolute;right:20px;bottom:14px;display:flex;align-items:center;gap:16px;font-size:15px;color:rgba(0,0,0,.56);}
+.archive-variant-modal-hint{display:flex;align-items:center;gap:8px;}
+.archive-variant-modal-hint img{width:24px;height:24px;object-fit:contain;}
 #sub-library-games #games-installed-list{flex:1 1 auto;max-height:none;}
 #sub-library-games #games-installed-detail{height:100%;}
 #sub-library-games .games-library-count{margin-top:10px;padding-top:0;}
@@ -1083,7 +1170,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'MC
   .profile-placeholder-title{font-size:28px;line-height:1.08;color:#111;margin-bottom:12px;}
   .profile-placeholder-copy{font-size:20px;line-height:1.42;color:rgba(0,0,0,.74);white-space:pre-line;}
   .mkt-browse,.mkt-ready{display:grid;grid-template-columns:270px 1fr;gap:24px;height:calc(100% - 54px);}
-  #sub-browse .mkt-browse{grid-template-columns:minmax(0,1fr) 360px;gap:22px;}
+  #sub-browse .mkt-browse{grid-template-columns:minmax(0,1fr) 360px;grid-template-areas:"systems systems" "list main";gap:22px;}
   .mkt-side{display:flex;flex-direction:column;gap:14px;min-height:0;}
   .mkt-main{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:24px;min-height:0;}
   .mkt-pane{display:flex;flex-direction:column;min-height:0;background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.08));border-top:2px solid rgba(255,255,255,.22);border-bottom:2px solid rgba(72,50,94,.22);}
@@ -1121,13 +1208,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'MC
   .mkt-action-label{font-size:20px;color:#111;}
   .mkt-action-meta{font-size:14px;color:rgba(0,0,0,.52);}
   .mkt-empty{padding:20px 16px;font-size:18px;color:rgba(0,0,0,.5);}
-  #sub-browse .mkt-side{display:grid;grid-template-columns:220px minmax(0,1fr);gap:18px;align-items:stretch;}
+  #sub-browse .mkt-side{display:contents;}
   #sub-market-themes .mkt-side{display:grid;grid-template-columns:220px minmax(0,1fr);gap:18px;align-items:stretch;}
   #sub-browse .mkt-main{display:flex;flex-direction:column;gap:18px;min-width:0;}
   #sub-market-themes .mkt-main{display:flex;flex-direction:column;gap:18px;min-width:0;}
-  #sub-browse .sys-grid{display:flex;flex-direction:column;gap:10px;padding:0;max-width:none;}
+  #sub-browse .sys-grid{grid-area:systems;display:flex;gap:10px;padding:0;max-width:none;width:100%;align-items:stretch;justify-content:center;}
   #sub-market-themes .sys-grid{display:flex;flex-direction:column;gap:10px;padding:0;max-width:none;}
-  #sub-browse .mkt-system-card{min-height:86px;padding:0 14px;border-radius:0;border:none;border-bottom:2px solid rgba(125,82,47,.24);background:none;box-shadow:none;}
+  #sub-browse .mkt-system-card{flex:0 0 156px;min-width:0;max-width:156px;min-height:94px;padding:0 14px;border-radius:0;border:none;border-bottom:2px solid rgba(125,82,47,.24);background:none;box-shadow:none;width:auto;}
   #sub-market-themes .mkt-system-card{min-height:86px;padding:0 14px;border-radius:0;border:none;border-bottom:2px solid rgba(125,82,47,.24);background:none;box-shadow:none;}
   #sub-browse .mkt-system-card .sys-card-copy{display:flex;align-items:center;gap:14px;min-width:0;width:100%;}
   #sub-market-themes .mkt-system-card .sys-card-copy{display:flex;align-items:center;gap:14px;min-width:0;width:100%;}
@@ -1138,8 +1225,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'MC
   #sub-browse .mkt-system-card .sys-card-count{font-size:15px;color:rgba(0,0,0,.5);margin-top:6px;}
   #sub-market-themes .mkt-system-card .sys-card-count{font-size:15px;color:rgba(0,0,0,.5);margin-top:6px;}
   #sub-browse .mkt-system-card.sel{background:linear-gradient(180deg,rgba(255,255,255,.52),rgba(255,255,255,.18));}
+  #sub-browse .mkt-system-card.sel{flex-basis:196px;max-width:196px;}
+  #sub-browse .mkt-system-card.sel .sys-card-copy{flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:10px;padding:10px 0;}
+  #sub-browse .mkt-system-card.sel .sys-card-icon{width:40px;height:40px;margin:0 auto;}
+  #sub-browse .mkt-system-card.sel .sys-card-text{align-items:center;}
   #sub-market-themes .mkt-system-card.sel{background:linear-gradient(180deg,rgba(255,255,255,.52),rgba(255,255,255,.18));}
-  #sub-browse .mkt-side>.mkt-pane{min-width:0;}
+  #sub-browse .mkt-side>.mkt-pane{grid-area:list;min-width:0;}
+  #sub-browse .mkt-main{grid-area:main;}
   #sub-market-themes .mkt-side>.mkt-pane{min-width:0;}
   #sub-browse #mkt-rom-list .mkt-rom-item{max-width:none;width:100%;min-height:56px;padding:10px 14px 10px 16px;border:none;border-bottom:2px solid rgba(125,82,47,.18);background:none;box-shadow:none;}
   #sub-market-themes .mkt-cosmetic-item{max-width:none;width:100%;min-height:56px;padding:10px 14px 10px 16px;border:none;border-bottom:2px solid rgba(125,82,47,.18);background:none;box-shadow:none;}
@@ -1665,6 +1757,34 @@ body:has(#guide.on) #blade-layer{visibility:hidden;}
                   <div class="mkt-action-meta">Choose a dedicated folder</div>
                 </div>
               </div>
+              <div class="subnav-item mkt-scan-action" data-scan-action="system-run" data-scan-system="genesis" data-scan-title="Scan Sega Genesis" data-scan-desc="Scan the configured SKALD folder for Sega Genesis installs only. This uses the system-specific path when one exists, and otherwise falls back to the main install or download folders.">
+                <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/Genesis.webp')"></div>
+                <div class="mkt-account-copy">
+                  <div class="mkt-scan-label">Sega Genesis</div>
+                  <div class="mkt-action-meta">Scan only Genesis matches</div>
+                </div>
+              </div>
+              <div class="subnav-item mkt-scan-action" data-scan-action="system-set" data-scan-system="genesis" data-scan-title="Set Sega Genesis Scan Folder" data-scan-desc="Choose a dedicated Sega Genesis scan folder. SKALD will use it before falling back to the general install or download folders.">
+                <div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-search.webp')"></div>
+                <div class="mkt-account-copy">
+                  <div class="mkt-scan-label">Set Genesis Scan Folder</div>
+                  <div class="mkt-action-meta">Choose a dedicated folder</div>
+                </div>
+              </div>
+              <div class="subnav-item mkt-scan-action" data-scan-action="system-run" data-scan-system="x360" data-scan-title="Scan Xbox 360" data-scan-desc="Scan the configured SKALD folder for Xbox 360 installs only. This uses the system-specific path when one exists, and otherwise falls back to the main install or download folders.">
+                <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/Xbox_360.webp')"></div>
+                <div class="mkt-account-copy">
+                  <div class="mkt-scan-label">Xbox 360</div>
+                  <div class="mkt-action-meta">Scan only Xbox 360 matches</div>
+                </div>
+              </div>
+              <div class="subnav-item mkt-scan-action" data-scan-action="system-set" data-scan-system="x360" data-scan-title="Set Xbox 360 Scan Folder" data-scan-desc="Choose a dedicated Xbox 360 scan folder. SKALD will use it before falling back to the general install or download folders.">
+                <div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-search.webp')"></div>
+                <div class="mkt-account-copy">
+                  <div class="mkt-scan-label">Set Xbox 360 Scan Folder</div>
+                  <div class="mkt-action-meta">Choose a dedicated folder</div>
+                </div>
+              </div>
                 <div class="subnav-item mkt-scan-action" data-scan-action="system-run" data-scan-system="psx" data-scan-title="Scan PlayStation" data-scan-desc="Scan the configured SKALD folder for PlayStation installs only. This uses the system-specific path when one exists, and otherwise falls back to the main install or download folders.">
                   <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/CONTROLLER-playstation1.svg')"></div>
                 <div class="mkt-account-copy">
@@ -1676,6 +1796,20 @@ body:has(#guide.on) #blade-layer{visibility:hidden;}
                 <div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-search.webp')"></div>
                 <div class="mkt-account-copy">
                   <div class="mkt-scan-label">Set PlayStation Scan Folder</div>
+                  <div class="mkt-action-meta">Choose a dedicated folder</div>
+                </div>
+              </div>
+              <div class="subnav-item mkt-scan-action" data-scan-action="system-run" data-scan-system="ps2" data-scan-title="Scan PlayStation 2" data-scan-desc="Scan the configured SKALD folder for PlayStation 2 installs only. This uses the system-specific path when one exists, and otherwise falls back to the main install or download folders.">
+                <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/CONTROLLER-playstation2.svg')"></div>
+                <div class="mkt-account-copy">
+                  <div class="mkt-scan-label">PlayStation 2</div>
+                  <div class="mkt-action-meta">Scan only PS2 matches</div>
+                </div>
+              </div>
+              <div class="subnav-item mkt-scan-action" data-scan-action="system-set" data-scan-system="ps2" data-scan-title="Set PlayStation 2 Scan Folder" data-scan-desc="Choose a dedicated PlayStation 2 scan folder. SKALD will use it before falling back to the general install or download folders.">
+                <div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-search.webp')"></div>
+                <div class="mkt-account-copy">
+                  <div class="mkt-scan-label">Set PlayStation 2 Scan Folder</div>
                   <div class="mkt-action-meta">Choose a dedicated folder</div>
                 </div>
               </div>
@@ -1731,11 +1865,25 @@ body:has(#guide.on) #blade-layer{visibility:hidden;}
                   <div class="mkt-action-meta" id="cnt-archive-snes">Loading…</div>
                 </div>
               </div>
+              <div class="subnav-item games-system-item" data-system="genesis" data-archive-title="Sega Genesis" data-archive-desc="Browse the Archive.org Sega Genesis repository and see everything currently available to download from this source.">
+                <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/Genesis.webp')"></div>
+                <div class="mkt-account-copy">
+                  <div class="mkt-scan-label">Sega Genesis</div>
+                  <div class="mkt-action-meta" id="cnt-archive-genesis">Loading…</div>
+                </div>
+              </div>
               <div class="subnav-item games-system-item" data-system="psx" data-archive-title="PlayStation" data-archive-desc="Browse the Archive.org PlayStation repository and see everything currently available to download from this source.">
                 <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/CONTROLLER-playstation1.svg')"></div>
                 <div class="mkt-account-copy">
                   <div class="mkt-scan-label">PlayStation</div>
                   <div class="mkt-action-meta" id="cnt-archive-psx">Loading…</div>
+                </div>
+              </div>
+              <div class="subnav-item games-system-item" data-system="ps2" data-archive-title="PlayStation 2" data-archive-desc="Browse the Archive.org PlayStation 2 repository and see everything currently available to download from this source.">
+                <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/CONTROLLER-playstation2.svg')"></div>
+                <div class="mkt-account-copy">
+                  <div class="mkt-scan-label">PlayStation 2</div>
+                  <div class="mkt-action-meta" id="cnt-archive-ps2">Loading…</div>
                 </div>
               </div>
               <div class="subnav-item games-system-item" data-system="psp" data-archive-title="PSP" data-archive-desc="Browse the Archive.org PSP repository and see everything currently available to download from this source.">
@@ -1750,6 +1898,13 @@ body:has(#guide.on) #blade-layer{visibility:hidden;}
                 <div class="mkt-account-copy">
                   <div class="mkt-scan-label">Dreamcast</div>
                   <div class="mkt-action-meta" id="cnt-archive-dc">Loading…</div>
+                </div>
+              </div>
+              <div class="subnav-item games-system-item" data-system="x360" data-archive-title="Xbox 360" data-archive-desc="Browse the Archive.org Xbox 360 repository and see everything currently available to download from this source.">
+                <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/Xbox_360.webp')"></div>
+                <div class="mkt-account-copy">
+                  <div class="mkt-scan-label">Xbox 360</div>
+                  <div class="mkt-action-meta" id="cnt-archive-x360">Loading…</div>
                 </div>
               </div>
             </div>
@@ -1772,6 +1927,7 @@ body:has(#guide.on) #blade-layer{visibility:hidden;}
             <div class="games-library-left">
               <div id="mkt-archive-list" class="games-games-list"><div class="mkt-empty">Loading catalog…</div></div>
               <div id="mkt-archive-count" class="games-library-count"></div>
+              <div id="mkt-archive-filters" class="games-library-filters"></div>
             </div>
             <div class="games-library-right">
               <div class="games-detail-panel" id="mkt-archive-detail">
@@ -1785,7 +1941,12 @@ body:has(#guide.on) #blade-layer{visibility:hidden;}
                     </div>
                   </div>
                   <div class="mkt-source-detail-copy">
-                    <div id="mkt-archive-title" class="mkt-source-detail-title">Select a game</div>
+                    <div class="mkt-source-detail-topline">
+                      <div id="mkt-archive-title" class="mkt-source-detail-title">Select a game</div>
+                      <div class="mkt-source-info">
+                        <div id="mkt-archive-info" class="mkt-source-info-value">Select a game</div>
+                      </div>
+                    </div>
                     <div class="mkt-source-detail-metarow">
                       <div id="mkt-archive-meta" class="mkt-source-detail-publisher">Choose a game to view Marketplace details.</div>
                       <div id="mkt-archive-genres" class="mkt-source-detail-genres"></div>
@@ -1797,9 +1958,6 @@ body:has(#guide.on) #blade-layer{visibility:hidden;}
                         <div id="mkt-archive-rating-badge" class="mkt-source-rating-badge"></div>
                         <div id="mkt-archive-rating" class="mkt-source-rating-value">Unrated</div>
                         <div id="mkt-archive-rating-caption" class="mkt-source-rating-caption"></div>
-                      </div>
-                      <div class="mkt-source-info">
-                        <div id="mkt-archive-info" class="mkt-source-info-value">Select a game</div>
                       </div>
                     </div>
                   </div>
@@ -1814,12 +1972,21 @@ body:has(#guide.on) #blade-layer{visibility:hidden;}
         <div class="mkt-browse">
           <div class="mkt-side">
             <div class="sys-grid" id="mkt-system-grid">
-              <div class="sys-card mkt-system-card sel" data-system="snes">
+                <div class="sys-card mkt-system-card sel" data-system="snes">
                   <div class="sys-card-copy">
                     <div class="sys-card-icon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/CONTROLLER-snes.svg')"></div>
                     <div class="sys-card-text">
                       <div class="sys-card-title">Super Nintendo</div>
                       <div class="sys-card-count" id="cnt-snes">Loading…</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="sys-card mkt-system-card" data-system="genesis">
+                  <div class="sys-card-copy">
+                    <div class="sys-card-icon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/Genesis.webp')"></div>
+                    <div class="sys-card-text">
+                      <div class="sys-card-title">Sega Genesis</div>
+                      <div class="sys-card-count" id="cnt-genesis">Loading…</div>
                     </div>
                   </div>
                 </div>
@@ -1829,6 +1996,15 @@ body:has(#guide.on) #blade-layer{visibility:hidden;}
                     <div class="sys-card-text">
                       <div class="sys-card-title">PlayStation</div>
                       <div class="sys-card-count" id="cnt-psx">Loading…</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="sys-card mkt-system-card" data-system="ps2">
+                  <div class="sys-card-copy">
+                    <div class="sys-card-icon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/CONTROLLER-playstation2.svg')"></div>
+                    <div class="sys-card-text">
+                      <div class="sys-card-title">PlayStation 2</div>
+                      <div class="sys-card-count" id="cnt-ps2">Loading…</div>
                     </div>
                   </div>
                 </div>
@@ -1847,6 +2023,15 @@ body:has(#guide.on) #blade-layer{visibility:hidden;}
                     <div class="sys-card-text">
                       <div class="sys-card-title">Dreamcast</div>
                       <div class="sys-card-count" id="cnt-dc">Loading…</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="sys-card mkt-system-card" data-system="x360">
+                  <div class="sys-card-copy">
+                    <div class="sys-card-icon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/Xbox_360.webp')"></div>
+                    <div class="sys-card-text">
+                      <div class="sys-card-title">Xbox 360</div>
+                      <div class="sys-card-count" id="cnt-x360">Loading…</div>
                     </div>
                   </div>
                 </div>
@@ -2211,7 +2396,7 @@ SKALD LIVE uses Stoat for accounts. If you already have a Stoat account, sign in
         </div>
       </div>
     </div>
-      <div id="p-games" class="panel"><div class="blade-home"><div class="home-menu-wrap"><div class="home-menu-shadow"></div><div class="home-menu-frame"></div><ul class="menu home-menu"><li class="mitem home-row r1 sel" data-sub="library" data-home-title="Game Library" data-home-desc="Choose a system and browse your installed and scanned-in games from the Games blade."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-games.webp')"></div>Game Library</li><li class="mitem home-row r2" data-sub="achievements" data-home-title="Achievements" data-home-desc="Track RetroAchievements progress, badge sync, and future gamerscore-style milestone views."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-trophy.webp')"></div>Achievements</li><li class="mitem home-row r3" data-sub="played" data-home-title="Played Games" data-home-desc="Review your recent play history and the games you have launched most often across supported systems."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-gamescore.webp')"></div>Played Games</li><li class="mitem home-row r4" data-sub="demos" data-home-title="Demos &amp; More" data-home-desc="Reserve space for future demos, bonus content, and special promotional downloads in the Games blade."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-apps.webp')"></div>Demos &amp; More</li></ul></div><div class="home-desc"><div class="home-desc-title">Game Library</div><div class="home-desc-body">Choose a system and browse your installed and scanned-in games from the Games blade.</div></div></div><div class="subpanel" id="sub-library"><div class="subpanel-title">GAMES LIBRARY</div><div class="blade-home games-library-home"><div class="home-menu-wrap"><ul class="menu mkt-home-list games-library-list" id="games-library-menu"><li class="subnav-item games-lib-item mkt-home-row sel" data-games-lib-action="mygames" style="--mkt-card-art:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-games.webp')" data-games-lib-title="My Games" data-games-lib-desc="Browse your installed and scanned-in library.\nSelect a system to see the games SKALD already knows about."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-games.webp')"></div><div class="mkt-home-label">My Games</div></li><li class="subnav-item games-lib-item mkt-home-row" data-games-lib-action="lastplayed" style="--mkt-card-art:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-gamescore.webp')" data-games-lib-title="Last Played Game" data-games-lib-desc="Jump back into the last game you launched once your recent play history is populated."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-gamescore.webp')"></div><div class="mkt-home-label">Last Played Game</div></li><li class="subnav-item games-lib-item mkt-home-row" data-games-lib-action="friends" style="--mkt-card-art:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-friends.webp')" data-games-lib-title="Friends Playing Now" data-games-lib-desc="Friends Playing Now will light up once SKALD LIVE presence and in-game activity are fully wired."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-friends.webp')"></div><div class="mkt-home-label">Friends Playing Now</div></li><li class="subnav-item games-lib-item mkt-home-row" data-games-lib-action="gamestore" style="--mkt-card-art:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-marketplace.webp')" data-games-lib-title="Game Store" data-games-lib-desc="Jump into the Marketplace blade to discover and download new games for your library."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-marketplace.webp')"></div><div class="mkt-home-label">Game Store</div></li><li class="subnav-item games-lib-item mkt-home-row" data-games-lib-action="autodownloads" style="--mkt-card-art:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-downloads.webp')" data-games-lib-title="Auto Downloads" data-games-lib-desc="Automatic downloads are currently off. Later this can watch for updates or background content for your library."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-downloads.webp')"></div><div class="mkt-home-label">Auto Downloads</div><div class="games-lib-tail">Off</div></li></ul></div><div class="home-desc games-library-copy"><div id="games-library-title" class="home-desc-title">My Games</div><div id="games-library-body" class="home-desc-body">Browse your installed and scanned-in library.\nSelect a system to see the games SKALD already knows about.</div></div></div></div><div class="subpanel" id="sub-library-systems"><div class="subpanel-title">SELECT SYSTEM</div><div class="mkt-scan-layout games-system-layout"><div class="mkt-scan-left"><div class="mkt-scan-list" id="games-system-list"><div class="subnav-item games-system-item sel" data-system="snes" data-games-title="Super Nintendo" data-games-desc="Browse your installed and scanned-in Super Nintendo library from the Games blade."><div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/CONTROLLER-snes.svg')"></div><div class="mkt-account-copy"><div class="mkt-scan-label">Super Nintendo</div><div class="mkt-action-meta" id="cnt-snes2">Loading…</div></div></div><div class="subnav-item games-system-item" data-system="psx" data-games-title="PlayStation" data-games-desc="Browse your installed and scanned-in PlayStation library from the Games blade."><div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/CONTROLLER-playstation1.svg')"></div><div class="mkt-account-copy"><div class="mkt-scan-label">PlayStation</div><div class="mkt-action-meta" id="cnt-psx2">Loading…</div></div></div><div class="subnav-item games-system-item" data-system="psp" data-games-title="PSP" data-games-desc="Browse your installed and scanned-in PSP library from the Games blade."><div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/CONTROLLER-playstation1.svg')"></div><div class="mkt-account-copy"><div class="mkt-scan-label">PSP</div><div class="mkt-action-meta" id="cnt-psp2">Loading…</div></div></div><div class="subnav-item games-system-item" data-system="dc" data-games-title="Dreamcast" data-games-desc="Browse your installed and scanned-in Sega Dreamcast library from the Games blade."><div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/Dreamcast.webp')"></div><div class="mkt-account-copy"><div class="mkt-scan-label">Dreamcast</div><div class="mkt-action-meta" id="cnt-dc2">Loading…</div></div></div></div></div><div class="mkt-scan-side"><div id="games-system-title" class="mkt-scan-title">Super Nintendo</div><div id="games-system-meta" class="mkt-scan-meta">Browse your installed and scanned-in Super Nintendo library from the Games blade.</div><div id="games-system-status" class="mkt-scan-status">Loading library status…</div></div></div></div><div class="subpanel" id="sub-library-games"><div class="subpanel-title">MY GAMES</div><div class="games-library-view"><div class="games-tabs"><div class="games-tab sel" data-games-filter="all">All Games</div><div class="games-tab" data-games-filter="recent">Recently Downloaded</div><div class="games-tab" data-games-filter="played">Recently Played</div></div><div class="games-library-main"><div class="games-library-left"><div id="games-installed-list" class="games-games-list"><div class="mkt-empty">No games installed yet.</div></div><div id="games-library-count" class="games-library-count"></div></div><div class="games-library-right"><div class="games-detail-panel" id="games-installed-detail"><div class="games-detail-head"><div class="games-detail-headrow"><div class="games-detail-copy"><div class="games-detail-title" id="games-installed-title">Select a game</div><div class="mkt-detail-meta" id="games-installed-meta">Choose an installed game to view details.</div></div><div class="games-detail-headactions"><div class="subnav-item games-ready-action" data-games-action="launch"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-a.webp')"></div><div class="mkt-account-copy"><div class="mkt-action-label">Launch</div><div class="mkt-action-meta">Start the selected installed game.</div></div></div><div class="subnav-item games-ready-action" data-games-action="delete"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-x.webp')"></div><div class="mkt-account-copy"><div class="mkt-action-label">Delete Install</div><div class="mkt-action-meta" id="games-delete-meta">Remove the selected installed game from disk.</div></div></div></div></div></div><div class="games-detail-top"><div id="games-detail-icon" class="games-detail-icon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/gamercard_defaultgamerpic.webp')"></div><div class="games-score-line"><div class="games-score-label"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-gamescore.webp')"></div><span>Gamerscore</span></div><div id="games-score-value" class="games-score-value">0/0</div></div></div><div class="games-detail-ach-head"><span>Achievements</span><span id="games-ach-count" class="games-detail-ach-count"></span></div><div id="games-ach-grid" class="games-ach-grid"><div class="games-ach-empty">RetroAchievements data will appear here when a matching game is found.</div></div><div id="games-installed-status" class="mkt-detail-status" style="padding:0 18px 16px;"></div></div></div></div></div><div class="subpanel" id="sub-achievements"><div class="subpanel-title">ACHIEVEMENTS</div><div class="info-block">Set your RetroAchievements API key in Settings to track achievements.</div></div><div class="subpanel" id="sub-played"><div class="subpanel-title">PLAYED GAMES</div><div class="info-block">No games played yet.</div></div></div>
+<div id="p-games" class="panel"><div class="blade-home"><div class="home-menu-wrap"><div class="home-menu-shadow"></div><div class="home-menu-frame"></div><ul class="menu home-menu"><li class="mitem home-row r1 sel" data-sub="library" data-home-title="Game Library" data-home-desc="Choose a system and browse your installed and scanned-in games from the Games blade."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-games.webp')"></div>Game Library</li><li class="mitem home-row r2" data-sub="achievements" data-home-title="Achievements" data-home-desc="Track RetroAchievements progress, badge sync, and future gamerscore-style milestone views."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-trophy.webp')"></div>Achievements</li><li class="mitem home-row r3" data-sub="played" data-home-title="Played Games" data-home-desc="Review your recent play history and the games you have launched most often across supported systems."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-gamescore.webp')"></div>Played Games</li><li class="mitem home-row r4" data-sub="demos" data-home-title="Demos &amp; More" data-home-desc="Reserve space for future demos, bonus content, and special promotional downloads in the Games blade."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-apps.webp')"></div>Demos &amp; More</li></ul></div><div class="home-desc"><div class="home-desc-title">Game Library</div><div class="home-desc-body">Choose a system and browse your installed and scanned-in games from the Games blade.</div></div></div><div class="subpanel" id="sub-library"><div class="subpanel-title">GAMES LIBRARY</div><div class="blade-home games-library-home"><div class="home-menu-wrap"><ul class="menu mkt-home-list games-library-list" id="games-library-menu"><li class="subnav-item games-lib-item mkt-home-row sel" data-games-lib-action="mygames" style="--mkt-card-art:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-games.webp')" data-games-lib-title="My Games" data-games-lib-desc="Browse your installed and scanned-in library.\nSelect a system to see the games SKALD already knows about."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-games.webp')"></div><div class="mkt-home-label">My Games</div></li><li class="subnav-item games-lib-item mkt-home-row" data-games-lib-action="lastplayed" style="--mkt-card-art:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-gamescore.webp')" data-games-lib-title="Last Played Game" data-games-lib-desc="Jump back into the last game you launched once your recent play history is populated."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-gamescore.webp')"></div><div class="mkt-home-label">Last Played Game</div></li><li class="subnav-item games-lib-item mkt-home-row" data-games-lib-action="friends" style="--mkt-card-art:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-friends.webp')" data-games-lib-title="Friends Playing Now" data-games-lib-desc="Friends Playing Now will light up once SKALD LIVE presence and in-game activity are fully wired."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-friends.webp')"></div><div class="mkt-home-label">Friends Playing Now</div></li><li class="subnav-item games-lib-item mkt-home-row" data-games-lib-action="gamestore" style="--mkt-card-art:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-marketplace.webp')" data-games-lib-title="Game Store" data-games-lib-desc="Jump into the Marketplace blade to discover and download new games for your library."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-marketplace.webp')"></div><div class="mkt-home-label">Game Store</div></li><li class="subnav-item games-lib-item mkt-home-row" data-games-lib-action="autodownloads" style="--mkt-card-art:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-downloads.webp')" data-games-lib-title="Auto Downloads" data-games-lib-desc="Automatic downloads are currently off. Later this can watch for updates or background content for your library."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-downloads.webp')"></div><div class="mkt-home-label">Auto Downloads</div><div class="games-lib-tail">Off</div></li></ul></div><div class="home-desc games-library-copy"><div id="games-library-title" class="home-desc-title">My Games</div><div id="games-library-body" class="home-desc-body">Browse your installed and scanned-in library.\nSelect a system to see the games SKALD already knows about.</div></div></div></div><div class="subpanel" id="sub-library-systems"><div class="subpanel-title">SELECT SYSTEM</div><div class="mkt-scan-layout games-system-layout"><div class="mkt-scan-left"><div class="mkt-scan-list" id="games-system-list"><div class="subnav-item games-system-item sel" data-system="snes" data-games-title="Super Nintendo" data-games-desc="Browse your installed and scanned-in Super Nintendo library from the Games blade."><div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/CONTROLLER-snes.svg')"></div><div class="mkt-account-copy"><div class="mkt-scan-label">Super Nintendo</div><div class="mkt-action-meta" id="cnt-snes2">Loading…</div></div></div><div class="subnav-item games-system-item" data-system="genesis" data-games-title="Sega Genesis" data-games-desc="Browse your installed and scanned-in Sega Genesis library from the Games blade."><div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/Genesis.webp')"></div><div class="mkt-account-copy"><div class="mkt-scan-label">Sega Genesis</div><div class="mkt-action-meta" id="cnt-genesis2">Loading…</div></div></div><div class="subnav-item games-system-item" data-system="psx" data-games-title="PlayStation" data-games-desc="Browse your installed and scanned-in PlayStation library from the Games blade."><div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/CONTROLLER-playstation1.svg')"></div><div class="mkt-account-copy"><div class="mkt-scan-label">PlayStation</div><div class="mkt-action-meta" id="cnt-psx2">Loading…</div></div></div><div class="subnav-item games-system-item" data-system="ps2" data-games-title="PlayStation 2" data-games-desc="Browse your installed and scanned-in PlayStation 2 library from the Games blade."><div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/CONTROLLER-playstation2.svg')"></div><div class="mkt-account-copy"><div class="mkt-scan-label">PlayStation 2</div><div class="mkt-action-meta" id="cnt-ps22">Loading…</div></div></div><div class="subnav-item games-system-item" data-system="psp" data-games-title="PSP" data-games-desc="Browse your installed and scanned-in PSP library from the Games blade."><div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/CONTROLLER-playstation1.svg')"></div><div class="mkt-account-copy"><div class="mkt-scan-label">PSP</div><div class="mkt-action-meta" id="cnt-psp2">Loading…</div></div></div><div class="subnav-item games-system-item" data-system="dc" data-games-title="Dreamcast" data-games-desc="Browse your installed and scanned-in Sega Dreamcast library from the Games blade."><div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/Dreamcast.webp')"></div><div class="mkt-account-copy"><div class="mkt-scan-label">Dreamcast</div><div class="mkt-action-meta" id="cnt-dc2">Loading…</div></div></div><div class="subnav-item games-system-item" data-system="x360" data-games-title="Xbox 360" data-games-desc="Browse your installed and scanned-in Xbox 360 library from the Games blade."><div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/Xbox_360.webp')"></div><div class="mkt-account-copy"><div class="mkt-scan-label">Xbox 360</div><div class="mkt-action-meta" id="cnt-x3602">Loading…</div></div></div></div></div><div class="mkt-scan-side"><div id="games-system-title" class="mkt-scan-title">Super Nintendo</div><div id="games-system-meta" class="mkt-scan-meta">Browse your installed and scanned-in Super Nintendo library from the Games blade.</div><div id="games-system-status" class="mkt-scan-status">Loading library status…</div></div></div></div><div class="subpanel" id="sub-library-games"><div class="subpanel-title">MY GAMES</div><div class="games-library-view"><div class="games-tabs"><div class="games-tab sel" data-games-filter="all">All Games</div><div class="games-tab" data-games-filter="recent">Recently Downloaded</div><div class="games-tab" data-games-filter="played">Recently Played</div></div><div class="games-library-main"><div class="games-library-left"><div id="games-installed-list" class="games-games-list"><div class="mkt-empty">No games installed yet.</div></div><div id="games-library-count" class="games-library-count"></div></div><div class="games-library-right"><div class="games-detail-panel" id="games-installed-detail"><div class="games-detail-head"><div class="games-detail-headrow"><div class="games-detail-copy"><div class="games-detail-title" id="games-installed-title">Select a game</div><div class="mkt-detail-meta" id="games-installed-meta">Choose an installed game to view details.</div></div><div class="games-detail-headactions"><div class="subnav-item games-ready-action" data-games-action="launch"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-a.webp')"></div><div class="mkt-account-copy"><div class="mkt-action-label">Launch</div><div class="mkt-action-meta">Start the selected installed game.</div></div></div><div class="subnav-item games-ready-action" data-games-action="delete"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-x.webp')"></div><div class="mkt-account-copy"><div class="mkt-action-label">Delete Install</div><div class="mkt-action-meta" id="games-delete-meta">Remove the selected installed game from disk.</div></div></div></div></div></div><div class="games-detail-top"><div id="games-detail-icon" class="games-detail-icon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/gamercard_defaultgamerpic.webp')"></div><div class="games-score-line"><div class="games-score-label"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-gamescore.webp')"></div><span>Gamerscore</span></div><div id="games-score-value" class="games-score-value">0/0</div></div></div><div class="games-detail-ach-head"><span>Achievements</span><span id="games-ach-count" class="games-detail-ach-count"></span></div><div id="games-ach-grid" class="games-ach-grid"><div class="games-ach-empty">RetroAchievements data will appear here when a matching game is found.</div></div><div id="games-installed-status" class="mkt-detail-status" style="padding:0 18px 16px;"></div></div></div></div></div><div class="subpanel" id="sub-achievements"><div class="subpanel-title">ACHIEVEMENTS</div><div class="info-block">Set your RetroAchievements API key in Settings to track achievements.</div></div><div class="subpanel" id="sub-played"><div class="subpanel-title">PLAYED GAMES</div><div class="info-block">No games played yet.</div></div></div>
     </div>
     <div id="p-media" class="panel"><div class="blade-home"><div class="home-menu-wrap"><div class="home-menu-shadow"></div><div class="home-menu-frame"></div><ul class="menu home-menu"><li class="mitem home-row r1 sel" data-sub="music" data-home-title="Music" data-home-desc="Future music playback and soundtrack browsing will live here, matching the original Media blade rhythm."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-music.webp')"></div>Music</li><li class="mitem home-row r2" data-sub="pictures" data-home-title="Pictures" data-home-desc="Open image galleries, screenshots, and future media libraries from the Pictures section of the Media blade."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-pictures.webp')"></div>Pictures</li><li class="mitem home-row r3" data-sub="videos" data-home-title="Videos" data-home-desc="Video playback, previews, and trailer-style presentation can be surfaced here later in development."><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-videos.webp')"></div>Videos</li><li class="mitem home-row r4" data-sub="mc" data-home-title="Media Center" data-home-desc="Reserve the classic Media Center slot for future companion apps or a modern streaming equivalent."><div class="micon"></div>Media Center</li></ul></div><div class="home-desc"><div class="home-desc-title">Music</div><div class="home-desc-body">Future music playback and soundtrack browsing will live here, matching the original Media blade rhythm.</div></div></div><div class="subpanel" id="sub-music"><div class="subpanel-title">MUSIC</div><div class="info-block">Music playback coming soon.</div></div><div class="subpanel" id="sub-pictures"><div class="subpanel-title">PICTURES</div><div class="info-block">Picture viewer coming soon.</div></div><div class="subpanel" id="sub-videos"><div class="subpanel-title">VIDEOS</div><div class="info-block">Video playback coming soon.</div></div><div class="subpanel" id="sub-mc"><div class="subpanel-title">MEDIA CENTER</div><div class="info-block">Media Center coming soon.</div></div></div>
     <div id="p-sys" class="panel">
@@ -2512,11 +2697,25 @@ SKALD LIVE uses Stoat for accounts. If you already have a Stoat account, sign in
                   <div class="mkt-action-meta" id="emu-snes-display">Not set</div>
                 </div>
               </div>
+              <div class="subnav-item emu-item" data-emu-key="genesis" data-emu-title="Sega Genesis Core" data-emu-desc="Choose the libretro core DLL SKALD should load for Sega Genesis games." data-emu-picker="core">
+                <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/Genesis.webp')"></div>
+                <div class="mkt-account-copy">
+                  <div class="mkt-scan-label">Sega Genesis Core</div>
+                  <div class="mkt-action-meta" id="emu-genesis-display">Not set</div>
+                </div>
+              </div>
               <div class="subnav-item emu-item" data-emu-key="psx" data-emu-title="PlayStation Core" data-emu-desc="Choose the libretro core DLL SKALD should load for PlayStation games." data-emu-picker="core">
                 <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/CONTROLLER-playstation1.svg')"></div>
                 <div class="mkt-account-copy">
                   <div class="mkt-scan-label">PlayStation Core</div>
                   <div class="mkt-action-meta" id="emu-psx-display">Not set</div>
+                </div>
+              </div>
+              <div class="subnav-item emu-item" data-emu-key="ps2" data-emu-title="PlayStation 2 Core" data-emu-desc="Choose the libretro core DLL SKALD should load for PlayStation 2 games." data-emu-picker="core">
+                <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/CONTROLLER-playstation2.svg')"></div>
+                <div class="mkt-account-copy">
+                  <div class="mkt-scan-label">PlayStation 2 Core</div>
+                  <div class="mkt-action-meta" id="emu-ps2-display">Not set</div>
                 </div>
               </div>
               <div class="subnav-item emu-item" data-emu-key="psp" data-emu-title="PSP Core" data-emu-desc="Choose the libretro core DLL SKALD should load for PSP games." data-emu-picker="core">
@@ -2568,7 +2767,7 @@ SKALD LIVE uses Stoat for accounts. If you already have a Stoat account, sign in
                   <div class="mkt-action-meta" id="storage-download-display">Not set</div>
                 </div>
               </div>
-              <div class="subnav-item emu-item storage-item" data-storage-title="System Scan Folders" data-storage-desc="Review the dedicated scan folders SKALD will prefer when importing existing games by system, including Super Nintendo, PlayStation, PSP, and Dreamcast paths when they are configured.">
+              <div class="subnav-item emu-item storage-item" data-storage-title="System Scan Folders" data-storage-desc="Review the dedicated scan folders SKALD will prefer when importing existing games by system, including Super Nintendo, Sega Genesis, PlayStation, PlayStation 2, PSP, and Dreamcast paths when they are configured.">
                 <div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-search.webp')"></div>
                 <div class="mkt-account-copy">
                   <div class="mkt-scan-label">System Scan Folders</div>
@@ -2806,9 +3005,14 @@ const marketplaceState={
     archiveHideInstalled:false,
     archiveRegion:[],
     archiveRating:[],
-    archiveGenre:[],
+  archiveGenre:[],
+  archiveDownloads:[],
   archiveMediaIdx:0,
   archiveConfirmDownload:false,
+  archiveConfirmCancel:false,
+  archiveVariantModalOpen:false,
+  archiveVariantRows:[],
+  archiveVariantIdx:0,
   romsByProvider:{},
   catalogErrors:{},
   sourceProviders:{},
@@ -4073,13 +4277,13 @@ async function refreshInitialSetupPanel(){
     const setText=(id,value)=>{ const el=document.getElementById(id); if(el) el.textContent=value; };
     setText('setup-install-display', settings.installPath || 'Not set');
     setText('setup-download-display', settings.downloadPath || 'Not set');
-    setText('setup-emulators-display', settings.retroarchPath && cores.snes && cores.psx && cores.psp && cores.dc ? 'RetroArch ready' : 'Needs RetroArch + cores');
+    setText('setup-emulators-display', settings.retroarchPath && cores.snes && cores.genesis && cores.psx && cores.ps2 && cores.psp && cores.dc ? 'RetroArch ready' : 'Needs RetroArch + cores');
     setText('setup-accounts-display', archive?.loggedIn || (raAccount?.secret) || (sgdbAccount?.secret) ? 'Some providers configured' : 'No providers configured');
     setText('setup-network-display', settings?.metadataService?.enabled ? 'Cloud metadata reviewed' : 'Review service status');
     const missing=[];
     if(!settings.installPath) missing.push('Install Folder');
     if(!settings.downloadPath) missing.push('Download Folder');
-    if(!settings.retroarchPath || !cores.snes || !cores.psx || !cores.psp || !cores.dc) missing.push('Emulators');
+    if(!settings.retroarchPath || !cores.snes || !cores.genesis || !cores.psx || !cores.ps2 || !cores.psp || !cores.dc) missing.push('Emulators');
     const status=document.getElementById('setup-status');
     if(status){
       status.textContent=missing.length
@@ -4110,19 +4314,25 @@ async function refreshEmulatorSettingsPanel(){
     const metadataDefaultUrl='https://skald-metadata-worker.uberbeau.workers.dev';
     const raDisplay=document.getElementById('emu-retroarch-display');
     const snesDisplay=document.getElementById('emu-snes-display');
+    const genesisDisplay=document.getElementById('emu-genesis-display');
     const psxDisplay=document.getElementById('emu-psx-display');
+    const ps2Display=document.getElementById('emu-ps2-display');
     const pspDisplay=document.getElementById('emu-psp-display');
     const dcDisplay=document.getElementById('emu-dc-display');
     if(raDisplay) raDisplay.textContent=s.retroarchPath || 'Not set';
     if(snesDisplay) snesDisplay.textContent=cores.snes || 'Not set';
+    if(genesisDisplay) genesisDisplay.textContent=cores.genesis || 'Not set';
     if(psxDisplay) psxDisplay.textContent=cores.psx || 'Not set';
+    if(ps2Display) ps2Display.textContent=cores.ps2 || 'Not set';
     if(pspDisplay) pspDisplay.textContent=cores.psp || 'Not set';
     if(dcDisplay) dcDisplay.textContent=cores.dc || 'Not set';
     const status=document.getElementById('emu-status');
     const missing=[];
     if(!s.retroarchPath) missing.push('RetroArch executable');
     if(!cores.snes) missing.push('SNES core');
+    if(!cores.genesis) missing.push('Genesis core');
     if(!cores.psx) missing.push('PlayStation core');
+    if(!cores.ps2) missing.push('PlayStation 2 core');
     if(!cores.psp) missing.push('PSP core');
     if(!cores.dc) missing.push('Dreamcast core');
     if(status){
@@ -4193,9 +4403,12 @@ async function refreshStoragePanel(){
       : 'Pending background optimization';
     const scanParts=[];
     if(s.systemScanPaths?.snes) scanParts.push(`SNES`);
+    if(s.systemScanPaths?.genesis) scanParts.push(`Genesis`);
     if(s.systemScanPaths?.psx) scanParts.push(`PSX`);
-      if(s.systemScanPaths?.psp) scanParts.push(`PSP`);
-      if(s.systemScanPaths?.dc) scanParts.push(`Dreamcast`);
+    if(s.systemScanPaths?.ps2) scanParts.push(`PlayStation 2`);
+    if(s.systemScanPaths?.psp) scanParts.push(`PSP`);
+    if(s.systemScanPaths?.dc) scanParts.push(`Dreamcast`);
+    if(s.systemScanPaths?.x360) scanParts.push(`Xbox 360`);
     if(artDisplay) artDisplay.textContent=artText;
     if(installDisplay) installDisplay.textContent=s.installPath || 'Not set';
     if(downloadDisplay) downloadDisplay.textContent=s.downloadPath || 'Not set';
@@ -4717,6 +4930,7 @@ function menuBack(){
   if(vkOpen){closeKeyboard(true);return;}
   if(closeGameSearchModal()) return;
   if(closeGamesDeleteModal()) return;
+  if(closeArchiveVariantModal()){ playSfx('tier2_exit.wav'); return; }
   if(subOpen[activeIdx]){
     const sub=getActiveSubpanel();
     if(BLADES[activeIdx]?.id==='live' && !stoatConnected && /^sub-profile-(manager|add|create|signin|themes|blades|gamerpic)$/.test(sub?.id||'')){
@@ -4739,6 +4953,10 @@ function menuBack(){
         return;
     }
 if(BLADES[activeIdx]?.id==='mkt' && sub?.id==='sub-archive-games' && cancelMarketplaceDownloadConfirm()){
+      playSfx('tier2_exit.wav');
+      return;
+    }
+if(BLADES[activeIdx]?.id==='mkt' && sub?.id==='sub-archive-games' && cancelMarketplaceCancelConfirm()){
       playSfx('tier2_exit.wav');
       return;
     }
@@ -5003,8 +5221,8 @@ function getGuideAccountRefs(){
   };
 }
 const GAMES_ALL_SYSTEM='all';
-const GAMES_LIBRARY_SYSTEMS=['snes','psx','psp','dc'];
-const ACHIEVEMENT_SYSTEMS=['snes','psx'];
+const GAMES_LIBRARY_SYSTEMS=['snes','genesis','psx','ps2','psp','dc','xbox','x360'];
+const ACHIEVEMENT_SYSTEMS=['snes','genesis','psx'];
   const gamesState={system:'snes',selectedId:null,filter:'all',pane:'list',actionIdx:0,systemSelectorSource:'library',achievementIdx:0,achievementGameId:null,achievementModalOpen:false,achievementListModalOpen:false,currentAchievements:[],mediaIdx:0,mediaModalOpen:false,deleteModalOpen:false,filterRegion:[],filterRating:[],filterGenre:[],filterTab:'region'};
 const gameSearchState={open:false,context:null,query:'',focus:'input',resultIdx:0,results:[]};
 const folderBrowserState={open:false,title:'Select Folder',currentPath:'',parentPath:null,entries:[],selectedIdx:0,resolve:null,error:''};
@@ -5686,13 +5904,15 @@ document.getElementById('sub-archive-systems')?.addEventListener('click',async(e
   document.getElementById('mkt-archive-list')?.addEventListener('click',(e)=>{
     const item=e.target.closest('.mkt-archive-rom-item');
     if(!item || !item.offsetParent) return;
+    closeArchiveVariantModal();
     marketplaceState.archivePane='list';
     marketplaceState.archiveConfirmDownload=false;
+    marketplaceState.archiveConfirmCancel=false;
     marketplaceState.archiveMediaIdx=0;
     marketplaceState.selectedRomId=item.dataset.romId;
     const items=getSubItems();
     const idx=items.indexOf(item);
-    if(idx>=0){subSelIdx=idx;applySubSel();}else{renderArchiveGamesDetail();}
+    if(idx>=0){subSelIdx=idx;applySubSel();}else{renderArchiveGamesDetail();updateControlLegend();}
   });
   document.querySelectorAll('#sub-library-games .games-tab').forEach(tab=>tab.addEventListener('click',()=>{
     playSfx('select.wav');
@@ -5724,24 +5944,34 @@ document.getElementById('btn-exit').addEventListener('click',()=>exitBlades(fals
   async function loadRomCounts(){
     if(!window.electronAPI?.fetchMarketplaceCatalog) return;
     try{
-      const [sR,pR,pspR,dcR]=await Promise.all([
+      const [sR,gR,pR,ps2R,pspR,dcR,xboxR,x360R]=await Promise.all([
         window.electronAPI.fetchMarketplaceCatalog({provider:'archiveorg',system:'snes'}),
+        window.electronAPI.fetchMarketplaceCatalog({provider:'archiveorg',system:'genesis'}),
         window.electronAPI.fetchMarketplaceCatalog({provider:'archiveorg',system:'psx'}),
+        window.electronAPI.fetchMarketplaceCatalog({provider:'archiveorg',system:'ps2'}),
         window.electronAPI.fetchMarketplaceCatalog({provider:'archiveorg',system:'psp'}),
-        window.electronAPI.fetchMarketplaceCatalog({provider:'archiveorg',system:'dc'})
+        window.electronAPI.fetchMarketplaceCatalog({provider:'archiveorg',system:'dc'}),
+        window.electronAPI.fetchMarketplaceCatalog({provider:'archiveorg',system:'xbox'}),
+        window.electronAPI.fetchMarketplaceCatalog({provider:'archiveorg',system:'x360'})
       ]);
-      mktCatalogBucket('archiveorg').snes=sR.ok?sR.roms:[];
-      mktCatalogBucket('archiveorg').psx=pR.ok?pR.roms:[];
-      mktCatalogBucket('archiveorg').psp=pspR.ok?pspR.roms:[];
-      mktCatalogBucket('archiveorg').dc=dcR.ok?dcR.roms:[];
+      mktCatalogBucket('archiveorg').snes=normalizeMarketplaceCatalogRoms(sR.ok?sR.roms:[],'snes','archiveorg');
+      mktCatalogBucket('archiveorg').genesis=normalizeMarketplaceCatalogRoms(gR.ok?gR.roms:[],'genesis','archiveorg');
+      mktCatalogBucket('archiveorg').psx=normalizeMarketplaceCatalogRoms(pR.ok?pR.roms:[],'psx','archiveorg');
+      mktCatalogBucket('archiveorg').ps2=normalizeMarketplaceCatalogRoms(ps2R.ok?ps2R.roms:[],'ps2','archiveorg');
+      mktCatalogBucket('archiveorg').psp=normalizeMarketplaceCatalogRoms(pspR.ok?pspR.roms:[],'psp','archiveorg');
+      mktCatalogBucket('archiveorg').dc=normalizeMarketplaceCatalogRoms(dcR.ok?dcR.roms:[],'dc','archiveorg');
+      mktCatalogBucket('archiveorg').xbox=normalizeMarketplaceCatalogRoms(xboxR.ok?xboxR.roms:[],'xbox','archiveorg');
+      mktCatalogBucket('archiveorg').x360=normalizeMarketplaceCatalogRoms(x360R.ok?x360R.roms:[],'x360','archiveorg');
       renderMarketplaceSystemCounts('archiveorg');
     }catch{}
   }
 async function loadSysInfo(){try{const v=await window.electronAPI?.getAppVersion?.()??'—';const items=[...document.querySelectorAll('#p-sys .sys-row')];const consoleItem=items.find(el=>el.dataset.sysTitle==='Console Settings');const emuItem=items.find(el=>el.dataset.sysTitle==='Emulators');const storageItem=items.find(el=>el.dataset.sysTitle==='Storage');const networkItem=items.find(el=>el.dataset.sysTitle==='Network Settings');const setupItem=items.find(el=>el.dataset.sysTitle==='Initial Setup');if(consoleItem)consoleItem.dataset.sysDesc=`View launcher version information, platform credits, and third-party technology notes.\nSKALD Launcher v${v}`;if(emuItem)emuItem.dataset.sysDesc=`Configure RetroArch executable and core paths so games can launch directly from Blades.\nSKALD Launcher v${v}`;if(storageItem)storageItem.dataset.sysDesc='Review install paths, download paths, scan folders, and art-cache optimization status.';if(networkItem)networkItem.dataset.sysDesc='Review Stoat, metadata service, Archive.org, RetroAchievements, and SteamGridDB connectivity.';if(setupItem)setupItem.dataset.sysDesc='Review first-run setup, install paths, emulator configuration, and sign-in requirements.';const versionEl=document.getElementById('sys-console-version');if(versionEl)versionEl.textContent=`SKALD Launcher v${v}\nElectron desktop shell with integrated launcher services.`;if(BLADES[activeIdx]?.id==='sys')updateSystemBlade();updateConsoleSettingsPanel();await refreshEmulatorSettingsPanel();await refreshStoragePanel();await refreshNetworkSettingsPanel();await refreshInitialSetupPanel();}catch{}}
 
-function mktRomId(rom){return rom?.name||'';}
-function mktRomTitle(rom){return rom?.cleanName||rom?.name||'Unknown';}
-function mktInstalled(rom){return !!marketplaceState.library[mktRomId(rom)]?.install_dir;}
+function mktRomId(rom){return rom?.groupId || rom?.name || '';}
+function mktRomTitle(rom){return rom?.title || rom?.cleanName || rom?.name || 'Unknown';}
+function mktInstalled(rom){
+  return marketplaceArchiveVariants(rom).some(item=>!!marketplaceState.library[item?.name||'']?.install_dir);
+}
 function mktProviderLabel(provider){return provider==='archiveorg'?'Archive.org':'Archive.org';}
 function mktDownloadHost(rom){
   const url=rom?.downloadUrl;
@@ -5772,9 +6002,13 @@ function marketplaceDefaultIcon(){
 function marketplaceSystemLogoUrl(system){
   const base='file:///C:/Projects/SKALD/assets/icons/Systems';
   if(system==='snes') return `${base}/Super_Nintendo.webp`;
+  if(system==='genesis') return `${base}/Genesis.webp`;
   if(system==='psx') return `${base}/PlayStation.webp`;
+  if(system==='ps2') return `${base}/PlayStation_2.webp`;
   if(system==='psp') return `${base}/PSP.webp`;
   if(system==='dc') return `${base}/Dreamcast.webp`;
+  if(system==='xbox') return `${base}/XBOX.webp`;
+  if(system==='x360') return `${base}/Xbox_360.webp`;
   if(system){
     const title=marketplaceSystemLabel(system).replace(/[^A-Za-z0-9]+/g,'_');
     return `${base}/${title}.webp`;
@@ -5785,9 +6019,13 @@ function marketplaceSystemBadgeUrl(system){
   if(system===GAMES_ALL_SYSTEM) return "file:///C:/Projects/SKALD/assets/icons/Systems/All_Games.webp";
   const logo=marketplaceSystemLogoUrl(system);
   if(system==='snes') return logo || "file:///C:/Projects/SKALD/assets/icons/CONTROLLER-snes.svg";
+  if(system==='genesis') return logo || "file:///C:/Projects/SKALD/assets/icons/Systems/Genesis.webp";
   if(system==='psx') return logo || "file:///C:/Projects/SKALD/assets/icons/CONTROLLER-playstation1.svg";
+  if(system==='ps2') return logo || "file:///C:/Projects/SKALD/assets/icons/CONTROLLER-playstation2.svg";
   if(system==='psp') return logo || "file:///C:/Projects/SKALD/assets/icons/CONTROLLER-playstation1.svg";
   if(system==='dc') return logo || marketplaceDefaultIcon();
+  if(system==='xbox') return logo || "file:///C:/Projects/SKALD/assets/icons/Systems/XBOX.webp";
+  if(system==='x360') return logo || "file:///C:/Projects/SKALD/assets/icons/Systems/Xbox_360.webp";
   return logo || marketplaceDefaultIcon();
 }
 function marketplacePreviewPublisher(preview){
@@ -5816,6 +6054,7 @@ function marketplacePreviewPublisherDisplay(preview){
 function marketplacePreviewSourceLabel(preview){
   const source=String(preview?.metadata_source || '').toLowerCase();
   if(source==='packaged-metadata') return 'Local Pack';
+  if(source==='local-xml') return 'Local XML';
   if(source==='cloudflare-worker') return 'Cloud';
   if(source==='local-providers') return 'Local Providers';
   if(source==='missing') return 'Unavailable';
@@ -5831,7 +6070,7 @@ function marketplacePreviewGenres(preview){
 }
 function marketplacePreviewRating(preview){
   if(!preview || typeof preview!=='object') return 'Unrated';
-  const rating=String(preview.rating || '').trim();
+  const rating=String(preview.age_rating || preview.rating_esrb || preview.rating || '').trim();
   return rating || 'Unrated';
 }
 function marketplaceEsrbBadgeUrl(code){
@@ -5861,7 +6100,7 @@ function marketplaceNormalizeEsrbCode(value){
 function marketplaceAgeRating(preview){
   if(!preview || typeof preview!=='object') return null;
   const board=String(preview.age_rating_board || '').toUpperCase();
-  const code=marketplaceNormalizeEsrbCode(preview.age_rating || preview.age_rating_label);
+  const code=marketplaceNormalizeEsrbCode(preview.age_rating || preview.age_rating_label || preview.rating_esrb);
   const badgeUrl=marketplaceEsrbBadgeUrl(code);
   if(code && (board==='ESRB' || badgeUrl)){
     return {
@@ -5900,15 +6139,16 @@ function marketplaceSourceInfoBox(rom){
       <div class="mkt-source-info-side"><span class="mkt-source-info-label-inline">SIZE:</span> <span class="mkt-source-info-strong">SELECT A GAME</span></div>
     `;
   }
-  const region=rom.region || 'Unknown';
-  const size=formatMktSize(rom) || 'Unknown';
+  const variants=marketplaceArchiveVariants(rom);
+  const region=variants.length>1 ? `${variants.length} Versions` : (rom.region || 'Unknown');
+  const size=variants.length>1 ? 'Select Version' : (formatMktSize(rom) || 'Unknown');
   return `
     <div class="mkt-source-info-side"><span class="mkt-source-info-label-inline">REGION:</span> <span class="mkt-source-info-strong">${esc(String(region).toUpperCase())}</span></div>
     <div class="mkt-source-info-side"><span class="mkt-source-info-label-inline">SIZE:</span> <span class="mkt-source-info-strong">${esc(size)}</span></div>
   `;
 }
 function marketplaceShouldConsumeMediaNav(){
-return isArchiveGamesOpen() && !marketplaceState.archiveConfirmDownload;
+return isArchiveGamesOpen() && !marketplaceState.archiveConfirmDownload && !marketplaceState.archiveConfirmCancel;
 }
 function stopMarketplaceMediaRotation(){
   if(marketplaceMediaTimer){
@@ -5977,8 +6217,37 @@ if(!marketplaceState.archiveConfirmDownload) return false;
 marketplaceState.archiveConfirmDownload=false;
 renderArchiveGamesDetail();
 syncArchiveGamesSelection();
+  updateControlLegend();
   startMarketplaceMediaRotation();
   return true;
+}
+function cancelMarketplaceCancelConfirm(){
+if(!marketplaceState.archiveConfirmCancel) return false;
+marketplaceState.archiveConfirmCancel=false;
+renderArchiveGamesList();
+renderArchiveGamesDetail();
+syncArchiveGamesSelection();
+  updateControlLegend();
+  startMarketplaceMediaRotation();
+  return true;
+}
+function marketplaceSelectedDownloadEntryForRom(rom){
+  if(!rom) return null;
+  for(const variant of marketplaceArchiveVariants(rom)){
+    const entry=marketplaceState.downloads.get(variant?.name||'');
+    if(marketplaceDownloadEntryIsActive(entry)) return entry;
+  }
+  return null;
+}
+function marketplaceSelectedDownloadEntry(){
+  return marketplaceSelectedDownloadEntryForRom(mktSelectedRom());
+}
+function marketplaceDownloadEntryIsActive(entry){
+  return ['downloading','extracting','cancelling'].includes(String(entry?.status||'').toLowerCase());
+}
+function marketplaceDownloadEntryLabel(entry){
+  if(!marketplaceDownloadEntryIsActive(entry)) return '';
+  return `${entry.statusLabel||entry.status||'Downloading'}${entry.percent!=null?` ${entry.percent}%`:''}`;
 }
 function applyMarketplaceListArt(identifier,url){
 const el=document.querySelector(`#mkt-archive-list .mkt-archive-rom-item[data-rom-id="${CSS.escape(identifier)}"] .micon`);
@@ -5989,7 +6258,7 @@ function applyMarketplaceListPreview(rom){
   if(!identifier) return;
 const row=document.querySelector(`#mkt-archive-list .mkt-archive-rom-item[data-rom-id="${CSS.escape(identifier)}"]`);
   if(!row) return;
-  const publisher=row.querySelector('.mkt-source-row-publisher');
+  const publisher=row.querySelector('.mkt-source-row-publisher-main') || row.querySelector('.mkt-source-row-publisher');
   const preview=marketplacePreviewCache.get(marketplacePreviewKey(rom));
   if(publisher){
     publisher.textContent=marketplacePreviewPublisherDisplay(preview);
@@ -6045,19 +6314,40 @@ function marketplaceListMetaLine(rom){
   const region=(rom?.region||'').trim();
   return region ? `${systemLabel} - ${region}` : systemLabel;
 }
+function marketplaceArchiveVariantState(variant){
+  const queue=marketplaceState.downloads.get(variant?.name||'');
+  if(marketplaceDownloadEntryIsActive(queue)) return queue.statusLabel||queue.status||'Downloading';
+  if(!!marketplaceState.library[variant?.name||'']?.install_dir) return 'Installed';
+  return '';
+}
+function marketplaceArchiveVariantMeta(variant){
+  const parts=[];
+  const region=String(variant?.region||'Unknown').trim() || 'Unknown';
+  parts.push(region);
+  if(variant?.size) parts.push(variant.size);
+  const extraTags=(Array.isArray(variant?.tags) ? variant.tags : []).filter(tag=>!/^(usa|europe|japan|unknown)$/i.test(String(tag||'')));
+  if(extraTags.length) parts.push(extraTags.join(', '));
+  return parts.join(' · ');
+}
 function marketplaceArchiveRowHtml(rom){
   const installed=mktInstalled(rom);
-  const queue=marketplaceState.downloads.get(mktRomId(rom));
-  const queueLabel=queue
-    ? `${queue.statusLabel||queue.status||'Downloading'}${queue.percent!=null?` ${queue.percent}%`:''}`
-    : '';
+  const queue=marketplaceSelectedDownloadEntryForRom(rom);
+  const queueLabel=marketplaceDownloadEntryLabel(queue);
+  const variantCount=marketplaceArchiveVariants(rom).length;
+  const publisher=marketplacePreviewPublisherDisplay(marketplacePreviewCache.get(marketplacePreviewKey(rom)));
+  const variantsLine=variantCount>1 ? `
+            <span class="mkt-source-row-variants">
+              <span class="mkt-source-row-variants-icon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/cards_collection_outline.webp')"></span>
+              <span class="mkt-source-row-variants-text">${esc(`${variantCount} versions available`)}</span>
+            </span>
+  ` : '';
   return `
     <div class="subnav-item games-installed-item mkt-archive-rom-item" data-rom-id="${esc(mktRomId(rom))}">
       <div class="mkt-source-row">
         <div class="micon" style="background-image:url('${esc(marketplaceArtCache.get(marketplaceArtKey(rom))||marketplaceDefaultIcon())}')"></div>
         <div class="mkt-source-row-copy">
           <div class="mkt-source-row-title">${esc(mktRomTitle(rom))}</div>
-          <div class="mkt-source-row-publisher">${esc(marketplacePreviewPublisherDisplay(marketplacePreviewCache.get(marketplacePreviewKey(rom))))}</div>
+          <div class="mkt-source-row-publisher"><span class="mkt-source-row-publisher-main">${esc(publisher)}</span>${variantsLine}</div>
         </div>
         ${queueLabel ? `<div class="mkt-source-row-download">${esc(queueLabel)}</div>` : ''}
         <div class="mkt-source-row-systemwrap">
@@ -6231,12 +6521,12 @@ async function primeMarketplacePackagedMetadata(provider=marketplaceState.provid
     const result=await window.electronAPI.getPackagedMarketplaceMetadata({
       provider,
       system,
-      catalogIdentifiers: roms.map(rom=>mktRomId(rom)).filter(Boolean),
+      catalogIdentifiers: roms.map(rom=>mktCatalogIdentifier(rom)).filter(Boolean),
     });
     if(!result?.ok || !result.entries || typeof result.entries!=='object') return false;
     let changed=false;
     roms.forEach((rom)=>{
-      const identifier=mktRomId(rom);
+      const identifier=mktCatalogIdentifier(rom);
       const key=marketplacePreviewKey(rom);
       const entry=result.entries?.[identifier] || {
         title:mktRomTitle(rom),
@@ -6267,7 +6557,7 @@ async function updateMarketplacePackagedStats(provider=marketplaceState.provider
     const stats=await window.electronAPI.getPackagedMarketplaceMetadataStats({
       provider,
       system,
-      catalogIdentifiers: roms.map(rom=>mktRomId(rom)).filter(Boolean),
+      catalogIdentifiers: roms.map(rom=>mktCatalogIdentifier(rom)).filter(Boolean),
     });
     if(stats?.ok){
       marketplacePackStatsCache.set(`${provider}::${system}`,stats);
@@ -6333,6 +6623,17 @@ function processMarketplacePreviewQueue(){
     const next=marketplacePreviewQueue.shift();
     if(!next?.rom) continue;
     const { rom, key, resolve, viewToken, viewKey } = next;
+    if(viewToken !== marketplaceArchiveViewToken){
+      marketplacePreviewPromises.delete(key);
+      resolve(null);
+      continue;
+    }
+    const currentViewKey=marketplaceArchiveViewKey(rom.provider||marketplaceState.provider,rom.system||marketplaceState.system,mktArchiveMode());
+    if(viewKey !== currentViewKey){
+      marketplacePreviewPromises.delete(key);
+      resolve(null);
+      continue;
+    }
     marketplacePreviewInFlight+=1;
     marketplacePreviewPending.add(key);
     (async()=>{
@@ -6342,7 +6643,7 @@ function processMarketplacePreviewQueue(){
           title:mktRomTitle(rom),
           system:rom.system||marketplaceState.system,
           provider:rom.provider||marketplaceState.provider,
-          catalogIdentifier:mktRomId(rom),
+          catalogIdentifier:mktCatalogIdentifier(rom),
         });
         if(result?.ok && result.data){
           data=result.data;
@@ -6393,9 +6694,13 @@ async function loadMarketplacePreview(rom,{priority=false,force=false}={}){
 function marketplaceSystemLabel(system){
   if(system===GAMES_ALL_SYSTEM) return 'All Games';
   if(system==='snes') return 'Super Nintendo';
+  if(system==='genesis') return 'Sega Genesis';
   if(system==='psx') return 'PlayStation';
+  if(system==='ps2') return 'PlayStation 2';
   if(system==='psp') return 'PSP';
   if(system==='dc') return 'Dreamcast';
+  if(system==='xbox') return 'Xbox';
+  if(system==='x360') return 'Xbox 360';
   return String(system || '').toUpperCase();
 }
 const CONTROL_ICON_BASE='file:///C:/Projects/SKALD/assets/icons/Controls';
@@ -6593,6 +6898,20 @@ function controlLegendForContext(){
     };
   }
     if(isArchiveGamesOpen()){
+      if(marketplaceState.archiveVariantModalOpen){
+        return {
+          title:'Control Legend',
+          entries:[
+            { icons:['dpadVertical','leftStickVertical'], label:'Choose Version' },
+            { icons:['a'], label:'Download' },
+            { icons:['b'], label:'Back' },
+          ],
+        };
+      }
+      const activeDownload=marketplaceSelectedDownloadEntry();
+      const aLabel=marketplaceState.archiveConfirmCancel
+        ? 'Confirm Cancel'
+        : (activeDownload ? 'Cancel Download' : (marketplaceState.archiveConfirmDownload ? 'Confirm' : 'Download'));
       return {
         title:'Control Legend',
         entries:[
@@ -6602,7 +6921,7 @@ function controlLegendForContext(){
           { icons:['view'], label:'Filters' },
           { icons:['x'], label:marketplaceState.archiveHideInstalled?'Show Installed':'Hide Installed' },
           { icons:['y'], label:'Search' },
-          { icons:['a'], label:marketplaceState.archiveConfirmDownload?'Confirm':'Download' },
+          { icons:['a'], label:aLabel },
           { icons:['b'], label:'Back' },
         ],
     };
@@ -6826,10 +7145,40 @@ function mktCatalogForSystem(provider,system){
   const roms=mktCatalogBucket(provider)[system];
   return Array.isArray(roms) ? roms.filter(rom=>rom && typeof rom==='object') : [];
 }
-function marketplaceIsDemoRom(rom){
+function normalizeMarketplaceCatalogRoms(roms=[], system='', provider='archiveorg'){
+  return Array.isArray(roms)
+    ? roms.filter(rom=>rom && typeof rom==='object').map(rom=>({
+        ...rom,
+        system: rom.system || system,
+        provider: rom.provider || provider,
+      }))
+    : [];
+}
+function marketplaceArchiveVariants(rom){
+  return Array.isArray(rom?.variants) && rom.variants.length ? rom.variants.filter(Boolean) : (rom ? [rom] : []);
+}
+function marketplaceArchivePrimaryRom(rom){
+  return rom?.primaryRom || marketplaceArchiveVariants(rom)[0] || rom || null;
+}
+function mktCatalogIdentifier(rom){
+  const primary=marketplaceArchivePrimaryRom(rom);
+  return primary?.name || rom?.catalogIdentifier || rom?.name || '';
+}
+function marketplaceArchiveTagTokens(rom){
+  const sources=[rom, ...marketplaceArchiveVariants(rom)];
+  return [...new Set(sources.flatMap(item=>Array.isArray(item?.tags) ? item.tags : String(item?.tags||'').split(/[,|]/)).map(value=>String(value||'').trim()).filter(Boolean))];
+}
+function marketplaceArchiveVariantClass(rom){
   const name=String(rom?.name||rom?.cleanName||'');
-  const tags=Array.isArray(rom?.tags) ? rom.tags.join(' ') : '';
-  return /\([^)]*\bdemo\b[^)]*\)/i.test(name) || /\bdemo\b/i.test(tags);
+  const tags=marketplaceArchiveTagTokens(rom).join(' ');
+  if(/\([^)]*\bprototype\b[^)]*\)/i.test(name) || /\bprototype\b/i.test(tags)) return 'prototype';
+  if(/\([^)]*\bproto\b[^)]*\)/i.test(name) || /\bproto\b/i.test(tags)) return 'proto';
+  if(/\([^)]*\bbeta\b[^)]*\)/i.test(name) || /\bbeta\b/i.test(tags)) return 'beta';
+  if(/\([^)]*\bdemo\b[^)]*\)/i.test(name) || /\bdemo\b/i.test(tags)) return 'demo';
+  return 'game';
+}
+function marketplaceIsDemoRom(rom){
+  return marketplaceArchiveVariantClass(rom)!=='game';
 }
 function mktArchiveMode(){
   return marketplaceState.archiveMode==='demos' ? 'demos' : 'discover';
@@ -6841,15 +7190,22 @@ function marketplaceArchiveFilterCacheKey(provider=marketplaceState.provider,sys
   const regions=getArchiveFilterValues('region').map(value=>value.toLowerCase()).sort().join('|');
   const ratings=getArchiveFilterValues('rating').map(value=>value.toLowerCase()).sort().join('|');
   const genres=getArchiveFilterValues('genre').map(value=>value.toLowerCase()).sort().join('|');
+  const downloads=getArchiveFilterValues('downloads').map(value=>value.toLowerCase()).sort().join('|');
   const hideInstalled=marketplaceState.archiveHideInstalled ? '1' : '0';
-  return `${marketplaceArchiveViewKey(provider,system,mode)}::h=${hideInstalled}::r=${regions}::a=${ratings}::g=${genres}`;
+  return `${marketplaceArchiveViewKey(provider,system,mode)}::h=${hideInstalled}::r=${regions}::a=${ratings}::g=${genres}::d=${downloads}`;
+}
+function clearMarketplaceArchiveCatalogCache(provider=marketplaceState.provider,system=marketplaceState.system){
+  const prefix=`${provider}::${system}::`;
+  [...marketplaceArchiveCatalogCache.keys()].forEach(key=>{
+    if(String(key||'').startsWith(prefix)) marketplaceArchiveCatalogCache.delete(key);
+  });
 }
 function marketplaceArchiveMetadataForRom(rom){
   return marketplacePreviewCache.get(marketplacePreviewKey(rom)) || rom || {};
 }
   function marketplaceArchiveRatingForRom(rom){
     const meta=marketplaceArchiveMetadataForRom(rom);
-    return String(meta.age_rating || meta.ageRating || meta.esrb || meta.rating || rom?.rating || '').trim() || 'Unrated';
+    return String(meta.age_rating || meta.ageRating || meta.rating_esrb || meta.esrb || meta.rating || rom?.rating || '').trim() || 'Unrated';
   }
   function marketplaceArchiveGenresForRom(rom){
   const meta=marketplaceArchiveMetadataForRom(rom);
@@ -6871,12 +7227,14 @@ function marketplaceArchiveMetadataForRom(rom){
   function getArchiveFilterValues(kind){
     if(kind==='region') return normalizeArchiveFilterValues(marketplaceState.archiveRegion);
     if(kind==='rating') return normalizeArchiveFilterValues(marketplaceState.archiveRating);
+    if(kind==='downloads') return normalizeArchiveFilterValues(marketplaceState.archiveDownloads);
     return normalizeArchiveFilterValues(marketplaceState.archiveGenre);
   }
   function setArchiveFilterValues(kind,values){
     const normalized=normalizeArchiveFilterValues(values);
     if(kind==='region') marketplaceState.archiveRegion=normalized;
     else if(kind==='rating') marketplaceState.archiveRating=normalized;
+    else if(kind==='downloads') marketplaceState.archiveDownloads=normalized;
     else marketplaceState.archiveGenre=normalized;
   }
   function toggleArchiveFilterValue(kind,value){
@@ -6895,6 +7253,7 @@ function marketplaceArchiveMetadataForRom(rom){
     marketplaceState.archiveRegion=[];
     marketplaceState.archiveRating=[];
     marketplaceState.archiveGenre=[];
+    marketplaceState.archiveDownloads=[];
   }
   function toggleArchiveHideInstalled(){
     marketplaceState.archiveHideInstalled=!marketplaceState.archiveHideInstalled;
@@ -6912,6 +7271,50 @@ function marketplaceArchiveMetadataForRom(rom){
     if(normalized.length===2) return `${normalized[0]} + ${normalized[1]}`;
     return `${normalized[0]} + ${normalized.length-1} more`;
   }
+  function marketplaceArchivePreferredVariant(variants=[]){
+    const list=Array.isArray(variants) ? variants.filter(Boolean) : [];
+    if(!list.length) return null;
+    return list.find(item=>mktInstalled(item))
+      || list.find(item=>String(item?.region||'').toLowerCase()==='usa')
+      || list.find(item=>String(item?.region||'').toLowerCase()==='europe')
+      || list[0];
+  }
+  function marketplaceArchiveGroupKey(rom){
+    const title=String(rom?.cleanName || rom?.name || 'Unknown').trim().toLowerCase();
+    return `${title}::${marketplaceArchiveVariantClass(rom)}`;
+  }
+  function marketplaceArchiveGroupCatalog(roms=[], system=marketplaceState.system, provider=marketplaceState.provider){
+    const groups=new Map();
+    (Array.isArray(roms) ? roms : []).forEach(rom=>{
+      const key=marketplaceArchiveGroupKey(rom);
+      const existing=groups.get(key);
+      if(existing){
+        existing.variants.push(rom);
+        return;
+      }
+      groups.set(key,{
+        groupId:`group::${rom.system||marketplaceState.system}::${key}`,
+        title:String(rom?.cleanName || rom?.name || 'Unknown').trim() || 'Unknown',
+        variants:[rom],
+        system:rom.system||system,
+        provider:rom.provider||provider,
+      });
+    });
+    return [...groups.values()].map(group=>{
+      const primary=marketplaceArchivePreferredVariant(group.variants) || group.variants[0];
+      return {
+        ...primary,
+        ...group,
+        primaryRom:primary,
+        catalogIdentifier:primary?.name || '',
+        cleanName:group.title,
+        region:group.variants.length>1 ? 'Multiple' : (primary?.region || 'Unknown'),
+        size:group.variants.length>1 ? '' : (primary?.size || ''),
+        sizeBytes:group.variants.length>1 ? null : (primary?.sizeBytes ?? null),
+        tags:primary?.tags || [],
+      };
+    });
+  }
   function mktArchiveCatalogForSystem(provider=marketplaceState.provider,system=marketplaceState.system,mode=mktArchiveMode()){
     const cacheKey=marketplaceArchiveFilterCacheKey(provider,system,mode);
     if(marketplaceArchiveCatalogCache.has(cacheKey)) return marketplaceArchiveCatalogCache.get(cacheKey);
@@ -6919,23 +7322,26 @@ function marketplaceArchiveMetadataForRom(rom){
     const regions=getArchiveFilterValues('region').map(value=>value.toLowerCase());
     const ratings=getArchiveFilterValues('rating').map(value=>value.toLowerCase());
     const genres=getArchiveFilterValues('genre').map(value=>value.toLowerCase());
+    const downloads=getArchiveFilterValues('downloads').map(value=>value.toLowerCase());
     const filtered=roms.filter(rom=>{
       if(mode==='demos' ? !marketplaceIsDemoRom(rom) : marketplaceIsDemoRom(rom)) return false;
       if(marketplaceState.archiveHideInstalled && mktInstalled(rom)) return false;
       if(regions.length && !regions.includes(String(rom.region||'Unknown').toLowerCase())) return false;
       if(ratings.length && !ratings.includes(marketplaceArchiveRatingForRom(rom).toLowerCase())) return false;
       if(genres.length && !marketplaceArchiveGenresForRom(rom).some(item=>genres.includes(item.toLowerCase()))) return false;
+      if(downloads.includes('active') && !marketplaceDownloadEntryIsActive(marketplaceState.downloads.get(mktRomId(rom)))) return false;
       return true;
     });
-    marketplaceArchiveCatalogCache.set(cacheKey,filtered);
-    return filtered;
+    const grouped=marketplaceArchiveGroupCatalog(filtered, system, provider);
+    marketplaceArchiveCatalogCache.set(cacheKey,grouped);
+    return grouped;
   }
 function mktArchiveBaseCatalogForSystem(provider=marketplaceState.provider,system=marketplaceState.system,mode=mktArchiveMode()){
   const roms=mktCatalogForSystem(provider,system);
-  return roms.filter(rom=>mode==='demos' ? marketplaceIsDemoRom(rom) : !marketplaceIsDemoRom(rom));
+  return marketplaceArchiveGroupCatalog(roms.filter(rom=>mode==='demos' ? marketplaceIsDemoRom(rom) : !marketplaceIsDemoRom(rom)), system, provider);
 }
 function renderMarketplaceSystemCounts(provider=marketplaceState.provider){
-  ['snes','psx','psp','dc'].forEach(system=>{
+['snes','genesis','psx','ps2','psp','dc','xbox','x360'].forEach(system=>{
     const roms=mktCatalogForSystem(provider,system);
     const text=Array.isArray(roms)&&roms.length?`${roms.length.toLocaleString()} ROMs`:'—';
     const el=document.getElementById(`cnt-${system}`);
@@ -6943,7 +7349,7 @@ function renderMarketplaceSystemCounts(provider=marketplaceState.provider){
   });
 }
 function renderArchiveSystemCounts(provider=marketplaceState.provider){
-  ['snes','psx','psp','dc'].forEach(system=>{
+['snes','genesis','psx','ps2','psp','dc','xbox','x360'].forEach(system=>{
     const roms=mktCatalogForSystem(provider,system);
     const stats=marketplacePackStatsCache.get(`${provider}::${system}`);
     const text=Array.isArray(roms)&&roms.length
@@ -6986,9 +7392,12 @@ async function archiveGamesCycleSystem(delta){
   marketplaceState.archivePane='list';
   marketplaceState.archiveMediaIdx=0;
   marketplaceState.archiveConfirmDownload=false;
+  marketplaceState.archiveConfirmCancel=false;
+  closeArchiveVariantModal();
   marketplaceState.archiveRegion=[];
   marketplaceState.archiveRating=[];
   marketplaceState.archiveGenre=[];
+  marketplaceState.archiveDownloads=[];
   marketplaceState.selectedRomId=null;
   await openMarketplaceSourceGamesLibrary(next,marketplaceState.provider);
   playSfx('cursor.wav');
@@ -7005,6 +7414,22 @@ function isMarketplaceReadyOpen(){
 }
 function getMarketplaceSystemCards(){
   return [...document.querySelectorAll('#sub-browse .mkt-system-card')].filter(el=>el.offsetParent!==null);
+}
+function centerMarketplaceSystemCards(system=marketplaceState.system){
+  const cards=getMarketplaceSystemCards();
+  if(!cards.length) return;
+  const selectedIdx=Math.max(0,cards.findIndex(card=>card.dataset.system===system));
+  const center=Math.floor(cards.length/2);
+  const wrapDistance=(idx)=>{
+    let rel=idx-selectedIdx;
+    const half=Math.floor(cards.length/2);
+    if(rel>half) rel-=cards.length;
+    if(rel<-half) rel+=cards.length;
+    return rel;
+  };
+  cards.forEach((card,idx)=>{
+    card.style.order=String(center + wrapDistance(idx));
+  });
 }
 function getMarketplaceRomItems(){
   return [...document.querySelectorAll('#sub-browse .mkt-rom-item')].filter(el=>el.offsetParent!==null);
@@ -7327,6 +7752,7 @@ function renderGameSearchResults(){
 }
 function openGameSearchModal(){
   if(!isGameSearchAvailable()) return false;
+  if(isArchiveGamesOpen() && (marketplaceState.archiveConfirmDownload || marketplaceState.archiveConfirmCancel || marketplaceState.archiveVariantModalOpen)) return false;
   const ctx=gameSearchContext();
   const selectedId=isArchiveGamesOpen()||isMarketplaceBrowseOpen()
     ? marketplaceState.selectedRomId
@@ -7371,6 +7797,7 @@ function marketplaceArchiveFilterCounts(kind,roms){
       {id:'region',title:'Region',meta:marketplaceArchiveRegionLabel()},
       {id:'rating',title:'Age Rating',meta:marketplaceArchiveRatingLabel()},
       {id:'genre',title:'Genre',meta:marketplaceArchiveGenreLabel()},
+      {id:'downloads',title:'Downloads',meta:marketplaceArchiveDownloadsLabel()},
     ];
   }
   function gamesLibraryBaseEntries(){
@@ -7433,7 +7860,14 @@ function marketplaceArchiveFilterCounts(kind,roms){
     const noun=mktArchiveMode()==='demos'?'demo':'game';
     const total=base.length;
     const activeValues=getArchiveFilterValues(kind);
-    const allLabel=kind==='region' ? 'All Regions' : (kind==='rating' ? 'All Ratings' : 'All Genres');
+    const allLabel=kind==='region' ? 'All Regions' : (kind==='rating' ? 'All Ratings' : (kind==='downloads' ? 'All Downloads' : 'All Genres'));
+    if(kind==='downloads'){
+      const activeCount=base.filter(rom=>marketplaceDownloadEntryIsActive(marketplaceState.downloads.get(mktRomId(rom)))).length;
+      return [
+        {kind,id:'all',title:allLabel,meta:`${total.toLocaleString()} ${noun}${total===1?'':'s'}`,active:activeValues.length===0},
+        {kind,id:'active',title:'Active Downloads',meta:`${activeCount.toLocaleString()} ${noun}${activeCount===1?'':'s'}`,active:activeValues.some(item=>item.toLowerCase()==='active')},
+      ];
+    }
     return [
       {kind,id:'all',title:allLabel,meta:`${total.toLocaleString()} ${noun}${total===1?'':'s'}`,active:activeValues.length===0},
       ...marketplaceArchiveFilterCounts(kind,base).map(([label,count])=>({
@@ -7571,6 +8005,7 @@ function moveGameSearchResult(delta){
         marketplaceState.selectedRomId=null;
         marketplaceState.archivePane='list';
         marketplaceState.archiveConfirmDownload=false;
+        marketplaceState.archiveConfirmCancel=false;
         marketplaceState.archiveMediaIdx=0;
         renderArchiveGamesList();
         syncArchiveGamesSelection();
@@ -7584,6 +8019,7 @@ function moveGameSearchResult(delta){
   closeGameSearchModal();
   if(context==='archive-games'){
     marketplaceState.archiveConfirmDownload=false;
+    marketplaceState.archiveConfirmCancel=false;
     marketplaceState.archivePane='list';
     marketplaceState.archiveMediaIdx=0;
     marketplaceState.selectedRomId=row.id;
@@ -7850,13 +8286,14 @@ function syncArchiveGamesSelection(){
   if(!isArchiveGamesOpen()) return;
   const fullRoms=marketplaceArchiveRenderedRoms.length ? marketplaceArchiveRenderedRoms : (mktArchiveCatalogForSystem(marketplaceState.provider,marketplaceState.system)||[]);
   const selectedIdx=fullRoms.findIndex(item=>mktRomId(item)===marketplaceState.selectedRomId);
-  if(selectedIdx>=0) renderMarketplaceArchiveWindow(selectedIdx);
+  if(selectedIdx>=0 && !marketplaceState.archiveConfirmDownload && !marketplaceState.archiveConfirmCancel) renderMarketplaceArchiveWindow(selectedIdx);
   const items=getArchiveGameItems();
   const detail=document.querySelector('#sub-archive-games #mkt-archive-detail');
-  items.forEach(item=>item.classList.toggle('sel',!marketplaceState.archiveConfirmDownload && item.dataset.romId===marketplaceState.selectedRomId));
+  items.forEach(item=>item.classList.toggle('sel',!marketplaceState.archiveConfirmDownload && !marketplaceState.archiveConfirmCancel && item.dataset.romId===marketplaceState.selectedRomId));
   detail?.classList.remove('sel');
   const selectedItem=items.find(item=>item.dataset.romId===marketplaceState.selectedRomId);
   if(selectedItem) scrollSelectionIntoView(selectedItem);
+  updateControlLegend();
   startMarketplaceMediaRotation();
 }
 function gamesInstalledMoveVertical(delta){
@@ -7891,7 +8328,8 @@ function gamesInstalledMoveVertical(delta){
 }
 function archiveGamesMoveVertical(delta){
   if(!isArchiveGamesOpen()) return false;
-  if(marketplaceState.archiveConfirmDownload) return false;
+  if(marketplaceState.archiveVariantModalOpen) return archiveVariantMove(delta);
+  if(marketplaceState.archiveConfirmDownload || marketplaceState.archiveConfirmCancel) return false;
   const roms=marketplaceArchiveRenderedRoms.length ? marketplaceArchiveRenderedRoms : (mktArchiveCatalogForSystem(marketplaceState.provider,marketplaceState.system)||[]);
   if(!roms.length) return false;
   let idx=Math.max(0,roms.findIndex(item=>mktRomId(item)===marketplaceState.selectedRomId));
@@ -7899,6 +8337,7 @@ function archiveGamesMoveVertical(delta){
   idx=(idx+delta+roms.length)%roms.length;
   marketplaceState.selectedRomId=mktRomId(roms[idx]) || marketplaceState.selectedRomId;
   marketplaceState.archiveConfirmDownload=false;
+  marketplaceState.archiveConfirmCancel=false;
   marketplaceState.archiveMediaIdx=0;
   renderArchiveGamesDetail();
   syncArchiveGamesSelection();
@@ -7989,6 +8428,7 @@ function gamesInstalledCycleFilter(delta){
 }
 function archiveGamesMoveHorizontal(delta){
   if(!isArchiveGamesOpen()) return false;
+  if(marketplaceState.archiveVariantModalOpen) return false;
   return cycleMarketplaceMedia(delta);
 }
 function gamesInstalledSelect(){
@@ -8028,6 +8468,25 @@ function gamesInstalledSelect(){
 }
 function archiveGamesSelect(){
   if(!isArchiveGamesOpen()) return false;
+  if(marketplaceState.archiveVariantModalOpen){
+    marketplaceDownloadSelected();
+    return true;
+  }
+  if(marketplaceState.archiveConfirmCancel){
+    marketplaceCancelSelectedDownload();
+    return true;
+  }
+  const activeDownload=marketplaceSelectedDownloadEntry();
+  if(activeDownload){
+    marketplaceState.archiveConfirmDownload=false;
+    marketplaceState.archiveConfirmCancel=true;
+    renderArchiveGamesList();
+    renderArchiveGamesDetail();
+    syncArchiveGamesSelection();
+    updateControlLegend();
+    return true;
+  }
+  marketplaceState.archiveConfirmCancel=false;
   marketplaceState.archiveConfirmDownload=false;
   marketplaceDownloadSelected();
   return true;
@@ -8708,7 +9167,7 @@ async function marketplaceCosmeticsDeleteSelected(){
   }
   function gamesRatingForEntry(identifier,entry){
     const {meta}=gamesMetadataForEntry(identifier,entry);
-    return String(meta?.age_rating || meta?.ageRating || meta?.esrb || meta?.rating || entry?.age_rating || entry?.rating || '').trim() || 'Unrated';
+    return String(meta?.age_rating || meta?.ageRating || meta?.rating_esrb || meta?.esrb || meta?.rating || entry?.age_rating || entry?.rating || '').trim() || 'Unrated';
   }
   function gamesGenresForEntry(identifier,entry){
     const {meta}=gamesMetadataForEntry(identifier,entry);
@@ -8797,6 +9256,39 @@ async function refreshMarketplaceSources(){
     return next;
   }catch{
     return marketplaceState.sourceProviders;
+  }
+}
+function ensureMarketplaceSystemEntries(){
+  const system='xbox';
+  const label=marketplaceSystemLabel(system);
+  const badge=marketplaceSystemBadgeUrl(system);
+  const archiveList=document.getElementById('mkt-archive-system-list');
+  if(archiveList && !archiveList.querySelector(`[data-system="${system}"]`)){
+    const item=document.createElement('div');
+    item.className='subnav-item games-system-item';
+    item.dataset.system=system;
+    item.dataset.archiveTitle=label;
+    item.dataset.archiveDesc='Browse the Archive.org Xbox repository and see everything currently available to download from this source.';
+    item.innerHTML=`<div class="micon" style="background-image:url('${badge}')"></div><div class="mkt-account-copy"><div class="mkt-scan-label">${label}</div><div class="mkt-action-meta" id="cnt-archive-xbox">Loading…</div></div>`;
+    archiveList.appendChild(item);
+  }
+  const browseGrid=document.getElementById('mkt-system-grid');
+  if(browseGrid && !browseGrid.querySelector(`[data-system="${system}"]`)){
+    const card=document.createElement('div');
+    card.className='sys-card mkt-system-card';
+    card.dataset.system=system;
+    card.innerHTML=`<div class="sys-card-copy"><div class="sys-card-icon" style="background-image:url('${badge}')"></div><div class="sys-card-text"><div class="sys-card-title">${label}</div><div class="sys-card-count" id="cnt-xbox">Loading…</div></div></div>`;
+    browseGrid.appendChild(card);
+  }
+  const gamesList=document.getElementById('games-system-list');
+  if(gamesList && !gamesList.querySelector(`[data-system="${system}"]`)){
+    const item=document.createElement('div');
+    item.className='subnav-item games-system-item';
+    item.dataset.system=system;
+    item.dataset.gamesTitle=label;
+    item.dataset.gamesDesc='Browse your installed and scanned-in Xbox library from the Games blade.';
+    item.innerHTML=`<div class="micon" style="background-image:url('${badge}')"></div><div class="mkt-account-copy"><div class="mkt-scan-label">${label}</div><div class="mkt-action-meta" id="cnt-xbox2">Loading…</div></div>`;
+    gamesList.appendChild(item);
   }
 }
 function syncMetadataServiceDisplays(){
@@ -8907,8 +9399,9 @@ async function ensureMarketplaceCatalogSystems(systems){
     if(!mktCatalogBucket(marketplaceState.provider)[system]){
       const result=await window.electronAPI?.fetchMarketplaceCatalog?.({provider:marketplaceState.provider,system});
       mktCatalogBucket(marketplaceState.provider)[system]=result?.ok
-        ? (Array.isArray(result.roms) ? result.roms.filter(rom=>rom && typeof rom==='object') : [])
+        ? normalizeMarketplaceCatalogRoms(result.roms, system, marketplaceState.provider)
         : [];
+      clearMarketplaceArchiveCatalogCache(marketplaceState.provider,system);
       if(result?.ok) delete mktErrorBucket(marketplaceState.provider)[system];
       else mktErrorBucket(marketplaceState.provider)[system]=result?.error || result?.details || 'This provider could not be loaded.';
     }
@@ -8920,12 +9413,12 @@ async function ensureMarketplaceCatalogSystem(provider, system){
   if(!mktCatalogBucket(marketplaceState.provider)[marketplaceState.system]){
     const result=await window.electronAPI?.fetchMarketplaceCatalog?.({provider:marketplaceState.provider,system:marketplaceState.system});
     if(result?.ok){
-      mktCatalogBucket(marketplaceState.provider)[marketplaceState.system]=Array.isArray(result.roms)
-        ? result.roms.filter(rom=>rom && typeof rom==='object')
-        : [];
+      mktCatalogBucket(marketplaceState.provider)[marketplaceState.system]=normalizeMarketplaceCatalogRoms(result.roms, marketplaceState.system, marketplaceState.provider);
+      clearMarketplaceArchiveCatalogCache(marketplaceState.provider,marketplaceState.system);
       delete mktErrorBucket(marketplaceState.provider)[marketplaceState.system];
     }else{
       mktCatalogBucket(marketplaceState.provider)[marketplaceState.system]=[];
+      clearMarketplaceArchiveCatalogCache(marketplaceState.provider,marketplaceState.system);
       mktErrorBucket(marketplaceState.provider)[marketplaceState.system]=result?.error || result?.details || 'This provider could not be loaded.';
     }
   }
@@ -9108,7 +9601,8 @@ function systemFlowSlots(systems,currentSystem){
   let idx=systems.indexOf(currentSystem);
   if(idx<0) idx=0;
   if(systems.length===1) return [{system:systems[0],offset:0,active:true}];
-  return [-1,0,1].map(offset=>({
+  const offsets=systems.length>=2 ? [-3,-2,-1,0,1,2,3] : [0];
+  return offsets.map(offset=>({
     system:systems[(idx+offset+systems.length)%systems.length],
     offset,
     active:offset===0,
@@ -9895,13 +10389,13 @@ function renderMarketplaceDetail(){
   const lib=marketplaceState.library[mktRomId(rom)];
   const preview=marketplacePreviewCache.get(marketplacePreviewKey(rom));
   const deletePending=hasDeleteConfirmation('marketplace-rom',mktRomId(rom));
-  const queue=marketplaceState.downloads.get(mktRomId(rom));
+  const activeQueue=marketplaceSelectedDownloadEntryForRom(rom);
   if(title)title.textContent=mktRomTitle(rom);
   if(meta)meta.textContent=marketplacePreviewMetaLine(rom,preview);
   if(downloadLabel)downloadLabel.textContent=mktInstalled(rom)?'Reinstall':'Download';
   const needsArchiveLogin=mktRequiresArchiveLogin(rom);
-  if(downloadMeta)downloadMeta.textContent=queue
-    ? `${queue.statusLabel||queue.status||'Downloading'}${queue.percent!=null?` · ${queue.percent}%`:''}`
+  if(downloadMeta)downloadMeta.textContent=activeQueue
+    ? `${activeQueue.statusLabel||activeQueue.status||'Downloading'}${activeQueue.percent!=null?` · ${activeQueue.percent}%`:''}`
     : needsArchiveLogin
       ? (marketplaceState.archiveLoggedIn
           ? 'Download and install the selected ROM from Archive.org.'
@@ -9922,7 +10416,7 @@ function renderMarketplaceDetail(){
     if(previewText) lines.push(previewText);
     if(mktInstalled(rom)) lines.push(`Installed at ${lib.install_dir}`);
     else lines.push('Not installed yet.');
-    if(queue) lines.push(`${queue.statusLabel||queue.status||'Downloading'}${queue.percent!=null?` (${queue.percent}%)`:''}`);
+    if(activeQueue) lines.push(`${activeQueue.statusLabel||activeQueue.status||'Downloading'}${activeQueue.percent!=null?` (${activeQueue.percent}%)`:''}`);
     if(deletePending) lines.push('Delete armed. Press Delete again within 5 seconds to confirm.');
     status.textContent=lines.join('\n');
   }
@@ -9968,8 +10462,9 @@ function renderArchiveGamesDetail(){
   }
   const lib=marketplaceState.library[mktRomId(rom)];
   const preview=marketplacePreviewCache.get(marketplacePreviewKey(rom));
-  const queue=marketplaceState.downloads.get(mktRomId(rom));
+  const activeQueue=marketplaceSelectedDownloadEntryForRom(rom);
   const media=marketplacePreviewMediaAssets(rom,preview);
+  const variants=marketplaceArchiveVariants(rom);
   const mediaIdx=Math.max(0,Math.min(marketplaceState.archiveMediaIdx||0,Math.max(media.length-1,0)));
   marketplaceState.archiveMediaIdx=mediaIdx;
   const activeMedia=media[mediaIdx] || {url:marketplaceDefaultIcon(),label:'Artwork',fit:'contain'};
@@ -9990,17 +10485,19 @@ function renderArchiveGamesDetail(){
     mediaIndicators.innerHTML=media.map((_,idx)=>`<div class="mkt-source-media-dot${idx===mediaIdx?' on':''}"></div>`).join('');
   }
   const ageRating=marketplaceAgeRating(preview);
-  if(ratingEl) ratingEl.textContent=ageRating?.code || marketplacePreviewRating(preview);
-  if(ratingBadgeEl) ratingBadgeEl.style.backgroundImage=ageRating?.badgeUrl ? `url('${ageRating.badgeUrl}')` : 'none';
-  if(ratingCaptionEl) ratingCaptionEl.textContent=ageRating?.label || '';
+  const hasRatingBadge=!!ageRating?.badgeUrl;
+  if(ratingEl) ratingEl.textContent=hasRatingBadge ? '' : (ageRating?.code || marketplacePreviewRating(preview));
+  if(ratingBadgeEl) ratingBadgeEl.style.backgroundImage=hasRatingBadge ? `url('${ageRating.badgeUrl}')` : 'none';
+  if(ratingCaptionEl) ratingCaptionEl.textContent=hasRatingBadge ? '' : (ageRating?.label || '');
   if(infoEl) infoEl.innerHTML=marketplaceSourceInfoBox(rom);
   if(status){
     const lines=[];
     const description=marketplacePreviewDescription(preview);
     if(description) lines.push(description);
     else lines.push(`Browse this ${providerLabel} entry and review its details.`);
+    if(variants.length>1) lines.push(`${variants.length} versions available. Press A to choose which version to download.`);
     const metaBits=[];
-    if(queue) metaBits.push(`${queue.statusLabel||queue.status||'Downloading'}${queue.percent!=null?` (${queue.percent}%)`:''}`);
+    if(activeQueue) metaBits.push(`${activeQueue.statusLabel||activeQueue.status||'Downloading'}${activeQueue.percent!=null?` (${activeQueue.percent}%)`:''}`);
     else if(needsArchiveLogin && !marketplaceState.archiveLoggedIn) metaBits.push('Archive.org sign-in required before download');
     if(preview?.rating) metaBits.push(`Rating: ${preview.rating}`);
     if(preview?.players) metaBits.push(String(preview.players));
@@ -10017,6 +10514,7 @@ function renderArchiveGamesDetail(){
 function renderArchiveGamesList(){
   const list=document.getElementById('mkt-archive-list');
   const countEl=document.getElementById('mkt-archive-count');
+  const filtersEl=document.getElementById('mkt-archive-filters');
   if(!list) return;
   marketplaceArchiveRenderToken+=1;
   const renderToken=marketplaceArchiveRenderToken;
@@ -10025,12 +10523,25 @@ function renderArchiveGamesList(){
     marketplaceArchiveRenderFrame=0;
   }
   updateMarketplaceArchiveHeader();
-  const roms=mktArchiveCatalogForSystem(marketplaceState.provider,marketplaceState.system)||[];
+  const hasActiveFilters=
+    marketplaceState.archiveHideInstalled ||
+    getArchiveFilterValues('region').length>0 ||
+    getArchiveFilterValues('rating').length>0 ||
+    getArchiveFilterValues('genre').length>0 ||
+    getArchiveFilterValues('downloads').length>0;
+  let roms=mktArchiveCatalogForSystem(marketplaceState.provider,marketplaceState.system)||[];
+  const baseRoms=mktArchiveBaseCatalogForSystem(marketplaceState.provider,marketplaceState.system)||[];
+  if(!roms.length && baseRoms.length && !hasActiveFilters){
+    clearMarketplaceArchiveCatalogCache(marketplaceState.provider,marketplaceState.system);
+    roms=mktArchiveCatalogForSystem(marketplaceState.provider,marketplaceState.system)||[];
+    if(!roms.length) roms=baseRoms;
+  }
   resetMarketplaceArchiveRenderState(roms);
   const error=mktErrorBucket(marketplaceState.provider)[marketplaceState.system];
   if(!roms.length){
     list.innerHTML=`<div class="mkt-empty">${esc(error || marketplaceArchiveEmptyLabel())}</div>`;
     marketplaceState.selectedRomId=null;
+    closeArchiveVariantModal();
     resetMarketplaceArchiveRenderState([]);
     if(countEl) countEl.textContent='';
     renderArchiveGamesDetail();
@@ -10057,15 +10568,31 @@ function renderArchiveGamesList(){
     syncArchiveGamesSelection();
     return;
   }
+  if(marketplaceState.archiveConfirmCancel && selectedRom){
+    list.innerHTML=`
+      <div class="mkt-source-list-confirm">
+        <div class="mkt-source-list-confirm-title">Cancel download for ${esc(mktRomTitle(selectedRom))}?</div>
+        <div class="mkt-source-list-confirm-copy">Press A or Enter to cancel this download.\nPress B to keep downloading.</div>
+        <div class="mkt-source-list-confirm-actions">
+          <div class="mkt-source-list-confirm-action"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-a.webp')"></div><span>Confirm Cancel</span></div>
+          <div class="mkt-source-list-confirm-action"><div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-b.webp')"></div><span>Keep Downloading</span></div>
+        </div>
+      </div>
+    `;
+    if(countEl) countEl.textContent='';
+    if(filtersEl) filtersEl.textContent='';
+    renderArchiveGamesDetail();
+    syncArchiveGamesSelection();
+    return;
+  }
   list.innerHTML='';
   if(countEl){
     const idx=roms.findIndex(item=>mktRomId(item)===marketplaceState.selectedRomId);
-    const filters=[
-      marketplaceArchiveRegionLabel(),
-      marketplaceArchiveRatingLabel(),
-      marketplaceArchiveGenreLabel(),
-    ].filter(label=>!/^All /.test(label));
-    countEl.textContent=idx>=0 ? `${idx+1} of ${roms.length.toLocaleString()}${filters.length ? ` · ${filters.join(' · ')}` : ''}` : '';
+    countEl.textContent=idx>=0 ? `${idx+1} of ${roms.length.toLocaleString()}` : '';
+  }
+  if(filtersEl){
+    const filters=marketplaceArchiveActiveFilterLabels();
+    filtersEl.textContent=filters.length ? filters.join(' · ') : '';
   }
   list.onscroll=()=>{
     maybeRenderMoreMarketplaceArchiveRows();
@@ -10093,6 +10620,100 @@ function renderArchiveGamesList(){
     }
   };
   renderChunk(0);
+  renderArchiveVariantModal();
+}
+function ensureArchiveVariantModal(){
+  let modal=document.getElementById('archive-variant-modal');
+  if(modal) return modal;
+  const panel=document.getElementById('sub-archive-games');
+  modal=document.createElement('div');
+  modal.id='archive-variant-modal';
+  modal.className='archive-variant-modal';
+  modal.innerHTML=`
+    <div class="archive-variant-modal-title">Select Version</div>
+    <div class="archive-variant-modal-copy">Choose which version you want to download.</div>
+    <div id="archive-variant-list" class="archive-variant-list"></div>
+    <div class="archive-variant-modal-hints">
+      <div class="archive-variant-modal-hint"><img src="${CONTROL_ICONS.a}" alt=""/>Select</div>
+      <div class="archive-variant-modal-hint"><img src="${CONTROL_ICONS.b}" alt=""/>Back</div>
+    </div>
+  `;
+  panel?.appendChild(modal);
+  modal.addEventListener('click',(event)=>{
+    const row=event.target.closest('.archive-variant-row');
+    if(!row) return;
+    const idx=Number(row.dataset.variantIdx||0);
+    if(Number.isFinite(idx)) marketplaceState.archiveVariantIdx=Math.max(0,Math.min(idx,marketplaceState.archiveVariantRows.length-1));
+    renderArchiveVariantModal();
+  });
+  return modal;
+}
+function closeArchiveVariantModal(){
+  if(!marketplaceState.archiveVariantModalOpen) return false;
+  marketplaceState.archiveVariantModalOpen=false;
+  marketplaceState.archiveVariantRows=[];
+  marketplaceState.archiveVariantIdx=0;
+  document.getElementById('archive-variant-modal')?.classList.remove('on');
+  updateControlLegend();
+  return true;
+}
+function renderArchiveVariantModal(){
+  const modal=ensureArchiveVariantModal();
+  if(!modal) return;
+  if(!marketplaceState.archiveVariantModalOpen){
+    modal.classList.remove('on');
+    return;
+  }
+  const rom=mktSelectedRom();
+  const rows=marketplaceState.archiveVariantRows||[];
+  modal.querySelector('.archive-variant-modal-title').textContent=`Select Version`;
+  modal.querySelector('.archive-variant-modal-copy').textContent=`Choose which version of ${mktRomTitle(rom)} you want to download.`;
+  const list=modal.querySelector('#archive-variant-list');
+  if(list){
+    list.innerHTML=rows.map((variant,idx)=>{
+      const state=marketplaceArchiveVariantState(variant);
+      return `
+        <div class="archive-variant-row${idx===marketplaceState.archiveVariantIdx?' sel':''}" data-variant-idx="${idx}">
+          <div class="archive-variant-row-main">
+            <div class="archive-variant-row-title">${esc(String(variant.region||'Unknown'))}</div>
+            <div class="archive-variant-row-meta">${esc(marketplaceArchiveVariantMeta(variant))}</div>
+          </div>
+          <div class="archive-variant-row-state">${esc(state)}</div>
+        </div>
+      `;
+    }).join('');
+    const selected=list.querySelector('.archive-variant-row.sel');
+    if(selected) scrollSelectionIntoView(selected);
+  }
+  modal.classList.add('on');
+}
+function openArchiveVariantModal(rom){
+  const variants=marketplaceArchiveVariants(rom);
+  if(variants.length<=1) return false;
+  marketplaceState.archiveVariantRows=variants.slice().sort((a,b)=>{
+    const aInstalled=mktInstalled(a)?1:0;
+    const bInstalled=mktInstalled(b)?1:0;
+    if(aInstalled!==bInstalled) return bInstalled-aInstalled;
+    const aRegion=String(a?.region||'Unknown');
+    const bRegion=String(b?.region||'Unknown');
+    return aRegion.localeCompare(bRegion);
+  });
+  marketplaceState.archiveVariantIdx=0;
+  marketplaceState.archiveVariantModalOpen=true;
+  renderArchiveVariantModal();
+  updateControlLegend();
+  return true;
+}
+function archiveVariantMove(delta){
+  if(!marketplaceState.archiveVariantModalOpen) return false;
+  const rows=marketplaceState.archiveVariantRows||[];
+  if(!rows.length) return false;
+  let idx=Math.max(0,Math.min(marketplaceState.archiveVariantIdx||0,rows.length-1));
+  idx=(idx+delta+rows.length)%rows.length;
+  marketplaceState.archiveVariantIdx=idx;
+  renderArchiveVariantModal();
+  updateControlLegend();
+  return true;
 }
 async function openMarketplaceSourceSystemSelector(provider=marketplaceState.provider){
   marketplaceState.provider=provider;
@@ -10122,20 +10743,34 @@ function marketplaceArchiveModeLabel(mode=mktArchiveMode()){
     if(getArchiveFilterValues('rating').length){
       return `No ${mode==='demos'?'demos':'games'} are available for the selected age ratings.`;
     }
-    if(getArchiveFilterValues('genre').length){
+  if(getArchiveFilterValues('genre').length){
       return `No ${mode==='demos'?'demos':'games'} are available for the selected genres.`;
+    }
+    if(getArchiveFilterValues('downloads').length){
+      return `No ${mode==='demos'?'demos':'games'} are currently downloading.`;
     }
     return mode==='demos' ? 'No demos are available for this system yet.' : 'No games available for this system yet.';
   }
-  function marketplaceArchiveRegionLabel(region=marketplaceState.archiveRegion){
-    return marketplaceArchiveFilterSummary(region,'All Regions');
-  }
-  function marketplaceArchiveRatingLabel(rating=marketplaceState.archiveRating){
-    return marketplaceArchiveFilterSummary(rating,'All Ratings');
-  }
-  function marketplaceArchiveGenreLabel(genre=marketplaceState.archiveGenre){
-    return marketplaceArchiveFilterSummary(genre,'All Genres');
-  }
+function marketplaceArchiveRegionLabel(region=marketplaceState.archiveRegion){
+return marketplaceArchiveFilterSummary(region,'All Regions');
+}
+function marketplaceArchiveRatingLabel(rating=marketplaceState.archiveRating){
+return marketplaceArchiveFilterSummary(rating,'All Ratings');
+}
+function marketplaceArchiveGenreLabel(genre=marketplaceState.archiveGenre){
+return marketplaceArchiveFilterSummary(genre,'All Genres');
+}
+function marketplaceArchiveDownloadsLabel(downloads=marketplaceState.archiveDownloads){
+return marketplaceArchiveFilterSummary(downloads,'All Downloads');
+}
+function marketplaceArchiveActiveFilterLabels(){
+  return [
+    marketplaceArchiveRegionLabel(),
+    marketplaceArchiveRatingLabel(),
+    marketplaceArchiveGenreLabel(),
+    marketplaceArchiveDownloadsLabel(),
+  ].filter(label=>!/^All /.test(label));
+}
 function openMarketplaceCosmeticsPanel(){
   marketplaceState.cosmeticCategory=marketplaceState.cosmeticCategory || 'themes';
   marketplaceState.cosmeticPane='list';
@@ -10164,17 +10799,30 @@ async function openMarketplaceSourceGamesLibrary(system, provider=marketplaceSta
   marketplaceState.provider=provider||marketplaceState.provider;
   marketplaceState.system=system||marketplaceState.system;
   marketplaceState.archiveMode=mode==='demos'?'demos':'discover';
+  const discoverRoms=mktArchiveBaseCatalogForSystem(marketplaceState.provider,marketplaceState.system,'discover');
+  const demoRoms=mktArchiveBaseCatalogForSystem(marketplaceState.provider,marketplaceState.system,'demos');
+  if(marketplaceState.archiveMode==='demos' && !demoRoms.length && discoverRoms.length){
+    marketplaceState.archiveMode='discover';
+  }
   marketplaceArchiveViewToken+=1;
+  if(marketplaceVisibleLoadTimer){
+    clearTimeout(marketplaceVisibleLoadTimer);
+    marketplaceVisibleLoadTimer=null;
+  }
+  marketplacePreviewQueue.length=0;
   if(marketplaceState.lastArchiveSystem!==marketplaceState.system || marketplaceState.lastArchiveMode!==marketplaceState.archiveMode){
     marketplaceState.archiveRegion=[];
     marketplaceState.archiveRating=[];
     marketplaceState.archiveGenre=[];
+    marketplaceState.archiveDownloads=[];
   }
   marketplaceState.lastArchiveSystem=marketplaceState.system;
   marketplaceState.lastArchiveMode=marketplaceState.archiveMode;
   marketplaceState.archivePane='list';
   marketplaceState.archiveMediaIdx=0;
   marketplaceState.archiveConfirmDownload=false;
+  marketplaceState.archiveConfirmCancel=false;
+  closeArchiveVariantModal();
   marketplaceState.selectedRomId=null;
   const panel=document.getElementById('p-mkt');
   const gamesPanel=document.getElementById('sub-archive-games');
@@ -10201,6 +10849,7 @@ async function openMarketplaceSourceGamesLibrary(system, provider=marketplaceSta
   if(info) info.textContent='Loading game details…';
   if(rating) rating.textContent='Unrated';
   if(list) list.innerHTML='<div class="mkt-empty">Loading catalog…</div>';
+  resetMarketplaceArchiveRenderState([]);
   applySubSel();
   try{
     const roms=await ensureMarketplaceCatalogSystem(marketplaceState.provider, marketplaceState.system);
@@ -10286,6 +10935,7 @@ function renderMarketplaceRomList(){
 async function loadMarketplaceSystem(system,preserveSelection=false){
   marketplaceState.system=system;
   document.querySelectorAll('.mkt-system-card').forEach(card=>card.classList.toggle('sel',card.dataset.system===system && !subOpen[activeIdx]));
+  centerMarketplaceSystemCards(system);
   if(!mktCatalogBucket(marketplaceState.provider)[system]){
     const result=await window.electronAPI?.fetchMarketplaceCatalog?.({provider:marketplaceState.provider,system});
     if(result?.ok){
@@ -10297,6 +10947,11 @@ async function loadMarketplaceSystem(system,preserveSelection=false){
     }
   }
   renderMarketplaceSystemCounts(marketplaceState.provider);
+  const discoverRoms=mktArchiveBaseCatalogForSystem(marketplaceState.provider,system,'discover');
+  const demoRoms=mktArchiveBaseCatalogForSystem(marketplaceState.provider,system,'demos');
+  if(mktArchiveMode()==='demos' && !demoRoms.length && discoverRoms.length){
+    marketplaceState.archiveMode='discover';
+  }
   if(!preserveSelection) marketplaceState.browsePane='list';
   if(!preserveSelection) marketplaceState.selectedRomId=null;
   renderMarketplaceRomList();
@@ -10443,9 +11098,22 @@ function openMarketplaceBlade(){
 async function marketplaceDownloadSelected(){
   const rom=mktSelectedRom();
   if(!rom) return;
-  const id=mktRomId(rom);
-  if(marketplaceState.downloads.has(id)) return;
+  const variants=marketplaceArchiveVariants(rom);
+  if(!marketplaceState.archiveVariantModalOpen && variants.length>1){
+    openArchiveVariantModal(rom);
+    return;
+  }
+  const selectedVariant=marketplaceState.archiveVariantModalOpen
+    ? marketplaceState.archiveVariantRows[Math.max(0,Math.min(marketplaceState.archiveVariantIdx||0,(marketplaceState.archiveVariantRows.length||1)-1))]
+    : variants[0];
+  if(!selectedVariant) return;
+  const id=selectedVariant.name||mktRomId(rom);
+  const existingEntry=marketplaceState.downloads.get(id);
+  if(marketplaceDownloadEntryIsActive(existingEntry)) return;
+  if(existingEntry) marketplaceState.downloads.delete(id);
+  closeArchiveVariantModal();
   marketplaceState.archiveConfirmDownload=false;
+  marketplaceState.archiveConfirmCancel=false;
   renderArchiveGamesList();
   const detailStatus=getActiveSubpanel()?.id==='sub-archive-games'
     ? document.querySelector('#sub-archive-games #mkt-archive-status')
@@ -10454,10 +11122,11 @@ async function marketplaceDownloadSelected(){
   renderMarketplaceQueue();
   if(getActiveSubpanel()?.id==='sub-archive-games') renderArchiveGamesList();
   refreshActiveMarketplaceDetail();
+  updateControlLegend();
   const result=await window.electronAPI.marketplaceInstall({
     identifier:id,
-    downloadUrl:rom.downloadUrl,
-    fileName:rom.name,
+    downloadUrl:selectedVariant.downloadUrl,
+    fileName:selectedVariant.name,
     title:mktRomTitle(rom),
     system:marketplaceState.system,
     provider:marketplaceState.provider,
@@ -10466,13 +11135,23 @@ async function marketplaceDownloadSelected(){
     matchConfidence:1
   });
   if(!result?.ok){
+    const wasCancelled=String(result?.error||'').toLowerCase()==='cancelled';
     if(result?.requiresAuth){
       await refreshMarketplaceArchiveStatus();
     }
-    if(detailStatus) detailStatus.textContent=result?.error || 'Download failed.';
-    marketplaceState.downloads.set(id,{identifier:id,title:mktRomTitle(rom),status:'error',statusLabel:result?.error||'Download failed',percent:null,startedAt:Date.now()});
+    if(detailStatus && !wasCancelled) detailStatus.textContent=result?.error || 'Download failed.';
+    marketplaceState.downloads.set(id,{
+      identifier:id,
+      title:mktRomTitle(rom),
+      status:wasCancelled ? 'cancelled' : 'error',
+      statusLabel:wasCancelled ? 'Cancelled' : (result?.error||'Download failed'),
+      percent:null,
+      startedAt:Date.now()
+    });
     renderMarketplaceQueue();
+    if(getActiveSubpanel()?.id==='sub-archive-games') renderArchiveGamesList();
     refreshActiveMarketplaceDetail();
+    updateControlLegend();
     return;
   }
   await refreshMarketplaceLibrary();
@@ -10480,7 +11159,40 @@ async function marketplaceDownloadSelected(){
   renderMarketplaceQueue();
   if(getActiveSubpanel()?.id==='sub-archive-games') renderArchiveGamesList();
   else renderMarketplaceRomList();
+  updateControlLegend();
   toast(`${mktRomTitle(rom)} is ready to play`);
+}
+async function marketplaceCancelSelectedDownload(){
+  const rom=mktSelectedRom();
+  if(!rom) return;
+  const variants=marketplaceArchiveVariants(rom);
+  const activeVariant=variants.find(item=>marketplaceDownloadEntryIsActive(marketplaceState.downloads.get(item?.name||'')));
+  const id=activeVariant?.name||mktRomId(rom);
+  const entry=marketplaceState.downloads.get(id);
+  if(!entry || !marketplaceDownloadEntryIsActive(entry) || String(entry.status||'').toLowerCase()==='cancelling') return;
+  marketplaceState.archiveConfirmCancel=false;
+  marketplaceState.downloads.set(id,{
+    ...entry,
+    status:'cancelling',
+    statusLabel:'Cancelling',
+  });
+  renderMarketplaceQueue();
+  if(getActiveSubpanel()?.id==='sub-archive-games') renderArchiveGamesList();
+  refreshActiveMarketplaceDetail();
+  updateControlLegend();
+  const result=await window.electronAPI?.downloadCancel?.({identifier:id});
+  if(!result?.ok){
+    marketplaceState.downloads.set(id,{
+      ...entry,
+      status:'error',
+      statusLabel:result?.error || 'Could not cancel download',
+    });
+    renderMarketplaceQueue();
+    if(getActiveSubpanel()?.id==='sub-archive-games') renderArchiveGamesList();
+    refreshActiveMarketplaceDetail();
+    updateControlLegend();
+    return;
+  }
 }
 async function marketplaceLaunchSelected(){
   const rom=mktSelectedRom();
@@ -10552,6 +11264,7 @@ async function initMarketplace(){
   const settings=await window.electronAPI.getSettings();
   marketplaceState.scanSystemPaths=settings?.systemScanPaths || {};
   await refreshMarketplaceSources();
+  ensureMarketplaceSystemEntries();
   await refreshMarketplaceLibrary();
   await refreshMarketplaceArchiveStatus();
   await loadMarketplaceSystem(marketplaceState.system);

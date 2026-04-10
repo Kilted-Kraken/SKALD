@@ -48,6 +48,7 @@ const SGDB_CACHE_DIR    = ART_PROVIDER_SGDB_DIR;
 const MARKETPLACE_DIR   = path.join(USER_DATA, 'marketplace');
 const MARKETPLACE_THEMES_DIR = path.join(MARKETPLACE_DIR, 'themes', 'xbox360');
 const MARKETPLACE_METADATA_CACHE = Object.create(null);
+const LOCAL_XML_METADATA_CACHE = Object.create(null);
 
 [
   DEFAULT_GAMES_DIR,
@@ -150,6 +151,11 @@ try {
       release_date:  'TEXT',
       players:       'TEXT',
       rating:        'TEXT',
+      rating_esrb:   'TEXT',
+      rating_acb:    'TEXT',
+      rating_cero:   'TEXT',
+      rating_pegi:   'TEXT',
+      rating_usk:    'TEXT',
       platform_name: 'TEXT',
       igdb_id:       'TEXT',
       thegamesdb_id: 'TEXT',
@@ -260,6 +266,11 @@ function upsertGameEnrichment(identifier, payload = {}) {
     release_date: payload.release_date ?? null,
     players: payload.players ?? null,
     rating: payload.rating ?? null,
+    rating_esrb: payload.rating_esrb ?? null,
+    rating_acb: payload.rating_acb ?? null,
+    rating_cero: payload.rating_cero ?? null,
+    rating_pegi: payload.rating_pegi ?? null,
+    rating_usk: payload.rating_usk ?? null,
     platform_name: payload.platform_name ?? null,
     igdb_id: payload.igdb_id ?? null,
     thegamesdb_id: payload.thegamesdb_id ?? null,
@@ -298,6 +309,11 @@ function upsertGameEnrichment(identifier, payload = {}) {
         release_date = COALESCE(?, release_date),
         players = COALESCE(?, players),
         rating = COALESCE(?, rating),
+        rating_esrb = COALESCE(?, rating_esrb),
+        rating_acb = COALESCE(?, rating_acb),
+        rating_cero = COALESCE(?, rating_cero),
+        rating_pegi = COALESCE(?, rating_pegi),
+        rating_usk = COALESCE(?, rating_usk),
         platform_name = COALESCE(?, platform_name),
         igdb_id = COALESCE(?, igdb_id),
         thegamesdb_id = COALESCE(?, thegamesdb_id),
@@ -335,6 +351,11 @@ function upsertGameEnrichment(identifier, payload = {}) {
     normalized.release_date,
     normalized.players,
     normalized.rating,
+    normalized.rating_esrb,
+    normalized.rating_acb,
+    normalized.rating_cero,
+    normalized.rating_pegi,
+    normalized.rating_usk,
     normalized.platform_name,
     normalized.igdb_id,
     normalized.thegamesdb_id,
@@ -439,6 +460,11 @@ function normalizeWorkerEnrichmentResponse(data = {}, context = {}) {
     release_date: metadata.release_date || data.release_date || null,
     players: metadata.players || data.players || null,
     rating: metadata.rating || data.rating || null,
+    rating_esrb: metadata.rating_esrb || data.rating_esrb || null,
+    rating_acb: metadata.rating_acb || data.rating_acb || null,
+    rating_cero: metadata.rating_cero || data.rating_cero || null,
+    rating_pegi: metadata.rating_pegi || data.rating_pegi || null,
+    rating_usk: metadata.rating_usk || data.rating_usk || null,
     age_rating: metadata.age_rating || data.age_rating || null,
     age_rating_label: metadata.age_rating_label || data.age_rating_label || null,
     age_rating_board: metadata.age_rating_board || data.age_rating_board || null,
@@ -472,6 +498,457 @@ function packagedMetadataPath(provider, system) {
   if (fs.existsSync(devPath)) return devPath;
   if (fs.existsSync(packedPath)) return packedPath;
   return devPath;
+}
+
+function localXmlMetadataDir(system) {
+  if (!system) return null;
+  const normalized = String(system || '').toLowerCase();
+  const devPath = path.join(__dirname, '../../assets/metadata', normalized, 'xml');
+  const packedPath = path.join(process.resourcesPath || '', 'metadata', normalized, 'xml');
+  if (fs.existsSync(devPath)) return devPath;
+  if (fs.existsSync(packedPath)) return packedPath;
+  return devPath;
+}
+
+function localImageMetadataDir(system, kind) {
+  if (!system || !kind) return null;
+  const normalizedSystem = String(system || '').toLowerCase();
+  const normalizedKind = String(kind || '').toLowerCase();
+  const devPath = path.join(__dirname, '../../assets/metadata', normalizedSystem, normalizedKind);
+  const packedPath = path.join(process.resourcesPath || '', 'metadata', normalizedSystem, normalizedKind);
+  if (fs.existsSync(devPath)) return devPath;
+  if (fs.existsSync(packedPath)) return packedPath;
+  return devPath;
+}
+
+function localXmlMetadataCacheKey(system, fileName) {
+  return `${String(system || 'unknown').toLowerCase()}::${String(fileName || '').toLowerCase()}`;
+}
+
+function localXmlMetadataIndexKey(system) {
+  return `${String(system || 'unknown').toLowerCase()}::__index__`;
+}
+
+function localImageMetadataIndexKey(system, kind) {
+  return `${String(system || 'unknown').toLowerCase()}::__images__::${String(kind || '').toLowerCase()}`;
+}
+
+function loadLocalXmlMetadataIndex(system) {
+  const normalizedSystem = String(system || '').toLowerCase();
+  const dir = localXmlMetadataDir(normalizedSystem);
+  if (!dir || !fs.existsSync(dir)) return null;
+  const cacheKey = localXmlMetadataIndexKey(normalizedSystem);
+  try {
+    const files = fs.readdirSync(dir).filter(name => /\.xml$/i.test(name));
+    const statKey = files.map(name => {
+      try {
+        const stat = fs.statSync(path.join(dir, name));
+        return `${name}:${stat.mtimeMs}`;
+      } catch {
+        return `${name}:0`;
+      }
+    }).join('|');
+    const cached = LOCAL_XML_METADATA_CACHE[cacheKey];
+    if (cached && cached.statKey === statKey) return cached.data;
+    const byName = Object.create(null);
+    for (const name of files) {
+      const stem = String(name).replace(/\.xml$/i, '');
+      const keys = [
+        sanitizeTitle(stem).toLowerCase(),
+        sanitizeTitle(parseRomFilename(stem).cleanName || stem).toLowerCase(),
+        sanitizeTitle(sanitizeTitle(stem)).toLowerCase(),
+        normalizeScanName(stem),
+        normalizeScanName(parseRomFilename(stem).cleanName || stem),
+      ].filter(Boolean);
+      for (const key of keys) {
+        if (key && !byName[key]) byName[key] = name;
+      }
+    }
+    const index = { dir, byName };
+    LOCAL_XML_METADATA_CACHE[cacheKey] = { statKey, data: index };
+    return index;
+  } catch {
+    return null;
+  }
+}
+
+function loadLocalImageMetadataIndex(system, kind) {
+  const normalizedSystem = String(system || '').toLowerCase();
+  const normalizedKind = String(kind || '').toLowerCase();
+  const dir = localImageMetadataDir(normalizedSystem, normalizedKind);
+  if (!dir || !fs.existsSync(dir)) return null;
+  const cacheKey = localImageMetadataIndexKey(normalizedSystem, normalizedKind);
+  try {
+    const files = fs.readdirSync(dir).filter(name => /\.(webp|png|jpg|jpeg)$/i.test(name));
+    const statKey = files.map(name => {
+      try {
+        const stat = fs.statSync(path.join(dir, name));
+        return `${name}:${stat.mtimeMs}`;
+      } catch {
+        return `${name}:0`;
+      }
+    }).join('|');
+    const cached = LOCAL_XML_METADATA_CACHE[cacheKey];
+    if (cached && cached.statKey === statKey) return cached.data;
+    const byName = Object.create(null);
+    for (const name of files) {
+      const stem = String(name).replace(/\.[^.]+$/i, '');
+      const keys = [
+        sanitizeTitle(stem).toLowerCase(),
+        sanitizeTitle(parseRomFilename(stem).cleanName || stem).toLowerCase(),
+        normalizeScanName(stem),
+        normalizeScanName(parseRomFilename(stem).cleanName || stem),
+      ].filter(Boolean);
+      for (const key of keys) {
+        if (!key) continue;
+        if (normalizedKind === 'screenshots') {
+          if (!Array.isArray(byName[key])) byName[key] = [];
+          byName[key].push(name);
+        } else if (!byName[key]) {
+          byName[key] = name;
+        }
+      }
+    }
+    if (normalizedKind === 'screenshots') {
+      Object.keys(byName).forEach((key) => {
+        byName[key].sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+      });
+    }
+    const index = { dir, byName };
+    LOCAL_XML_METADATA_CACHE[cacheKey] = { statKey, data: index };
+    return index;
+  } catch {
+    return null;
+  }
+}
+
+function loadLocalImageMetadata(system, catalogIdentifier, title) {
+  const normalizedSystem = String(system || '').toLowerCase();
+  if (normalizedSystem !== 'x360') return null;
+  const lookupKeys = [
+    catalogIdentifier ? String(catalogIdentifier).replace(/\.[^.]+$/, '') : '',
+    title || '',
+    catalogIdentifier ? parseRomFilename(String(catalogIdentifier).replace(/\.[^.]+$/, '')).cleanName : '',
+  ]
+    .filter(Boolean)
+    .flatMap(value => [sanitizeTitle(value).toLowerCase(), normalizeScanName(value)])
+    .filter(Boolean);
+  const uniqueKeys = [...new Set(lookupKeys)];
+  if (!uniqueKeys.length) return null;
+
+  const findSingle = (kind) => {
+    const index = loadLocalImageMetadataIndex(normalizedSystem, kind);
+    if (!index?.dir || !index.byName) return null;
+    for (const key of uniqueKeys) {
+      const fileName = index.byName[key];
+      if (fileName) return path.join(index.dir, fileName);
+    }
+    return null;
+  };
+  const findMany = (kind) => {
+    const index = loadLocalImageMetadataIndex(normalizedSystem, kind);
+    if (!index?.dir || !index.byName) return [];
+    for (const key of uniqueKeys) {
+      const fileNames = index.byName[key];
+      if (Array.isArray(fileNames) && fileNames.length) {
+        return fileNames.map(fileName => path.join(index.dir, fileName));
+      }
+    }
+    return [];
+  };
+
+  const iconPath = findSingle('icons');
+  const coverPath = findSingle('covers');
+  const marqueePath = findSingle('marquees');
+  const screenshotPaths = findMany('screenshots');
+  if (!iconPath && !coverPath && !marqueePath && !screenshotPaths.length) return null;
+  return {
+    icon_path: iconPath || null,
+    cover_path: coverPath || null,
+    logo_path: marqueePath || null,
+    screenshot_paths: screenshotPaths,
+  };
+}
+
+function parseSimpleGameXmlMetadata(xmlText = '', context = {}) {
+  const text = String(xmlText || '');
+  if (!text.trim()) return null;
+  const readTag = (tag) => {
+    const match = text.match(new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`, 'i'));
+    return match?.[1] ? decodeHtmlEntities(String(match[1]).trim()) : '';
+  };
+  const title = readTag('name') || context.title || null;
+  const genreText = readTag('genre');
+  const ratingEsrb = readTag('rating_esrb');
+  const ratingAcb = readTag('rating_acb');
+  const ratingCero = readTag('rating_cero');
+  const ratingPegi = readTag('rating_pegi');
+  const ratingUsk = readTag('rating_usk');
+  const genres = genreText
+    ? genreText.split(',').map(value => String(value || '').trim()).filter(Boolean)
+    : [];
+  const players = readTag('players');
+  const payload = {
+    title,
+    sort_title: sanitizeTitle(title || context.title || ''),
+    system: context.system || null,
+    provider: context.provider || 'archiveorg',
+    catalog_identifier: context.catalogIdentifier || null,
+    match_confidence: 1,
+    metadata_status: 'ready',
+    metadata_source: 'local-xml',
+    description: readTag('desc') || null,
+    genres,
+    developer: readTag('developer') || null,
+    publisher: readTag('publisher') || null,
+    release_date: readTag('releasedate') || null,
+    players: players || null,
+    rating: null,
+    rating_esrb: ratingEsrb || null,
+    rating_acb: ratingAcb || null,
+    rating_cero: ratingCero || null,
+    rating_pegi: ratingPegi || null,
+    rating_usk: ratingUsk || null,
+    age_rating: ratingEsrb || null,
+    age_rating_label: ratingEsrb || null,
+    age_rating_board: ratingEsrb ? 'ESRB' : null,
+    last_metadata_refresh: Date.now(),
+  };
+  if (
+    !payload.description &&
+    !payload.developer &&
+    !payload.publisher &&
+    !payload.release_date &&
+    !payload.rating_esrb &&
+    !payload.rating_acb &&
+    !payload.rating_cero &&
+    !payload.rating_pegi &&
+    !payload.rating_usk &&
+    !payload.players &&
+    !payload.genres.length
+  ) {
+    payload.metadata_status = 'missing';
+  }
+  return payload;
+}
+
+function loadLocalXmlMetadata(system, catalogIdentifier, title, provider = 'archiveorg') {
+  const normalizedSystem = String(system || '').toLowerCase();
+  if (normalizedSystem !== 'x360') return null;
+  const index = loadLocalXmlMetadataIndex(normalizedSystem);
+  if (!index?.dir || !index.byName) return null;
+  const lookupKeys = [
+    catalogIdentifier ? String(catalogIdentifier).replace(/\.[^.]+$/,'') : '',
+    title || '',
+    catalogIdentifier ? parseRomFilename(String(catalogIdentifier).replace(/\.[^.]+$/,'')).cleanName : '',
+  ]
+    .filter(Boolean)
+    .flatMap(value => [sanitizeTitle(value).toLowerCase(), normalizeScanName(value)])
+    .filter(Boolean);
+  for (const key of lookupKeys) {
+    const fileName = index.byName[key];
+    if (!fileName) continue;
+    const fullPath = path.join(index.dir, fileName);
+    const cacheKey = localXmlMetadataCacheKey(normalizedSystem, fileName);
+    try {
+      const stat = fs.statSync(fullPath);
+      const cached = LOCAL_XML_METADATA_CACHE[cacheKey];
+      if (cached && cached.mtimeMs === stat.mtimeMs) return cached.data;
+      const xmlText = fs.readFileSync(fullPath, 'utf8');
+      const parsed = parseSimpleGameXmlMetadata(xmlText, {
+        system: normalizedSystem,
+        provider,
+        catalogIdentifier,
+        title,
+      });
+      if (!parsed) return null;
+      LOCAL_XML_METADATA_CACHE[cacheKey] = { mtimeMs: stat.mtimeMs, data: parsed };
+      return parsed;
+    } catch {}
+  }
+  return null;
+}
+
+function repoSystemMetadataDir(system) {
+  if (!system) return null;
+  return path.join(__dirname, '../../assets/metadata', String(system || '').toLowerCase());
+}
+
+function repoSystemHarvestDir(system) {
+  const baseDir = repoSystemMetadataDir(system);
+  return baseDir ? path.join(baseDir, 'harvest') : null;
+}
+
+function ensureRepoSystemHarvestDirs(system) {
+  const harvestDir = repoSystemHarvestDir(system);
+  if (!harvestDir) return null;
+  const dirs = {
+    root: harvestDir,
+    icons: path.join(harvestDir, 'icons'),
+    covers: path.join(harvestDir, 'covers'),
+    marquees: path.join(harvestDir, 'marquees'),
+    screenshots: path.join(harvestDir, 'screenshots'),
+  };
+  Object.values(dirs).forEach(dir => {
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  });
+  return dirs;
+}
+
+function safeMetadataFileStem(value) {
+  return String(value || '')
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/[. ]+$/g, '') || 'Unknown Game';
+}
+
+function localPathFromAssetValue(value) {
+  if (!value || typeof value !== 'string') return null;
+  if (/^file:\/\/\//i.test(value)) {
+    try {
+      return decodeURIComponent(new URL(value).pathname.replace(/^\/([A-Za-z]:\/)/, '$1'));
+    } catch {
+      return null;
+    }
+  }
+  if (/^[a-zA-Z]:\\/.test(value) || value.startsWith('\\\\')) return value;
+  return null;
+}
+
+function copyHarvestAsset(sourceValue, destDir, destStem, index = null) {
+  const sourcePath = localPathFromAssetValue(sourceValue);
+  if (!sourcePath || !fs.existsSync(sourcePath)) return null;
+  const ext = path.extname(sourcePath) || '.webp';
+  const suffix = Number.isFinite(index) ? `-${String(index + 1).padStart(2, '0')}` : '';
+  const destPath = path.join(destDir, `${safeMetadataFileStem(destStem)}${suffix}${ext.toLowerCase()}`);
+  try {
+    if (!fs.existsSync(destPath)) fs.copyFileSync(sourcePath, destPath);
+    return destPath;
+  } catch {
+    return null;
+  }
+}
+
+function summarizePreviewMetadata(payload = {}) {
+  return {
+    title: payload.title || null,
+    sort_title: payload.sort_title || null,
+    description: payload.description || null,
+    genres: Array.isArray(payload.genres) ? payload.genres : normalizeProviderArray(payload.genres) || [],
+    developer: payload.developer || null,
+    publisher: payload.publisher || null,
+    release_date: payload.release_date || null,
+    players: payload.players || null,
+    rating: payload.rating || null,
+    rating_esrb: payload.rating_esrb || null,
+    rating_acb: payload.rating_acb || null,
+    rating_cero: payload.rating_cero || null,
+    rating_pegi: payload.rating_pegi || null,
+    rating_usk: payload.rating_usk || null,
+    age_rating: payload.age_rating || null,
+    age_rating_label: payload.age_rating_label || null,
+    age_rating_board: payload.age_rating_board || null,
+    platform_name: payload.platform_name || null,
+    metadata_source: payload.metadata_source || null,
+  };
+}
+
+function buildVariantSummary(rom = {}) {
+  return {
+    name: rom.name || null,
+    cleanName: rom.cleanName || null,
+    region: rom.region || null,
+    tags: Array.isArray(rom.tags) ? rom.tags : [],
+    size: rom.size || null,
+    sizeBytes: rom.sizeBytes ?? null,
+    timestamp: rom.timestamp || null,
+    downloadUrl: rom.downloadUrl || null,
+  };
+}
+
+async function exportMarketplaceMetadataPack({ system, provider = 'archiveorg', limit = 0 } = {}) {
+  const normalizedSystem = String(system || '').toLowerCase();
+  if (!normalizedSystem) return { ok: false, error: 'Missing system.' };
+  const harvestDirs = ensureRepoSystemHarvestDirs(normalizedSystem);
+  if (!harvestDirs) return { ok: false, error: 'Could not prepare harvest directory.' };
+
+  const catalog = await fetchMarketplaceCatalog(provider, normalizedSystem);
+  const roms = Array.isArray(catalog?.roms) ? catalog.roms : [];
+  if (!roms.length) return { ok: false, error: `No catalog entries available for ${normalizedSystem}.` };
+  const sourceRoms = limit > 0 ? roms.slice(0, limit) : roms.slice();
+  const groups = new Map();
+
+  for (const rom of sourceRoms) {
+    const canonicalTitle = String(rom?.cleanName || parseRomFilename(rom?.name || '').cleanName || rom?.name || 'Unknown Game').trim() || 'Unknown Game';
+    const groupKey = sanitizeTitle(canonicalTitle).toLowerCase();
+    let group = groups.get(groupKey);
+    if (!group) {
+      group = {
+        title: canonicalTitle,
+        sort_title: sanitizeTitle(canonicalTitle),
+        system: normalizedSystem,
+        provider,
+        metadata: null,
+        art: {
+          icon: null,
+          cover: null,
+          marquee: null,
+          screenshots: [],
+        },
+        variants: [],
+      };
+      groups.set(groupKey, group);
+    }
+    group.variants.push(buildVariantSummary(rom));
+
+    if (!group.metadata) {
+      const preview = await buildGameEnrichmentPreview({
+        title: canonicalTitle,
+        system: normalizedSystem,
+        provider,
+        catalogIdentifier: rom?.name || null,
+      });
+      if (preview?.ok && preview.data) {
+        group.metadata = summarizePreviewMetadata(preview.data);
+        const stem = canonicalTitle;
+        const iconPath = copyHarvestAsset(preview.data.icon_path, harvestDirs.icons, stem);
+        const coverPath = copyHarvestAsset(preview.data.cover_path, harvestDirs.covers, stem);
+        const logoPath = copyHarvestAsset(preview.data.logo_path, harvestDirs.marquees, stem);
+        const screenshotPaths = Array.isArray(preview.data.screenshot_paths)
+          ? preview.data.screenshot_paths
+              .map((value, idx) => copyHarvestAsset(value, harvestDirs.screenshots, stem, idx))
+              .filter(Boolean)
+          : [];
+        group.art = {
+          icon: iconPath ? path.relative(harvestDirs.root, iconPath).replace(/\\/g, '/') : null,
+          cover: coverPath ? path.relative(harvestDirs.root, coverPath).replace(/\\/g, '/') : null,
+          marquee: logoPath ? path.relative(harvestDirs.root, logoPath).replace(/\\/g, '/') : null,
+          screenshots: screenshotPaths.map(filePath => path.relative(harvestDirs.root, filePath).replace(/\\/g, '/')),
+        };
+      }
+    }
+  }
+
+  const manifest = {
+    generatedAt: new Date().toISOString(),
+    system: normalizedSystem,
+    provider,
+    totalSourceEntries: sourceRoms.length,
+    totalGroupedTitles: groups.size,
+    items: [...groups.values()].sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: 'base' })),
+  };
+  const manifestPath = path.join(harvestDirs.root, 'manifest.json');
+  fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2), 'utf8');
+  return {
+    ok: true,
+    system: normalizedSystem,
+    provider,
+    manifestPath,
+    harvestDir: harvestDirs.root,
+    totalSourceEntries: manifest.totalSourceEntries,
+    totalGroupedTitles: manifest.totalGroupedTitles,
+  };
 }
 
 function loadPackagedMarketplaceMetadata(provider, system) {
@@ -552,6 +1029,11 @@ function normalizePackagedMarketplaceMetadata(entry = {}, context = {}) {
     release_date: entry.release_date || null,
     players: entry.players || null,
     rating: entry.rating || null,
+    rating_esrb: entry.rating_esrb || null,
+    rating_acb: entry.rating_acb || null,
+    rating_cero: entry.rating_cero || null,
+    rating_pegi: entry.rating_pegi || null,
+    rating_usk: entry.rating_usk || null,
     age_rating: entry.age_rating || null,
     age_rating_label: entry.age_rating_label || null,
     age_rating_board: entry.age_rating_board || null,
@@ -1314,12 +1796,61 @@ ipcMain.handle('metadata-service-health', async () => {
 async function buildGameEnrichmentPreview({ title, system, provider = null, catalogIdentifier = null }) {
   const effectiveTitle = title || catalogIdentifier || 'Unknown Game';
   const effectiveSystem = system || null;
+  const localXmlMetadata = provider === 'archiveorg' && effectiveSystem
+    ? loadLocalXmlMetadata(effectiveSystem, catalogIdentifier, effectiveTitle, provider)
+    : null;
   const packagedMetadata = provider === 'archiveorg' && effectiveSystem && shouldUsePackagedMarketplaceOnly(provider, effectiveSystem)
     ? normalizePackagedMarketplaceMetadata(
         getPackagedMarketplaceMetadata(provider, effectiveSystem, catalogIdentifier, effectiveTitle),
         { title: effectiveTitle, system: effectiveSystem, provider, catalogIdentifier }
       )
     : null;
+
+  if (localXmlMetadata) {
+    const localImages = loadLocalImageMetadata(effectiveSystem, catalogIdentifier, effectiveTitle);
+    if (String(effectiveSystem || '').toLowerCase() === 'x360') {
+      console.log('[x360-local-preview]', JSON.stringify({
+        title: effectiveTitle,
+        catalogIdentifier,
+        localXml: true,
+        localImages: !!localImages,
+        cover: !!localImages?.cover_path,
+        icon: !!localImages?.icon_path,
+        logo: !!localImages?.logo_path,
+        screenshots: Array.isArray(localImages?.screenshot_paths) ? localImages.screenshot_paths.length : 0,
+      }));
+    }
+    if (localImages) {
+      if (localImages.icon_path && !localXmlMetadata.icon_path) localXmlMetadata.icon_path = localImages.icon_path;
+      if (localImages.logo_path && !localXmlMetadata.logo_path) localXmlMetadata.logo_path = localImages.logo_path;
+      if (localImages.cover_path && !localXmlMetadata.cover_path) localXmlMetadata.cover_path = localImages.cover_path;
+      if ((!Array.isArray(localXmlMetadata.screenshot_paths) || !localXmlMetadata.screenshot_paths.length) && Array.isArray(localImages.screenshot_paths) && localImages.screenshot_paths.length) {
+        localXmlMetadata.screenshot_paths = localImages.screenshot_paths;
+      }
+    }
+    const settings = loadSettings();
+    const sgdbAccount = readThirdPartyAccount('steamgriddb');
+    const sgdbKey = sgdbAccount.secret || settings.steamGridDbKey || '';
+    if (sgdbKey && effectiveSystem) {
+      const [icon, logo, cover] = await Promise.all([
+        fetchSgdbAsset('icon', effectiveTitle, effectiveSystem, sgdbKey),
+        fetchSgdbAsset('logo', effectiveTitle, effectiveSystem, sgdbKey),
+        fetchSgdbAsset('grid', effectiveTitle, effectiveSystem, sgdbKey),
+      ]);
+      if (icon?.ok && !localXmlMetadata.icon_path) localXmlMetadata.icon_path = icon.path;
+      if (logo?.ok && !localXmlMetadata.logo_path) localXmlMetadata.logo_path = logo.path;
+      if (cover?.ok && !localXmlMetadata.cover_path) localXmlMetadata.cover_path = cover.path;
+    }
+    return { ok: true, data: normalizeEnrichmentAssetUrls(localXmlMetadata), source: 'local-xml', cached: true };
+  }
+  if (String(effectiveSystem || '').toLowerCase() === 'x360') {
+    console.log('[x360-local-preview]', JSON.stringify({
+      title: effectiveTitle,
+      catalogIdentifier,
+      localXml: false,
+      localImages: false,
+    }));
+  }
 
   if (packagedMetadata) {
     const settings = loadSettings();
@@ -1445,6 +1976,10 @@ async function buildGameEnrichmentPreview({ title, system, provider = null, cata
 ipcMain.handle('metadata-preview-game', async (_, { title, system, provider = null, catalogIdentifier = null }) => {
   if (!title) return { ok: false, error: 'Missing title' };
   return buildGameEnrichmentPreview({ title, system, provider, catalogIdentifier });
+});
+
+ipcMain.handle('metadata-export-system-pack', async (_, { system, provider = 'archiveorg', limit = 0 } = {}) => {
+  return exportMarketplaceMetadataPack({ system, provider, limit });
 });
 
 ipcMain.handle('marketplace-packaged-metadata', async (_, { provider = null, system = null, catalogIdentifiers = [] } = {}) => {
@@ -1637,6 +2172,17 @@ function archiveDownloadHeaders(cookieHeader = '', referer = 'https://archive.or
   return headers;
 }
 
+function archiveHtmlHeaders(cookieHeader = '', referer = 'https://archive.org/') {
+  const headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Referer': referer,
+  };
+  if (cookieHeader) headers.Cookie = cookieHeader;
+  return headers;
+}
+
 function archiveDownloadReferer(downloadUrl = '') {
   try {
     const parsed = new URL(downloadUrl);
@@ -1651,6 +2197,18 @@ function archiveDownloadReferer(downloadUrl = '') {
     }
   } catch {}
   return 'https://archive.org/';
+}
+
+function archiveItemIdFromUrl(url = '') {
+  try {
+    const parsed = new URL(url);
+    const parts = parsed.pathname.split('/').filter(Boolean);
+    const downloadIdx = parts.indexOf('download');
+    if (downloadIdx >= 0 && parts[downloadIdx + 1]) return parts[downloadIdx + 1];
+    const itemsIdx = parts.indexOf('items');
+    if (itemsIdx >= 0 && parts[itemsIdx + 1]) return parts[itemsIdx + 1];
+  } catch {}
+  return '';
 }
 
 const MARKETPLACE_THEME_SOURCES = [
@@ -1703,7 +2261,7 @@ async function fetchArchiveText(url, referer = 'https://archive.org/details/Xbox
         hostname: parsed.hostname,
         path: parsed.pathname + parsed.search,
         method: 'GET',
-        headers: archiveDownloadHeaders(cookieHeader, referer),
+        headers: archiveHtmlHeaders(cookieHeader, referer),
         timeout: 30000,
       }, (res) => {
         const { statusCode, headers } = res;
@@ -2270,10 +2828,10 @@ async function downloadArchiveViaBrowserWindow(event, { identifier, downloadUrl,
     let sawDownload = false;
     let itemRef = null;
     let win = null;
-    let timeout = null;
+    let startTimeout = null;
 
     const cleanup = () => {
-      try { if (timeout) clearTimeout(timeout); } catch {}
+      try { if (startTimeout) clearTimeout(startTimeout); } catch {}
       try { ses.removeListener('will-download', onWillDownload); } catch {}
       try { if (win && !win.isDestroyed()) win.close(); } catch {}
       activeDownloads.delete(identifier);
@@ -2290,6 +2848,7 @@ async function downloadArchiveViaBrowserWindow(event, { identifier, downloadUrl,
       if (!win || webContents !== win.webContents) return;
       sawDownload = true;
       itemRef = item;
+      try { if (startTimeout) { clearTimeout(startTimeout); startTimeout = null; } } catch {}
       item.setSavePath(destFile);
 
       activeDownloads.set(identifier, {
@@ -2334,14 +2893,14 @@ async function downloadArchiveViaBrowserWindow(event, { identifier, downloadUrl,
       },
     });
 
-    timeout = setTimeout(() => {
+    startTimeout = setTimeout(() => {
       if (finished) return;
       finalize({ ok: false, error: `Timed out waiting for browser download\n${downloadUrl}` });
     }, 45000);
     try {
       win.webContents.downloadURL(downloadUrl);
     } catch (err) {
-      clearTimeout(timeout);
+      try { if (startTimeout) { clearTimeout(startTimeout); startTimeout = null; } } catch {}
       finalize({ ok: false, error: `${err.message}\n${downloadUrl}` });
     }
   });
@@ -3684,10 +4243,22 @@ const SYSTEM_CONFIGS = {
     label: 'Super Nintendo (SNES)',
     archivePath: 'roms/Nintendo%20-%20Super%20Nintendo%20Entertainment%20System.zip',
     downloadBase: 'https://archive.org/download/ni-roms/roms/Nintendo%20-%20Super%20Nintendo%20Entertainment%20System.zip/',
+    catalogUrl: 'https://ia802803.us.archive.org/view_archive.php?archive=/17/items/ni-roms/roms/Nintendo%20-%20Super%20Nintendo%20Entertainment%20System.zip',
+  },
+  genesis: {
+    label: 'Sega Genesis',
+    archivePath: 'roms/Sega%20-%20Mega%20Drive%20-%20Genesis.zip',
+    downloadBase: 'https://archive.org/download/ni-roms/roms/Sega%20-%20Mega%20Drive%20-%20Genesis.zip/',
+    catalogUrl: 'https://ia802803.us.archive.org/view_archive.php?archive=/17/items/ni-roms/roms/Sega%20-%20Mega%20Drive%20-%20Genesis.zip',
   },
   psx: {
     label: 'PlayStation',
     // PSX uses multiple archive.org items — downloadUrl is per-ROM in the JSON
+    archivePath: null,
+    downloadBase: null,
+  },
+  ps2: {
+    label: 'PlayStation 2',
     archivePath: null,
     downloadBase: null,
   },
@@ -3701,8 +4272,55 @@ const SYSTEM_CONFIGS = {
     archivePath: null,
     downloadBase: null,
   },
+  xbox: {
+    label: 'Xbox',
+    archivePath: null,
+    downloadBase: null,
+  },
+  x360: {
+    label: 'Xbox 360',
+    archivePath: null,
+    downloadBase: null,
+  },
 };
 const LIVE_ARCHIVE_SYSTEM_SOURCES = Object.freeze({
+  ps2: {
+    extensions: ['.chd'],
+    urls: [
+      'https://archive.org/download/sony-playstation-2-0-redump-collection/',
+      'https://archive.org/download/sony-playstation-2-a-redump-collection/',
+      'https://archive.org/download/sony-playstation-2-b-redump-collection/',
+      'https://archive.org/download/sony-playstation-2-c-redump-collection/',
+      'https://archive.org/download/sony-playstation-2-d0-dm-redump-collection/',
+      'https://archive.org/download/sony-playstation-2-dn-dz-redump-collection/',
+      'https://archive.org/download/sony-playstation-2-e-redump-collection/',
+      'https://archive.org/download/sony-playstation-2-f-redump-collection/',
+      'https://archive.org/download/sony-playstation-2-g-redump-collection/',
+      'https://archive.org/download/sony-playstation-2-h-redump-collection/',
+      'https://archive.org/download/sony-playstation-2-i-redump-collection/',
+      'https://archive.org/download/sony-playstation-2-j-redump-collection/',
+      'https://archive.org/download/sony-playstation-2-k-redump-collection/',
+      'https://archive.org/download/sony-playstation-2-l-redump-collection/',
+      'https://archive.org/download/sony-playstation-2-m0-mm-redump-collection/',
+      'https://archive.org/download/sony-playstation-2-mn-mz-redump-collection/',
+      'https://archive.org/download/sony-playstation-2-n-redump-collection/',
+      'https://archive.org/download/sony-playstation-2-o0-om-redump-collection/',
+      'https://archive.org/download/sony-playstation-2-on-oz-redump-collection/',
+      'https://archive.org/download/sony-playstation-2-p-redump-collection/',
+      'https://archive.org/download/sony-playstation-2-q-redump-collection/',
+      'https://archive.org/download/sony-playstation-2-r-redump-collection/',
+      'https://archive.org/download/sony-playstation-2-s0-sh-redump-collection/',
+      'https://archive.org/download/sony-playstation-2-si-so-redump-collection/',
+      'https://archive.org/download/sony-playstation-2-sr-sz-redump-collection/',
+      'https://archive.org/download/sony-playstation-2-t-redump-collection/',
+      'https://archive.org/download/sony-playstation-2-u-redump-collection/',
+      'https://archive.org/download/sony-playstation-2-v-redump-collection/',
+      'https://archive.org/download/sony-playstation-2-w-redump-collection/',
+      'https://archive.org/download/sony-playstation-2-x-redump-collection/',
+      'https://archive.org/download/sony-playstation-2-y-redump-collection/',
+      'https://archive.org/download/sony-playstation-2-z-redump-collection/',
+    ],
+  },
   psp: {
     referer: 'https://archive.org/details/psp-chd-zstd-redump-part1',
     extensions: ['.chd'],
@@ -3718,6 +4336,90 @@ const LIVE_ARCHIVE_SYSTEM_SOURCES = Object.freeze({
       'https://archive.org/download/dc-chd-zstd-redump/dc-chd-zstd/',
     ],
   },
+  xbox: {
+    referer: 'https://archive.org/details/microsoft_xbox_numberssymbols',
+    extensions: ['.zip'],
+    urls: [
+      'https://archive.org/download/microsoft_xbox_numberssymbols/',
+      'https://archive.org/download/microsoft_xbox_a/',
+      'https://archive.org/download/microsoft_xbox_b/',
+      'https://archive.org/download/microsoft_xbox_c_part1/',
+      'https://archive.org/download/microsoft_xbox_c_part2/',
+      'https://archive.org/download/microsoft_xbox_d_part1/',
+      'https://archive.org/download/microsoft_xbox_d_part2/',
+      'https://archive.org/download/microsoft_xbox_e/',
+      'https://archive.org/download/microsoft_xbox_f/',
+      'https://archive.org/download/microsoft_xbox_g/',
+      'https://archive.org/download/microsoft_xbox_h/',
+      'https://archive.org/download/microsoft_xbox_i/',
+      'https://archive.org/download/microsoft_xbox_j/',
+      'https://archive.org/download/microsoft_xbox_k/',
+      'https://archive.org/download/microsoft_xbox_l/',
+      'https://archive.org/download/microsoft_xbox_m_part1/',
+      'https://archive.org/download/microsoft_xbox_m_part2/',
+      'https://archive.org/download/microsoft_xbox_n_part1/',
+      'https://archive.org/download/microsoft_xbox_n_part2/',
+      'https://archive.org/download/microsoft_xbox_o_part1/',
+      'https://archive.org/download/microsoft_xbox_o_part2/',
+      'https://archive.org/download/microsoft_xbox_p/',
+      'https://archive.org/download/microsoft_xbox_q/',
+      'https://archive.org/download/microsoft_xbox_r/',
+      'https://archive.org/download/microsoft_xbox_s_part1/',
+      'https://archive.org/download/microsoft_xbox_s_part2/',
+      'https://archive.org/download/microsoft_xbox_t_part1/',
+      'https://archive.org/download/microsoft_xbox_t_part2/',
+      'https://archive.org/download/microsoft_xbox_u/',
+      'https://archive.org/download/microsoft_xbox_v/',
+      'https://archive.org/download/microsoft_xbox_w/',
+      'https://archive.org/download/microsoft_xbox_x/',
+      'https://archive.org/download/microsoft_xbox_y/',
+      'https://archive.org/download/microsoft_xbox_z/',
+    ],
+  },
+  x360: {
+    referer: 'https://archive.org/details/microsoft_xbox360_numberssymbols',
+    extensions: ['.zip'],
+    urls: [
+      'https://archive.org/download/microsoft_xbox360_numberssymbols/',
+      'https://archive.org/download/microsoft_xbox360_a_part1/',
+      'https://archive.org/download/microsoft_xbox360_a_part2/',
+      'https://archive.org/download/microsoft_xbox360_b_part1/',
+      'https://archive.org/download/microsoft_xbox360_b_part2/',
+      'https://archive.org/download/microsoft_xbox360_c_part1/',
+      'https://archive.org/download/microsoft_xbox360_c_part2/',
+      'https://archive.org/download/microsoft_xbox360_d_part1/',
+      'https://archive.org/download/microsoft_xbox360_d_part2/',
+      'https://archive.org/download/microsoft_xbox360_d_part3/',
+      'https://archive.org/download/microsoft_xbox360_e/',
+      'https://archive.org/download/microsoft_xbox360_f_part1/',
+      'https://archive.org/download/microsoft_xbox360_f_part2/',
+      'https://archive.org/download/microsoft_xbox360_g/',
+      'https://archive.org/download/microsoft_xbox360_h/',
+      'https://archive.org/download/microsoft_xbox360_i/',
+      'https://archive.org/download/microsoft_xbox360_j/',
+      'https://archive.org/download/microsoft_xbox360_k/',
+      'https://archive.org/download/microsoft_xbox360_l/',
+      'https://archive.org/download/microsoft_xbox360_m_part1/',
+      'https://archive.org/download/microsoft_xbox360_m_part2/',
+      'https://archive.org/download/microsoft_xbox360_n_part1/',
+      'https://archive.org/download/microsoft_xbox360_n_part2/',
+      'https://archive.org/download/microsoft_xbox360_o/',
+      'https://archive.org/download/microsoft_xbox360_p/',
+      'https://archive.org/download/microsoft_xbox360_q/',
+      'https://archive.org/download/microsoft_xbox360_r/',
+      'https://archive.org/download/microsoft_xbox360_s_part1/',
+      'https://archive.org/download/microsoft_xbox360_s_part2/',
+      'https://archive.org/download/microsoft_xbox360_t_part1/',
+      'https://archive.org/download/microsoft_xbox360_t_part2/',
+      'https://archive.org/download/microsoft_xbox360_u/',
+      'https://archive.org/download/microsoft_xbox360_v/',
+      'https://archive.org/download/microsoft_xbox360_w/',
+      'https://archive.org/download/microsoft_xbox360_x_part1/',
+      'https://archive.org/download/microsoft_xbox360_x_part2/',
+      'https://archive.org/download/microsoft_xbox360_y/',
+      'https://archive.org/download/microsoft_xbox360_z/',
+    ],
+  },
 });
 
 const romListCache = {};
@@ -3726,7 +4428,7 @@ const MARKETPLACE_PROVIDERS = {
     id: 'archiveorg',
     name: 'Archive.org',
     status: 'active',
-    systems: ['snes', 'psx', 'psp', 'dc'],
+    systems: ['snes', 'genesis', 'psx', 'ps2', 'psp', 'dc', 'xbox', 'x360'],
   },
 };
 
@@ -3738,13 +4440,44 @@ async function loadArchiveOrgLiveRomList(system) {
   if (!config) return { ok: false, error: `No live Archive.org source configured for ${system}.`, provider: 'archiveorg' };
   const normalizedSystem = String(system || '').toLowerCase();
   const cacheKey = romListCacheKey('archiveorg', normalizedSystem);
+  const diskCached = loadRomDiskCache(normalizedSystem);
+  if (normalizedSystem === 'x360' || normalizedSystem === 'xbox') {
+    console.log(`[${normalizedSystem}-catalog] disk cache entries:`, Array.isArray(diskCached) ? diskCached.length : 0);
+  }
+  if (Array.isArray(diskCached) && diskCached.length) {
+    romListCache[cacheKey] = diskCached;
+  }
   try {
-    try {
-      const p = getRomCachePath(normalizedSystem);
-      if (fs.existsSync(p)) fs.unlinkSync(p);
-    } catch {}
-    delete romListCache[cacheKey];
-    const pages = await Promise.all(config.urls.map(url => fetchArchiveText(url, config.referer)));
+    if (normalizedSystem === 'x360' || normalizedSystem === 'xbox') {
+      const manifestPages = await Promise.all((config.urls || []).map(async (url) => {
+        const itemId = archiveItemIdFromUrl(url);
+        const manifestUrl = itemId ? `${url}${itemId}_files.xml` : '';
+        if (!manifestUrl) return [];
+        const manifestXml = await fetchArchiveText(manifestUrl, archiveDownloadReferer(url));
+        return parseArchiveFilesXml(manifestXml, {
+          extensions: config.extensions || ['.zip'],
+          system: normalizedSystem,
+          provider: 'archiveorg',
+          sourceUrl: url,
+        });
+      }));
+      const manifestRoms = manifestPages.flat();
+      console.log(`[${normalizedSystem}-catalog] manifest entries:`, manifestRoms.length);
+      console.log(`[${normalizedSystem}-catalog] first manifest entries:`, manifestRoms.slice(0, 8).map(r => r?.name).filter(Boolean));
+      if (manifestRoms.length) {
+        romListCache[cacheKey] = manifestRoms;
+        saveRomDiskCache(normalizedSystem, manifestRoms);
+        return { ok: true, roms: manifestRoms, cached: false, source: 'archive.org-manifest', provider: 'archiveorg' };
+      }
+    }
+    const pages = await Promise.all(config.urls.map(url => fetchArchiveText(url, config.referer || archiveDownloadReferer(url))));
+    if (normalizedSystem === 'x360' || normalizedSystem === 'xbox' || normalizedSystem === 'genesis') {
+      pages.forEach((html, idx) => {
+        const sample = String(html || '').slice(0, 400).replace(/\s+/g, ' ').trim();
+        console.log(`[${normalizedSystem}-catalog] page ${idx} length:`, String(html || '').length);
+        console.log(`[${normalizedSystem}-catalog] page ${idx} sample:`, sample);
+      });
+    }
     const merged = pages.flatMap((html, sourceIdx) => parseArchiveDirectoryHtml(html, {
       extensions: config.extensions || ['.chd'],
       system: normalizedSystem,
@@ -3752,6 +4485,15 @@ async function loadArchiveOrgLiveRomList(system) {
       sourceUrl: config.urls[sourceIdx],
     }));
     merged.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
+    if (!merged.length && Array.isArray(diskCached) && diskCached.length) {
+      console.warn(`[live-rom-cache] using cached ${normalizedSystem} catalog because fresh parse returned 0 entries`);
+      return { ok: true, roms: diskCached, cached: true, source: 'disk-cache', provider: 'archiveorg' };
+    }
+    if (normalizedSystem === 'x360' || normalizedSystem === 'xbox') {
+      console.log(`[${normalizedSystem}-catalog] urls:`, config.urls.length);
+      console.log(`[${normalizedSystem}-catalog] parsed entries:`, merged.length);
+      console.log(`[${normalizedSystem}-catalog] first entries:`, merged.slice(0, 8).map(r => r?.name).filter(Boolean));
+    }
     romListCache[cacheKey] = merged;
     saveRomDiskCache(normalizedSystem, merged);
     return { ok: true, roms: merged, cached: false, source: 'archive.org', provider: 'archiveorg' };
@@ -3773,6 +4515,24 @@ async function loadArchiveOrgRomList(system) {
   const devPath      = path.join(__dirname, '../../assets/roms', romsFileName);
   const packedPath   = path.join(process.resourcesPath || '', 'roms', romsFileName);
   const romsPath     = fs.existsSync(devPath) ? devPath : packedPath;
+  const config       = SYSTEM_CONFIGS[String(system || '').toLowerCase()];
+
+  if (!fs.existsSync(romsPath) && config?.catalogUrl && config?.downloadBase) {
+    try {
+      const html = await fetchArchiveText(config.catalogUrl, archiveDownloadReferer(config.downloadBase));
+      const roms = parseViewArchiveHtml(html, config.downloadBase).map(rom => ({
+        ...rom,
+        system: String(system || '').toLowerCase(),
+        provider: 'archiveorg',
+      }));
+      console.log(`[marketplace-fetch-catalog] archiveorg loaded ${roms.length} ROMs from live view_archive for ${system}`);
+      romListCache[cacheKey] = roms;
+      saveRomDiskCache(String(system || '').toLowerCase(), roms);
+      return { ok: true, roms, cached: false, source: 'archive.org', provider: 'archiveorg' };
+    } catch (e) {
+      return { ok: false, error: e.message || `Failed to load ${String(system || '').toUpperCase()} catalog.`, provider: 'archiveorg' };
+    }
+  }
 
   if (!fs.existsSync(romsPath)) {
     return { ok: false, error: `ROM list file not found: ${romsPath}`, provider: 'archiveorg' };
@@ -3822,6 +4582,7 @@ ipcMain.handle('marketplace-fetch-catalog', async (_, { provider = 'archiveorg',
 
 function parseArchiveDirectoryHtml(html, { extensions = ['.zip'], system = '', provider = 'archiveorg', sourceUrl = '' } = {}) {
   const roms = [];
+  let restrictedFallbackCount = 0;
   const allowed = new Set(extensions.map(ext => String(ext || '').toLowerCase()));
   const baseHrefMatch = String(html || '').match(/<base\s+href="([^"]+)"/i);
   let resolvedBaseHref = '';
@@ -3836,9 +4597,9 @@ function parseArchiveDirectoryHtml(html, { extensions = ['.zip'], system = '', p
     const inner = trMatch[1];
     const linkRe = /<td[^>]*><a[^>]+href="([^"]+)"[^>]*>([^<]+)<\/a><\/td>/i;
     const linkMatch = linkRe.exec(inner);
-    if (!linkMatch) continue;
-    const href    = linkMatch[1];
-    const rawName = decodeHtmlEntities(linkMatch[2].trim());
+    const firstCellMatch = inner.match(/<td[^>]*>([\s\S]*?)<\/td>/i);
+    const href    = linkMatch?.[1] || '';
+    const rawName = decodeHtmlEntities((linkMatch?.[2] || firstCellMatch?.[1] || '').replace(/<[^>]+>/g, '').trim());
     const lowerName = String(rawName || '').toLowerCase();
     if (!rawName || ![...allowed].some(ext => lowerName.endsWith(ext))) continue;
     if (rawName === '../' || rawName === 'Parent Directory') continue;
@@ -3851,7 +4612,11 @@ function parseArchiveDirectoryHtml(html, { extensions = ['.zip'], system = '', p
     const timestamp = cells.length >= 2 ? (cells[cells.length - 2] || '') : (cells[1] || '');
     const sizeRaw   = cells.length >= 1 ? (cells[cells.length - 1] || '') : '';
     let downloadUrl = href.startsWith('//') ? 'https:' + href : href;
-    if (downloadUrl.startsWith('/')) {
+    if (!downloadUrl) {
+      try {
+        downloadUrl = new URL(encodeURIComponent(rawName), resolvedBaseHref || sourceUrl || 'https://archive.org').toString();
+      } catch {}
+    } else if (downloadUrl.startsWith('/')) {
       try {
         const base = new URL(sourceUrl || 'https://archive.org');
         downloadUrl = `${base.protocol}//${base.host}${downloadUrl}`;
@@ -3866,11 +4631,81 @@ function parseArchiveDirectoryHtml(html, { extensions = ['.zip'], system = '', p
     const size = sizeBytes ? formatSizeMain(sizeBytes) : '';
     roms.push({ name: rawName, cleanName, region, tags, size, sizeBytes, timestamp, downloadUrl, system, provider });
   }
+  if (!roms.length && String(html || '').includes('directory-listing-table')) {
+    const restrictedRowRe = /<td[^>]*>([^<]+\.[A-Za-z0-9]{2,5})<\/td>\s*<td[^>]*>([^<]*)<\/td>\s*<td[^>]*>([^<]*)<\/td>/gi;
+    let rowMatch;
+    while ((rowMatch = restrictedRowRe.exec(html)) !== null) {
+      const rawName = decodeHtmlEntities(String(rowMatch[1] || '').trim());
+      const lowerName = rawName.toLowerCase();
+      if (!rawName || ![...allowed].some(ext => lowerName.endsWith(ext))) continue;
+      if (rawName === '../' || rawName === 'Parent Directory') continue;
+      const timestamp = String(rowMatch[2] || '').trim();
+      const sizeRaw = String(rowMatch[3] || '').trim();
+      let downloadUrl = '';
+      try {
+        downloadUrl = new URL(encodeURIComponent(rawName), resolvedBaseHref || sourceUrl || 'https://archive.org').toString();
+      } catch {}
+      const { cleanName, region, tags } = parseRomFilename(rawName);
+      const sizeBytes = parseSizeString(sizeRaw) || parseInt(sizeRaw, 10) || 0;
+      const size = sizeBytes ? formatSizeMain(sizeBytes) : '';
+      roms.push({ name: rawName, cleanName, region, tags, size, sizeBytes, timestamp, downloadUrl, system, provider });
+      restrictedFallbackCount += 1;
+    }
+  }
+  if (!roms.length && String(html || '').includes('directory-listing-table')) {
+    const tdMatches = [...String(html || '').matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)].map(match =>
+      decodeHtmlEntities(String(match[1] || '').replace(/<[^>]+>/g, '').trim())
+    );
+    for (let i = 0; i + 2 < tdMatches.length; i += 1) {
+      const rawName = tdMatches[i];
+      const lowerName = String(rawName || '').toLowerCase();
+      if (!rawName || ![...allowed].some(ext => lowerName.endsWith(ext))) continue;
+      if (rawName === '../' || rawName === 'Parent Directory') continue;
+      const timestamp = String(tdMatches[i + 1] || '').trim();
+      const sizeRaw = String(tdMatches[i + 2] || '').trim();
+      let downloadUrl = '';
+      try {
+        downloadUrl = new URL(encodeURIComponent(rawName), resolvedBaseHref || sourceUrl || 'https://archive.org').toString();
+      } catch {}
+      const { cleanName, region, tags } = parseRomFilename(rawName);
+      const sizeBytes = parseSizeString(sizeRaw) || parseInt(sizeRaw, 10) || 0;
+      const size = sizeBytes ? formatSizeMain(sizeBytes) : '';
+      roms.push({ name: rawName, cleanName, region, tags, size, sizeBytes, timestamp, downloadUrl, system, provider });
+      restrictedFallbackCount += 1;
+    }
+  }
+  if (String(system || '').toLowerCase() === 'x360') {
+    console.log('[x360-catalog] restricted fallback count:', restrictedFallbackCount);
+  }
   return roms;
 }
 
 function parseViewArchiveHtml(html, downloadBase) {
   return parseArchiveDirectoryHtml(html, { extensions: ['.zip'], sourceUrl: downloadBase });
+}
+
+function parseArchiveFilesXml(xml, { extensions = ['.zip'], system = '', provider = 'archiveorg', sourceUrl = '' } = {}) {
+  const roms = [];
+  const allowed = new Set(extensions.map(ext => String(ext || '').toLowerCase()));
+  const fileRe = /<file\b[^>]*name="([^"]+)"[^>]*>([\s\S]*?)<\/file>/gi;
+  let fileMatch;
+  while ((fileMatch = fileRe.exec(String(xml || ''))) !== null) {
+    const rawName = decodeHtmlEntities(String(fileMatch[1] || '').trim());
+    const lowerName = rawName.toLowerCase();
+    if (!rawName || ![...allowed].some(ext => lowerName.endsWith(ext))) continue;
+    const body = fileMatch[2] || '';
+    const sizeRaw = (body.match(/<size>([^<]+)<\/size>/i)?.[1] || '').trim();
+    const timestamp = (body.match(/<mtime>([^<]+)<\/mtime>/i)?.[1] || '').trim();
+    let downloadUrl = '';
+    try {
+      downloadUrl = new URL(encodeURIComponent(rawName), sourceUrl || 'https://archive.org').toString();
+    } catch {}
+    const { cleanName, region, tags } = parseRomFilename(rawName);
+    const sizeBytes = parseSizeString(sizeRaw) || parseInt(sizeRaw, 10) || 0;
+    const size = sizeBytes ? formatSizeMain(sizeBytes) : '';
+    roms.push({ name: rawName, cleanName, region, tags, size, sizeBytes, timestamp, downloadUrl, system, provider });
+  }
+  return roms;
 }
 
 function formatSizeMain(bytes) {
@@ -4133,6 +4968,7 @@ const LIBRETRO_SYSTEMS = [
   { id: 'nds', label: 'Nintendo DS', coreExample: 'melondsds_libretro.dll' },
   { id: 'pce', label: 'PC Engine / TurboGrafx-16', coreExample: 'mednafen_pce_fast_libretro.dll' },
   { id: 'psx', label: 'PlayStation', coreExample: 'mednafen_psx_libretro.dll' },
+  { id: 'ps2', label: 'PlayStation 2', coreExample: 'pcsx2_libretro.dll' },
   { id: 'psp', label: 'PSP', coreExample: 'ppsspp_libretro.dll' },
   { id: 'dc', label: 'Sega Dreamcast', coreExample: 'flycast_libretro.dll' },
   { id: 'dolphin', label: 'GameCube / Wii (Dolphin core)', coreExample: 'dolphin_libretro.dll' },

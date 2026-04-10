@@ -1,0 +1,15 @@
+<game romname="Backbreaker (USA, Europe)">
+  <name>Backbreaker (USA, Europe)</name>
+  <rating>0.75</rating>
+  <rating_esrb></rating_esrb>
+  <rating_acb></rating_acb>
+  <rating_cero></rating_cero>
+  <rating_pegi></rating_pegi>
+  <rating_usk></rating_usk>
+  <desc>Backbreaker is an American Football game in which the player controls an unlicensed team on its way to the top. The main selling point of the game it its graphics: it uses the Euphoria (physics) and Morpheme (animation) middleware engines, both developed by NaturalMotion, for real-time calculated player and especially tackling animations. The second big change in comparison to other football games are the controls: most actions are directly triggered with the right analogue stick instead of pressing buttons. The exception is the playing mode - aggressive or agile (offensive) respectively focus (defensive) - which is switched with the shoulder buttons and changes on what aspect the athlete focuses on, e.g. in aggressive defense mode a tackling will have more power behind them. The camera is positioned directly behind the active athlete and can&apos;t be controlled directly because it changes behaviour depending on the active mode.</desc>
+  <releasedate>2010-06-01</releasedate>
+  <developer>NaturalMotion</developer>
+  <publisher>505 Games</publisher>
+  <genre>Sports, Sports / Football (American)</genre>
+  <players>2</players>
+</game>
