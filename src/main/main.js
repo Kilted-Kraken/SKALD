@@ -4,15 +4,17 @@
  * Session 5: Auto-updater added (electron-updater + GitHub releases).
  */
 
-const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell, screen } = require('electron');
 const path   = require('path');
 const fs     = require('fs');
 const https  = require('https');
+const net = require('net');
 const { Readable } = require('stream');
 const { pathToFileURL } = require('url');
 const { execFile, spawn } = require('child_process');
 const extractZip = require('extract-zip');
 const stoat = require('./stoat');
+const { createEmulatorManager } = require('./emulator-manager');
 let sharp = null;
 try { sharp = require('sharp'); } catch {}
 
@@ -27,6 +29,7 @@ if (!app.isPackaged) {
 // ─── Paths ───────────────────────────────────────────────────────────────────
 
 const USER_DATA         = app.getPath('userData');
+const APP_ROOT_DIR      = app.getAppPath();
 const DEFAULT_GAMES_DIR = path.join(USER_DATA, 'games');
 const LEGACY_DB_PATH    = path.join(USER_DATA, 'library.json');
 const SETTINGS_PATH     = path.join(USER_DATA, 'settings.json');
@@ -47,8 +50,23 @@ const THUMB_CACHE_DIR   = path.join(ART_PROVIDER_ARCHIVE_DIR, 'thumbs');
 const SGDB_CACHE_DIR    = ART_PROVIDER_SGDB_DIR;
 const MARKETPLACE_DIR   = path.join(USER_DATA, 'marketplace');
 const MARKETPLACE_THEMES_DIR = path.join(MARKETPLACE_DIR, 'themes', 'xbox360');
+const XENIA_PROGRESS_LOG_PATH = path.join(USER_DATA, 'xenia-runtime-progress.log');
+const XENIA_CONTENT_TRACE_PATH = path.join(USER_DATA, 'xenia-content-trace.json');
+const RPCS3_INSTALL_MAP_PATH = path.join(USER_DATA, 'rpcs3-install-map.json');
+const RPCS3_PKG_AUTOMATION_LOG_PATH = path.join(USER_DATA, 'rpcs3-pkg-automation.log');
+const PS3_DISC_KEY_ARCHIVE_BASE = 'https://archive.org/download/sony-playstation-3-disc-keys-dat-cuesheets/Sony%20-%20PlayStation%203%20-%20Disc%20Keys%20%283388%29%20%282021-06-05%2001-59-33%29.zip';
+const PS3_DISC_KEY_CATALOG_URL = 'https://ia800701.us.archive.org/view_archive.php?archive=/32/items/sony-playstation-3-disc-keys-dat-cuesheets/Sony%20-%20PlayStation%203%20-%20Disc%20Keys%20%283388%29%20%282021-06-05%2001-59-33%29.zip';
+const BUNDLED_7ZIP_DIR  = app.isPackaged
+  ? path.join(process.resourcesPath, 'tools', '7zip')
+  : path.join(APP_ROOT_DIR, 'assets', 'tools', '7zip');
 const MARKETPLACE_METADATA_CACHE = Object.create(null);
 const LOCAL_XML_METADATA_CACHE = Object.create(null);
+let latestEmulatorRuntimeProgress = { active: false, percent: 0, stage: '', message: '' };
+const activeXeniaContentSnapshots = new Map();
+const activeRPCS3InstallSnapshots = new Map();
+const activeRPCS3PkgInstallWatchers = new Map();
+const DOWNLOAD_INACTIVITY_TIMEOUT_MS = 90000;
+let ps3DiscKeyIndexCache = null;
 
 [
   DEFAULT_GAMES_DIR,
@@ -1113,22 +1131,207 @@ function shouldUsePackagedMarketplaceOnly(provider, system) {
 function loadSettings() {
   try {
     if (fs.existsSync(SETTINGS_PATH)) {
-      const parsed = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf8'));
+      const parsed = emulatorManager.normalizeSettings(JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf8')));
       if (!parsed.metadataService || typeof parsed.metadataService !== 'object') {
         parsed.metadataService = {};
       }
+      parsed.retroarchPath = parsed.retroarchPath || parsed.emulators?.retroarch?.executablePath || '';
+      parsed.cores = { ...(parsed.cores || {}), ...(parsed.emulators?.retroarch?.cores || {}) };
       return parsed;
     }
   } catch {}
-  return { metadataService: {} };
+  return emulatorManager.normalizeSettings({ metadataService: {}, retroarchPath: '', cores: {} });
 }
 
 function saveSettings(data) {
-  if (!data.metadataService || typeof data.metadataService !== 'object') {
-    data.metadataService = {};
+  const normalized = emulatorManager.normalizeSettings(data);
+  if (!normalized.metadataService || typeof normalized.metadataService !== 'object') {
+    normalized.metadataService = {};
   }
-  fs.writeFileSync(SETTINGS_PATH, JSON.stringify(data, null, 2));
+  normalized.retroarchPath = normalized.emulators?.retroarch?.executablePath || normalized.retroarchPath || '';
+  normalized.cores = { ...(normalized.cores || {}), ...(normalized.emulators?.retroarch?.cores || {}) };
+  fs.writeFileSync(SETTINGS_PATH, JSON.stringify(normalized, null, 2));
 }
+
+function syncManagedXeniaProfileIfPossible(settings = loadSettings()) {
+  try {
+    return emulatorManager.syncXeniaProfileConfig(settings);
+  } catch (err) {
+    console.warn('[xenia-profile] automatic sync failed:', err?.message || err);
+    return { ok: false, error: err?.message || String(err || 'Unknown error') };
+  }
+}
+
+function getManagedXeniaContentRoot() {
+  return path.join(USER_DATA, 'emulators', 'xenia', 'content');
+}
+
+function buildDirectorySnapshot(rootDir) {
+  const snapshot = {};
+  const normalizedRoot = String(rootDir || '').trim();
+  if (!normalizedRoot || !fs.existsSync(normalizedRoot)) return snapshot;
+  const walk = (currentDir) => {
+    let entries = [];
+    try {
+      entries = fs.readdirSync(currentDir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      const fullPath = path.join(currentDir, entry.name);
+      const relPath = path.relative(normalizedRoot, fullPath).replace(/\\/g, '/');
+      try {
+        const stat = fs.statSync(fullPath);
+        snapshot[relPath] = {
+          isDirectory: stat.isDirectory(),
+          size: stat.isFile() ? stat.size : 0,
+          mtimeMs: Math.floor(stat.mtimeMs || 0),
+        };
+        if (stat.isDirectory()) walk(fullPath);
+      } catch {}
+    }
+  };
+  walk(normalizedRoot);
+  return snapshot;
+}
+
+function diffDirectorySnapshots(before = {}, after = {}) {
+  const created = [];
+  const changed = [];
+  const deleted = [];
+  const beforeKeys = new Set(Object.keys(before || {}));
+  const afterKeys = new Set(Object.keys(after || {}));
+  for (const key of afterKeys) {
+    if (!beforeKeys.has(key)) {
+      created.push(key);
+      continue;
+    }
+    const prev = before[key] || {};
+    const next = after[key] || {};
+    if (
+      !!prev.isDirectory !== !!next.isDirectory ||
+      Number(prev.size || 0) !== Number(next.size || 0) ||
+      Number(prev.mtimeMs || 0) !== Number(next.mtimeMs || 0)
+    ) {
+      changed.push(key);
+    }
+  }
+  for (const key of beforeKeys) {
+    if (!afterKeys.has(key)) deleted.push(key);
+  }
+  return { created, changed, deleted };
+}
+
+function writeXeniaContentTrace(record) {
+  try {
+    const nextRecord = record && typeof record === 'object' ? record : {};
+    let payload = { history: [] };
+    if (fs.existsSync(XENIA_CONTENT_TRACE_PATH)) {
+      try {
+        const parsed = JSON.parse(fs.readFileSync(XENIA_CONTENT_TRACE_PATH, 'utf8'));
+        if (parsed && Array.isArray(parsed.history)) payload = parsed;
+      } catch {}
+    }
+    payload.last = nextRecord;
+    payload.history = [nextRecord, ...(payload.history || [])].slice(0, 20);
+    fs.writeFileSync(XENIA_CONTENT_TRACE_PATH, JSON.stringify(payload, null, 2), 'utf8');
+  } catch {}
+}
+
+const emulatorManager = createEmulatorManager({
+  fs,
+  path,
+  spawn,
+  userDataDir: USER_DATA,
+  loadSettings,
+  markGamePlayed: (identifier) => {
+    try { markGamePlayed(identifier); } catch {}
+  },
+  onSessionsChanged: (sessions) => {
+    for (const win of BrowserWindow.getAllWindows()) {
+      try { win.webContents.send('emulator-sessions-changed', sessions); } catch {}
+    }
+  },
+  onSessionStarted: (session) => {
+    const emulatorId = String(session?.emulatorId || '');
+    if (emulatorId === 'xenia') {
+      const contentRoot = getManagedXeniaContentRoot();
+      activeXeniaContentSnapshots.set(String(session.id || ''), {
+        takenAt: Date.now(),
+        contentRoot,
+        snapshot: buildDirectorySnapshot(contentRoot),
+        session,
+      });
+      return;
+    }
+    if (emulatorId === 'rpcs3') {
+      const gameRoot = getManagedRPCS3GameRoot();
+      const discRoot = getManagedRPCS3DiscRoot();
+      activeRPCS3InstallSnapshots.set(String(session.id || ''), {
+        takenAt: Date.now(),
+        gameRoot,
+        discRoot,
+        snapshot: buildRPCS3InstalledTitleSnapshot(gameRoot),
+        discSnapshot: buildRPCS3MountedDiscSnapshot(discRoot),
+        mountedTitleId: '',
+        session,
+      });
+      const sessionId = String(session.id || '');
+      setTimeout(() => {
+        const current = activeRPCS3InstallSnapshots.get(sessionId);
+        if (!current) return;
+        const latestDiscSnapshot = buildRPCS3MountedDiscSnapshot(current.discRoot || getManagedRPCS3DiscRoot());
+        const mountedTitleId = pickRPCS3MountedTitleId(current.discSnapshot || {}, latestDiscSnapshot);
+        activeRPCS3InstallSnapshots.set(sessionId, {
+          ...current,
+          discSnapshot: latestDiscSnapshot,
+          mountedTitleId: mountedTitleId || current.mountedTitleId || '',
+        });
+      }, 8000);
+      startRPCS3PkgInstallWatcher(session);
+    }
+  },
+  onSessionEnded: (session) => {
+    const emulatorId = String(session?.emulatorId || '');
+    if (emulatorId === 'xenia') {
+      const sessionId = String(session?.id || '');
+      const started = activeXeniaContentSnapshots.get(sessionId) || null;
+      if (sessionId) activeXeniaContentSnapshots.delete(sessionId);
+      const contentRoot = started?.contentRoot || getManagedXeniaContentRoot();
+      const before = started?.snapshot || {};
+      const after = buildDirectorySnapshot(contentRoot);
+      const diff = diffDirectorySnapshots(before, after);
+      writeXeniaContentTrace({
+        generatedAt: Date.now(),
+        session,
+        contentRoot,
+        beforeCount: Object.keys(before).length,
+        afterCount: Object.keys(after).length,
+        diff,
+      });
+      return;
+    }
+    if (emulatorId === 'rpcs3') {
+      const sessionId = String(session?.id || '');
+      logRPCS3PkgAutomation(`session-ended session=${sessionId} exit=${String(session?.exitCode ?? '')}`);
+      clearRPCS3PkgInstallWatcher(sessionId);
+      const started = activeRPCS3InstallSnapshots.get(sessionId) || null;
+      if (sessionId) activeRPCS3InstallSnapshots.delete(sessionId);
+      const gameRoot = started?.gameRoot || getManagedRPCS3GameRoot();
+      const before = started?.snapshot || {};
+      const after = buildRPCS3InstalledTitleSnapshot(gameRoot);
+      const candidate = pickRPCS3InstalledTitleCandidate(before, after);
+      const mountedTitleId = String(started?.mountedTitleId || '').trim();
+      const mountedCandidate = mountedTitleId && after[mountedTitleId]
+        ? { titleId: mountedTitleId, ...after[mountedTitleId] }
+        : null;
+      const remembered = candidate || mountedCandidate || null;
+      if (remembered && session?.identifier) {
+        rememberRPCS3InstalledTitle(session.identifier, remembered);
+      }
+    }
+  },
+});
 
 const PROFILE_GAMERPICS_DIR = 'C:\\Projects\\RG-THEMES\\X360 BLADES\\XBMC360\\XBMC360\\03.Extras\\GamerPics';
 function normalizeStoatProfiles(settings) {
@@ -1520,6 +1723,77 @@ ipcMain.on('window-close', () => mainWindow?.close());
 
 let bladesWindow = null;
 let thirdPartyWindow = null;
+let guideOverlayWindow = null;
+let youtubeVideoWindow = null;
+let activeVlcProcess = null;
+let activeVlcBounds = null;
+let activeVlcControlPipe = '';
+let activeVlcEventPipe = '';
+let activeVlcEventServer = null;
+let activeVlcFocusTimer = null;
+let activeVlcAudioProcess = null;
+let activeVlcAudioControlPipe = '';
+let bladesOverlayState = {
+  active: false,
+  wasAlwaysOnTop: false,
+  wasFullScreen: false,
+};
+
+function emitGuideOverlayState(active) {
+  BrowserWindow.getAllWindows().forEach(win => {
+    try {
+      win.webContents.send('guide-overlay-state-changed', { active: !!active });
+    } catch {}
+  });
+}
+
+async function applyBladesGuideOverlayState(active) {
+  if (!bladesWindow || bladesWindow.isDestroyed()) return { ok: false, error: 'Blades window is not open.' };
+  const nextActive = !!active;
+  if (nextActive === bladesOverlayState.active) return { ok: true };
+  const activeSession = emulatorManager.getSessions().find(session => session.status === 'running' || session.status === 'suspended');
+  if (nextActive) {
+    bladesOverlayState = {
+      active: true,
+      wasAlwaysOnTop: bladesWindow.isAlwaysOnTop(),
+      wasFullScreen: bladesWindow.isFullScreen(),
+    };
+    try {
+      if (activeSession?.id) {
+        await emulatorManager.minimizeSessionWindow(activeSession.id).catch(() => null);
+        await emulatorManager.suspendSession(activeSession.id).catch(() => null);
+      }
+      bladesWindow.setAlwaysOnTop(true, 'screen-saver');
+      bladesWindow.setVisibleOnAllWorkspaces?.(true, { visibleOnFullScreen: true });
+      if (!bladesWindow.isFullScreen()) bladesWindow.setFullScreen(true);
+      bladesWindow.show();
+      bladesWindow.focus();
+      bladesWindow.moveTop();
+      return { ok: true };
+    } catch (error) {
+      return { ok: false, error: error?.message || 'Could not promote the Guide overlay.' };
+    }
+  }
+  try {
+    if (activeSession?.id && activeSession.status === 'suspended') {
+      await emulatorManager.resumeSession(activeSession.id).catch(() => null);
+    }
+    if (!bladesOverlayState.wasFullScreen && bladesWindow.isFullScreen()) bladesWindow.setFullScreen(false);
+    bladesWindow.setAlwaysOnTop(!!bladesOverlayState.wasAlwaysOnTop);
+    bladesWindow.setVisibleOnAllWorkspaces?.(false);
+    if (activeSession?.id) {
+      await emulatorManager.focusSession(activeSession.id).catch(() => null);
+    }
+    bladesOverlayState = {
+      active: false,
+      wasAlwaysOnTop: false,
+      wasFullScreen: false,
+    };
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error: error?.message || 'Could not restore the Blades window.' };
+  }
+}
 
 ipcMain.handle('blades-open', async () => {
   if (bladesWindow && !bladesWindow.isDestroyed()) {
@@ -1527,28 +1801,106 @@ ipcMain.handle('blades-open', async () => {
     return { ok: true };
   }
   const ses = getSession();
+  const displayBounds = screen.getPrimaryDisplay?.().bounds || { x: 0, y: 0, width: 1920, height: 1080 };
   bladesWindow = new BrowserWindow({
-    width:           1920,
-    height:          1080,
+    x:               displayBounds.x,
+    y:               displayBounds.y,
+    width:           displayBounds.width,
+    height:          displayBounds.height,
     frame:           false,
+    transparent:     true,
     fullscreenable:  true,
     fullscreen:      false,
-    resizable:       true,
-    backgroundColor: '#000000',
+    resizable:       false,
+    backgroundColor: '#00000000',
     webPreferences: {
       preload:          path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration:  false,
+      webviewTag:       true,
       session:          ses,
     },
   });
+  bladesWindow.setBounds(displayBounds);
+  bladesWindow.show();
+  bladesWindow.focus();
   bladesWindow.loadFile(path.join(__dirname, '../renderer/blades.html'));
   bladesWindow.on('closed', () => { bladesWindow = null; });
   return { ok: true };
 });
 
 ipcMain.handle('blades-close', () => {
+  guideOverlayWindow?.close();
   bladesWindow?.close();
+  return { ok: true };
+});
+
+ipcMain.handle('blades-guide-overlay-state', async (_, { active } = {}) => applyBladesGuideOverlayState(active));
+
+ipcMain.handle('guide-overlay-open', async () => {
+  const activeSession = emulatorManager.getSessions().find(session => session.status === 'running' || session.status === 'suspended');
+  if (guideOverlayWindow && !guideOverlayWindow.isDestroyed()) {
+    guideOverlayWindow.show();
+    guideOverlayWindow.focus();
+    guideOverlayWindow.moveTop();
+    emitGuideOverlayState(true);
+    return { ok: true };
+  }
+  if (activeSession?.id) {
+    await emulatorManager.suspendSession(activeSession.id);
+  }
+  const ses = getSession();
+  guideOverlayWindow = new BrowserWindow({
+    show: false,
+    width: 1920,
+    height: 1080,
+    frame: false,
+    transparent: true,
+    backgroundColor: '#00000000',
+    fullscreenable: true,
+    fullscreen: true,
+    resizable: false,
+    movable: false,
+    skipTaskbar: true,
+    alwaysOnTop: true,
+    focusable: true,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      session: ses,
+    },
+  });
+  guideOverlayWindow.setAlwaysOnTop(true, 'screen-saver');
+  guideOverlayWindow.setVisibleOnAllWorkspaces?.(true, { visibleOnFullScreen: true });
+  guideOverlayWindow.loadFile(path.join(__dirname, '../renderer/blades.html'), { query: { guideOverlay: '1' } });
+  guideOverlayWindow.once('ready-to-show', () => {
+    try {
+      guideOverlayWindow.show();
+      guideOverlayWindow.focus();
+      guideOverlayWindow.moveTop();
+      emitGuideOverlayState(true);
+    } catch {}
+  });
+  guideOverlayWindow.on('closed', () => {
+    guideOverlayWindow = null;
+    emitGuideOverlayState(false);
+  });
+  return { ok: true };
+});
+
+ipcMain.handle('guide-overlay-close', async () => {
+  const suspendedSession = emulatorManager.getSessions().find(session => session.status === 'suspended');
+  if (suspendedSession?.id) {
+    await emulatorManager.resumeSession(suspendedSession.id);
+  }
+  guideOverlayWindow?.close();
+  return { ok: true };
+});
+
+ipcMain.handle('guide-overlay-command', async (_, command = {}) => {
+  if (!guideOverlayWindow || guideOverlayWindow.isDestroyed()) return { ok: false, error: 'Guide overlay is not open.' };
+  guideOverlayWindow.webContents.send('guide-overlay-command', command);
   return { ok: true };
 });
 
@@ -1592,6 +1944,56 @@ ipcMain.handle('thirdparty-close-window', () => {
   return { ok: true };
 });
 
+function buildYouTubePlayerUrl(videoId) {
+  return `https://www.youtube.com/watch?v=${encodeURIComponent(String(videoId || '').trim())}&autoplay=1`;
+}
+
+ipcMain.handle('youtube-player-open', async (_, { videoId, title } = {}) => {
+  const cleanVideoId = String(videoId || '').trim();
+  if (!cleanVideoId) return { ok: false, error: 'Missing YouTube video id.' };
+  const url = buildYouTubePlayerUrl(cleanVideoId);
+  const parent = BrowserWindow.getFocusedWindow() || bladesWindow || mainWindow || null;
+
+  if (youtubeVideoWindow && !youtubeVideoWindow.isDestroyed()) {
+    youtubeVideoWindow.setTitle(title || 'SKALD Video Player');
+    await youtubeVideoWindow.loadURL(url);
+    youtubeVideoWindow.show();
+    youtubeVideoWindow.focus();
+    return { ok: true };
+  }
+
+  const ses = getSession();
+  youtubeVideoWindow = new BrowserWindow({
+    width: 1280,
+    height: 760,
+    minWidth: 960,
+    minHeight: 600,
+    title: title || 'SKALD Video Player',
+    backgroundColor: '#000000',
+    autoHideMenuBar: true,
+    parent: parent || undefined,
+    show: false,
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+      session: ses,
+    },
+  });
+  youtubeVideoWindow.removeMenu?.();
+  youtubeVideoWindow.on('closed', () => { youtubeVideoWindow = null; });
+  await youtubeVideoWindow.loadURL(url);
+  youtubeVideoWindow.once('ready-to-show', () => {
+    try { youtubeVideoWindow?.show(); } catch {}
+    try { youtubeVideoWindow?.focus(); } catch {}
+  });
+  return { ok: true };
+});
+
+ipcMain.handle('youtube-player-close', () => {
+  youtubeVideoWindow?.close();
+  return { ok: true };
+});
+
 ipcMain.handle('thirdparty-get-account', (_, { provider }) => {
   return readThirdPartyAccount(provider);
 });
@@ -1608,6 +2010,47 @@ ipcMain.handle('thirdparty-clear-account', (_, { provider }) => {
 
 ipcMain.handle('settings-get',  ()      => loadSettings());
 ipcMain.handle('settings-save', (_, s)  => { saveSettings(s); return { ok: true }; });
+function getDialogOwnerWindow() {
+  return BrowserWindow.getFocusedWindow() || bladesWindow || mainWindow || null;
+}
+function scanMusicLibrary(dir) {
+  try {
+    if (!dir) return { ok: false, error: 'No music folder is set.' };
+    const resolved = path.resolve(dir);
+    if (!fs.existsSync(resolved)) return { ok: false, error: 'Music folder does not exist.' };
+    if (!fs.statSync(resolved).isDirectory()) return { ok: false, error: 'Music path is not a folder.' };
+    const extensions = new Set(['.mp3', '.flac', '.ogg', '.wav', '.m4a', '.aac', '.opus', '.webm']);
+    const tracks = [];
+    const walk = (folder) => {
+      const entries = fs.readdirSync(folder, { withFileTypes: true });
+      for (const entry of entries) {
+        const fullPath = path.join(folder, entry.name);
+        if (entry.isDirectory()) {
+          walk(fullPath);
+          continue;
+        }
+        if (!entry.isFile()) continue;
+        const ext = path.extname(entry.name).toLowerCase();
+        if (!extensions.has(ext)) continue;
+        const relativePath = path.relative(resolved, fullPath);
+        const parsed = path.parse(entry.name);
+        tracks.push({
+          id: relativePath.replace(/\\/g, '/').toLowerCase(),
+          title: parsed.name,
+          fileName: entry.name,
+          path: fullPath,
+          relativePath,
+          url: pathToFileURL(fullPath).href,
+        });
+      }
+    };
+    walk(resolved);
+    tracks.sort((a, b) => a.relativePath.localeCompare(b.relativePath, undefined, { numeric: true, sensitivity: 'base' }));
+    return { ok: true, dir: resolved, tracks };
+  } catch (e) {
+    return { ok: false, error: e.message || 'Could not scan the music folder.' };
+  }
+}
 ipcMain.handle('profile-gamerpics-list', async () => {
   try {
     if (!fs.existsSync(PROFILE_GAMERPICS_DIR)) return [];
@@ -1632,9 +2075,10 @@ ipcMain.handle('profile-gamerpics-list', async () => {
   }
 });
 ipcMain.handle('choose-folder', async () => {
-  const res = await dialog.showOpenDialog(mainWindow, { properties: ['openDirectory'] });
+  const res = await dialog.showOpenDialog(getDialogOwnerWindow(), { properties: ['openDirectory'] });
   return res.canceled ? null : res.filePaths[0];
 });
+ipcMain.handle('music-library-scan', async (_, { dir } = {}) => scanMusicLibrary(dir));
 ipcMain.handle('folder-browser-list', async (_, { dir } = {}) => {
   const home = app.getPath('home');
   if (!dir) {
@@ -1704,7 +2148,7 @@ ipcMain.handle('storage-open-path', (_, { kind } = {}) => {
 });
 
 ipcMain.handle('choose-file', async (_, { filters } = {}) => {
-  const res = await dialog.showOpenDialog(mainWindow, {
+  const res = await dialog.showOpenDialog(getDialogOwnerWindow(), {
     properties: ['openFile'],
     filters: filters || [{ name: 'All Files', extensions: ['*'] }],
   });
@@ -2574,6 +3018,1426 @@ async function downloadArchiveFileToPath(url, destFile, referer = 'https://archi
   });
 }
 
+function getSevenZipExecutableCandidates() {
+  if (process.platform !== 'win32') return [];
+  const candidates = [
+    path.join(BUNDLED_7ZIP_DIR, '7z.exe'),
+    path.join(BUNDLED_7ZIP_DIR, '7za.exe'),
+    'C:\\Program Files\\7-Zip\\7z.exe',
+    'C:\\Program Files (x86)\\7-Zip\\7z.exe',
+  ];
+  return candidates.filter(Boolean);
+}
+
+function resolveSevenZipExecutable() {
+  return getSevenZipExecutableCandidates().find(candidate => fs.existsSync(candidate)) || '';
+}
+
+function ensureDir(dirPath) {
+  if (!dirPath) return;
+  if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true });
+}
+
+function appendXeniaProgressLog(message) {
+  try {
+    fs.appendFileSync(XENIA_PROGRESS_LOG_PATH, `${new Date().toISOString()} ${message}\n`, 'utf8');
+  } catch {}
+}
+
+function downloadFileToPath(url, destFile, { headers = {}, timeoutMs = 60000, onProgress = null } = {}) {
+  if (!fs.existsSync(path.dirname(destFile))) fs.mkdirSync(path.dirname(destFile), { recursive: true });
+  return new Promise((resolve) => {
+    const doRequest = (requestUrl, redirectCount) => {
+      if (redirectCount > 10) return resolve({ ok: false, error: 'Too many redirects', url });
+      let parsed;
+      try {
+        parsed = new URL(requestUrl);
+      } catch (err) {
+        return resolve({ ok: false, error: err.message, url });
+      }
+      const protocol = parsed.protocol === 'https:' ? https : http;
+      const req = protocol.request({
+        hostname: parsed.hostname,
+        path: parsed.pathname + parsed.search,
+        method: 'GET',
+        headers: {
+          'User-Agent': 'SKALD-Launcher/0.1',
+          ...headers,
+        },
+        timeout: timeoutMs,
+      }, (res) => {
+        const { statusCode, headers: responseHeaders } = res;
+        if ([301, 302, 303, 307, 308].includes(statusCode) && responseHeaders.location) {
+          res.resume();
+          let next = responseHeaders.location;
+          if (next.startsWith('/')) next = `${parsed.protocol}//${parsed.host}${next}`;
+          doRequest(next, redirectCount + 1);
+          return;
+        }
+        if (statusCode !== 200) {
+          res.resume();
+          return resolve({ ok: false, error: `HTTP ${statusCode} from ${parsed.hostname}`, url: requestUrl });
+        }
+        const total = Number(responseHeaders['content-length'] || 0) || 0;
+        let received = 0;
+        const file = fs.createWriteStream(destFile);
+        res.on('data', (chunk) => {
+          received += chunk?.length || 0;
+          if (typeof onProgress === 'function') {
+            const percent = total > 0 ? Math.max(0, Math.min(100, Math.round((received / total) * 100))) : null;
+            onProgress({ stage: 'downloading', received, total, percent, url: requestUrl });
+          }
+        });
+        res.pipe(file);
+        file.on('finish', () => {
+          file.close();
+          resolve({ ok: true, filePath: destFile, url: requestUrl });
+        });
+        file.on('error', (err) => {
+          fs.unlink(destFile, () => {});
+          resolve({ ok: false, error: err.message, url: requestUrl });
+        });
+      });
+      req.on('timeout', () => {
+        req.destroy();
+        resolve({ ok: false, error: 'Connection timed out', url: requestUrl });
+      });
+      req.on('error', (err) => resolve({ ok: false, error: err.message, url: requestUrl }));
+      req.end();
+    };
+    doRequest(url, 0);
+  });
+}
+
+function fetchText(url, { headers = {}, timeoutMs = 30000 } = {}) {
+  return new Promise((resolve, reject) => {
+    const doRequest = (requestUrl, redirectCount) => {
+      if (redirectCount > 10) return reject(new Error('Too many redirects'));
+      let parsed;
+      try {
+        parsed = new URL(requestUrl);
+      } catch (err) {
+        reject(err);
+        return;
+      }
+      const protocol = parsed.protocol === 'https:' ? https : http;
+      const req = protocol.request({
+        hostname: parsed.hostname,
+        path: parsed.pathname + parsed.search,
+        method: 'GET',
+        headers: {
+          'User-Agent': 'SKALD-Launcher/0.1',
+          ...headers,
+        },
+        timeout: timeoutMs,
+      }, (res) => {
+        const { statusCode, headers: responseHeaders } = res;
+        if ([301, 302, 303, 307, 308].includes(statusCode) && responseHeaders.location) {
+          res.resume();
+          let next = responseHeaders.location;
+          if (next.startsWith('/')) next = `${parsed.protocol}//${parsed.host}${next}`;
+          doRequest(next, redirectCount + 1);
+          return;
+        }
+        if (statusCode !== 200) {
+          res.resume();
+          reject(new Error(`HTTP ${statusCode} from ${parsed.hostname}`));
+          return;
+        }
+        let body = '';
+        res.setEncoding('utf8');
+        res.on('data', chunk => { body += chunk; });
+        res.on('end', () => resolve(body));
+      });
+      req.on('timeout', () => {
+        req.destroy();
+        reject(new Error('Connection timed out'));
+      });
+      req.on('error', reject);
+      req.end();
+    };
+    doRequest(url, 0);
+  });
+}
+
+async function fetchJson(url, options = {}) {
+  const text = await fetchText(url, {
+    headers: {
+      Accept: 'application/vnd.github+json',
+      ...((options && options.headers) || {}),
+    },
+    timeoutMs: options?.timeoutMs || 30000,
+  });
+  return JSON.parse(text);
+}
+
+async function resolveRetroArchStableWindowsDownload() {
+  const platformsUrl = 'https://retroarch.com/?page=platforms';
+  const html = await fetchText(platformsUrl);
+  const versionMatch = html.match(/The current stable version is:\s*([0-9]+\.[0-9]+\.[0-9]+)/i);
+  const version = versionMatch?.[1] || '';
+  if (!version) {
+    return { ok: false, error: 'Could not determine the current RetroArch stable version from the official platforms page.' };
+  }
+  return {
+    ok: true,
+    version,
+    archiveUrl: `https://buildbot.libretro.com/stable/${version}/windows/x86_64/RetroArch.7z`,
+    sourcePage: platformsUrl,
+  };
+}
+
+async function resolvePCSX2StableWindowsDownload() {
+  const releasesUrl = 'https://api.github.com/repos/PCSX2/pcsx2/releases?per_page=10';
+  const releases = await fetchJson(releasesUrl, { timeoutMs: 30000 });
+  if (!Array.isArray(releases) || !releases.length) {
+    return { ok: false, error: 'Could not read the current PCSX2 releases from GitHub.' };
+  }
+  const findWindowsAsset = (entry) => (entry?.assets || []).find(asset => {
+    const name = String(asset?.name || '').toLowerCase();
+    if (!name) return false;
+    if (!(name.endsWith('.7z') || name.endsWith('.zip'))) return false;
+    if (!name.includes('windows')) return false;
+    if (!(name.includes('qt') || name.includes('x64') || name.includes('64bit'))) return false;
+    if (name.includes('symbols') || name.includes('debug') || name.includes('src') || name.includes('source')) return false;
+    return true;
+  }) || null;
+  const stableRelease = releases.find(entry => !entry?.draft && !entry?.prerelease && findWindowsAsset(entry)) || null;
+  const fallbackRelease = releases.find(entry => !entry?.draft && findWindowsAsset(entry)) || null;
+  const release = stableRelease || fallbackRelease;
+  if (!release) {
+    return { ok: false, error: 'Could not find a PCSX2 release with downloadable Windows assets.' };
+  }
+  const asset = findWindowsAsset(release);
+  if (!asset?.browser_download_url) {
+    return { ok: false, error: 'Could not find a Windows PCSX2 package in the current stable release assets.' };
+  }
+  return {
+    ok: true,
+    version: String(release.tag_name || release.name || '').trim(),
+    archiveUrl: asset.browser_download_url,
+    archiveFileName: asset.name,
+    sourcePage: String(release.html_url || 'https://github.com/PCSX2/pcsx2/releases'),
+    prerelease: !!release.prerelease,
+  };
+}
+
+async function resolveRPCS3StableWindowsDownload() {
+  const releasesUrl = 'https://api.github.com/repos/RPCS3/rpcs3-binaries-win/releases?per_page=10';
+  const releases = await fetchJson(releasesUrl, { timeoutMs: 30000 });
+  if (!Array.isArray(releases) || !releases.length) {
+    return { ok: false, error: 'Could not read the current RPCS3 Windows releases from GitHub.' };
+  }
+  const findWindowsAsset = (entry) => (entry?.assets || []).find(asset => {
+    const name = String(asset?.name || '').toLowerCase();
+    if (!name) return false;
+    if (!(name.endsWith('.7z') || name.endsWith('.zip'))) return false;
+    if (name.includes('symbols') || name.includes('debug') || name.includes('source')) return false;
+    return true;
+  }) || null;
+  const release = releases.find(entry => !entry?.draft && !entry?.prerelease && findWindowsAsset(entry))
+    || releases.find(entry => !entry?.draft && findWindowsAsset(entry))
+    || null;
+  if (!release) {
+    return { ok: false, error: 'Could not find a RPCS3 Windows release with downloadable assets.' };
+  }
+  const asset = findWindowsAsset(release);
+  if (!asset?.browser_download_url) {
+    return { ok: false, error: 'Could not find a Windows RPCS3 package in the current release assets.' };
+  }
+  return {
+    ok: true,
+    version: String(release.tag_name || release.name || '').trim(),
+    archiveUrl: String(asset.browser_download_url || '').trim(),
+    archiveFileName: String(asset.name || 'rpcs3-win.7z').trim(),
+    sourcePage: String(release.html_url || 'https://github.com/RPCS3/rpcs3-binaries-win/releases'),
+  };
+}
+
+async function resolveVLCStableWindowsDownload() {
+  const sourcePage = 'https://images.videolan.org/vlc/download-windows.html';
+  const html = await fetchText(sourcePage, { timeoutMs: 30000 });
+  const directMatch = html.match(/(?:https?:)?\/\/get\.videolan\.org\/vlc\/([0-9.]+)\/win64\/(vlc-\1-win64\.zip)/i);
+  if (directMatch) {
+    return {
+      ok: true,
+      version: String(directMatch[1] || '').trim(),
+      archiveUrl: directMatch[0].startsWith('//') ? `https:${directMatch[0]}` : directMatch[0],
+      archiveFileName: directMatch[2],
+      sourcePage,
+    };
+  }
+  const versionMatch =
+    html.match(/Version(?:\s|&nbsp;|&#160;)+([0-9]+\.[0-9]+\.[0-9]+)/i)
+    || html.match(/vlc-([0-9]+\.[0-9]+\.[0-9]+)-win64\.(?:zip|7z|msi|exe)/i);
+  const version = String(versionMatch?.[1] || '').trim();
+  if (!version) {
+    return { ok: false, error: 'Could not determine the current VLC Windows version from the official VideoLAN download page.' };
+  }
+  return {
+    ok: true,
+    version,
+    archiveUrl: `https://get.videolan.org/vlc/${version}/win64/vlc-${version}-win64.zip`,
+    archiveFileName: `vlc-${version}-win64.zip`,
+    sourcePage,
+  };
+}
+
+async function resolveXeniaStableWindowsDownload() {
+  const releasesUrl = 'https://api.github.com/repos/xenia-canary/xenia-canary-releases/releases?per_page=10';
+  const releases = await fetchJson(releasesUrl, { headers: { 'User-Agent': 'SKALD Launcher' }, timeoutMs: 30000 });
+  if (!Array.isArray(releases) || !releases.length) {
+    return { ok: false, error: 'Could not read the current Xenia Canary releases from GitHub.' };
+  }
+  const release = releases.find(entry => !entry?.draft && /canary/i.test(String(entry?.name || entry?.tag_name || '')) && Array.isArray(entry?.assets) && entry.assets.length)
+    || releases.find(entry => !entry?.draft && Array.isArray(entry?.assets) && entry.assets.length)
+    || null;
+  if (!release) {
+    return { ok: false, error: 'Could not find a Xenia Canary release with downloadable Windows assets.' };
+  }
+  const asset = release.assets.find(entry => /xenia[_-]?canary[_-]?windows\.zip/i.test(String(entry?.name || '')))
+    || release.assets.find(entry => /\.zip$/i.test(String(entry?.name || '')))
+    || null;
+  if (!asset?.browser_download_url) {
+    return { ok: false, error: 'Could not find a Windows Xenia Canary package in the current release assets.' };
+  }
+  return {
+    ok: true,
+    version: String(release.tag_name || '').trim() || 'latest',
+    archiveUrl: String(asset.browser_download_url || '').trim(),
+    archiveFileName: String(asset.name || 'xenia_canary_windows.zip').trim(),
+    archiveSize: Number(asset.size || 0) || 0,
+    sourcePage: String(release.html_url || 'https://github.com/xenia-canary/xenia-canary-releases/releases'),
+  };
+}
+
+function resolveRetroArchCoreDownload(systemId, coreFileName = '') {
+  const system = (emulatorManager.getSystems() || []).find(entry => entry.id === systemId);
+  if (!system?.coreExample) {
+    return { ok: false, error: `System "${systemId}" is not registered for RetroArch core downloads.` };
+  }
+  const managedChoices = emulatorManager.getManagedCoreChoices?.(systemId) || [];
+  const selectedChoice = managedChoices.find(choice => choice.fileName === String(coreFileName || '').trim())
+    || managedChoices.find(choice => choice.fileName === system.coreExample)
+    || managedChoices[0]
+    || { fileName: system.coreExample, label: system.label };
+  const buildbotBase = 'https://buildbot.libretro.com/nightly/windows/x86_64/latest/';
+  return {
+    ok: true,
+    system: system.id,
+    label: system.label,
+    coreLabel: selectedChoice.label,
+    coreFileName: selectedChoice.fileName,
+    archiveFileName: `${selectedChoice.fileName}.zip`,
+    archiveUrl: `${buildbotBase}${encodeURIComponent(selectedChoice.fileName)}.zip`,
+    sourcePage: 'https://www.retroarch.com/',
+  };
+}
+
+function findFileRecursive(dirPath, expectedName) {
+  if (!dirPath || !expectedName || !fs.existsSync(dirPath)) return '';
+  const queue = [dirPath];
+  while (queue.length) {
+    const current = queue.shift();
+    let entries = [];
+    try {
+      entries = fs.readdirSync(current, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const entry of entries) {
+      const fullPath = path.join(current, entry.name);
+      if (entry.isFile() && entry.name.toLowerCase() === expectedName.toLowerCase()) return fullPath;
+      if (entry.isDirectory()) queue.push(fullPath);
+    }
+  }
+  return '';
+}
+
+async function downloadManagedRetroArchRuntime(onProgress = null) {
+  const emitProgress = (payload = {}) => {
+    if (typeof onProgress !== 'function') return;
+    try { onProgress(payload); } catch {}
+  };
+  const runtimeStatus = emulatorManager.getRetroArchRuntimeStatus(loadSettings());
+  const managedRuntimeDir = runtimeStatus?.managedRuntimeDir || path.join(USER_DATA, 'emulators', 'retroarch');
+  const stagingRoot = path.join(USER_DATA, 'emulators', 'downloads');
+  const extractRoot = path.join(stagingRoot, 'retroarch-stable');
+  const archivePath = path.join(stagingRoot, 'retroarch-stable.7z');
+  const sevenZ = resolveSevenZipExecutable();
+
+  if (!fs.existsSync(sevenZ)) {
+    return { ok: false, error: 'SKALD could not find its 7-Zip runtime. Bundle the 7-Zip tools or install 7-Zip on Windows.' };
+  }
+
+  emitProgress({ stage: 'resolving', percent: 5, message: 'Checking the official RetroArch stable release…' });
+  const release = await resolveRetroArchStableWindowsDownload();
+  if (!release?.ok) return release;
+
+  if (fs.existsSync(extractRoot)) {
+    try { fs.rmSync(extractRoot, { recursive: true, force: true }); } catch {}
+  }
+  if (!fs.existsSync(stagingRoot)) fs.mkdirSync(stagingRoot, { recursive: true });
+
+  emitProgress({ stage: 'downloading', percent: 8, message: `Downloading RetroArch ${release.version}…` });
+  const downloadResult = await downloadFileToPath(release.archiveUrl, archivePath, {
+    headers: { Referer: release.sourcePage },
+    timeoutMs: 120000,
+    onProgress: ({ percent, received, total }) => {
+      const scaled = percent == null
+        ? Math.max(10, Math.min(55, 10 + Math.round((Number(received || 0) / (1024 * 1024)) * 2.1)))
+        : Math.max(8, Math.min(55, 8 + Math.round(percent * 0.47)));
+      emitProgress({
+        stage: 'downloading',
+        percent: scaled,
+        received,
+        total,
+        message: total > 0
+          ? `Downloading RetroArch ${release.version}… ${Math.round((received / total) * 100)}%`
+          : `Downloading RetroArch ${release.version}…`,
+      });
+    },
+  });
+  if (!downloadResult?.ok) return downloadResult;
+
+  emitProgress({ stage: 'extracting', percent: 58, message: 'Extracting the RetroArch package…' });
+  const extractResult = await new Promise((resolve) => {
+    execFile(sevenZ, ['x', archivePath, `-o${extractRoot}`, '-y'], (err) => {
+      if (err) return resolve({ ok: false, error: err.message || 'Could not extract the RetroArch archive.' });
+      resolve({ ok: true });
+    });
+  });
+  if (!extractResult?.ok) return extractResult;
+
+  const extractedExe = findFileRecursive(extractRoot, 'retroarch.exe');
+  if (!extractedExe) {
+    return { ok: false, error: 'RetroArch downloaded, but SKALD could not find retroarch.exe in the extracted package.' };
+  }
+
+  emitProgress({ stage: 'importing', percent: 68, message: 'Importing RetroArch into the SKALD managed runtime…' });
+  const importResult = emulatorManager.importRetroArchRuntime(extractedExe);
+  if (!importResult?.ok) return importResult;
+
+  const settings = loadSettings();
+  const next = emulatorManager.normalizeSettings({
+    ...settings,
+    emulators: {
+      ...(settings.emulators || {}),
+      retroarch: {
+        ...((settings.emulators || {}).retroarch || {}),
+        mode: 'bundled',
+        customExecutablePath: String(settings?.emulators?.retroarch?.customExecutablePath || settings.retroarchPath || '').trim(),
+        cores: {
+          ...(((settings.emulators || {}).retroarch || {}).cores || {}),
+          ...(settings.cores || {}),
+        },
+      },
+    },
+  });
+  saveSettings(next);
+
+  try { if (fs.existsSync(archivePath)) fs.unlinkSync(archivePath); } catch {}
+  try { if (fs.existsSync(extractRoot)) fs.rmSync(extractRoot, { recursive: true, force: true }); } catch {}
+
+  emitProgress({ stage: 'complete', percent: 100, message: `RetroArch ${release.version} is ready in SKALD.` });
+  return {
+    ok: true,
+    version: release.version,
+    archiveUrl: release.archiveUrl,
+    managedRuntimeDir,
+    executablePath: importResult.executablePath,
+    status: emulatorManager.getRetroArchRuntimeStatus(loadSettings()),
+  };
+}
+
+async function downloadManagedRetroArchCore(systemId, coreFileName = '', onProgress = null) {
+  const emitProgress = (payload = {}) => {
+    if (typeof onProgress !== 'function') return;
+    try { onProgress(payload); } catch {}
+  };
+  const runtimeStatus = emulatorManager.getRetroArchRuntimeStatus(loadSettings());
+  if (!runtimeStatus?.managedRuntimeDir) {
+    return { ok: false, error: 'SKALD does not have a managed RetroArch runtime folder yet.' };
+  }
+  const managedRuntimeExe = emulatorManager.getRetroArchManagedExecutablePath?.() || path.join(runtimeStatus.managedRuntimeDir, 'retroarch.exe');
+  if (!managedRuntimeExe || !fs.existsSync(managedRuntimeExe)) {
+    return { ok: false, error: 'Install the SKALD managed RetroArch runtime before downloading cores.' };
+  }
+
+  const release = resolveRetroArchCoreDownload(systemId, coreFileName);
+  if (!release?.ok) return release;
+
+  const targetCoresDir = runtimeStatus?.managedCoresDir || path.join(runtimeStatus.managedRuntimeDir, 'cores');
+  const stagingRoot = path.join(USER_DATA, 'emulators', 'downloads', 'cores');
+  const archivePath = path.join(stagingRoot, release.archiveFileName);
+  ensureDir(stagingRoot);
+  ensureDir(targetCoresDir);
+
+  emitProgress({ stage: 'resolving', percent: 5, message: `Checking the official ${release.coreLabel || release.label} core package…` });
+  emitProgress({ stage: 'downloading', percent: 8, message: `Downloading ${release.coreLabel || release.label} core…` });
+  const downloadResult = await downloadFileToPath(release.archiveUrl, archivePath, {
+    headers: { Referer: release.sourcePage },
+    timeoutMs: 120000,
+    onProgress: ({ percent, received, total }) => {
+      const scaled = percent == null
+        ? Math.max(10, Math.min(60, 10 + Math.round((Number(received || 0) / (1024 * 1024)) * 4.5)))
+        : Math.max(8, Math.min(60, 8 + Math.round(percent * 0.52)));
+      emitProgress({
+        stage: 'downloading',
+        percent: scaled,
+        received,
+        total,
+        message: total > 0
+          ? `Downloading ${release.coreLabel || release.label} core… ${Math.round((received / total) * 100)}%`
+          : `Downloading ${release.coreLabel || release.label} core…`,
+      });
+    },
+  });
+  if (!downloadResult?.ok) return downloadResult;
+
+  emitProgress({ stage: 'extracting', percent: 68, message: `Installing ${release.coreLabel || release.label} into SKALD…` });
+  try {
+    await extractZip(archivePath, { dir: targetCoresDir });
+  } catch (error) {
+    return { ok: false, error: error?.message || `Could not extract the ${release.coreLabel || release.label} core package.` };
+  }
+
+  const extractedCorePath = findFileRecursive(targetCoresDir, release.coreFileName);
+  if (!extractedCorePath) {
+    return { ok: false, error: `SKALD downloaded ${release.coreLabel || release.label}, but could not find ${release.coreFileName} after extraction.` };
+  }
+  const normalizedCorePath = path.join(targetCoresDir, release.coreFileName);
+  if (path.resolve(extractedCorePath) !== path.resolve(normalizedCorePath)) {
+    try { fs.copyFileSync(extractedCorePath, normalizedCorePath); } catch {}
+  }
+
+  try { if (fs.existsSync(archivePath)) fs.unlinkSync(archivePath); } catch {}
+
+  emitProgress({ stage: 'complete', percent: 100, message: `${release.coreLabel || release.label} is ready in SKALD.` });
+  return {
+    ok: true,
+    system: release.system,
+    label: release.label,
+    coreLabel: release.coreLabel,
+    coreFileName: release.coreFileName,
+    corePath: normalizedCorePath,
+    status: emulatorManager.getLibretroCoreStatus(loadSettings())[release.system] || null,
+  };
+}
+
+async function downloadManagedPCSX2Runtime(onProgress = null) {
+  const emitProgress = (payload = {}) => {
+    if (typeof onProgress !== 'function') return;
+    try { onProgress(payload); } catch {}
+  };
+  const runtimeStatus = emulatorManager.getPCSX2RuntimeStatus(loadSettings());
+  const managedRuntimeDir = runtimeStatus?.managedRuntimeDir || path.join(USER_DATA, 'emulators', 'pcsx2');
+  const stagingRoot = path.join(USER_DATA, 'emulators', 'downloads');
+  const extractRoot = path.join(stagingRoot, 'pcsx2-stable');
+  const sevenZ = resolveSevenZipExecutable();
+
+  emitProgress({ stage: 'resolving', percent: 5, message: 'Checking the official PCSX2 stable release…' });
+  const release = await resolvePCSX2StableWindowsDownload();
+  if (!release?.ok) return release;
+
+  const archivePath = path.join(stagingRoot, release.archiveFileName || 'pcsx2-stable.7z');
+  if (fs.existsSync(extractRoot)) {
+    try { fs.rmSync(extractRoot, { recursive: true, force: true }); } catch {}
+  }
+  ensureDir(stagingRoot);
+
+  emitProgress({ stage: 'downloading', percent: 8, message: `Downloading PCSX2 ${release.version}…` });
+  const downloadResult = await downloadFileToPath(release.archiveUrl, archivePath, {
+    headers: { Referer: release.sourcePage },
+    timeoutMs: 120000,
+    onProgress: ({ percent, received, total }) => {
+      const scaled = percent == null
+        ? Math.max(10, Math.min(55, 10 + Math.round((Number(received || 0) / (1024 * 1024)) * 2.4)))
+        : Math.max(8, Math.min(55, 8 + Math.round(percent * 0.47)));
+      emitProgress({
+        stage: 'downloading',
+        percent: scaled,
+        received,
+        total,
+        message: total > 0
+          ? `Downloading PCSX2 ${release.version}… ${Math.round((received / total) * 100)}%`
+          : `Downloading PCSX2 ${release.version}…`,
+      });
+    },
+  });
+  if (!downloadResult?.ok) return downloadResult;
+
+  emitProgress({ stage: 'extracting', percent: 58, message: 'Extracting the PCSX2 package…' });
+  const lowerArchive = String(archivePath || '').toLowerCase();
+  if (lowerArchive.endsWith('.zip')) {
+    try {
+      await extractZip(archivePath, { dir: extractRoot });
+    } catch (error) {
+      return { ok: false, error: error?.message || 'Could not extract the PCSX2 archive.' };
+    }
+  } else {
+    if (!fs.existsSync(sevenZ)) {
+      return { ok: false, error: 'SKALD could not find its 7-Zip runtime. Bundle the 7-Zip tools or install 7-Zip on Windows.' };
+    }
+    const extractResult = await new Promise((resolve) => {
+      execFile(sevenZ, ['x', archivePath, `-o${extractRoot}`, '-y'], (err) => {
+        if (err) return resolve({ ok: false, error: err.message || 'Could not extract the PCSX2 archive.' });
+        resolve({ ok: true });
+      });
+    });
+    if (!extractResult?.ok) return extractResult;
+  }
+
+  const extractedExe = findFileRecursive(extractRoot, 'pcsx2-qt.exe') || findFileRecursive(extractRoot, 'pcsx2.exe');
+  if (!extractedExe) {
+    return { ok: false, error: 'PCSX2 downloaded, but SKALD could not find pcsx2-qt.exe in the extracted package.' };
+  }
+
+  emitProgress({ stage: 'importing', percent: 68, message: 'Importing PCSX2 into the SKALD managed runtime…' });
+  const importResult = emulatorManager.importPCSX2Runtime(extractedExe);
+  if (!importResult?.ok) return importResult;
+
+  const settings = loadSettings();
+  const next = emulatorManager.normalizeSettings({
+    ...settings,
+    emulators: {
+      ...(settings.emulators || {}),
+      pcsx2: {
+        ...((settings.emulators || {}).pcsx2 || {}),
+        mode: 'bundled',
+        customExecutablePath: String(settings?.emulators?.pcsx2?.customExecutablePath || '').trim(),
+        biosPath: String(settings?.emulators?.pcsx2?.biosPath || '').trim(),
+      },
+    },
+  });
+  saveSettings(next);
+
+  try { if (fs.existsSync(archivePath)) fs.unlinkSync(archivePath); } catch {}
+  try { if (fs.existsSync(extractRoot)) fs.rmSync(extractRoot, { recursive: true, force: true }); } catch {}
+
+  emitProgress({ stage: 'complete', percent: 100, message: `PCSX2 ${release.version} is ready in SKALD.` });
+  return {
+    ok: true,
+    version: release.version,
+    archiveUrl: release.archiveUrl,
+    managedRuntimeDir,
+    executablePath: importResult.executablePath,
+    status: emulatorManager.getPCSX2RuntimeStatus(loadSettings()),
+  };
+}
+
+async function downloadManagedRPCS3Runtime(onProgress = null) {
+  const emitProgress = (payload = {}) => {
+    if (typeof onProgress !== 'function') return;
+    try { onProgress(payload); } catch {}
+  };
+  const runtimeStatus = emulatorManager.getRPCS3RuntimeStatus(loadSettings());
+  const managedRuntimeDir = runtimeStatus?.managedRuntimeDir || path.join(USER_DATA, 'emulators', 'rpcs3');
+  const stagingRoot = path.join(USER_DATA, 'emulators', 'downloads');
+  const extractRoot = path.join(stagingRoot, 'rpcs3-stable');
+  const sevenZ = resolveSevenZipExecutable();
+
+  emitProgress({ stage: 'resolving', percent: 5, message: 'Checking the official RPCS3 Windows release…' });
+  const release = await resolveRPCS3StableWindowsDownload();
+  if (!release?.ok) return release;
+
+  const archivePath = path.join(stagingRoot, release.archiveFileName || 'rpcs3-win.7z');
+  if (fs.existsSync(extractRoot)) {
+    try { fs.rmSync(extractRoot, { recursive: true, force: true }); } catch {}
+  }
+  ensureDir(stagingRoot);
+
+  emitProgress({ stage: 'downloading', percent: 8, message: `Downloading RPCS3 ${release.version}…` });
+  const downloadResult = await downloadFileToPath(release.archiveUrl, archivePath, {
+    headers: { Referer: release.sourcePage },
+    timeoutMs: 120000,
+    onProgress: ({ percent, received, total }) => {
+      const scaled = percent == null
+        ? Math.max(10, Math.min(55, 10 + Math.round((Number(received || 0) / (1024 * 1024)) * 2.3)))
+        : Math.max(8, Math.min(55, 8 + Math.round(percent * 0.47)));
+      emitProgress({
+        stage: 'downloading',
+        percent: scaled,
+        received,
+        total,
+        message: total > 0
+          ? `Downloading RPCS3 ${release.version}… ${Math.round((received / total) * 100)}%`
+          : `Downloading RPCS3 ${release.version}…`,
+      });
+    },
+  });
+  if (!downloadResult?.ok) return downloadResult;
+
+  emitProgress({ stage: 'extracting', percent: 58, message: 'Extracting the RPCS3 package…' });
+  const lowerArchive = String(archivePath || '').toLowerCase();
+  if (lowerArchive.endsWith('.zip')) {
+    try {
+      await extractZip(archivePath, { dir: extractRoot });
+    } catch (error) {
+      return { ok: false, error: error?.message || 'Could not extract the RPCS3 archive.' };
+    }
+  } else {
+    if (!fs.existsSync(sevenZ)) {
+      return { ok: false, error: 'SKALD could not find its 7-Zip runtime. Bundle the 7-Zip tools or install 7-Zip on Windows.' };
+    }
+    const extractResult = await new Promise((resolve) => {
+      execFile(sevenZ, ['x', archivePath, `-o${extractRoot}`, '-y'], (err) => {
+        if (err) return resolve({ ok: false, error: err.message || 'Could not extract the RPCS3 archive.' });
+        resolve({ ok: true });
+      });
+    });
+    if (!extractResult?.ok) return extractResult;
+  }
+
+  const extractedExe = findFileRecursive(extractRoot, 'rpcs3.exe');
+  if (!extractedExe) {
+    return { ok: false, error: 'RPCS3 downloaded, but SKALD could not find rpcs3.exe in the extracted package.' };
+  }
+
+  emitProgress({ stage: 'importing', percent: 68, message: 'Importing RPCS3 into the SKALD managed runtime…' });
+  const importResult = emulatorManager.importRPCS3Runtime(extractedExe);
+  if (!importResult?.ok) return importResult;
+
+  const settings = loadSettings();
+  const next = emulatorManager.normalizeSettings({
+    ...settings,
+    emulators: {
+      ...(settings.emulators || {}),
+      rpcs3: {
+        ...((settings.emulators || {}).rpcs3 || {}),
+        mode: 'bundled',
+        customExecutablePath: String(settings?.emulators?.rpcs3?.customExecutablePath || '').trim(),
+      },
+    },
+  });
+  saveSettings(next);
+
+  try { if (fs.existsSync(archivePath)) fs.unlinkSync(archivePath); } catch {}
+  try { if (fs.existsSync(extractRoot)) fs.rmSync(extractRoot, { recursive: true, force: true }); } catch {}
+
+  emitProgress({ stage: 'complete', percent: 100, message: `RPCS3 ${release.version} is ready in SKALD.` });
+  return {
+    ok: true,
+    version: release.version,
+    archiveUrl: release.archiveUrl,
+    managedRuntimeDir,
+    executablePath: importResult.executablePath,
+    status: emulatorManager.getRPCS3RuntimeStatus(loadSettings()),
+  };
+}
+
+async function downloadManagedVLCRuntime(onProgress = null) {
+  const emitProgress = (payload = {}) => {
+    if (typeof onProgress !== 'function') return;
+    try { onProgress(payload); } catch {}
+  };
+  const runtimeStatus = emulatorManager.getVLCRuntimeStatus(loadSettings());
+  const managedRuntimeDir = runtimeStatus?.managedRuntimeDir || path.join(USER_DATA, 'emulators', 'vlc');
+  const stagingRoot = path.join(USER_DATA, 'emulators', 'downloads');
+  const extractRoot = path.join(stagingRoot, 'vlc-stable');
+
+  emitProgress({ stage: 'resolving', percent: 5, message: 'Checking the official VLC Windows download…' });
+  const release = await resolveVLCStableWindowsDownload();
+  if (!release?.ok) return release;
+
+  const archivePath = path.join(stagingRoot, release.archiveFileName || 'vlc-stable.zip');
+  if (fs.existsSync(extractRoot)) {
+    try { fs.rmSync(extractRoot, { recursive: true, force: true }); } catch {}
+  }
+  ensureDir(stagingRoot);
+
+  emitProgress({ stage: 'downloading', percent: 8, message: `Downloading VLC ${release.version}…` });
+  const downloadResult = await downloadFileToPath(release.archiveUrl, archivePath, {
+    headers: { Referer: release.sourcePage },
+    timeoutMs: 120000,
+    onProgress: ({ percent, received, total }) => {
+      const scaled = percent == null
+        ? Math.max(10, Math.min(55, 10 + Math.round((Number(received || 0) / (1024 * 1024)) * 2.3)))
+        : Math.max(8, Math.min(55, 8 + Math.round(percent * 0.47)));
+      emitProgress({
+        stage: 'downloading',
+        percent: scaled,
+        received,
+        total,
+        message: total > 0
+          ? `Downloading VLC ${release.version}… ${Math.round((received / total) * 100)}%`
+          : `Downloading VLC ${release.version}…`,
+      });
+    },
+  });
+  if (!downloadResult?.ok) return downloadResult;
+
+  emitProgress({ stage: 'extracting', percent: 58, message: 'Extracting the VLC package…' });
+  try {
+    await extractZip(archivePath, { dir: extractRoot });
+  } catch (error) {
+    return { ok: false, error: error?.message || 'Could not extract the VLC archive.' };
+  }
+
+  const extractedExe = findFileRecursive(extractRoot, 'vlc.exe');
+  if (!extractedExe) {
+    return { ok: false, error: 'VLC downloaded, but SKALD could not find vlc.exe in the extracted package.' };
+  }
+
+  emitProgress({ stage: 'importing', percent: 68, message: 'Importing VLC into the SKALD managed runtime…' });
+  const importResult = emulatorManager.importVLCRuntime(extractedExe);
+  if (!importResult?.ok) return importResult;
+
+  const settings = loadSettings();
+  const next = emulatorManager.normalizeSettings({
+    ...settings,
+    emulators: {
+      ...(settings.emulators || {}),
+      vlc: {
+        ...((settings.emulators || {}).vlc || {}),
+        mode: 'bundled',
+        customExecutablePath: String(settings?.emulators?.vlc?.customExecutablePath || '').trim(),
+      },
+    },
+  });
+  saveSettings(next);
+
+  try { if (fs.existsSync(archivePath)) fs.unlinkSync(archivePath); } catch {}
+  try { if (fs.existsSync(extractRoot)) fs.rmSync(extractRoot, { recursive: true, force: true }); } catch {}
+
+  emitProgress({ stage: 'complete', percent: 100, message: `VLC ${release.version} is ready in SKALD.` });
+  return {
+    ok: true,
+    version: release.version,
+    archiveUrl: release.archiveUrl,
+    managedRuntimeDir,
+    executablePath: importResult.executablePath,
+    status: emulatorManager.getVLCRuntimeStatus(loadSettings()),
+  };
+}
+
+async function importManagedXeniaRuntime(sourceExecutablePath) {
+  const sourcePath = String(sourceExecutablePath || '').trim();
+  if (!sourcePath) return { ok: false, error: 'No Xenia Canary executable was selected.' };
+  if (process.platform !== 'win32') {
+    return { ok: false, error: 'SKALD runtime import is currently implemented for Windows only.' };
+  }
+  if (!fs.existsSync(sourcePath)) {
+    return { ok: false, error: `Xenia Canary executable not found: ${sourcePath}` };
+  }
+  if (!['xenia_canary.exe', 'xenia.exe'].includes(path.basename(sourcePath).toLowerCase())) {
+    return { ok: false, error: 'Pick the Xenia Canary executable itself so SKALD can import the full runtime folder.' };
+  }
+  const runtimeStatus = emulatorManager.getXeniaRuntimeStatus(loadSettings());
+  const managedRuntimeDir = runtimeStatus?.managedRuntimeDir || path.join(USER_DATA, 'emulators', 'xenia');
+  if (!managedRuntimeDir) {
+    return { ok: false, error: 'SKALD user-data runtime folder is not available.' };
+  }
+
+  const sourceDir = path.dirname(sourcePath);
+  const targetParent = path.dirname(managedRuntimeDir);
+  const backupDir = `${managedRuntimeDir}-backup`;
+  try {
+    ensureDir(targetParent);
+    if (fs.existsSync(backupDir)) {
+      await fs.promises.rm(backupDir, { recursive: true, force: true });
+    }
+    if (fs.existsSync(managedRuntimeDir)) {
+      await fs.promises.rename(managedRuntimeDir, backupDir);
+    }
+    try {
+      await fs.promises.cp(sourceDir, managedRuntimeDir, { recursive: true, force: true });
+    } catch (copyError) {
+      if (fs.existsSync(managedRuntimeDir)) {
+        await fs.promises.rm(managedRuntimeDir, { recursive: true, force: true }).catch(() => {});
+      }
+      if (fs.existsSync(backupDir)) {
+        await fs.promises.rename(backupDir, managedRuntimeDir).catch(() => {});
+      }
+      throw copyError;
+    }
+    if (fs.existsSync(backupDir)) {
+      await fs.promises.rm(backupDir, { recursive: true, force: true });
+    }
+    const runtimeExe = emulatorManager.getXeniaManagedExecutablePath?.() || path.join(managedRuntimeDir, 'xenia_canary.exe');
+    if (!runtimeExe || !fs.existsSync(runtimeExe)) {
+      return { ok: false, error: 'Xenia Canary import finished, but SKALD could not find the emulator executable in the managed runtime.' };
+    }
+    return {
+      ok: true,
+      runtimeDir: managedRuntimeDir,
+      executablePath: runtimeExe,
+      status: emulatorManager.getXeniaRuntimeStatus(loadSettings()),
+    };
+  } catch (error) {
+    return { ok: false, error: error?.message || 'Could not import the Xenia Canary runtime into SKALD.' };
+  }
+}
+
+function flushUiProgressFrame(delayMs = 0) {
+  return new Promise((resolve) => setTimeout(resolve, delayMs));
+}
+
+function downloadFileWithCurl(url, destFile, { referer = '', userAgent = 'SKALD-Launcher/0.1', expectedSize = 0, onProgress = null } = {}) {
+  return new Promise((resolve) => {
+    if (!fs.existsSync(path.dirname(destFile))) fs.mkdirSync(path.dirname(destFile), { recursive: true });
+    try { if (fs.existsSync(destFile)) fs.unlinkSync(destFile); } catch {}
+    const args = ['-L', '--fail', '--silent', '--show-error', '-A', userAgent];
+    if (referer) args.push('-e', referer);
+    args.push('-o', destFile, url);
+    const child = spawn('curl.exe', args, {
+      windowsHide: true,
+      stdio: ['ignore', 'ignore', 'pipe'],
+    });
+    let stderr = '';
+    const poller = setInterval(() => {
+      try {
+        const received = fs.existsSync(destFile) ? fs.statSync(destFile).size : 0;
+        const total = Number(expectedSize || 0) || 0;
+        const percent = total > 0 ? Math.max(0, Math.min(100, Math.round((received / total) * 100))) : null;
+        if (typeof onProgress === 'function') onProgress({ received, total, percent, url });
+      } catch {}
+    }, 200);
+    child.stderr?.on('data', (chunk) => { stderr += String(chunk || ''); });
+    child.once('error', (error) => {
+      clearInterval(poller);
+      resolve({ ok: false, error: error?.message || 'Could not start curl.exe for download.', url });
+    });
+    child.once('exit', (code) => {
+      clearInterval(poller);
+      try {
+        const received = fs.existsSync(destFile) ? fs.statSync(destFile).size : 0;
+        const total = Number(expectedSize || 0) || 0;
+        const percent = total > 0 ? Math.max(0, Math.min(100, Math.round((received / total) * 100))) : null;
+        if (typeof onProgress === 'function') onProgress({ received, total, percent, url });
+      } catch {}
+      if (code === 0 && fs.existsSync(destFile)) {
+        resolve({ ok: true, filePath: destFile, url });
+        return;
+      }
+      try { if (fs.existsSync(destFile)) fs.unlinkSync(destFile); } catch {}
+      resolve({ ok: false, error: stderr.trim() || `curl exited with code ${code}`, url });
+    });
+  });
+}
+
+function cleanupDownloadedArchive(filePath) {
+  const archivePath = String(filePath || '').trim();
+  if (!archivePath) return;
+  try {
+    if (fs.existsSync(archivePath)) fs.unlinkSync(archivePath);
+  } catch {}
+  try {
+    const downloadParentDir = path.dirname(archivePath);
+    if (downloadParentDir && fs.existsSync(downloadParentDir) && !fs.readdirSync(downloadParentDir).length) {
+      fs.rmdirSync(downloadParentDir);
+    }
+  } catch {}
+}
+
+function extractArchiveWithSevenZip(filePath, destDir, sevenZ, onProgress = null) {
+  return new Promise((resolve) => {
+    const child = spawn(sevenZ, ['x', filePath, `-o${destDir}`, '-y', '-bsp1'], {
+      windowsHide: true,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    let stderr = '';
+    let lastPercent = -1;
+    const pushProgress = (chunk) => {
+      const text = String(chunk || '');
+      const match = text.match(/(\d{1,3})%/);
+      if (!match) return;
+      const percent = Math.max(0, Math.min(100, Number(match[1] || 0)));
+      if (percent === lastPercent) return;
+      lastPercent = percent;
+      if (typeof onProgress === 'function') {
+        try { onProgress({ percent, stage: 'extracting' }); } catch {}
+      }
+    };
+    child.stdout?.on('data', pushProgress);
+    child.stderr?.on('data', (chunk) => {
+      stderr += String(chunk || '');
+      pushProgress(chunk);
+    });
+    child.once('error', (error) => {
+      resolve({ ok: false, error: error?.message || 'Could not start 7-Zip extraction.' });
+    });
+    child.once('exit', (code) => {
+      if (typeof onProgress === 'function') {
+        try { onProgress({ percent: 100, stage: 'extracting' }); } catch {}
+      }
+      if (code === 0) {
+        resolve({ ok: true });
+        return;
+      }
+      resolve({ ok: false, error: stderr.trim() || `7-Zip extraction failed with exit code ${code}` });
+    });
+  });
+}
+
+async function downloadManagedXeniaRuntime(onProgress = null) {
+  appendXeniaProgressLog('entered downloadManagedXeniaRuntime body');
+  const emitProgress = (payload = {}) => {
+    appendXeniaProgressLog(`emit stage=${String(payload?.stage || '')} percent=${Number(payload?.percent || 0)} message=${JSON.stringify(String(payload?.message || ''))}`);
+    if (typeof onProgress !== 'function') return;
+    try { onProgress(payload); } catch {}
+  };
+  try { fs.writeFileSync(XENIA_PROGRESS_LOG_PATH, '', 'utf8'); } catch {}
+  appendXeniaProgressLog('begin downloadManagedXeniaRuntime');
+  appendXeniaProgressLog('before loadSettings');
+  const currentSettings = loadSettings();
+  appendXeniaProgressLog('after loadSettings');
+  appendXeniaProgressLog('before getXeniaRuntimeStatus');
+  const runtimeStatus = emulatorManager.getXeniaRuntimeStatus(currentSettings);
+  appendXeniaProgressLog(`after getXeniaRuntimeStatus ok=${!!runtimeStatus?.ok} managedRuntimeDir=${JSON.stringify(String(runtimeStatus?.managedRuntimeDir || ''))}`);
+  const managedRuntimeDir = runtimeStatus?.managedRuntimeDir || path.join(USER_DATA, 'emulators', 'xenia');
+  const stagingRoot = path.join(USER_DATA, 'emulators', 'downloads');
+  const extractRoot = path.join(stagingRoot, 'xenia-canary');
+
+  appendXeniaProgressLog('before emit resolving');
+  emitProgress({ stage: 'resolving', percent: 5, message: 'Checking the official Xenia Canary Windows release…' });
+  appendXeniaProgressLog('after emit resolving');
+  appendXeniaProgressLog('before resolveXeniaStableWindowsDownload');
+  const release = await resolveXeniaStableWindowsDownload();
+  appendXeniaProgressLog('after resolveXeniaStableWindowsDownload');
+  appendXeniaProgressLog(`release ok=${!!release?.ok} version=${JSON.stringify(String(release?.version || ''))} url=${JSON.stringify(String(release?.archiveUrl || ''))}`);
+  if (!release?.ok) return release;
+
+  const archivePath = path.join(stagingRoot, release.archiveFileName || 'xenia_canary_windows.zip');
+  if (fs.existsSync(extractRoot)) {
+    try { fs.rmSync(extractRoot, { recursive: true, force: true }); } catch {}
+  }
+  ensureDir(stagingRoot);
+
+  emitProgress({ stage: 'downloading', percent: 8, message: `Downloading Xenia Canary ${release.version}…` });
+  const downloadResult = await downloadFileWithCurl(release.archiveUrl, archivePath, {
+    referer: release.sourcePage,
+    userAgent: 'SKALD Launcher',
+    expectedSize: release.archiveSize || 0,
+    onProgress: ({ percent, received, total }) => {
+      const scaled = percent == null
+        ? Math.max(10, Math.min(55, 10 + Math.round((Number(received || 0) / (1024 * 1024)) * 2.2)))
+        : Math.max(8, Math.min(55, 8 + Math.round(percent * 0.47)));
+      emitProgress({
+        stage: 'downloading',
+        percent: scaled,
+        received,
+        total,
+        message: total > 0
+          ? `Downloading Xenia Canary ${release.version}… ${Math.round((received / total) * 100)}%`
+          : `Downloading Xenia Canary ${release.version}…`,
+      });
+    },
+  });
+  appendXeniaProgressLog(`downloadResult ok=${!!downloadResult?.ok} error=${JSON.stringify(String(downloadResult?.error || ''))} archivePath=${JSON.stringify(archivePath)}`);
+  if (!downloadResult?.ok) return downloadResult;
+
+  emitProgress({ stage: 'extracting', percent: 58, message: 'Extracting the Xenia Canary package…' });
+  await flushUiProgressFrame(40);
+  try {
+    await extractZip(archivePath, { dir: extractRoot });
+    appendXeniaProgressLog(`extract ok dir=${JSON.stringify(extractRoot)}`);
+  } catch (error) {
+    appendXeniaProgressLog(`extract error=${JSON.stringify(String(error?.message || ''))}`);
+    return { ok: false, error: error?.message || 'Could not extract the Xenia Canary archive.' };
+  }
+
+  const extractedExe = findFileRecursive(extractRoot, 'xenia_canary.exe') || findFileRecursive(extractRoot, 'xenia.exe');
+  appendXeniaProgressLog(`find xenia executable path=${JSON.stringify(extractedExe)}`);
+  if (!extractedExe) {
+    return { ok: false, error: 'Xenia Canary downloaded, but SKALD could not find the emulator executable in the extracted package.' };
+  }
+
+  emitProgress({ stage: 'importing', percent: 68, message: 'Preparing the Xenia Canary managed runtime…' });
+  await flushUiProgressFrame(25);
+  emitProgress({ stage: 'importing', percent: 76, message: 'Copying Xenia Canary into the SKALD managed runtime…' });
+  await flushUiProgressFrame(40);
+  const importResult = await importManagedXeniaRuntime(extractedExe);
+  appendXeniaProgressLog(`importResult ok=${!!importResult?.ok} error=${JSON.stringify(String(importResult?.error || ''))} executablePath=${JSON.stringify(String(importResult?.executablePath || ''))}`);
+  if (!importResult?.ok) return importResult;
+
+  const settings = loadSettings();
+  const next = emulatorManager.normalizeSettings({
+    ...settings,
+    emulators: {
+      ...(settings.emulators || {}),
+      xenia: {
+        ...((settings.emulators || {}).xenia || {}),
+        mode: 'bundled',
+        customExecutablePath: String(settings?.emulators?.xenia?.customExecutablePath || '').trim(),
+      },
+    },
+  });
+  saveSettings(next);
+
+  try { if (fs.existsSync(archivePath)) fs.unlinkSync(archivePath); } catch {}
+  try { if (fs.existsSync(extractRoot)) fs.rmSync(extractRoot, { recursive: true, force: true }); } catch {}
+
+  emitProgress({ stage: 'importing', percent: 94, message: 'Finalizing the Xenia Canary runtime in SKALD…' });
+  await flushUiProgressFrame(25);
+  emitProgress({ stage: 'complete', percent: 100, message: `Xenia Canary ${release.version} is ready in SKALD.` });
+  appendXeniaProgressLog('complete downloadManagedXeniaRuntime');
+  return {
+    ok: true,
+    version: release.version,
+    archiveUrl: release.archiveUrl,
+    managedRuntimeDir,
+    executablePath: importResult.executablePath,
+    status: emulatorManager.getXeniaRuntimeStatus(loadSettings()),
+  };
+}
+
+function getVlcHostExecutableCandidates() {
+  const candidates = [];
+  if (process.platform === 'win32') {
+    if (app.isPackaged) {
+      candidates.push(path.join(process.resourcesPath, 'tools', 'Skald.VlcHost', 'Skald.VlcHost.exe'));
+      candidates.push(path.join(process.resourcesPath, 'Skald.VlcHost', 'Skald.VlcHost.exe'));
+    } else {
+      candidates.push(path.join(APP_ROOT_DIR, 'src', 'native', 'Skald.VlcHost', 'bin', 'Release', 'net10.0-windows', 'win-x64', 'publish', 'Skald.VlcHost.exe'));
+      candidates.push(path.join(APP_ROOT_DIR, 'src', 'native', 'Skald.VlcHost', 'bin', 'Release', 'net10.0-windows', 'publish', 'Skald.VlcHost.exe'));
+      candidates.push(path.join(APP_ROOT_DIR, 'src', 'native', 'Skald.VlcHost', 'bin', 'Debug', 'net10.0-windows', 'win-x64', 'publish', 'Skald.VlcHost.exe'));
+      candidates.push(path.join(APP_ROOT_DIR, 'src', 'native', 'Skald.VlcHost', 'bin', 'Debug', 'net10.0-windows', 'publish', 'Skald.VlcHost.exe'));
+    }
+  }
+  return candidates.filter(Boolean);
+}
+
+function resolveVlcHostExecutable() {
+  return getVlcHostExecutableCandidates().find(candidate => fs.existsSync(candidate)) || '';
+}
+
+function getWindowHandleHex(win) {
+  try {
+    const buffer = win?.getNativeWindowHandle?.();
+    if (!buffer || !Buffer.isBuffer(buffer)) return '';
+    if (buffer.length >= 8) return buffer.readBigUInt64LE(0).toString(16);
+    if (buffer.length >= 4) return buffer.readUInt32LE(0).toString(16);
+  } catch {}
+  return '';
+}
+
+function stopActiveVLCProcess() {
+  if (activeVlcFocusTimer) {
+    try { clearInterval(activeVlcFocusTimer); } catch {}
+    activeVlcFocusTimer = null;
+  }
+  if (!activeVlcProcess?.pid) return;
+  try {
+    if (process.platform === 'win32') {
+      execFile('taskkill', ['/PID', String(activeVlcProcess.pid), '/T', '/F'], { windowsHide: true }, () => {});
+    } else {
+      try { activeVlcProcess.kill('SIGTERM'); } catch {}
+    }
+  } catch {}
+  activeVlcProcess = null;
+  activeVlcControlPipe = '';
+  try {
+    activeVlcEventServer?.close();
+  } catch {}
+  activeVlcEventServer = null;
+  activeVlcEventPipe = '';
+}
+
+function startActiveVlcFocusAssist() {
+  if (activeVlcFocusTimer) {
+    try { clearInterval(activeVlcFocusTimer); } catch {}
+    activeVlcFocusTimer = null;
+  }
+  if (!bladesWindow || bladesWindow.isDestroyed()) return;
+  activeVlcFocusTimer = setInterval(() => {
+    if (!activeVlcProcess?.pid || !bladesWindow || bladesWindow.isDestroyed()) {
+      if (activeVlcFocusTimer) {
+        try { clearInterval(activeVlcFocusTimer); } catch {}
+        activeVlcFocusTimer = null;
+      }
+      return;
+    }
+    try {
+      bladesWindow.focus();
+      bladesWindow.moveTop();
+    } catch {}
+  }, 500);
+}
+
+function stopActiveVLCAudioProcess() {
+  if (!activeVlcAudioProcess?.pid) return;
+  try {
+    if (process.platform === 'win32') {
+      execFile('taskkill', ['/PID', String(activeVlcAudioProcess.pid), '/T', '/F'], { windowsHide: true }, () => {});
+    } else {
+      try { activeVlcAudioProcess.kill('SIGTERM'); } catch {}
+    }
+  } catch {}
+  activeVlcAudioProcess = null;
+  activeVlcAudioControlPipe = '';
+}
+
+function makeVlcControlPipeName() {
+  return `skald-vlc-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
+}
+
+function startVlcEventPipe(pipeName) {
+  try {
+    activeVlcEventServer?.close();
+  } catch {}
+  activeVlcEventServer = null;
+  activeVlcEventPipe = pipeName;
+  const server = net.createServer((socket) => {
+    let data = '';
+    socket.on('data', (chunk) => { data += chunk.toString(); });
+    socket.on('end', () => {
+      try {
+        const payload = JSON.parse(data || '{}');
+        const action = String(payload?.action || '').trim().toLowerCase();
+        if (action) {
+          BrowserWindow.getAllWindows().forEach((win) => {
+            try { win.webContents.send('vlc-media-action', { action }); } catch {}
+          });
+        }
+      } catch {}
+    });
+  });
+  server.on('error', () => {});
+  server.listen(`\\\\.\\pipe\\${pipeName}`);
+  activeVlcEventServer = server;
+}
+
+function sendVlcControl(payload = {}) {
+  return new Promise((resolve) => {
+    const pipeName = String(activeVlcControlPipe || '').trim();
+    if (!pipeName) return resolve({ ok: false, error: 'No active VLC control pipe.' });
+    const socket = net.createConnection({ path: `\\\\.\\pipe\\${pipeName}` }, () => {
+      try {
+        socket.end(JSON.stringify(payload));
+      } catch (error) {
+        try { socket.destroy(); } catch {}
+        resolve({ ok: false, error: error?.message || 'Could not send VLC control payload.' });
+      }
+    });
+    socket.setTimeout(2000, () => {
+      try { socket.destroy(); } catch {}
+      resolve({ ok: false, error: 'Timed out talking to VLC.' });
+    });
+    socket.once('error', (error) => {
+      try { socket.destroy(); } catch {}
+      resolve({ ok: false, error: error?.message || 'Could not connect to VLC control pipe.' });
+    });
+    socket.once('close', () => resolve({ ok: true }));
+  });
+}
+
+function sendVlcAudioControl(payload = {}) {
+  return new Promise((resolve) => {
+    const pipeName = String(activeVlcAudioControlPipe || '').trim();
+    if (!pipeName) return resolve({ ok: false, error: 'No active VLC audio control pipe.' });
+    const socket = net.createConnection({ path: `\\\\.\\pipe\\${pipeName}` }, () => {
+      try {
+        socket.end(JSON.stringify(payload));
+      } catch (error) {
+        try { socket.destroy(); } catch {}
+        resolve({ ok: false, error: error?.message || 'Could not send VLC audio payload.' });
+      }
+    });
+    socket.setTimeout(2000, () => {
+      try { socket.destroy(); } catch {}
+      resolve({ ok: false, error: 'Timed out talking to VLC audio.' });
+    });
+    socket.once('error', (error) => {
+      try { socket.destroy(); } catch {}
+      resolve({ ok: false, error: error?.message || 'Could not connect to VLC audio pipe.' });
+    });
+    socket.once('close', () => resolve({ ok: true }));
+  });
+}
+
+async function launchManagedVLCMedia({ url, title = '' } = {}) {
+  const mediaUrl = String(url || '').trim();
+  if (!mediaUrl) return { ok: false, error: 'Missing media URL.' };
+  const runtime = emulatorManager.getVLCRuntimeStatus(loadSettings());
+  if (!runtime?.ok || !runtime.executablePath) {
+    return { ok: false, error: 'VLC runtime is not available. Download it into SKALD or set a custom override first.' };
+  }
+  if (!fs.existsSync(runtime.executablePath)) {
+    return { ok: false, error: `VLC executable not found: ${runtime.executablePath}` };
+  }
+
+  stopActiveVLCProcess();
+  try {
+    const hostExe = resolveVlcHostExecutable();
+    const command = hostExe || runtime.executablePath;
+    const controlPipe = hostExe ? makeVlcControlPipeName() : '';
+    const eventPipe = hostExe ? makeVlcControlPipeName() : '';
+    if (eventPipe) startVlcEventPipe(eventPipe);
+    const args = hostExe
+      ? [
+          '--url', mediaUrl,
+          '--title', String(title || 'SKALD Video Player').trim() || 'SKALD Video Player',
+          ...(activeVlcBounds ? [
+            '--x', String(activeVlcBounds.x),
+            '--y', String(activeVlcBounds.y),
+            '--width', String(activeVlcBounds.width),
+            '--height', String(activeVlcBounds.height),
+            '--borderless',
+            '--topmost',
+          ] : ['--topmost']),
+          ...(controlPipe ? ['--control-pipe', controlPipe] : []),
+          ...(eventPipe ? ['--event-pipe', eventPipe] : []),
+        ]
+      : ['--no-video-title-show', '--play-and-exit', mediaUrl];
+    const child = spawn(command, args, {
+      detached: false,
+      stdio: 'ignore',
+      windowsHide: false,
+      cwd: path.dirname(command),
+    });
+    activeVlcProcess = child;
+    activeVlcControlPipe = controlPipe;
+    child.once('exit', () => {
+      if (activeVlcProcess === child) {
+        if (activeVlcFocusTimer) {
+          try { clearInterval(activeVlcFocusTimer); } catch {}
+          activeVlcFocusTimer = null;
+        }
+        activeVlcProcess = null;
+        activeVlcControlPipe = '';
+        try { activeVlcEventServer?.close(); } catch {}
+        activeVlcEventServer = null;
+        activeVlcEventPipe = '';
+      }
+    });
+    child.once('error', () => {
+      if (activeVlcProcess === child) {
+        if (activeVlcFocusTimer) {
+          try { clearInterval(activeVlcFocusTimer); } catch {}
+          activeVlcFocusTimer = null;
+        }
+        activeVlcProcess = null;
+        activeVlcControlPipe = '';
+        try { activeVlcEventServer?.close(); } catch {}
+        activeVlcEventServer = null;
+        activeVlcEventPipe = '';
+      }
+    });
+    child.unref();
+    if (bladesWindow && !bladesWindow.isDestroyed()) {
+      setTimeout(() => {
+        try {
+          bladesWindow.focus();
+          bladesWindow.moveTop();
+        } catch {}
+      }, 150);
+      startActiveVlcFocusAssist();
+    }
+    return {
+      ok: true,
+      hostExecutablePath: hostExe,
+      executablePath: runtime.executablePath,
+      title: String(title || '').trim(),
+      url: mediaUrl,
+    };
+  } catch (error) {
+    return { ok: false, error: error?.message || 'Could not launch VLC.' };
+  }
+}
+
+async function launchManagedVLCAudio({ url, title = '' } = {}) {
+  const mediaUrl = String(url || '').trim();
+  if (!mediaUrl) return { ok: false, error: 'Missing media URL.' };
+  const runtime = emulatorManager.getVLCRuntimeStatus(loadSettings());
+  if (!runtime?.ok || !runtime.executablePath) {
+    return { ok: false, error: 'VLC runtime is not available. Download it into SKALD or set a custom override first.' };
+  }
+  stopActiveVLCAudioProcess();
+  try {
+    const hostExe = resolveVlcHostExecutable();
+    if (!hostExe) {
+      return { ok: false, error: 'The native SKALD VLC host is not available for audio playback yet.' };
+    }
+    const controlPipe = makeVlcControlPipeName();
+    const args = [
+      '--url', mediaUrl,
+      '--title', String(title || 'SKALD Audio Player').trim() || 'SKALD Audio Player',
+      '--audio-only',
+      '--control-pipe', controlPipe,
+    ];
+    const child = spawn(hostExe, args, {
+      detached: false,
+      stdio: 'ignore',
+      windowsHide: true,
+      cwd: path.dirname(hostExe),
+    });
+    activeVlcAudioProcess = child;
+    activeVlcAudioControlPipe = controlPipe;
+    child.once('exit', () => {
+      if (activeVlcAudioProcess === child) {
+        activeVlcAudioProcess = null;
+        activeVlcAudioControlPipe = '';
+      }
+    });
+    child.once('error', () => {
+      if (activeVlcAudioProcess === child) {
+        activeVlcAudioProcess = null;
+        activeVlcAudioControlPipe = '';
+      }
+    });
+    child.unref();
+    return { ok: true, hostExecutablePath: hostExe, executablePath: runtime.executablePath, title: String(title || '').trim(), url: mediaUrl };
+  } catch (error) {
+    return { ok: false, error: error?.message || 'Could not launch VLC audio.' };
+  }
+}
+
+async function controlActiveVLCAudio({ command, url, title } = {}) {
+  const action = String(command || '').trim().toLowerCase();
+  if (!action) return { ok: false, error: 'Missing VLC audio command.' };
+  if (!activeVlcAudioProcess?.pid || !activeVlcAudioControlPipe) {
+    return { ok: false, error: 'No active VLC audio session.' };
+  }
+  const allowed = new Set(['playpause', 'play', 'pause', 'stop', 'close', 'load']);
+  if (!allowed.has(action)) return { ok: false, error: 'Unsupported VLC audio command.' };
+  const payload = { command: action };
+  if (action === 'load') {
+    payload.url = String(url || '').trim();
+    payload.title = String(title || '').trim();
+    if (!payload.url) return { ok: false, error: 'Missing audio URL.' };
+  }
+  return sendVlcAudioControl(payload);
+}
+
+function updateVlcMediaBounds({ x, y, width, height, scaleFactor } = {}) {
+  const nx = Number(x);
+  const ny = Number(y);
+  const nw = Number(width);
+  const nh = Number(height);
+  const ns = Number(scaleFactor);
+  if (![nx, ny, nw, nh].every(Number.isFinite)) {
+    activeVlcBounds = null;
+    return { ok: false, error: 'Invalid VLC bounds.' };
+  }
+  const pixelScale = Number.isFinite(ns) && ns > 0 ? ns : 1;
+  const hostWindow = bladesWindow && !bladesWindow.isDestroyed()
+    ? bladesWindow
+    : (BrowserWindow.getFocusedWindow() || null);
+  const contentBounds = hostWindow?.getContentBounds?.() || hostWindow?.getBounds?.() || { x: 0, y: 0 };
+  activeVlcBounds = {
+    x: Math.round(contentBounds.x + (nx * pixelScale)),
+    y: Math.round(contentBounds.y + (ny * pixelScale)),
+    width: Math.max(320, Math.round(nw * pixelScale)),
+    height: Math.max(180, Math.round(nh * pixelScale)),
+  };
+  if (activeVlcProcess?.pid && activeVlcControlPipe) {
+    void sendVlcControl({ command: 'bounds', ...activeVlcBounds });
+  }
+  return { ok: true, bounds: activeVlcBounds };
+}
+
+async function controlActiveVLCMedia({ command } = {}) {
+  const action = String(command || '').trim().toLowerCase();
+  if (!action) return { ok: false, error: 'Missing VLC command.' };
+  if (!activeVlcProcess?.pid || !activeVlcControlPipe) {
+    return { ok: false, error: 'No active VLC session.' };
+  }
+  const allowed = new Set(['playpause', 'play', 'pause', 'stop', 'close', 'rewind', 'fastforward']);
+  if (!allowed.has(action)) return { ok: false, error: 'Unsupported VLC command.' };
+  return sendVlcControl({ command: action });
+}
+
 async function inspectMarketplaceThemeFolder({ folderUrl } = {}) {
   if (!folderUrl) return { ok: false, error: 'Missing theme folder URL.' };
   const html = await fetchArchiveText(folderUrl);
@@ -2821,7 +4685,7 @@ async function probeArchiveDownloadAccess(downloadUrl) {
   });
 }
 
-async function downloadArchiveViaBrowserWindow(event, { identifier, downloadUrl, destFile }) {
+async function downloadArchiveViaBrowserWindow(event, { identifier, downloadUrl, destFile, progressStage = '' }) {
   const ses = getSession();
   return new Promise((resolve) => {
     let finished = false;
@@ -2829,9 +4693,20 @@ async function downloadArchiveViaBrowserWindow(event, { identifier, downloadUrl,
     let itemRef = null;
     let win = null;
     let startTimeout = null;
+    let inactivityTimeout = null;
+
+    const resetInactivityTimeout = (url = downloadUrl) => {
+      try { if (inactivityTimeout) clearTimeout(inactivityTimeout); } catch {}
+      inactivityTimeout = setTimeout(() => {
+        if (finished) return;
+        try { itemRef?.cancel?.(); } catch {}
+        finalize({ ok: false, error: `Download stalled after 90 seconds with no progress\n${url}` });
+      }, DOWNLOAD_INACTIVITY_TIMEOUT_MS);
+    };
 
     const cleanup = () => {
       try { if (startTimeout) clearTimeout(startTimeout); } catch {}
+      try { if (inactivityTimeout) clearTimeout(inactivityTimeout); } catch {}
       try { ses.removeListener('will-download', onWillDownload); } catch {}
       try { if (win && !win.isDestroyed()) win.close(); } catch {}
       activeDownloads.delete(identifier);
@@ -2859,15 +4734,17 @@ async function downloadArchiveViaBrowserWindow(event, { identifier, downloadUrl,
         req: null,
         file: null,
       });
+      resetInactivityTimeout(item.getURL?.() || downloadUrl);
 
       item.on('updated', (_event, state) => {
         if (finished || state === 'interrupted') return;
         const total = Number(item.getTotalBytes?.() || 0);
         const received = Number(item.getReceivedBytes?.() || 0);
+        resetInactivityTimeout(item.getURL?.() || downloadUrl);
         if (total > 0) {
           try {
             if (event?.sender && !event.sender.isDestroyed()) {
-              event.sender.send('download-progress', { identifier, percent: Math.round(received / total * 100) });
+              event.sender.send('download-progress', { identifier, percent: Math.round(received / total * 100), stage: progressStage || undefined });
             }
           } catch {}
         }
@@ -2906,7 +4783,7 @@ async function downloadArchiveViaBrowserWindow(event, { identifier, downloadUrl,
   });
 }
 
-async function downloadArchiveViaSessionFetch(event, { identifier, downloadUrl, destFile, cookieHeader = '', referer = 'https://archive.org/' }) {
+async function downloadArchiveViaSessionFetch(event, { identifier, downloadUrl, destFile, cookieHeader = '', referer = 'https://archive.org/', progressStage = '' }) {
   const ses = getSession();
   const headers = archiveDownloadHeaders(cookieHeader, referer);
   let response;
@@ -2935,11 +4812,32 @@ async function downloadArchiveViaSessionFetch(event, { identifier, downloadUrl, 
     let received = 0;
     const file = fs.createWriteStream(destFile);
     const bodyStream = Readable.fromWeb(response.body);
+    let inactivityTimeout = null;
+
+    const clearInactivityTimeout = () => {
+      try { if (inactivityTimeout) clearTimeout(inactivityTimeout); } catch {}
+      inactivityTimeout = null;
+    };
+    const failForStall = () => {
+      clearInactivityTimeout();
+      if (cancelled) return;
+      cancelled = true;
+      try { bodyStream.destroy(new Error('Download stalled after 90 seconds with no progress')); } catch {}
+      try { file.destroy(); } catch {}
+      fs.unlink(destFile, () => {});
+      activeDownloads.delete(identifier);
+      resolve({ ok: false, error: `Download stalled after 90 seconds with no progress\n${finalUrl}` });
+    };
+    const resetInactivityTimeout = () => {
+      clearInactivityTimeout();
+      inactivityTimeout = setTimeout(failForStall, DOWNLOAD_INACTIVITY_TIMEOUT_MS);
+    };
 
     activeDownloads.set(identifier, {
       cancel: () => {
         if (cancelled) return;
         cancelled = true;
+        clearInactivityTimeout();
         try { bodyStream.destroy(); } catch {}
         try { file.destroy(); } catch {}
         activeDownloads.delete(identifier);
@@ -2948,14 +4846,16 @@ async function downloadArchiveViaSessionFetch(event, { identifier, downloadUrl, 
       req: null,
       file,
     });
+    resetInactivityTimeout();
 
     bodyStream.on('data', chunk => {
       if (cancelled) return;
       received += chunk.length;
+      resetInactivityTimeout();
       if (total > 0) {
         try {
           if (event?.sender && !event.sender.isDestroyed()) {
-            event.sender.send('download-progress', { identifier, percent: Math.round(received / total * 100) });
+            event.sender.send('download-progress', { identifier, percent: Math.round(received / total * 100), stage: progressStage || undefined });
           }
         } catch {}
       }
@@ -2963,6 +4863,7 @@ async function downloadArchiveViaSessionFetch(event, { identifier, downloadUrl, 
 
     bodyStream.on('error', err => {
       if (cancelled) return;
+      clearInactivityTimeout();
       try { file.destroy(); } catch {}
       fs.unlink(destFile, () => {});
       activeDownloads.delete(identifier);
@@ -2971,6 +4872,7 @@ async function downloadArchiveViaSessionFetch(event, { identifier, downloadUrl, 
 
     file.on('finish', () => {
       if (cancelled) return;
+      clearInactivityTimeout();
       file.close();
       activeDownloads.delete(identifier);
       resolve({ ok: true, filePath: destFile, finalUrl });
@@ -2978,6 +4880,7 @@ async function downloadArchiveViaSessionFetch(event, { identifier, downloadUrl, 
 
     file.on('error', err => {
       if (cancelled) return;
+      clearInactivityTimeout();
       try { bodyStream.destroy(); } catch {}
       fs.unlink(destFile, () => {});
       activeDownloads.delete(identifier);
@@ -2988,9 +4891,9 @@ async function downloadArchiveViaSessionFetch(event, { identifier, downloadUrl, 
   });
 }
 
-async function performDownloadJob(event, { identifier, downloadUrl, fileName }) {
+async function performDownloadJob(event, { identifier, downloadUrl, fileName, progressStage = '', system = '' }) {
   const settings    = loadSettings();
-  const downloadDir = settings.downloadPath || DEFAULT_GAMES_DIR;
+  const downloadDir = resolveSystemStorageRoot(settings.downloadPath || DEFAULT_GAMES_DIR, system);
   const destDir     = path.join(downloadDir, sanitizeFolderName(identifier));
   if (!fs.existsSync(destDir)) fs.mkdirSync(destDir, { recursive: true });
   const originalDownloadUrl = downloadUrl;
@@ -3012,9 +4915,9 @@ async function performDownloadJob(event, { identifier, downloadUrl, fileName }) 
   const referer      = archiveDownloadReferer(downloadUrl);
 
   if (archiveUrlRequiresAuth(downloadUrl)) {
-    const browserResult = await downloadArchiveViaBrowserWindow(event, { identifier, downloadUrl: originalDownloadUrl, destFile, referer: archiveDownloadReferer(originalDownloadUrl) });
+    const browserResult = await downloadArchiveViaBrowserWindow(event, { identifier, downloadUrl: originalDownloadUrl, destFile, referer: archiveDownloadReferer(originalDownloadUrl), progressStage });
     if (browserResult?.ok) return browserResult;
-    const fetchResult = await downloadArchiveViaSessionFetch(event, { identifier, downloadUrl, destFile, cookieHeader, referer });
+    const fetchResult = await downloadArchiveViaSessionFetch(event, { identifier, downloadUrl, destFile, cookieHeader, referer, progressStage });
     if (fetchResult?.ok) return fetchResult;
     const authLines = [
       `Archive login: ${archiveStatus?.loggedIn ? 'yes' : 'no'}`,
@@ -3034,11 +4937,33 @@ async function performDownloadJob(event, { identifier, downloadUrl, fileName }) 
 
   return new Promise((resolve) => {
     let cancelled = false;
+    let inactivityTimeout = null;
+
+    const clearInactivityTimeout = () => {
+      try { if (inactivityTimeout) clearTimeout(inactivityTimeout); } catch {}
+      inactivityTimeout = null;
+    };
+    const failForStall = (url) => {
+      clearInactivityTimeout();
+      if (cancelled) return;
+      cancelled = true;
+      const entry = activeDownloads.get(identifier);
+      try { entry?.req?.destroy(); } catch {}
+      try { entry?.file?.destroy(); } catch {}
+      try { if (fs.existsSync(destFile)) fs.unlinkSync(destFile); } catch {}
+      activeDownloads.delete(identifier);
+      resolve({ ok: false, error: `Download stalled after 90 seconds with no progress\n${url}` });
+    };
+    const resetInactivityTimeout = (url) => {
+      clearInactivityTimeout();
+      inactivityTimeout = setTimeout(() => failForStall(url), DOWNLOAD_INACTIVITY_TIMEOUT_MS);
+    };
 
     activeDownloads.set(identifier, {
       cancel: () => {
         if (cancelled) return;
         cancelled = true;
+        clearInactivityTimeout();
         activeDownloads.delete(identifier);
         resolve({ ok: false, error: 'Cancelled' });
       },
@@ -3049,6 +4974,7 @@ async function performDownloadJob(event, { identifier, downloadUrl, fileName }) 
     const doRequest = (url, redirectCount) => {
       if (cancelled) return;
       if (redirectCount > 10) {
+        clearInactivityTimeout();
         activeDownloads.delete(identifier);
         return resolve({ ok: false, error: 'Too many redirects' });
       }
@@ -3067,10 +4993,12 @@ async function performDownloadJob(event, { identifier, downloadUrl, fileName }) 
         if (cancelled) { res.resume(); return; }
 
         const { statusCode, headers } = res;
+        resetInactivityTimeout(url);
 
         if ([301, 302, 303, 307, 308].includes(statusCode) && headers.location) {
           req.destroy();
           res.resume();
+          clearInactivityTimeout();
           let next = headers.location;
           if (next.startsWith('/')) next = `${parsed.protocol}//${parsed.host}${next}`;
           doRequest(next, redirectCount + 1);
@@ -3078,6 +5006,7 @@ async function performDownloadJob(event, { identifier, downloadUrl, fileName }) 
         }
 
         if (statusCode !== 200) {
+          clearInactivityTimeout();
           res.resume();
           activeDownloads.delete(identifier);
           return resolve({ ok: false, error: `HTTP ${statusCode} from ${parsed.hostname}\n${url}` });
@@ -3093,10 +5022,11 @@ async function performDownloadJob(event, { identifier, downloadUrl, fileName }) 
         res.on('data', chunk => {
           if (cancelled) return;
           received += chunk.length;
+          resetInactivityTimeout(url);
           if (total > 0) {
             try {
               if (event?.sender && !event.sender.isDestroyed()) {
-                event.sender.send('download-progress', { identifier, percent: Math.round(received / total * 100) });
+                event.sender.send('download-progress', { identifier, percent: Math.round(received / total * 100), stage: progressStage || undefined });
               }
             } catch {}
           }
@@ -3106,6 +5036,7 @@ async function performDownloadJob(event, { identifier, downloadUrl, fileName }) 
 
         file.on('finish', () => {
           if (cancelled) return;
+          clearInactivityTimeout();
           file.close();
           activeDownloads.delete(identifier);
           resolve({ ok: true, filePath: destFile });
@@ -3113,6 +5044,7 @@ async function performDownloadJob(event, { identifier, downloadUrl, fileName }) 
 
         file.on('error', err => {
           if (cancelled) return;
+          clearInactivityTimeout();
           fs.unlink(destFile, () => {});
           activeDownloads.delete(identifier);
           resolve({ ok: false, error: `${err.message}\n${url}` });
@@ -3124,6 +5056,7 @@ async function performDownloadJob(event, { identifier, downloadUrl, fileName }) 
 
       req.on('timeout', () => {
         if (cancelled) return;
+        clearInactivityTimeout();
         req.destroy();
         activeDownloads.delete(identifier);
         resolve({ ok: false, error: `Connection timed out\n${url}` });
@@ -3131,10 +5064,12 @@ async function performDownloadJob(event, { identifier, downloadUrl, fileName }) 
 
       req.on('error', err => {
         if (cancelled) return;
+        clearInactivityTimeout();
         activeDownloads.delete(identifier);
         resolve({ ok: false, error: `${err.message}\n${url}` });
       });
 
+      resetInactivityTimeout(url);
       req.end();
     };
 
@@ -3142,10 +5077,10 @@ async function performDownloadJob(event, { identifier, downloadUrl, fileName }) 
   });
 }
 
-async function extractArchiveInternal({ filePath, identifier, subFolder }) {
+async function extractArchiveInternal({ filePath, identifier, subFolder, extractRootDir = null, deleteSourceArchive = false, onProgress = null, system = '' }) {
   const settings       = loadSettings();
-  const installBase    = settings.installPath || DEFAULT_GAMES_DIR;
-  const parentDir      = path.join(installBase, sanitizeFolderName(identifier));
+  const installBase    = resolveSystemStorageRoot(settings.installPath || DEFAULT_GAMES_DIR, system);
+  const parentDir      = String(extractRootDir || '').trim() || path.join(installBase, sanitizeFolderName(identifier));
   const destDir = subFolder
     ? path.join(parentDir, '_GAME_' + sanitizeFolderName(subFolder))
     : parentDir;
@@ -3153,35 +5088,31 @@ async function extractArchiveInternal({ filePath, identifier, subFolder }) {
   if (!fs.existsSync(destDir)) fs.mkdirSync(destDir, { recursive: true });
 
   const ext    = filePath.toLowerCase();
-  const sevenZ = 'C:\\Program Files\\7-Zip\\7z.exe';
+  const sevenZ = resolveSevenZipExecutable();
 
   const unblockAfterExtract = () => unblockDirectory(destDir);
+  const shouldDeleteArchive = !!settings.deleteAfterInstall || !!deleteSourceArchive;
 
-  if ((ext.endsWith('.zip') || ext.endsWith('.7z') || ext.endsWith('.rar')) && fs.existsSync(sevenZ)) {
-    return new Promise((resolve) => {
-      execFile(sevenZ, ['x', filePath, `-o${destDir}`, '-y'], async (err) => {
-        if (err) return resolve({ ok: false, error: err.message });
-        await unblockAfterExtract();
-        if (settings.deleteAfterInstall) {
-          fs.unlink(filePath, () => {
-            try { fs.rmdirSync(path.dirname(filePath)); } catch {}
-          });
-        }
-        resolve({ ok: true, installDir: destDir, parentInstallDir: parentDir });
-      });
-    });
+  if ((ext.endsWith('.zip') || ext.endsWith('.7z') || ext.endsWith('.rar')) && sevenZ && fs.existsSync(sevenZ)) {
+    const result = await extractArchiveWithSevenZip(filePath, destDir, sevenZ, onProgress);
+    if (!result?.ok) return result;
+    await unblockAfterExtract();
+    if (shouldDeleteArchive) cleanupDownloadedArchive(filePath);
+    return { ok: true, installDir: destDir, parentInstallDir: parentDir };
   }
 
   if (ext.endsWith('.zip')) {
     try {
       const extractZip = require('extract-zip');
-      await extractZip(filePath, { dir: destDir });
-      await unblockAfterExtract();
-      if (settings.deleteAfterInstall) {
-        fs.unlink(filePath, () => {
-          try { fs.rmdirSync(path.dirname(filePath)); } catch {}
-        });
+      if (typeof onProgress === 'function') {
+        try { onProgress({ percent: 15, stage: 'extracting' }); } catch {}
       }
+      await extractZip(filePath, { dir: destDir });
+      if (typeof onProgress === 'function') {
+        try { onProgress({ percent: 100, stage: 'extracting' }); } catch {}
+      }
+      await unblockAfterExtract();
+      if (shouldDeleteArchive) cleanupDownloadedArchive(filePath);
       return { ok: true, installDir: destDir, parentInstallDir: parentDir };
     } catch (e) {
       return { ok: false, error: e.message };
@@ -3234,25 +5165,64 @@ async function marketplaceInstallJob(event, {
     }
   }
 
-  const downloadResult = await performDownloadJob(event, { identifier, downloadUrl, fileName });
+  const downloadResult = await performDownloadJob(event, { identifier, downloadUrl, fileName, system });
   if (!downloadResult?.ok) return downloadResult;
 
   const settings = loadSettings();
   const directExts = ['.chd', '.cue', '.bin', '.img', '.sfc', '.smc', '.nes', '.gba', '.n64'];
-  const shouldExtract = !!settings.extractArchive && !directExts.some(ext => downloadResult.filePath.toLowerCase().endsWith(ext));
+  const normalizedSystem = String(system || '').trim().toLowerCase();
+  const lowerDownloadPath = String(downloadResult.filePath || '').toLowerCase();
+  const isArchiveDownload = ['.zip', '.7z', '.rar'].some(ext => lowerDownloadPath.endsWith(ext));
+  const shouldExtract = (normalizedSystem === 'x360' || normalizedSystem === 'ps3')
+    ? isArchiveDownload
+    : (!!settings.extractArchive && !directExts.some(ext => lowerDownloadPath.endsWith(ext)));
 
   let installDir = downloadResult.filePath;
   let extractResult = null;
+  try {
+    if (event?.sender && !event.sender.isDestroyed() && normalizedSystem === 'ps3' && !shouldExtract) {
+      event.sender.send('download-progress', { identifier, percent: 5, stage: 'installing' });
+    }
+  } catch {}
   if (shouldExtract) {
     try {
       if (event?.sender && !event.sender.isDestroyed()) {
         event.sender.send('download-progress', { identifier, percent: 100, stage: 'extracting' });
       }
     } catch {}
-    extractResult = await extractArchiveInternal({ filePath: downloadResult.filePath, identifier, subFolder });
+    extractResult = await extractArchiveInternal({
+      filePath: downloadResult.filePath,
+      identifier,
+      subFolder,
+      system,
+      extractRootDir: (normalizedSystem === 'x360' || normalizedSystem === 'ps3') ? path.dirname(downloadResult.filePath) : null,
+      deleteSourceArchive: normalizedSystem === 'x360',
+      onProgress: ({ percent, stage }) => {
+        try {
+          if (event?.sender && !event.sender.isDestroyed()) {
+            event.sender.send('download-progress', { identifier, percent: Number(percent || 0), stage: stage || 'extracting' });
+          }
+        } catch {}
+      },
+    });
     if (!extractResult?.ok) return extractResult;
     installDir = extractResult.installDir;
   }
+
+  if (normalizedSystem === 'ps3') {
+    const discKeyResult = await ensurePs3DiscKey(event, {
+      identifier,
+      installDir,
+      originalDownloadPath: downloadResult.filePath,
+    });
+    if (!discKeyResult?.ok) return discKeyResult;
+  }
+
+  try {
+    if (event?.sender && !event.sender.isDestroyed()) {
+      event.sender.send('download-progress', { identifier, percent: 100, stage: 'installing' });
+    }
+  } catch {}
 
   const installResult = installGameRecord({
     identifier,
@@ -3299,6 +5269,686 @@ ipcMain.handle('fetch-file-list', async (_, { identifier }) => {
 // Windows forbids names ending with a dot or space.
 function sanitizeFolderName(name) {
   return name.replace(/[.\s]+$/, '').replace(/[<>:"/\\|?*]/g, '_') || '_';
+}
+
+function systemInstallFolderName(system = '') {
+  const normalized = String(system || '').trim().toLowerCase();
+  if (!normalized) return '';
+  const folderMap = {
+    snes: 'Super Nintendo',
+    genesis: 'Sega Genesis',
+    psx: 'PlayStation',
+    ps2: 'PlayStation 2',
+    ps3: 'PlayStation 3',
+    psp: 'PlayStation Portable',
+    dc: 'Dreamcast',
+    xbox: 'Xbox',
+    x360: 'Xbox 360',
+    nes: 'Nintendo Entertainment System',
+    gba: 'Game Boy Advance',
+    n64: 'Nintendo 64',
+    gamecube: 'GameCube',
+    wii: 'Wii',
+    switch: 'Nintendo Switch',
+    pc: 'PC',
+  };
+  return sanitizeFolderName(folderMap[normalized] || normalized.toUpperCase());
+}
+
+function resolveSystemStorageRoot(baseDir, system = '') {
+  const root = String(baseDir || '').trim() || DEFAULT_GAMES_DIR;
+  const systemFolder = systemInstallFolderName(system);
+  return systemFolder ? path.join(root, systemFolder) : root;
+}
+
+function resolveUniquePath(targetPath) {
+  const parsed = path.parse(String(targetPath || '').trim());
+  if (!parsed.dir || !parsed.base) return targetPath;
+  let attempt = targetPath;
+  let index = 2;
+  while (fs.existsSync(attempt)) {
+    attempt = path.join(parsed.dir, `${parsed.name} (${index})${parsed.ext}`);
+    index += 1;
+  }
+  return attempt;
+}
+
+function isSubPath(parentPath, childPath) {
+  const parent = path.resolve(String(parentPath || '').trim());
+  const child = path.resolve(String(childPath || '').trim());
+  if (!parent || !child) return false;
+  const relative = path.relative(parent, child);
+  return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
+}
+
+function resolveManagedGameDeleteTarget(installPath, system = '') {
+  const targetPath = String(installPath || '').trim();
+  if (!targetPath) return '';
+  const settings = loadSettings();
+  const gamesRoot = path.resolve(String(settings.installPath || DEFAULT_GAMES_DIR).trim() || DEFAULT_GAMES_DIR);
+  const systemRoot = path.resolve(resolveSystemStorageRoot(gamesRoot, system));
+  const resolvedTarget = path.resolve(targetPath);
+  if (!fs.existsSync(resolvedTarget) || !isSubPath(gamesRoot, resolvedTarget)) return resolvedTarget;
+  if (resolvedTarget === gamesRoot || resolvedTarget === systemRoot) return '';
+
+  let stat = null;
+  try { stat = fs.statSync(resolvedTarget); } catch {}
+  if (!stat) return '';
+
+  if (stat.isDirectory()) {
+    return resolvedTarget;
+  }
+
+  const parentDir = path.dirname(resolvedTarget);
+  if (parentDir && parentDir !== systemRoot && parentDir !== gamesRoot && isSubPath(systemRoot, parentDir)) {
+    return parentDir;
+  }
+  return resolvedTarget;
+}
+
+function readRPCS3InstallMap() {
+  try {
+    if (!fs.existsSync(RPCS3_INSTALL_MAP_PATH)) return {};
+    const parsed = JSON.parse(fs.readFileSync(RPCS3_INSTALL_MAP_PATH, 'utf8'));
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeRPCS3InstallMap(nextMap) {
+  try {
+    fs.writeFileSync(RPCS3_INSTALL_MAP_PATH, JSON.stringify(nextMap || {}, null, 2), 'utf8');
+  } catch {}
+}
+
+function runPowerShellHidden(command, { timeoutMs = 10000 } = {}) {
+  return new Promise((resolve, reject) => {
+    execFile(
+      'powershell.exe',
+      ['-NoProfile', '-NonInteractive', '-Command', command],
+      { windowsHide: true, timeout: timeoutMs },
+      (error, stdout, stderr) => {
+        if (error) {
+          error.stdout = String(stdout || '');
+          error.stderr = String(stderr || '');
+          reject(error);
+          return;
+        }
+        resolve({
+          stdout: String(stdout || '').trim(),
+          stderr: String(stderr || '').trim(),
+        });
+      },
+    );
+  });
+}
+
+function logRPCS3PkgAutomation(message = '') {
+  const line = `${new Date().toISOString()} ${String(message || '').trim()}`.trim();
+  try {
+    fs.appendFileSync(RPCS3_PKG_AUTOMATION_LOG_PATH, `${line}\n`, 'utf8');
+  } catch {}
+  console.log(`[rpcs3-pkg] ${String(message || '').trim()}`);
+}
+
+function clearRPCS3PkgInstallWatcher(sessionId = '') {
+  const key = String(sessionId || '').trim();
+  if (!key) return;
+  const watcher = activeRPCS3PkgInstallWatchers.get(key);
+  if (watcher?.timer) clearTimeout(watcher.timer);
+  activeRPCS3PkgInstallWatchers.delete(key);
+}
+
+async function invokeRPCS3PkgInstallButtonForPid(pid) {
+  const numericPid = Number(pid);
+  if (!Number.isFinite(numericPid) || numericPid <= 0) {
+    return { ok: false, state: 'invalid-pid', error: 'RPCS3 session pid is invalid.' };
+  }
+  const command = `
+Add-Type -AssemblyName UIAutomationClient
+Add-Type -AssemblyName UIAutomationTypes
+$null = Add-Type -AssemblyName System.Windows.Forms -ErrorAction SilentlyContinue
+$targetPid = ${numericPid}
+$root = [System.Windows.Automation.AutomationElement]::RootElement
+$titleContains = New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::NameProperty, 'PKG Installation')
+$dialogIdCond = New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::AutomationIdProperty, 'gui_application.pkg_install_dialog')
+$windowTypeCond = New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::ControlTypeProperty, [System.Windows.Automation.ControlType]::Window)
+$buttonTypeCond = New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::ControlTypeProperty, [System.Windows.Automation.ControlType]::Button)
+$pidCond = New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::ProcessIdProperty, $targetPid)
+$dialog = $null
+
+function Find-Dialog([System.Windows.Automation.AutomationElement]$scopeRoot, [bool]$requirePid) {
+  $walker = [System.Windows.Automation.TreeWalker]::RawViewWalker
+  $node = $walker.GetFirstChild($scopeRoot)
+  while ($node -ne $null) {
+    try {
+      $name = [string]$node.Current.Name
+      $automationId = [string]$node.Current.AutomationId
+      $controlType = $node.Current.ControlType
+      $nodePid = [int]$node.Current.ProcessId
+      $pidOk = (-not $requirePid) -or ($nodePid -eq $targetPid)
+      if ($pidOk -and $controlType -eq [System.Windows.Automation.ControlType]::Window -and (($name -eq 'PKG Installation') -or ($automationId -eq 'gui_application.pkg_install_dialog') -or ($name -like '*PKG*Installation*'))) {
+        return $node
+      }
+      $desc = Find-Dialog $node $requirePid
+      if ($desc -ne $null) { return $desc }
+    } catch {}
+    $node = $walker.GetNextSibling($node)
+  }
+  return $null
+}
+
+$dialog = Find-Dialog $root $true
+if ($null -eq $dialog) {
+  $dialog = Find-Dialog $root $false
+}
+if ($null -eq $dialog) {
+  Write-Output 'not-found'
+  exit 0
+}
+
+function Find-InstallButton([System.Windows.Automation.AutomationElement]$dialogRoot) {
+  $walker = [System.Windows.Automation.TreeWalker]::RawViewWalker
+  $node = $walker.GetFirstChild($dialogRoot)
+  while ($node -ne $null) {
+    try {
+      $name = [string]$node.Current.Name
+      $automationId = [string]$node.Current.AutomationId
+      $controlType = $node.Current.ControlType
+      if ($controlType -eq [System.Windows.Automation.ControlType]::Button -and (($name -eq 'Install') -or ($automationId -eq 'gui_application.pkg_install_dialog.QDialogButtonBox.QPushButton'))) {
+        return $node
+      }
+      $desc = Find-InstallButton $node
+      if ($desc -ne $null) { return $desc }
+    } catch {}
+    $node = $walker.GetNextSibling($node)
+  }
+  return $null
+}
+
+$button = Find-InstallButton $dialog
+if ($button -ne $null -and $button.Current.IsEnabled) {
+  try {
+    $invoke = $button.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)
+    if ($null -ne $invoke) {
+      $invoke.Invoke()
+      Write-Output 'clicked'
+      exit 0
+    }
+  } catch {}
+  try {
+    $legacy = $button.GetCurrentPattern([System.Windows.Automation.LegacyIAccessiblePattern]::Pattern)
+    if ($null -ne $legacy) {
+      $legacy.DoDefaultAction()
+      Write-Output 'clicked-legacy'
+      exit 0
+    }
+  } catch {}
+}
+
+try {
+  $windowPattern = $dialog.GetCurrentPattern([System.Windows.Automation.WindowPattern]::Pattern)
+  if ($null -ne $windowPattern) {
+    $dialog.SetFocus()
+    Start-Sleep -Milliseconds 100
+    [System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
+    Write-Output 'clicked-enter'
+    exit 0
+  }
+} catch {}
+
+if ($button -eq $null) {
+  Write-Output 'button-not-found'
+  exit 0
+}
+if (-not $button.Current.IsEnabled) {
+  Write-Output 'button-disabled'
+  exit 0
+}
+Write-Output 'invoke-not-supported'
+`.trim();
+  try {
+    const { stdout } = await runPowerShellHidden(command, { timeoutMs: 10000 });
+    const state = String(stdout || '').trim().toLowerCase() || 'unknown';
+    if (state === 'clicked') return { ok: true, state };
+    return { ok: false, state };
+  } catch (error) {
+    return {
+      ok: false,
+      state: 'error',
+      error: error?.message || 'Could not inspect the RPCS3 PKG Installation dialog.',
+      stderr: String(error?.stderr || '').trim(),
+    };
+  }
+}
+
+function isRPCS3AutoPkgInstallCandidateSession(session) {
+  if (String(session?.emulatorId || '').trim().toLowerCase() !== 'rpcs3') return false;
+  const launchPath = String(session?.romPath || session?.sourcePath || '').trim();
+  if (!launchPath) return true;
+  return path.extname(launchPath).toLowerCase() !== '.pkg';
+}
+
+function startRPCS3PkgInstallWatcher(session) {
+  const sessionId = String(session?.id || '').trim();
+  if (!sessionId || !isRPCS3AutoPkgInstallCandidateSession(session) || !session?.pid) return;
+  clearRPCS3PkgInstallWatcher(sessionId);
+  const startedAt = Date.now();
+  const maxDurationMs = 300000;
+  const attemptDelayMs = 1000;
+  const watcher = {
+    startedAt,
+    attempts: 0,
+    timer: null,
+  };
+  activeRPCS3PkgInstallWatchers.set(sessionId, watcher);
+  logRPCS3PkgAutomation(`watcher-start session=${sessionId} pid=${session.pid} launch=${String(session?.romPath || session?.sourcePath || '').trim() || '<none>'}`);
+
+  const tick = async () => {
+    const current = activeRPCS3PkgInstallWatchers.get(sessionId);
+    if (!current) return;
+    if (!current.startedAt) current.startedAt = startedAt;
+    current.attempts = Number(current.attempts || 0) + 1;
+
+    const result = await invokeRPCS3PkgInstallButtonForPid(session.pid);
+    if (result?.ok) {
+      logRPCS3PkgAutomation(`clicked session=${sessionId} attempt=${current.attempts}`);
+      clearRPCS3PkgInstallWatcher(sessionId);
+      return;
+    }
+
+    const state = String(result?.state || '').trim().toLowerCase();
+    if (!['not-found', 'button-not-found', 'button-disabled'].includes(state)) {
+      logRPCS3PkgAutomation(`watcher-stop session=${sessionId} attempt=${current.attempts} state=${state || 'unknown'} error=${String(result?.error || '').trim() || '<none>'}`);
+      clearRPCS3PkgInstallWatcher(sessionId);
+      return;
+    }
+
+    if (current.attempts === 1 || current.attempts % 15 === 0) {
+      logRPCS3PkgAutomation(`watcher-poll session=${sessionId} attempt=${current.attempts} state=${state}`);
+    }
+
+    if ((Date.now() - current.startedAt) >= maxDurationMs) {
+      logRPCS3PkgAutomation(`watcher-timeout session=${sessionId} attempts=${current.attempts} window=${Math.round(maxDurationMs / 1000)}s`);
+      clearRPCS3PkgInstallWatcher(sessionId);
+      return;
+    }
+
+    current.timer = setTimeout(() => {
+      tick().catch((error) => {
+        console.warn('[rpcs3-pkg] Watcher tick failed:', error?.message || error);
+        clearRPCS3PkgInstallWatcher(sessionId);
+      });
+    }, attemptDelayMs);
+    activeRPCS3PkgInstallWatchers.set(sessionId, current);
+  };
+
+  tick().catch((error) => {
+    logRPCS3PkgAutomation(`watcher-error session=${sessionId} error=${error?.message || error}`);
+    clearRPCS3PkgInstallWatcher(sessionId);
+  });
+}
+
+function getManagedRPCS3GameRoot() {
+  try {
+    const status = emulatorManager.getRPCS3RuntimeStatus(loadSettings());
+    const runtimeRoot = String(status?.runtimeRoot || '').trim();
+    if (!runtimeRoot) return '';
+    return path.join(runtimeRoot, 'dev_hdd0', 'game');
+  } catch {
+    return '';
+  }
+}
+
+function getManagedRPCS3DiscRoot() {
+  try {
+    const status = emulatorManager.getRPCS3RuntimeStatus(loadSettings());
+    const runtimeRoot = String(status?.runtimeRoot || '').trim();
+    if (!runtimeRoot) return '';
+    return path.join(runtimeRoot, 'dev_bdvd');
+  } catch {
+    return '';
+  }
+}
+
+function isLaunchableRPCS3InstalledTitle(dirPath = '') {
+  const base = String(dirPath || '').trim();
+  if (!base || !fs.existsSync(base)) return false;
+  try {
+    const stat = fs.statSync(base);
+    if (!stat.isDirectory()) return false;
+  } catch {
+    return false;
+  }
+  return fs.existsSync(path.join(base, 'USRDIR', 'EBOOT.BIN')) || fs.existsSync(path.join(base, 'PARAM.SFO'));
+}
+
+function buildRPCS3InstalledTitleSnapshot(gameRoot = '') {
+  const root = String(gameRoot || '').trim();
+  const snapshot = {};
+  if (!root || !fs.existsSync(root)) return snapshot;
+  let entries = [];
+  try {
+    entries = fs.readdirSync(root, { withFileTypes: true });
+  } catch {
+    return snapshot;
+  }
+  for (const entry of entries) {
+    if (!entry?.isDirectory?.()) continue;
+    const titleId = String(entry.name || '').trim();
+    if (!titleId) continue;
+    const fullPath = path.join(root, titleId);
+    if (!isLaunchableRPCS3InstalledTitle(fullPath)) continue;
+    try {
+      const stat = fs.statSync(fullPath);
+      snapshot[titleId] = {
+        path: fullPath,
+        mtimeMs: Number(stat.mtimeMs || 0),
+      };
+    } catch {}
+  }
+  return snapshot;
+}
+
+function buildRPCS3MountedDiscSnapshot(discRoot = '') {
+  const root = String(discRoot || '').trim();
+  const snapshot = {};
+  if (!root || !fs.existsSync(root)) return snapshot;
+  let entries = [];
+  try {
+    entries = fs.readdirSync(root, { withFileTypes: true });
+  } catch {
+    return snapshot;
+  }
+  for (const entry of entries) {
+    if (!entry?.isDirectory?.()) continue;
+    const name = String(entry.name || '').trim();
+    if (!name || name.toLowerCase() === 'shortcuts' || name === '＄locks') continue;
+    const fullPath = path.join(root, name);
+    try {
+      const stat = fs.statSync(fullPath);
+      snapshot[name] = {
+        path: fullPath,
+        mtimeMs: Number(stat.mtimeMs || 0),
+      };
+    } catch {}
+  }
+  return snapshot;
+}
+
+function readPS3ParamSfoMetadata(filePath = '') {
+  const target = String(filePath || '').trim();
+  if (!target || !fs.existsSync(target)) return null;
+  try {
+    const buffer = fs.readFileSync(target);
+    if (buffer.length < 20) return null;
+    if (buffer.toString('ascii', 0, 4) !== '\u0000PSF') return null;
+    const keyTableStart = buffer.readUInt32LE(8);
+    const dataTableStart = buffer.readUInt32LE(12);
+    const entryCount = buffer.readUInt32LE(16);
+    const out = {};
+    for (let index = 0; index < entryCount; index += 1) {
+      const entryOffset = 20 + (index * 16);
+      if (entryOffset + 16 > buffer.length) break;
+      const keyOffset = buffer.readUInt16LE(entryOffset);
+      const paramFmt = buffer.readUInt16LE(entryOffset + 2);
+      const paramLen = buffer.readUInt32LE(entryOffset + 4);
+      const dataOffset = buffer.readUInt32LE(entryOffset + 12);
+      const keyStart = keyTableStart + keyOffset;
+      if (keyStart >= buffer.length) continue;
+      let keyEnd = keyStart;
+      while (keyEnd < buffer.length && buffer[keyEnd] !== 0) keyEnd += 1;
+      const key = buffer.toString('utf8', keyStart, keyEnd).trim();
+      if (!key) continue;
+      const valueStart = dataTableStart + dataOffset;
+      const valueEnd = Math.min(buffer.length, valueStart + paramLen);
+      if (valueStart >= buffer.length || valueEnd <= valueStart) continue;
+      let value = '';
+      if (paramFmt === 0x0204 || paramFmt === 0x0004) {
+        value = buffer.toString('utf8', valueStart, valueEnd).replace(/\0+$/g, '').trim();
+      } else if (paramLen === 4) {
+        value = String(buffer.readUInt32LE(valueStart));
+      } else if (paramLen === 8) {
+        value = String(Number(buffer.readBigUInt64LE(valueStart)));
+      } else {
+        value = buffer.toString('hex', valueStart, valueEnd);
+      }
+      if (value) out[key] = value;
+    }
+    return {
+      title: String(out.TITLE || '').trim(),
+      titleId: String(out.TITLE_ID || '').trim(),
+    };
+  } catch {
+    return null;
+  }
+}
+
+function buildRPCS3InstalledTitleRecords(gameRoot = '') {
+  const root = String(gameRoot || '').trim();
+  if (!root || !fs.existsSync(root)) return [];
+  let entries = [];
+  try {
+    entries = fs.readdirSync(root, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+  return entries
+    .filter(entry => entry?.isDirectory?.())
+    .map((entry) => {
+      const titleId = String(entry.name || '').trim();
+      if (!titleId) return null;
+      const fullPath = path.join(root, titleId);
+      if (!isLaunchableRPCS3InstalledTitle(fullPath)) return null;
+      const paramPath = path.join(fullPath, 'PARAM.SFO');
+      const metadata = readPS3ParamSfoMetadata(paramPath) || null;
+      let mtimeMs = 0;
+      try { mtimeMs = Number(fs.statSync(fullPath).mtimeMs || 0); } catch {}
+      return {
+        titleId,
+        path: fullPath,
+        mtimeMs,
+        title: String(metadata?.title || '').trim(),
+        normalizedTitle: normalizeScanName(metadata?.title || titleId),
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => Number(b.mtimeMs || 0) - Number(a.mtimeMs || 0));
+}
+
+function buildRPCS3LaunchLookupTerms(identifier, romPath) {
+  const terms = [];
+  const add = (value) => {
+    const normalized = normalizeScanName(value);
+    if (!normalized) return;
+    if (!terms.includes(normalized)) terms.push(normalized);
+  };
+  const key = String(identifier || '').trim();
+  if (db && key) {
+    try {
+      const row = db.prepare('SELECT title, install_dir FROM games WHERE identifier = ?').get(key);
+      add(row?.title || '');
+      if (row?.install_dir) add(path.basename(String(row.install_dir || '').replace(/[\\/]+$/, '')));
+    } catch {}
+  }
+  const rawPath = String(romPath || '').trim();
+  if (rawPath) {
+    const baseName = path.basename(rawPath);
+    const stem = baseName.replace(/\.[^.]+$/i, '');
+    add(stem);
+    add(parseRomFilename(stem).cleanName || stem);
+  }
+  add(key.replace(/\.[^.]+$/i, ''));
+  add(parseRomFilename(String(key || '').replace(/\.[^.]+$/i, '')).cleanName || '');
+  return terms;
+}
+
+function findMatchingRPCS3InstalledTitle(identifier, romPath) {
+  const records = buildRPCS3InstalledTitleRecords(getManagedRPCS3GameRoot());
+  if (!records.length) return null;
+  const terms = buildRPCS3LaunchLookupTerms(identifier, romPath);
+  if (!terms.length) return null;
+  const exact = records.find(record => record.normalizedTitle && terms.includes(record.normalizedTitle));
+  if (exact) return exact;
+  const fuzzy = records.find((record) => {
+    const target = String(record.normalizedTitle || '').trim();
+    if (!target) return false;
+    return terms.some(term => term.includes(target) || target.includes(term));
+  });
+  return fuzzy || null;
+}
+
+function pickRPCS3InstalledTitleCandidate(before = {}, after = {}) {
+  const added = Object.entries(after)
+    .filter(([titleId]) => !before[titleId])
+    .map(([titleId, info]) => ({ titleId, ...info }))
+    .sort((a, b) => Number(b.mtimeMs || 0) - Number(a.mtimeMs || 0));
+  if (added.length) return added[0];
+
+  const changed = Object.entries(after)
+    .filter(([titleId, info]) => before[titleId] && Number(info?.mtimeMs || 0) > Number(before[titleId]?.mtimeMs || 0))
+    .map(([titleId, info]) => ({ titleId, ...info }))
+    .sort((a, b) => Number(b.mtimeMs || 0) - Number(a.mtimeMs || 0));
+  if (changed.length) return changed[0];
+  return null;
+}
+
+function pickRPCS3MountedTitleId(before = {}, after = {}) {
+  const added = Object.entries(after)
+    .filter(([titleId]) => !before[titleId])
+    .map(([titleId, info]) => ({ titleId, ...info }))
+    .sort((a, b) => Number(b.mtimeMs || 0) - Number(a.mtimeMs || 0));
+  if (added.length) return added[0].titleId;
+
+  const current = Object.entries(after)
+    .map(([titleId, info]) => ({ titleId, ...info }))
+    .sort((a, b) => Number(b.mtimeMs || 0) - Number(a.mtimeMs || 0));
+  if (current.length === 1) return current[0].titleId;
+  return '';
+}
+
+function rememberRPCS3InstalledTitle(identifier, candidate) {
+  const key = String(identifier || '').trim();
+  if (!key || !candidate?.path) return;
+  const next = readRPCS3InstallMap();
+  next[key] = {
+    titleId: String(candidate.titleId || '').trim(),
+    path: String(candidate.path || '').trim(),
+    recordedAt: Date.now(),
+  };
+  writeRPCS3InstallMap(next);
+}
+
+function resolvePreferredRPCS3LaunchPath(identifier, romPath) {
+  const key = String(identifier || '').trim();
+  if (!key) return String(romPath || '').trim();
+  const current = readRPCS3InstallMap();
+  const mapped = current[key];
+  if (mapped?.path && isLaunchableRPCS3InstalledTitle(mapped.path)) {
+    return String(mapped.path).trim();
+  }
+  if (mapped && (!mapped.path || !fs.existsSync(mapped.path))) {
+    delete current[key];
+    writeRPCS3InstallMap(current);
+  }
+  const discovered = findMatchingRPCS3InstalledTitle(key, romPath);
+  if (discovered?.path && isLaunchableRPCS3InstalledTitle(discovered.path)) {
+    rememberRPCS3InstalledTitle(key, discovered);
+    return String(discovered.path).trim();
+  }
+  return String(romPath || '').trim();
+}
+
+function migrateInstalledGamesIntoSystemFolders() {
+  if (!db) return { ok: false, error: 'Library database is not available.' };
+  const settings = loadSettings();
+  const gamesRoot = path.resolve(String(settings.installPath || DEFAULT_GAMES_DIR).trim() || DEFAULT_GAMES_DIR);
+  ensureDir(gamesRoot);
+
+  const rows = db.prepare(`
+    SELECT identifier, install_dir, exe_path, system
+    FROM games
+    WHERE install_dir IS NOT NULL
+      AND TRIM(install_dir) != ''
+      AND system IS NOT NULL
+      AND TRIM(system) != ''
+  `).all();
+
+  const updateStmt = db.prepare(`
+    UPDATE games
+    SET install_dir = ?, exe_path = ?, date_modified = ?
+    WHERE identifier = ?
+  `);
+
+  const results = {
+    ok: true,
+    scanned: rows.length,
+    migrated: 0,
+    skipped: 0,
+    errors: [],
+    moves: [],
+    gamesRoot,
+  };
+
+  const tx = db.transaction((entries) => {
+    for (const row of entries) {
+      const installDir = String(row.install_dir || '').trim();
+      const system = String(row.system || '').trim();
+      if (!installDir || !system || !fs.existsSync(installDir)) {
+        results.skipped += 1;
+        continue;
+      }
+
+      const sourcePath = path.resolve(installDir);
+      const relFromRoot = path.relative(gamesRoot, sourcePath);
+      if (!relFromRoot || relFromRoot.startsWith('..') || path.isAbsolute(relFromRoot)) {
+        results.skipped += 1;
+        continue;
+      }
+
+      const targetSystemRoot = path.resolve(resolveSystemStorageRoot(gamesRoot, system));
+      const relFromSystemRoot = path.relative(targetSystemRoot, sourcePath);
+      if (!relFromSystemRoot.startsWith('..') && !path.isAbsolute(relFromSystemRoot)) {
+        results.skipped += 1;
+        continue;
+      }
+
+      ensureDir(targetSystemRoot);
+      const targetPath = resolveUniquePath(path.join(targetSystemRoot, path.basename(sourcePath)));
+
+      try {
+        fs.renameSync(sourcePath, targetPath);
+        let nextExePath = row.exe_path || null;
+        if (nextExePath) {
+          const exeRel = path.relative(sourcePath, path.resolve(String(nextExePath)));
+          if (!exeRel.startsWith('..') && !path.isAbsolute(exeRel)) {
+            nextExePath = path.join(targetPath, exeRel);
+          }
+        }
+        updateStmt.run(targetPath, nextExePath, Date.now(), row.identifier);
+        results.migrated += 1;
+        results.moves.push({
+          identifier: row.identifier,
+          system,
+          from: sourcePath,
+          to: targetPath,
+        });
+      } catch (error) {
+        results.errors.push({
+          identifier: row.identifier,
+          system,
+          from: sourcePath,
+          to: targetPath,
+          error: error?.message || String(error),
+        });
+      }
+    }
+  });
+
+  tx(rows);
+  if (results.errors.length) results.ok = false;
+  return results;
 }
 
 ipcMain.handle('download-start', async (event, { identifier, downloadUrl, fileName }) => {
@@ -3594,7 +6244,9 @@ ipcMain.handle('scan-for-games', (_, { scanDir, knownIdentifiers, titleMap, syst
   const identifierSet  = new Set(knownIdentifiers);
   const titleLookup    = buildTitleLookup(titleMap);
   const found          = [];
-  const ROM_EXTS       = new Set(['.sfc', '.smc', '.snes', '.nes', '.gba', '.gbc', '.gb', '.md', '.gen', '.smd', '.n64', '.z64', '.v64', '.nds', '.pce', '.chd', '.cue', '.bin', '.img', '.zip', '.iso', '.cso', '.pbp']);
+  const ROM_EXTS       = new Set(['.sfc', '.smc', '.snes', '.nes', '.gba', '.gbc', '.gb', '.md', '.gen', '.smd', '.n64', '.z64', '.v64', '.nds', '.pce', '.chd', '.cue', '.bin', '.img', '.zip', '.iso', '.cso', '.pbp', '.pkg', '.self', '.elf']);
+  const visitedDirs    = new Set();
+  const MAX_SCAN_DEPTH = 5;
 
   let entries;
   try { entries = fs.readdirSync(scanDir, { withFileTypes: true }); }
@@ -3645,56 +6297,153 @@ ipcMain.handle('scan-for-games', (_, { scanDir, knownIdentifiers, titleMap, syst
     return { matchedId, matchedBy, matchedTitle, matchConfidence };
   }
 
-  for (const entry of entries) {
-    const entryPath = path.join(scanDir, entry.name);
-    const entryNameForMatch = entry.isFile()
-      ? path.parse(entry.name).name
-      : entry.name;
+  function hasPs3GameMarker(dirPath) {
+    try {
+      const directEboot = path.join(dirPath, 'PS3_GAME', 'USRDIR', 'EBOOT.BIN');
+      const directParam = path.join(dirPath, 'PS3_GAME', 'PARAM.SFO');
+      const nestedEboot = path.join(dirPath, 'USRDIR', 'EBOOT.BIN');
+      const nestedParam = path.join(dirPath, 'PARAM.SFO');
+      return fs.existsSync(directEboot) || fs.existsSync(directParam) || fs.existsSync(nestedEboot) || fs.existsSync(nestedParam);
+    } catch {
+      return false;
+    }
+  }
+
+  function hasDirectRomFile(dirPath) {
+    try {
+      const dirEntries = fs.readdirSync(dirPath, { withFileTypes: true });
+      return dirEntries.some(entry => entry.isFile() && ROM_EXTS.has(path.extname(entry.name).toLowerCase()));
+    } catch {
+      return false;
+    }
+  }
+
+  function registerFoundInstall({ entryPath, entryNameForMatch, matchedId, matchedBy, matchedTitle, matchConfidence, installTarget, exePath }) {
+    const identifier = matchedId || buildLocalIdentifier(entryNameForMatch, entryPath);
+    const displayTitle = matchedTitle || entryNameForMatch;
+    const sourceType = matchedId ? 'catalog_import' : 'local_scan';
+    const effectiveSystem = system || inferDetectedSystem({ entryPath, installTarget, exePath }) || null;
+    const existing = db.prepare('SELECT install_dir, system FROM games WHERE identifier = ?').get(identifier);
+    if (existing?.install_dir && fs.existsSync(existing.install_dir) && (existing.system || !effectiveSystem)) return;
+
+    db.prepare(`
+      INSERT OR IGNORE INTO games (identifier, added_at) VALUES (?, ?)
+    `).run(identifier, Date.now());
+    db.prepare(`
+      UPDATE games
+      SET install_dir = ?, exe_path = ?, title = ?, system = ?, source_type = ?, provider = COALESCE(provider, ?), catalog_identifier = ?, match_confidence = ?, date_modified = ?
+      WHERE identifier = ?
+    `).run(installTarget, exePath, displayTitle, effectiveSystem, sourceType, sourceType === 'catalog_import' ? 'archiveorg' : 'local', matchedId || null, matchConfidence || 0, Date.now(), identifier);
+
+    console.log(`[scan] Found ${matchedId ? 'catalog-linked' : 'local'} install (${matchedBy || 'filename'}): ${identifier} → ${installTarget}`);
+    found.push({
+      identifier,
+      installDir: installTarget,
+      exePath,
+      matchedBy: matchedBy || 'filename',
+      title: displayTitle,
+      catalogIdentifier: matchedId || null,
+      system: effectiveSystem || '',
+      matchConfidence: matchConfidence || 0,
+      sourceType,
+    });
+  }
+
+  function inferDetectedSystem({ entryPath, installTarget, exePath }) {
+    const normalizedPath = String(installTarget || entryPath || '').trim();
+    if (!normalizedPath) return '';
+    try {
+      if (hasPs3GameMarker(normalizedPath)) return 'ps3';
+      const stat = fs.existsSync(normalizedPath) ? fs.statSync(normalizedPath) : null;
+      if (stat?.isFile()) {
+        const ext = path.extname(normalizedPath).toLowerCase();
+        if (['.pkg', '.self', '.elf'].includes(ext)) return 'ps3';
+      }
+      if (exePath) return '';
+    } catch {
+      return '';
+    }
+    return '';
+  }
+
+  function walkDirectory(dirPath, depth = 0) {
+    if (depth > MAX_SCAN_DEPTH) return;
+    const normalizedDir = path.resolve(dirPath);
+    if (visitedDirs.has(normalizedDir)) return;
+    visitedDirs.add(normalizedDir);
+
+    let dirEntries;
+    try {
+      dirEntries = fs.readdirSync(dirPath, { withFileTypes: true });
+    } catch {
+      return;
+    }
+
+    for (const entry of dirEntries) {
+      const entryPath = path.join(dirPath, entry.name);
+      const entryNameForMatch = entry.isFile() ? path.parse(entry.name).name : entry.name;
       const { matchedId, matchedBy, matchedTitle, matchConfidence } = matchEntryName(entryNameForMatch);
 
-      let installTarget = entryPath;
-      let exePath = null;
-
-      if (entry.isDirectory()) {
-        const exes = findExesInDir(entryPath);
-        exePath = exes.length === 1 ? exes[0] : null;
-      } else if (entry.isFile()) {
+      if (entry.isFile()) {
         const ext = path.extname(entry.name).toLowerCase();
         if (!ROM_EXTS.has(ext)) continue;
-      } else {
+        registerFoundInstall({
+          entryPath,
+          entryNameForMatch,
+          matchedId,
+          matchedBy,
+          matchedTitle,
+          matchConfidence,
+          installTarget: entryPath,
+          exePath: null,
+        });
         continue;
       }
 
-      const identifier = matchedId || buildLocalIdentifier(entryNameForMatch, entryPath);
-      const existing = db.prepare('SELECT install_dir FROM games WHERE identifier = ?').get(identifier);
-      if (existing?.install_dir && fs.existsSync(existing.install_dir)) continue;
+      if (!entry.isDirectory()) continue;
 
-      const displayTitle = matchedTitle || entryNameForMatch;
-      const sourceType = matchedId ? 'catalog_import' : 'local_scan';
+      const exes = findExesInDir(entryPath);
+      const exePath = exes.length === 1 ? exes[0] : null;
+      const isRecognizedGameDir = !!exePath || hasPs3GameMarker(entryPath) || hasDirectRomFile(entryPath) || !!matchedId;
 
-      // Register it
-      db.prepare(`
-        INSERT OR IGNORE INTO games (identifier, added_at) VALUES (?, ?)
-      `).run(identifier, Date.now());
-      db.prepare(`
-        UPDATE games
-        SET install_dir = ?, exe_path = ?, title = ?, system = ?, source_type = ?, provider = COALESCE(provider, ?), catalog_identifier = ?, match_confidence = ?, date_modified = ?
-        WHERE identifier = ?
-      `).run(installTarget, exePath, displayTitle, system || null, sourceType, sourceType === 'catalog_import' ? 'archiveorg' : 'local', matchedId || null, matchConfidence || 0, Date.now(), identifier);
+      if (isRecognizedGameDir) {
+        registerFoundInstall({
+          entryPath,
+          entryNameForMatch,
+          matchedId,
+          matchedBy,
+          matchedTitle,
+          matchConfidence,
+          installTarget: entryPath,
+          exePath,
+        });
+      }
 
-      console.log(`[scan] Found ${matchedId ? 'catalog-linked' : 'local'} install (${matchedBy || 'filename'}): ${identifier} → ${installTarget}`);
-      found.push({
-        identifier,
-        installDir: installTarget,
-        exePath,
-        matchedBy: matchedBy || 'filename',
-        title: displayTitle,
-        catalogIdentifier: matchedId || null,
-        system: system || '',
-        matchConfidence: matchConfidence || 0,
-        sourceType,
+      walkDirectory(entryPath, depth + 1);
+    }
+  }
+
+  for (const entry of entries) {
+    const entryPath = path.join(scanDir, entry.name);
+    if (entry.isDirectory()) {
+      walkDirectory(entryPath, 0);
+    } else if (entry.isFile()) {
+      const ext = path.extname(entry.name).toLowerCase();
+      if (!ROM_EXTS.has(ext)) continue;
+      const entryNameForMatch = path.parse(entry.name).name;
+      const { matchedId, matchedBy, matchedTitle, matchConfidence } = matchEntryName(entryNameForMatch);
+      registerFoundInstall({
+        entryPath,
+        entryNameForMatch,
+        matchedId,
+        matchedBy,
+        matchedTitle,
+        matchConfidence,
+        installTarget: entryPath,
+        exePath: null,
       });
     }
+  }
 
   return { found };
 });
@@ -3706,6 +6455,7 @@ ipcMain.handle('install-game', (_, { identifier, installDir, exePath, title = nu
 });
 
 ipcMain.handle('marketplace-install', async (event, payload) => marketplaceInstallJob(event, payload));
+ipcMain.handle('migrate-system-install-folders', () => migrateInstalledGamesIntoSystemFolders());
 
 ipcMain.handle('set-exe-path', (_, { identifier, exePath }) => {
   if (!db) return { ok: false };
@@ -3717,22 +6467,37 @@ ipcMain.handle('set-exe-path', (_, { identifier, exePath }) => {
 ipcMain.handle('delete-game', async (_, { identifier, installDir }) => {
   try {
     console.log(`[delete] identifier=${identifier} installDir=${installDir}`);
-    const existing = db ? db.prepare('SELECT install_dir, source_type FROM games WHERE identifier = ?').get(identifier) : null;
+    const existing = db ? db.prepare('SELECT install_dir, source_type, system FROM games WHERE identifier = ?').get(identifier) : null;
     const sourceType = existing?.source_type || null;
+    const system = existing?.system || '';
     const effectiveInstallDir = existing?.install_dir || installDir;
     if (effectiveInstallDir) {
       if (sourceType === 'local_scan') {
         console.log(`[delete] Local scan entry detected — removing from library only: ${effectiveInstallDir}`);
       } else if (effectiveInstallDir && fs.existsSync(effectiveInstallDir)) {
+        const deleteTarget = resolveManagedGameDeleteTarget(effectiveInstallDir, system);
+        if (!deleteTarget) {
+          console.warn(`[delete] Refusing to delete root/system folder for ${effectiveInstallDir}`);
+        } else if (!fs.existsSync(deleteTarget)) {
+          console.log(`[delete] Resolved delete target missing on disk: ${deleteTarget}`);
+        } else {
         // Use shell.trashItem to move to Recycle Bin — avoids EPERM on locked folders
         // and is safer than force-deleting since the user can recover files if needed.
-        await shell.trashItem(effectiveInstallDir);
-        console.log(`[delete] Moved to Recycle Bin: ${effectiveInstallDir}`);
+          await shell.trashItem(deleteTarget);
+          console.log(`[delete] Moved to Recycle Bin: ${deleteTarget}`);
+        }
       } else {
         console.log(`[delete] Folder not found on disk (already gone?): ${effectiveInstallDir}`);
       }
     } else {
       console.log(`[delete] No installDir provided — only clearing DB entry`);
+    }
+    if (identifier) {
+      const installMap = readRPCS3InstallMap();
+      if (installMap[identifier]) {
+        delete installMap[identifier];
+        writeRPCS3InstallMap(installMap);
+      }
     }
     if (db) db.prepare('DELETE FROM games WHERE identifier = ?').run(identifier);
     return { ok: true };
@@ -4262,6 +7027,11 @@ const SYSTEM_CONFIGS = {
     archivePath: null,
     downloadBase: null,
   },
+  ps3: {
+    label: 'PlayStation 3',
+    archivePath: null,
+    downloadBase: null,
+  },
   psp: {
     label: 'PSP',
     archivePath: null,
@@ -4319,6 +7089,77 @@ const LIVE_ARCHIVE_SYSTEM_SOURCES = Object.freeze({
       'https://archive.org/download/sony-playstation-2-x-redump-collection/',
       'https://archive.org/download/sony-playstation-2-y-redump-collection/',
       'https://archive.org/download/sony-playstation-2-z-redump-collection/',
+    ],
+  },
+  ps3: {
+    referer: 'https://archive.org/details/sony_playstation3_a_part1',
+    extensions: ['.zip', '.pkg', '.iso'],
+    urls: [
+      'https://archive.org/download/sony_playstation3_a_part1/',
+      'https://archive.org/download/sony_playstation3_a_part2/',
+      'https://archive.org/download/sony_playstation3_a_part3/',
+      'https://archive.org/download/sony_playstation3_b_part1/',
+      'https://archive.org/download/sony_playstation3_b_part2/',
+      'https://archive.org/download/sony_playstation3_b_part3/',
+      'https://archive.org/download/sony_playstation3_c_part1/',
+      'https://archive.org/download/sony_playstation3_c_part2/',
+      'https://archive.org/download/sony_playstation3_c_part3/',
+      'https://archive.org/download/sony_playstation3_d_part1/',
+      'https://archive.org/download/sony_playstation3_d_part2/',
+      'https://archive.org/download/sony_playstation3_d_part3/',
+      'https://archive.org/download/sony_playstation3_d_part4/',
+      'https://archive.org/download/sony_playstation3_d_part5/',
+      'https://archive.org/download/sony_playstation3_e/',
+      'https://archive.org/download/sony_playstation3_f_part1/',
+      'https://archive.org/download/sony_playstation3_f_part2/',
+      'https://archive.org/download/sony_playstation3_f_part3/',
+      'https://archive.org/download/sony_playstation3_g_part1/',
+      'https://archive.org/download/sony_playstation3_g_part2/',
+      'https://archive.org/download/sony_playstation3_g_part3/',
+      'https://archive.org/download/sony_playstation3_h_part1/',
+      'https://archive.org/download/sony_playstation3_h_part2/',
+      'https://archive.org/download/sony_playstation3_i/',
+      'https://archive.org/download/sony_playstation3_j/',
+      'https://archive.org/download/sony_playstation3_k/',
+      'https://archive.org/download/sony_playstation3_l_part1/',
+      'https://archive.org/download/sony_playstation3_l_part2/',
+      'https://archive.org/download/sony_playstation3_l_part3/',
+      'https://archive.org/download/sony_playstation3_m_part1/',
+      'https://archive.org/download/sony_playstation3_m_part2/',
+      'https://archive.org/download/sony_playstation3_m_part3/',
+      'https://archive.org/download/sony_playstation3_m_part4/',
+      'https://archive.org/download/sony_playstation3_m_part5/',
+      'https://archive.org/download/sony_playstation3_n_part1/',
+      'https://archive.org/download/sony_playstation3_n_part2/',
+      'https://archive.org/download/sony_playstation3_n_part3/',
+      'https://archive.org/download/sony_playstation3_o_part1/',
+      'https://archive.org/download/sony_playstation3_o_part2/',
+      'https://archive.org/download/sony_playstation3_o_part3/',
+      'https://archive.org/download/sony_playstation3_p_part1/',
+      'https://archive.org/download/sony_playstation3_p_part2/',
+      'https://archive.org/download/sony_playstation3_q/',
+      'https://archive.org/download/sony_playstation3_r_part1/',
+      'https://archive.org/download/sony_playstation3_r_part2/',
+      'https://archive.org/download/sony_playstation3_r_part3/',
+      'https://archive.org/download/sony_playstation3_r_part4/',
+      'https://archive.org/download/sony_playstation3_s_part1/',
+      'https://archive.org/download/sony_playstation3_s_part2/',
+      'https://archive.org/download/sony_playstation3_s_part3/',
+      'https://archive.org/download/sony_playstation3_s_part4/',
+      'https://archive.org/download/sony_playstation3_s_part5/',
+      'https://archive.org/download/sony_playstation3_s_part6/',
+      'https://archive.org/download/sony_playstation3_t_part1/',
+      'https://archive.org/download/sony_playstation3_t_part2/',
+      'https://archive.org/download/sony_playstation3_t_part3/',
+      'https://archive.org/download/sony_playstation3_t_part4/',
+      'https://archive.org/download/sony_playstation3_u_part1/',
+      'https://archive.org/download/sony_playstation3_u_part2/',
+      'https://archive.org/download/sony_playstation3_v/',
+      'https://archive.org/download/sony_playstation3_w_part1/',
+      'https://archive.org/download/sony_playstation3_w_part2/',
+      'https://archive.org/download/sony_playstation3_x/',
+      'https://archive.org/download/sony_playstation3_y/',
+      'https://archive.org/download/sony_playstation3_z/',
     ],
   },
   psp: {
@@ -4428,7 +7269,7 @@ const MARKETPLACE_PROVIDERS = {
     id: 'archiveorg',
     name: 'Archive.org',
     status: 'active',
-    systems: ['snes', 'genesis', 'psx', 'ps2', 'psp', 'dc', 'xbox', 'x360'],
+    systems: ['snes', 'genesis', 'psx', 'ps2', 'ps3', 'psp', 'dc', 'xbox', 'x360'],
   },
 };
 
@@ -4440,7 +7281,11 @@ async function loadArchiveOrgLiveRomList(system) {
   if (!config) return { ok: false, error: `No live Archive.org source configured for ${system}.`, provider: 'archiveorg' };
   const normalizedSystem = String(system || '').toLowerCase();
   const cacheKey = romListCacheKey('archiveorg', normalizedSystem);
-  const diskCached = loadRomDiskCache(normalizedSystem);
+  let diskCached = loadRomDiskCache(normalizedSystem);
+  if (normalizedSystem === 'ps3' && Array.isArray(diskCached) && diskCached.length) {
+    diskCached = await filterPs3CatalogByDiscKeys(diskCached);
+    saveRomDiskCache(normalizedSystem, diskCached);
+  }
   if (normalizedSystem === 'x360' || normalizedSystem === 'xbox') {
     console.log(`[${normalizedSystem}-catalog] disk cache entries:`, Array.isArray(diskCached) ? diskCached.length : 0);
   }
@@ -4448,7 +7293,7 @@ async function loadArchiveOrgLiveRomList(system) {
     romListCache[cacheKey] = diskCached;
   }
   try {
-    if (normalizedSystem === 'x360' || normalizedSystem === 'xbox') {
+    if (normalizedSystem === 'x360' || normalizedSystem === 'xbox' || normalizedSystem === 'ps3') {
       const manifestPages = await Promise.all((config.urls || []).map(async (url) => {
         const itemId = archiveItemIdFromUrl(url);
         const manifestUrl = itemId ? `${url}${itemId}_files.xml` : '';
@@ -4461,7 +7306,10 @@ async function loadArchiveOrgLiveRomList(system) {
           sourceUrl: url,
         });
       }));
-      const manifestRoms = manifestPages.flat();
+      let manifestRoms = manifestPages.flat();
+      if (normalizedSystem === 'ps3') {
+        manifestRoms = await filterPs3CatalogByDiscKeys(manifestRoms);
+      }
       console.log(`[${normalizedSystem}-catalog] manifest entries:`, manifestRoms.length);
       console.log(`[${normalizedSystem}-catalog] first manifest entries:`, manifestRoms.slice(0, 8).map(r => r?.name).filter(Boolean));
       if (manifestRoms.length) {
@@ -4471,7 +7319,7 @@ async function loadArchiveOrgLiveRomList(system) {
       }
     }
     const pages = await Promise.all(config.urls.map(url => fetchArchiveText(url, config.referer || archiveDownloadReferer(url))));
-    if (normalizedSystem === 'x360' || normalizedSystem === 'xbox' || normalizedSystem === 'genesis') {
+    if (normalizedSystem === 'x360' || normalizedSystem === 'xbox' || normalizedSystem === 'ps3' || normalizedSystem === 'genesis') {
       pages.forEach((html, idx) => {
         const sample = String(html || '').slice(0, 400).replace(/\s+/g, ' ').trim();
         console.log(`[${normalizedSystem}-catalog] page ${idx} length:`, String(html || '').length);
@@ -4484,19 +7332,22 @@ async function loadArchiveOrgLiveRomList(system) {
       provider: 'archiveorg',
       sourceUrl: config.urls[sourceIdx],
     }));
-    merged.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
-    if (!merged.length && Array.isArray(diskCached) && diskCached.length) {
+    const filteredMerged = normalizedSystem === 'ps3'
+      ? await filterPs3CatalogByDiscKeys(merged)
+      : merged;
+    filteredMerged.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
+    if (!filteredMerged.length && Array.isArray(diskCached) && diskCached.length) {
       console.warn(`[live-rom-cache] using cached ${normalizedSystem} catalog because fresh parse returned 0 entries`);
       return { ok: true, roms: diskCached, cached: true, source: 'disk-cache', provider: 'archiveorg' };
     }
-    if (normalizedSystem === 'x360' || normalizedSystem === 'xbox') {
+    if (normalizedSystem === 'x360' || normalizedSystem === 'xbox' || normalizedSystem === 'ps3') {
       console.log(`[${normalizedSystem}-catalog] urls:`, config.urls.length);
-      console.log(`[${normalizedSystem}-catalog] parsed entries:`, merged.length);
-      console.log(`[${normalizedSystem}-catalog] first entries:`, merged.slice(0, 8).map(r => r?.name).filter(Boolean));
+      console.log(`[${normalizedSystem}-catalog] parsed entries:`, filteredMerged.length);
+      console.log(`[${normalizedSystem}-catalog] first entries:`, filteredMerged.slice(0, 8).map(r => r?.name).filter(Boolean));
     }
-    romListCache[cacheKey] = merged;
-    saveRomDiskCache(normalizedSystem, merged);
-    return { ok: true, roms: merged, cached: false, source: 'archive.org', provider: 'archiveorg' };
+    romListCache[cacheKey] = filteredMerged;
+    saveRomDiskCache(normalizedSystem, filteredMerged);
+    return { ok: true, roms: filteredMerged, cached: false, source: 'archive.org', provider: 'archiveorg' };
   } catch (e) {
     return { ok: false, error: e.message || `Failed to load ${normalizedSystem.toUpperCase()} catalog.`, provider: 'archiveorg' };
   }
@@ -4708,6 +7559,53 @@ function parseArchiveFilesXml(xml, { extensions = ['.zip'], system = '', provide
   return roms;
 }
 
+function normalizePs3DiscKeyStem(name = '') {
+  const raw = String(name || '').trim();
+  if (!raw) return '';
+  return path.basename(raw, path.extname(raw)).trim().toLowerCase();
+}
+
+async function loadPs3DiscKeyIndex() {
+  const now = Date.now();
+  if (ps3DiscKeyIndexCache && (now - Number(ps3DiscKeyIndexCache.loadedAt || 0) < 6 * 60 * 60 * 1000)) {
+    return ps3DiscKeyIndexCache.names;
+  }
+  try {
+    const html = await fetchArchiveText(PS3_DISC_KEY_CATALOG_URL, 'https://archive.org/details/sony-playstation-3-disc-keys-dat-cuesheets');
+    const names = new Set();
+    for (const match of String(html || '').matchAll(/<a[^>]+>([^<]+\.key)<\/a>/gi)) {
+      const rawName = decodeHtmlEntities(String(match[1] || '').trim());
+      const normalized = normalizePs3DiscKeyStem(rawName);
+      if (normalized) names.add(normalized);
+    }
+    if (!names.size) {
+      console.warn('[ps3-catalog] disc key regex parser found 0 entries');
+      return null;
+    }
+    ps3DiscKeyIndexCache = {
+      loadedAt: now,
+      names,
+    };
+    return names;
+  } catch (error) {
+    console.warn('[ps3-catalog] could not load disc key index:', error?.message || error);
+    return null;
+  }
+}
+
+async function filterPs3CatalogByDiscKeys(roms = []) {
+  const keyNames = await loadPs3DiscKeyIndex();
+  if (!(keyNames instanceof Set) || !keyNames.size) return roms;
+  const filtered = roms.filter((rom) => {
+    const rawName = String(rom?.name || '').trim();
+    const ext = path.extname(rawName).toLowerCase();
+    if (ext !== '.iso') return true;
+    return keyNames.has(normalizePs3DiscKeyStem(rawName));
+  });
+  console.log('[ps3-catalog] filtered by disc keys:', roms.length, '->', filtered.length);
+  return filtered;
+}
+
 function formatSizeMain(bytes) {
   if (!bytes) return '';
   if (bytes >= 1_073_741_824) return (bytes / 1_073_741_824).toFixed(2) + ' GB';
@@ -4754,36 +7652,20 @@ function parseSizeString(str) {
   return Math.round(n * (mult[unit] || 1));
 }
 
-// ─── ROM launch via RetroArch ───────────────────────────────────────────────
+// ─── ROM launch via emulator manager ────────────────────────────────────────
 
-ipcMain.handle('launch-rom', async (_, { romPath, system, identifier = null }) => {
-  const settings = loadSettings();
-  const resolved = resolveLibretroLaunch(settings, system);
-  if (!resolved.ok) return { ok: false, error: resolved.error };
-  const { raPath, corePath } = resolved;
-
-  const ROM_EXTS = ['.sfc', '.smc', '.snes', '.nes', '.gba', '.gbc', '.gb', '.md', '.gen', '.smd', '.n64', '.z64', '.v64', '.nds', '.pce', '.chd', '.cue', '.bin', '.img', '.zip'];
-  let actualRomPath = romPath;
-
-  if (fs.existsSync(romPath) && fs.statSync(romPath).isDirectory()) {
-    const entries = fs.readdirSync(romPath, { withFileTypes: true });
-    // Prefer native ROM files; fall back to .zip if that's all there is
-    const romFile = entries.find(e => e.isFile() && ROM_EXTS.filter(x => x !== '.zip').some(ext => e.name.toLowerCase().endsWith(ext)))
-                 || entries.find(e => e.isFile() && e.name.toLowerCase().endsWith('.zip'));
-    if (!romFile) return { ok: false, error: `No ROM file found in install directory: ${romPath}` };
-    actualRomPath = path.join(romPath, romFile.name);
+ipcMain.handle('launch-rom', async (_, { romPath, system, identifier = null, title = null }) => {
+  if (String(system || '').toLowerCase() === 'ps2') {
+    return emulatorManager.launchPCSX2Rom({ romPath, system, identifier, title });
   }
-
-  // When extractArchive is off, installDir is the .zip file path directly
-  if (!fs.existsSync(actualRomPath)) return { ok: false, error: `ROM file not found: ${actualRomPath}` };
-
-  return new Promise((resolve) => {
-    execFile(raPath, ['-L', corePath, actualRomPath], (err) => {
-      if (err && err.code !== null) console.error('[launch-rom] RetroArch exit:', err.message);
-      if (!err && identifier) markGamePlayed(identifier);
-      resolve({ ok: true });
-    });
-  });
+  if (String(system || '').toLowerCase() === 'ps3') {
+    const effectiveRomPath = resolvePreferredRPCS3LaunchPath(identifier, romPath);
+    return emulatorManager.launchRPCS3Rom({ romPath: effectiveRomPath, system, identifier, title });
+  }
+  if (String(system || '').toLowerCase() === 'x360') {
+    return emulatorManager.launchXeniaRom({ romPath, system, identifier, title });
+  }
+  return emulatorManager.launchLibretroRom({ romPath, system, identifier, title });
 });
 
 // ─── HowLongToBeat ──────────────────────────────────────────────────────────
@@ -4943,6 +7825,114 @@ function getHltbAuth() {
   });
 }
 
+function findFirstFileRecursive(rootDir, matcher, depth = 0, maxDepth = 6) {
+  if (!rootDir || depth > maxDepth || !fs.existsSync(rootDir)) return '';
+  let entries = [];
+  try {
+    entries = fs.readdirSync(rootDir, { withFileTypes: true });
+  } catch {
+    return '';
+  }
+  for (const entry of entries) {
+    const fullPath = path.join(rootDir, entry.name);
+    if (entry.isFile() && matcher(fullPath, entry.name)) return fullPath;
+  }
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    const nested = findFirstFileRecursive(path.join(rootDir, entry.name), matcher, depth + 1, maxDepth);
+    if (nested) return nested;
+  }
+  return '';
+}
+
+function resolvePs3IsoPath(installDir, originalDownloadPath = '') {
+  const installPath = String(installDir || '').trim();
+  if (installPath && fs.existsSync(installPath)) {
+    try {
+      const stat = fs.statSync(installPath);
+      if (stat.isFile() && path.extname(installPath).toLowerCase() === '.iso') return installPath;
+      if (stat.isDirectory()) {
+        const preferredBase = path.basename(String(originalDownloadPath || ''), path.extname(String(originalDownloadPath || ''))).toLowerCase();
+        return findFirstFileRecursive(installPath, (fullPath, name) => {
+          if (path.extname(name).toLowerCase() !== '.iso') return false;
+          if (!preferredBase) return true;
+          return path.basename(name, path.extname(name)).toLowerCase() === preferredBase;
+        });
+      }
+    } catch {}
+  }
+  const originalPath = String(originalDownloadPath || '').trim();
+  if (originalPath && fs.existsSync(originalPath) && path.extname(originalPath).toLowerCase() === '.iso') return originalPath;
+  return '';
+}
+
+function buildPs3DiscKeyDownloadUrl(isoPath) {
+  const isoBaseName = path.basename(String(isoPath || '').trim(), path.extname(String(isoPath || '').trim()));
+  if (!isoBaseName) return '';
+  return `${PS3_DISC_KEY_ARCHIVE_BASE}/${encodeURIComponent(isoBaseName)}.key`;
+}
+
+async function ensurePs3DiscKey(event, { identifier, installDir, originalDownloadPath = '' }) {
+  const isoPath = resolvePs3IsoPath(installDir, originalDownloadPath);
+  if (!isoPath) {
+    return { ok: true, skipped: true, reason: 'No ISO file found for PS3 disc key download.' };
+  }
+
+  const targetDir = path.dirname(isoPath);
+  const targetKeyPath = path.join(targetDir, `${path.basename(isoPath, path.extname(isoPath))}.key`);
+  if (fs.existsSync(targetKeyPath)) {
+    return { ok: true, skipped: true, filePath: targetKeyPath, existing: true };
+  }
+
+  const downloadUrl = buildPs3DiscKeyDownloadUrl(isoPath);
+  if (!downloadUrl) {
+    return { ok: false, error: 'Could not determine the matching PlayStation 3 disc key URL.' };
+  }
+
+  try {
+    if (event?.sender && !event.sender.isDestroyed()) {
+      event.sender.send('download-progress', { identifier, percent: 10, stage: 'installing' });
+    }
+  } catch {}
+
+  const downloadResult = await performDownloadJob(event, {
+    identifier,
+    downloadUrl,
+    fileName: path.basename(targetKeyPath),
+    progressStage: 'installing',
+    system: 'ps3',
+  });
+  if (!downloadResult?.ok) {
+    return {
+      ok: false,
+      error: `Downloaded the PlayStation 3 ISO, but could not fetch the matching disc key.\n${downloadResult?.error || 'Unknown disc key error.'}`,
+    };
+  }
+
+  const downloadedKeyPath = String(downloadResult.filePath || '').trim();
+  if (downloadedKeyPath && path.resolve(downloadedKeyPath) !== path.resolve(targetKeyPath)) {
+    try {
+      ensureDir(targetDir);
+      if (fs.existsSync(targetKeyPath)) fs.unlinkSync(targetKeyPath);
+      fs.renameSync(downloadedKeyPath, targetKeyPath);
+      try {
+        if (event?.sender && !event.sender.isDestroyed()) {
+          event.sender.send('download-progress', { identifier, percent: 85, stage: 'installing' });
+        }
+      } catch {}
+    } catch (error) {
+      return { ok: false, error: `Downloaded the PlayStation 3 disc key, but could not place it next to the ISO.\n${error?.message || error}` };
+    }
+  }
+
+  try {
+    if (event?.sender && !event.sender.isDestroyed()) {
+      event.sender.send('download-progress', { identifier, percent: 95, stage: 'installing' });
+    }
+  } catch {}
+  return { ok: true, filePath: targetKeyPath };
+}
+
 function getHltbToken() {
   return getHltbAuth().then(auth => auth?.token || null);
 }
@@ -4957,27 +7947,6 @@ const RA_CACHE_DIR = path.join(app.getPath('userData'), 'racache');
 if (!fs.existsSync(RA_CACHE_DIR)) fs.mkdirSync(RA_CACHE_DIR, { recursive: true });
 
 const RA_CONSOLE_MAP = { snes: 3, nes: 7, gba: 5, gbc: 6, gb: 4, genesis: 1, n64: 2, psx: 12 };
-const LIBRETRO_SYSTEMS = [
-  { id: 'snes', label: 'SNES', coreExample: 'bsnes_mercury_balanced_libretro.dll' },
-  { id: 'nes', label: 'NES', coreExample: 'mesen_libretro.dll' },
-  { id: 'gba', label: 'Game Boy Advance', coreExample: 'mgba_libretro.dll' },
-  { id: 'gbc', label: 'Game Boy Color', coreExample: 'mgba_libretro.dll' },
-  { id: 'gb', label: 'Game Boy', coreExample: 'gambatte_libretro.dll' },
-  { id: 'genesis', label: 'Genesis / Mega Drive', coreExample: 'genesis_plus_gx_libretro.dll' },
-  { id: 'n64', label: 'Nintendo 64', coreExample: 'mupen64plus_next_libretro.dll' },
-  { id: 'nds', label: 'Nintendo DS', coreExample: 'melondsds_libretro.dll' },
-  { id: 'pce', label: 'PC Engine / TurboGrafx-16', coreExample: 'mednafen_pce_fast_libretro.dll' },
-  { id: 'psx', label: 'PlayStation', coreExample: 'mednafen_psx_libretro.dll' },
-  { id: 'ps2', label: 'PlayStation 2', coreExample: 'pcsx2_libretro.dll' },
-  { id: 'psp', label: 'PSP', coreExample: 'ppsspp_libretro.dll' },
-  { id: 'dc', label: 'Sega Dreamcast', coreExample: 'flycast_libretro.dll' },
-  { id: 'dolphin', label: 'GameCube / Wii (Dolphin core)', coreExample: 'dolphin_libretro.dll' },
-  { id: 'pcsx2', label: 'PlayStation 2 (PCSX2 core)', coreExample: 'pcsx2_libretro.dll' },
-];
-
-function getLibretroSystems() {
-  return LIBRETRO_SYSTEMS.map(system => ({ ...system }));
-}
 
 async function fetchHltbMetadata(cleanName, { force = false } = {}) {
   const variants = hltbTitleVariants(cleanName);
@@ -5221,7 +8190,11 @@ async function fetchRaGameData(cleanName, system) {
   return new Promise((resolve) => {
     const userParam = raUser ? `&z=${encodeURIComponent(raUser)}` : '';
     const url = `https://retroachievements.org/API/API_GetGameExtended.php?y=${encodeURIComponent(apiKey)}&i=${best.ID}${userParam}`;
-    https.get(url, { headers: { 'User-Agent': 'SKALD-Launcher/0.1' } }, (res) => {
+    const req = https.get(url, { headers: { 'User-Agent': 'SKALD-Launcher/0.1' } }, (res) => {
+      if (res.statusCode && res.statusCode >= 400) {
+        res.resume();
+        return resolve({ ok: false, error: `RetroAchievements request failed (${res.statusCode})` });
+      }
       let data = '';
       res.on('data', c => data += c);
       res.on('end', () => {
@@ -5272,7 +8245,9 @@ async function fetchRaGameData(cleanName, system) {
           resolve({ ok: false, error: e.message });
         }
       });
-    }).on('error', err => resolve({ ok: false, error: err.message }));
+    });
+    req.setTimeout(15000, () => req.destroy(new Error('RetroAchievements request timed out')));
+    req.on('error', err => resolve({ ok: false, error: err.message }));
   });
 }
 
@@ -5514,31 +8489,170 @@ async function materializeEnrichmentAssets(payload, context = {}) {
   return next;
 }
 
-function resolveLibretroLaunch(settings, system) {
-  const libretroSystem = LIBRETRO_SYSTEMS.find(entry => entry.id === system);
-  const raPath = settings.retroarchPath || '';
-  const corePath = (settings.cores || {})[system] || '';
-
-  if (!libretroSystem) {
-    return { ok: false, error: `System "${system}" is not registered as a libretro platform.` };
+ipcMain.handle('libretro-systems', () => emulatorManager.getSystems());
+ipcMain.handle('emulator-sessions-get', () => emulatorManager.getSessions());
+ipcMain.handle('emulator-session-focus', async (_, { sessionId } = {}) => emulatorManager.focusSession(sessionId));
+ipcMain.handle('emulator-session-close', async (_, { sessionId } = {}) => emulatorManager.terminateSession(sessionId));
+ipcMain.handle('emulator-session-restart', async (_, { sessionId } = {}) => emulatorManager.restartSession(sessionId));
+ipcMain.handle('emulator-launch-standalone', async (_, { emulatorId } = {}) => emulatorManager.launchStandaloneEmulator(emulatorId));
+ipcMain.handle('emulator-runtime-status', () => emulatorManager.getRetroArchRuntimeStatus(loadSettings()));
+ipcMain.handle('pcsx2-runtime-status', () => emulatorManager.getPCSX2RuntimeStatus(loadSettings()));
+ipcMain.handle('rpcs3-runtime-status', () => emulatorManager.getRPCS3RuntimeStatus(loadSettings()));
+ipcMain.handle('vlc-runtime-status', () => emulatorManager.getVLCRuntimeStatus(loadSettings()));
+ipcMain.handle('xenia-runtime-status', () => emulatorManager.getXeniaRuntimeStatus(loadSettings()));
+ipcMain.handle('xenia-profile-status', () => emulatorManager.getXeniaProfileStatus(loadSettings()));
+ipcMain.handle('xenia-profile-sync', () => emulatorManager.syncXeniaProfileConfig(loadSettings()));
+ipcMain.handle('xenia-content-trace-get', () => {
+  try {
+    if (!fs.existsSync(XENIA_CONTENT_TRACE_PATH)) return { ok: true, trace: null };
+    return { ok: true, trace: JSON.parse(fs.readFileSync(XENIA_CONTENT_TRACE_PATH, 'utf8')) };
+  } catch (error) {
+    return { ok: false, error: error?.message || 'Could not read the Xenia content trace.' };
   }
-  if (!raPath) {
-    return { ok: false, error: 'RetroArch path not configured in Settings.' };
-  }
-  if (!corePath) {
-    return { ok: false, error: `No RetroArch core configured for ${libretroSystem.label}. Set it in Settings.` };
-  }
-  if (!fs.existsSync(raPath)) {
-    return { ok: false, error: `RetroArch not found: ${raPath}` };
-  }
-  if (!fs.existsSync(corePath)) {
-    return { ok: false, error: `Core not found: ${corePath}` };
-  }
-
-  return { ok: true, system: libretroSystem, raPath, corePath };
+});
+ipcMain.handle('pcsx2-runtime-sync', () => emulatorManager.syncPCSX2PortableConfig(loadSettings()));
+ipcMain.handle('libretro-core-status', () => emulatorManager.getLibretroCoreStatus(loadSettings()));
+function createEmulatorRuntimeProgressSender(webContents) {
+  let lastSentAt = 0;
+  let lastStage = '';
+  let lastPercentBucket = -1;
+  return (progress = {}) => {
+    try {
+      const stage = String(progress?.stage || '');
+      const percent = Number(progress?.percent || 0);
+      latestEmulatorRuntimeProgress = {
+        active: stage !== 'complete' && stage !== 'failed' && stage !== 'error' && !!stage,
+        percent,
+        stage,
+        message: String(progress?.message || ''),
+      };
+      const now = Date.now();
+      const percentBucket = Math.max(0, Math.min(100, Math.round(percent)));
+      const shouldSend =
+        stage === 'complete'
+        || stage !== lastStage
+        || percentBucket !== lastPercentBucket
+        || (now - lastSentAt) >= 150;
+      if (!shouldSend) return;
+      lastSentAt = now;
+      lastStage = stage;
+      lastPercentBucket = percentBucket;
+      webContents.send('emulator-runtime-progress', progress);
+    } catch {}
+  };
 }
-
-ipcMain.handle('libretro-systems', () => getLibretroSystems());
+ipcMain.handle('emulator-runtime-progress-get', () => latestEmulatorRuntimeProgress);
+ipcMain.handle('emulator-runtime-download', async (event) => downloadManagedRetroArchRuntime(createEmulatorRuntimeProgressSender(event.sender)));
+ipcMain.handle('pcsx2-runtime-download', async (event) => downloadManagedPCSX2Runtime(createEmulatorRuntimeProgressSender(event.sender)));
+ipcMain.handle('rpcs3-runtime-download', async (event) => downloadManagedRPCS3Runtime(createEmulatorRuntimeProgressSender(event.sender)));
+ipcMain.handle('vlc-runtime-download', async (event) => downloadManagedVLCRuntime(createEmulatorRuntimeProgressSender(event.sender)));
+ipcMain.handle('xenia-runtime-download', async (event) => downloadManagedXeniaRuntime(createEmulatorRuntimeProgressSender(event.sender)));
+ipcMain.handle('emulator-core-download', async (event, { system, coreFileName } = {}) => downloadManagedRetroArchCore(system, coreFileName, createEmulatorRuntimeProgressSender(event.sender)));
+ipcMain.handle('emulator-runtime-import', async (_, { executablePath } = {}) => {
+  const result = emulatorManager.importRetroArchRuntime(executablePath);
+  if (result?.ok) {
+    const settings = loadSettings();
+    const next = emulatorManager.normalizeSettings({
+      ...settings,
+      emulators: {
+        ...(settings.emulators || {}),
+        retroarch: {
+          ...((settings.emulators || {}).retroarch || {}),
+          mode: 'bundled',
+          customExecutablePath: String(settings?.emulators?.retroarch?.customExecutablePath || settings.retroarchPath || '').trim(),
+          cores: {
+            ...(((settings.emulators || {}).retroarch || {}).cores || {}),
+            ...(settings.cores || {}),
+          },
+        },
+      },
+    });
+    saveSettings(next);
+  }
+  return result;
+});
+ipcMain.handle('pcsx2-runtime-import', async (_, { executablePath } = {}) => {
+  const result = emulatorManager.importPCSX2Runtime(executablePath);
+  if (result?.ok) {
+    const settings = loadSettings();
+    const next = emulatorManager.normalizeSettings({
+      ...settings,
+      emulators: {
+        ...(settings.emulators || {}),
+        pcsx2: {
+          ...((settings.emulators || {}).pcsx2 || {}),
+          mode: 'bundled',
+          customExecutablePath: String(settings?.emulators?.pcsx2?.customExecutablePath || '').trim(),
+          biosPath: String(settings?.emulators?.pcsx2?.biosPath || '').trim(),
+        },
+      },
+    });
+    saveSettings(next);
+  }
+  return result;
+});
+ipcMain.handle('rpcs3-runtime-import', async (_, { executablePath } = {}) => {
+  const result = emulatorManager.importRPCS3Runtime(executablePath);
+  if (result?.ok) {
+    const settings = loadSettings();
+    const next = emulatorManager.normalizeSettings({
+      ...settings,
+      emulators: {
+        ...(settings.emulators || {}),
+        rpcs3: {
+          ...((settings.emulators || {}).rpcs3 || {}),
+          mode: 'bundled',
+          customExecutablePath: String(settings?.emulators?.rpcs3?.customExecutablePath || '').trim(),
+        },
+      },
+    });
+    saveSettings(next);
+  }
+  return result;
+});
+ipcMain.handle('vlc-runtime-import', async (_, { executablePath } = {}) => {
+  const result = emulatorManager.importVLCRuntime(executablePath);
+  if (result?.ok) {
+    const settings = loadSettings();
+    const next = emulatorManager.normalizeSettings({
+      ...settings,
+      emulators: {
+        ...(settings.emulators || {}),
+        vlc: {
+          ...((settings.emulators || {}).vlc || {}),
+          mode: 'bundled',
+          customExecutablePath: String(settings?.emulators?.vlc?.customExecutablePath || '').trim(),
+        },
+      },
+    });
+    saveSettings(next);
+  }
+  return result;
+});
+ipcMain.handle('xenia-runtime-import', async (_, { executablePath } = {}) => {
+  const result = await importManagedXeniaRuntime(executablePath);
+  if (result?.ok) {
+    const settings = loadSettings();
+    const next = emulatorManager.normalizeSettings({
+      ...settings,
+      emulators: {
+        ...(settings.emulators || {}),
+        xenia: {
+          ...((settings.emulators || {}).xenia || {}),
+          mode: 'bundled',
+          customExecutablePath: String(settings?.emulators?.xenia?.customExecutablePath || '').trim(),
+        },
+      },
+    });
+    saveSettings(next);
+  }
+  return result;
+});
+ipcMain.handle('vlc-media-launch', async (_, opts = {}) => launchManagedVLCMedia(opts));
+ipcMain.handle('vlc-media-bounds', async (_, opts = {}) => updateVlcMediaBounds(opts));
+ipcMain.handle('vlc-media-control', async (_, opts = {}) => controlActiveVLCMedia(opts));
+ipcMain.handle('vlc-audio-launch', async (_, opts = {}) => launchManagedVLCAudio(opts));
+ipcMain.handle('vlc-audio-control', async (_, opts = {}) => controlActiveVLCAudio(opts));
 
 async function raGetGameList(consoleId, apiKey) {
   const cachePath = path.join(RA_CACHE_DIR, `gamelist_${consoleId}.json`);
@@ -5552,7 +8666,11 @@ async function raGetGameList(consoleId, apiKey) {
   }
   return new Promise((resolve) => {
     const url = `https://retroachievements.org/API/API_GetGameList.php?y=${encodeURIComponent(apiKey)}&i=${consoleId}&f=1`;
-    https.get(url, { headers: { 'User-Agent': 'SKALD-Launcher/0.1' } }, (res) => {
+    const req = https.get(url, { headers: { 'User-Agent': 'SKALD-Launcher/0.1' } }, (res) => {
+      if (res.statusCode && res.statusCode >= 400) {
+        res.resume();
+        return resolve(null);
+      }
       let data = '';
       res.on('data', c => data += c);
       res.on('end', () => {
@@ -5566,13 +8684,19 @@ async function raGetGameList(consoleId, apiKey) {
           }
         } catch { resolve(null); }
       });
-    }).on('error', () => resolve(null));
+    });
+    req.setTimeout(15000, () => req.destroy(new Error('RetroAchievements game list request timed out')));
+    req.on('error', () => resolve(null));
   });
 }
 
 function raFetchJson(url) {
   return new Promise((resolve, reject) => {
-    https.get(url, { headers: { 'User-Agent': 'SKALD-Launcher/0.1' } }, (res) => {
+    const req = https.get(url, { headers: { 'User-Agent': 'SKALD-Launcher/0.1' } }, (res) => {
+      if (res.statusCode && res.statusCode >= 400) {
+        res.resume();
+        return reject(new Error(`RetroAchievements request failed (${res.statusCode})`));
+      }
       let data = '';
       res.on('data', c => data += c);
       res.on('end', () => {
@@ -5582,8 +8706,222 @@ function raFetchJson(url) {
           reject(e);
         }
       });
-    }).on('error', reject);
+    });
+    req.setTimeout(15000, () => req.destroy(new Error('RetroAchievements request timed out')));
+    req.on('error', reject);
   });
+}
+
+function extractEmbeddedJson(source, marker) {
+  const markerIndex = source.indexOf(marker);
+  if (markerIndex < 0) return null;
+  const start = source.indexOf('{', markerIndex);
+  if (start < 0) return null;
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  for (let i = start; i < source.length; i += 1) {
+    const ch = source[i];
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (ch === '\\') {
+        escaped = true;
+      } else if (ch === '"') {
+        inString = false;
+      }
+      continue;
+    }
+    if (ch === '"') {
+      inString = true;
+      continue;
+    }
+    if (ch === '{') depth += 1;
+    else if (ch === '}') {
+      depth -= 1;
+      if (depth === 0) return source.slice(start, i + 1);
+    }
+  }
+  return null;
+}
+
+function deepFindAll(node, predicate, acc = []) {
+  if (!node) return acc;
+  if (predicate(node)) acc.push(node);
+  if (Array.isArray(node)) {
+    node.forEach(item => deepFindAll(item, predicate, acc));
+    return acc;
+  }
+  if (typeof node === 'object') {
+    Object.values(node).forEach(value => deepFindAll(value, predicate, acc));
+  }
+  return acc;
+}
+
+function ytText(value) {
+  if (!value) return '';
+  if (typeof value === 'string') return value.trim();
+  if (value.simpleText) return String(value.simpleText).trim();
+  if (Array.isArray(value.runs)) return value.runs.map(run => String(run?.text || '')).join('').trim();
+  return '';
+}
+
+async function fetchYouTubePlaylistDetails(playlistId) {
+  if (!playlistId) return { ok: false, error: 'Missing YouTube playlist id.' };
+  return new Promise((resolve) => {
+    const url = `https://www.youtube.com/playlist?list=${encodeURIComponent(playlistId)}&hl=en&persist_hl=1`;
+    const req = https.get(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36',
+        'Accept-Language': 'en-US,en;q=0.9',
+      },
+    }, (res) => {
+      if (res.statusCode && res.statusCode >= 400) {
+        res.resume();
+        return resolve({ ok: false, error: `YouTube playlist request failed (${res.statusCode})` });
+      }
+      let html = '';
+      res.setEncoding('utf8');
+      res.on('data', chunk => { html += chunk; });
+      res.on('end', () => {
+        try {
+          const jsonText = extractEmbeddedJson(html, 'ytInitialData') || extractEmbeddedJson(html, 'var ytInitialData');
+          if (!jsonText) return resolve({ ok: false, error: 'Could not read YouTube playlist data.' });
+          const initialData = JSON.parse(jsonText);
+          const renderers = deepFindAll(initialData, value => !!value?.playlistVideoRenderer)
+            .map(value => value.playlistVideoRenderer);
+          const episodes = renderers
+            .map((renderer, idx) => {
+              const videoId = String(renderer?.videoId || '').trim();
+              if (!videoId) return null;
+              const thumbnails = renderer?.thumbnail?.thumbnails || [];
+              const bestThumb = thumbnails[thumbnails.length - 1]?.url || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+              const indexText = ytText(renderer?.index);
+              const index = Number(indexText || (idx + 1)) || (idx + 1);
+              return {
+                id: videoId,
+                title: ytText(renderer?.title) || `Episode ${index}`,
+                index,
+                thumb: String(bestThumb).replace(/&amp;/g, '&'),
+                duration: ytText(renderer?.lengthText),
+              };
+            })
+            .filter(Boolean)
+            .sort((a, b) => a.index - b.index);
+          const title =
+            ytText(initialData?.metadata?.playlistMetadataRenderer?.title) ||
+            ytText(initialData?.sidebar?.playlistSidebarRenderer?.items?.[0]?.playlistSidebarPrimaryInfoRenderer?.title) ||
+            `YouTube Playlist`;
+          if (!episodes.length) {
+            return resolve({ ok: false, error: 'No playlist episodes were found.' });
+          }
+          resolve({ ok: true, data: { playlistId, title, episodes } });
+        } catch (error) {
+          resolve({ ok: false, error: error?.message || 'Could not parse YouTube playlist.' });
+        }
+      });
+    });
+    req.setTimeout(15000, () => req.destroy(new Error('YouTube playlist request timed out')));
+    req.on('error', error => resolve({ ok: false, error: error?.message || 'Could not load YouTube playlist.' }));
+  });
+}
+
+
+function archiveMediaTitleFromName(name = '', fallback = 'Episode') {
+  const stem = String(name || '').replace(/\.[^.]+$/, '');
+  return stem.replace(/[_]+/g, ' ').replace(/\s+/g, ' ').trim() || fallback;
+}
+
+async function fetchArchiveCollectionEntries(identifier) {
+  const cleanId = String(identifier || '').trim();
+  if (!cleanId) return { ok: false, error: 'Missing Archive identifier.' };
+  const query = `collection:${cleanId} AND mediatype:movies`;
+  const url = `https://archive.org/advancedsearch.php?q=${encodeURIComponent(query)}&fl[]=identifier&fl[]=title&fl[]=mediatype&fl[]=date&sort[]=titleSorter asc&rows=1000&page=1&output=json`;
+  const result = await requestJson(url, { timeoutMs: 15000 });
+  if (!result?.ok || !result.data) {
+    return { ok: false, error: result?.error || 'Could not load Archive collection entries.' };
+  }
+  const docs = Array.isArray(result?.data?.response?.docs) ? result.data.response.docs : [];
+  const episodes = docs
+    .map((doc, idx) => {
+      const childId = String(doc?.identifier || '').trim();
+      if (!childId) return null;
+      return {
+        id: childId,
+        archiveIdentifier: childId,
+        title: String(doc?.title || childId).trim() || `Episode ${idx + 1}`,
+        index: idx + 1,
+        thumb: `https://archive.org/services/img/${encodeURIComponent(childId)}`,
+        duration: '',
+        mime: 'video/mp4',
+      };
+    })
+    .filter(Boolean);
+  if (!episodes.length) {
+    return { ok: false, error: 'No playable collection entries were found for this Archive item.' };
+  }
+  return {
+    ok: true,
+    data: {
+      identifier: cleanId,
+      title: cleanId,
+      episodes,
+    },
+  };
+}
+
+async function fetchArchiveVideoCollectionDetails(identifier) {
+  const cleanId = String(identifier || '').trim();
+  if (!cleanId) return { ok: false, error: 'Missing Archive identifier.' };
+  const result = await requestJson(`https://archive.org/metadata/${encodeURIComponent(cleanId)}`, { timeoutMs: 15000 });
+  if (!result?.ok || !result.data) {
+    return { ok: false, error: result?.error || 'Could not load Archive metadata.' };
+  }
+  const meta = result.data || {};
+  const mediaHost = String(meta?.d1 || meta?.server || 'archive.org').trim();
+  const mediaDir = String(meta?.dir || `/download/${cleanId}`).trim();
+  const files = Array.isArray(meta.files) ? meta.files : [];
+  const episodes = files
+    .filter(file => {
+      const name = String(file?.name || '');
+      const format = String(file?.format || '');
+      return !!name && /\.(mp4|m4v|webm|ogv)$/i.test(name) && !/thumb|sample/i.test(format);
+    })
+    .map((file, idx) => {
+      const name = String(file.name || '').trim();
+      const title = archiveMediaTitleFromName(name, `Episode ${idx + 1}`);
+      const encodedName = String(name || '')
+        .split('/')
+        .map(part => encodeURIComponent(part))
+        .join('/');
+      const directUrl = `https://${mediaHost}${mediaDir}/${encodedName}`;
+      return {
+        id: name,
+        archiveIdentifier: cleanId,
+        title,
+        index: idx + 1,
+        url: directUrl,
+        embedFile: String(file?.original || name || ''),
+        thumb: `https://archive.org/download/${encodeURIComponent(cleanId)}/__ia_thumb.jpg`,
+        duration: String(file?.length || '').trim(),
+        mime: 'video/mp4',
+      };
+    });
+  if (!episodes.length) {
+    if (String(meta?.metadata?.mediatype || meta?.mediatype || '').trim().toLowerCase() === 'collection') {
+      const collectionResult = await fetchArchiveCollectionEntries(cleanId);
+      if (collectionResult?.ok) return collectionResult;
+    }
+    return { ok: false, error: 'No playable video files were found for this Archive item.' };
+  }
+  return {
+    ok: true,
+    data: {
+      identifier: cleanId,
+      title: String(meta?.metadata?.title || cleanId),
+      episodes,
+    },
+  };
 }
 
 ipcMain.handle('ra-user-summary', async () => {
@@ -5629,6 +8967,8 @@ ipcMain.handle('ra-user-summary', async () => {
 });
 
 ipcMain.handle('ra-game-search', async (_, { cleanName, system }) => fetchRaGameData(cleanName, system));
+ipcMain.handle('youtube-playlist-details', async (_, { playlistId } = {}) => fetchYouTubePlaylistDetails(playlistId));
+ipcMain.handle('archive-video-details', async (_, { identifier } = {}) => fetchArchiveVideoCollectionDetails(identifier));
 
 // ─── ROM cover art via SteamGridDB ─────────────────────────────────────────
 
@@ -5792,6 +9132,8 @@ app.whenReady().then(async () => {
       console.log('[Stoat] Session resume failed, clearing stored session');
       delete settings.stoatSession;
       saveSettings(settings);
+    } else {
+      syncManagedXeniaProfileIfPossible(settings);
     }
   }
 });
@@ -5803,6 +9145,7 @@ ipcMain.handle('stoat-login', async (_, { email, password }) => {
     settings.stoatSession = result.session;
     if (result.user) upsertStoatProfile(settings, result.user, result.session);
     saveSettings(settings);
+    syncManagedXeniaProfileIfPossible(settings);
   }
   return result;
 });
@@ -5829,6 +9172,7 @@ ipcMain.handle('stoat-switch-profile', async (_, { profileId }) => {
     settings.stoatSession = profile.session;
     if (result.user) upsertStoatProfile(settings, result.user, profile.session);
     saveSettings(settings);
+    syncManagedXeniaProfileIfPossible(settings);
   }
   return result;
 });
