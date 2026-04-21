@@ -54,6 +54,8 @@ const XENIA_PROGRESS_LOG_PATH = path.join(USER_DATA, 'xenia-runtime-progress.log
 const XENIA_CONTENT_TRACE_PATH = path.join(USER_DATA, 'xenia-content-trace.json');
 const RPCS3_INSTALL_MAP_PATH = path.join(USER_DATA, 'rpcs3-install-map.json');
 const RPCS3_PKG_AUTOMATION_LOG_PATH = path.join(USER_DATA, 'rpcs3-pkg-automation.log');
+const RPCS3_COMPATIBILITY_CACHE_TTL_MS = 5 * 60 * 1000;
+const RPCS3_FIRMWARE_URL = 'http://dus01.ps3.update.playstation.net/update/ps3/image/us/2026_0318_a2b60b6ac1d2e49e230144345616927c/PS3UPDAT.PUP';
 const PS3_DISC_KEY_ARCHIVE_BASE = 'https://archive.org/download/sony-playstation-3-disc-keys-dat-cuesheets/Sony%20-%20PlayStation%203%20-%20Disc%20Keys%20%283388%29%20%282021-06-05%2001-59-33%29.zip';
 const PS3_DISC_KEY_CATALOG_URL = 'https://ia800701.us.archive.org/view_archive.php?archive=/32/items/sony-playstation-3-disc-keys-dat-cuesheets/Sony%20-%20PlayStation%203%20-%20Disc%20Keys%20%283388%29%20%282021-06-05%2001-59-33%29.zip';
 const BUNDLED_7ZIP_DIR  = app.isPackaged
@@ -64,9 +66,15 @@ const LOCAL_XML_METADATA_CACHE = Object.create(null);
 let latestEmulatorRuntimeProgress = { active: false, percent: 0, stage: '', message: '' };
 const activeXeniaContentSnapshots = new Map();
 const activeRPCS3InstallSnapshots = new Map();
+const activeRPCS3AutoRelaunches = new Map();
 const activeRPCS3PkgInstallWatchers = new Map();
+const activeRPCS3WelcomeWatchers = new Map();
+let skaldLaunchShieldTimer = null;
+let skaldLaunchShieldState = null;
+const activeRPCS3FirmwareWatchers = new Map();
 const DOWNLOAD_INACTIVITY_TIMEOUT_MS = 90000;
 let ps3DiscKeyIndexCache = null;
+let rpcs3CompatibilityDbCache = null;
 
 [
   DEFAULT_GAMES_DIR,
@@ -256,12 +264,13 @@ function fromJsonText(value, fallback) {
 
 function hydrateGameRow(row) {
   if (!row) return null;
-  return {
+  const hydrated = {
     ...row,
     has_ra: !!row.has_ra,
     genres: fromJsonText(row.genres, row.genres || null),
     screenshot_paths: fromJsonText(row.screenshot_paths, []),
   };
+  return attachRuntimeCompatibilityMetadata(hydrated);
 }
 
 function upsertGameEnrichment(identifier, payload = {}) {
@@ -1267,6 +1276,14 @@ const emulatorManager = createEmulatorManager({
     if (emulatorId === 'rpcs3') {
       const gameRoot = getManagedRPCS3GameRoot();
       const discRoot = getManagedRPCS3DiscRoot();
+      const launchPath = String(session?.romPath || session?.sourcePath || '').trim();
+      const isInstalledTitleLaunch = isRPCS3InstalledTitlePath(launchPath);
+      publishEmulatorRuntimeProgress({
+        stage: 'game-launching',
+        percent: isInstalledTitleLaunch ? 92 : 38,
+        message: isInstalledTitleLaunch ? 'Launching PlayStation 3 game…' : 'Preparing PlayStation 3 game…',
+      });
+      promoteSkaldLaunchShield(isInstalledTitleLaunch ? 8200 : 12000);
       activeRPCS3InstallSnapshots.set(String(session.id || ''), {
         takenAt: Date.now(),
         gameRoot,
@@ -1288,6 +1305,34 @@ const emulatorManager = createEmulatorManager({
           mountedTitleId: mountedTitleId || current.mountedTitleId || '',
         });
       }, 8000);
+      if (!isInstalledTitleLaunch) {
+        setTimeout(() => promoteSkaldLaunchShield(12000), 1200);
+        const keepSkaldFront = setInterval(() => promoteSkaldLaunchShield(12000), 1200);
+        setTimeout(() => clearInterval(keepSkaldFront), 9000);
+        setTimeout(() => {
+          const currentStage = String(latestEmulatorRuntimeProgress?.stage || '');
+          if (currentStage === 'pkg-installing') return;
+          releaseSkaldLaunchShield();
+          emulatorManager.focusSession(sessionId).catch(() => null);
+        }, 6500);
+        setTimeout(() => {
+          const currentStage = String(latestEmulatorRuntimeProgress?.stage || '');
+          if (currentStage === 'pkg-installing') return;
+          publishEmulatorRuntimeProgress({ stage: 'complete', percent: 100, message: 'Game launched.' });
+        }, 7600);
+      } else {
+        const keepSkaldFront = setInterval(() => promoteSkaldLaunchShield(8200), 900);
+        setTimeout(() => clearInterval(keepSkaldFront), 5200);
+        setTimeout(() => {
+          releaseSkaldLaunchShield();
+          emulatorManager.focusSession(sessionId).catch(() => null);
+        }, 6500);
+        setTimeout(() => publishEmulatorRuntimeProgress({ stage: 'complete', percent: 100, message: 'Game launched.' }), 7600);
+      }
+      // Firmware is installed through SKALD's setup flow before launch now.
+      // Avoid steering RPCS3's missing-firmware file picker during gameplay.
+      const rpcs3Setup = getRPCS3SetupStatus(loadSettings());
+      if (!rpcs3Setup?.welcomeCompleted) startRPCS3WelcomeWatcher(session);
       startRPCS3PkgInstallWatcher(session);
     }
   },
@@ -1314,6 +1359,8 @@ const emulatorManager = createEmulatorManager({
     if (emulatorId === 'rpcs3') {
       const sessionId = String(session?.id || '');
       logRPCS3PkgAutomation(`session-ended session=${sessionId} exit=${String(session?.exitCode ?? '')}`);
+      clearRPCS3FirmwareWatcher(sessionId);
+      clearRPCS3WelcomeWatcher(sessionId);
       clearRPCS3PkgInstallWatcher(sessionId);
       const started = activeRPCS3InstallSnapshots.get(sessionId) || null;
       if (sessionId) activeRPCS3InstallSnapshots.delete(sessionId);
@@ -1328,6 +1375,7 @@ const emulatorManager = createEmulatorManager({
       const remembered = candidate || mountedCandidate || null;
       if (remembered && session?.identifier) {
         rememberRPCS3InstalledTitle(session.identifier, remembered);
+        maybeAutoRelaunchRPCS3InstalledTitle(session, remembered);
       }
     }
   },
@@ -1712,6 +1760,44 @@ ipcMain.on('open-external', (_, url) => {
   shell.openExternal(url);
 });
 
+ipcMain.handle('home-ads-list', async (_, opts = {}) => {
+  const safeBlade = String(opts?.blade || 'games').replace(/[^a-z0-9_-]/gi, '').toLowerCase() || 'games';
+  const adsDir = path.join(APP_ROOT_DIR, 'assets', 'ads', safeBlade);
+  const manifestPath = path.join(adsDir, 'ads.json');
+  let manifest = [];
+  try {
+    manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  } catch {
+    manifest = [];
+  }
+  if (!Array.isArray(manifest)) manifest = [];
+  const ads = manifest.map((ad, index) => {
+    const imageName = String(ad?.image || '').trim();
+    const imagePath = path.isAbsolute(imageName) ? imageName : path.join(adsDir, imageName);
+    let image = '';
+    if (imageName && fs.existsSync(imagePath)) {
+      image = pathToFileURL(imagePath).toString();
+    }
+    let url = '';
+    try {
+      const parsed = new URL(String(ad?.url || '').trim());
+      if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
+        url = parsed.toString();
+      }
+    } catch {}
+    return {
+      id: String(ad?.id || `ad-${index}`),
+      title: String(ad?.title || 'Featured'),
+      subtitle: String(ad?.subtitle || ''),
+      description: String(ad?.description || ''),
+      cta: String(ad?.cta || 'Open'),
+      image,
+      url,
+    };
+  }).filter(ad => ad.image && ad.url);
+  return { ok: true, ads };
+});
+
 ipcMain.on('window-minimize', () => mainWindow?.minimize());
 ipcMain.on('window-maximize', () => {
   if (mainWindow?.isMaximized()) mainWindow.unmaximize();
@@ -1793,6 +1879,63 @@ async function applyBladesGuideOverlayState(active) {
   } catch (error) {
     return { ok: false, error: error?.message || 'Could not restore the Blades window.' };
   }
+}
+
+function focusPreferredSkaldWindow() {
+  const candidate = (!guideOverlayWindow?.isDestroyed() && guideOverlayWindow)
+    || (!bladesWindow?.isDestroyed() && bladesWindow)
+    || (!mainWindow?.isDestroyed() && mainWindow)
+    || null;
+  if (!candidate) return { ok: false, error: 'SKALD window is not available.' };
+  try {
+    candidate.show();
+    candidate.focus();
+    candidate.moveTop?.();
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error: error?.message || 'Could not focus SKALD.' };
+  }
+}
+
+function promoteSkaldLaunchShield(durationMs = 8000) {
+  const candidate = (!bladesWindow?.isDestroyed() && bladesWindow)
+    || (!mainWindow?.isDestroyed() && mainWindow)
+    || null;
+  if (!candidate) return focusPreferredSkaldWindow();
+  try {
+    if (!skaldLaunchShieldState || skaldLaunchShieldState.window !== candidate) {
+      skaldLaunchShieldState = {
+        window: candidate,
+        wasAlwaysOnTop: candidate.isAlwaysOnTop?.() || false,
+      };
+    }
+    candidate.show();
+    candidate.setAlwaysOnTop?.(true, 'screen-saver');
+    candidate.setVisibleOnAllWorkspaces?.(true, { visibleOnFullScreen: true });
+    candidate.focus();
+    candidate.moveTop?.();
+    if (skaldLaunchShieldTimer) clearTimeout(skaldLaunchShieldTimer);
+    skaldLaunchShieldTimer = setTimeout(() => releaseSkaldLaunchShield(), Math.max(1000, Number(durationMs) || 8000));
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error: error?.message || 'Could not promote SKALD.' };
+  }
+}
+
+function releaseSkaldLaunchShield() {
+  if (skaldLaunchShieldTimer) {
+    clearTimeout(skaldLaunchShieldTimer);
+    skaldLaunchShieldTimer = null;
+  }
+  const state = skaldLaunchShieldState;
+  skaldLaunchShieldState = null;
+  try {
+    const win = state?.window;
+    if (win && !win.isDestroyed()) {
+      win.setAlwaysOnTop?.(!!state.wasAlwaysOnTop);
+      win.setVisibleOnAllWorkspaces?.(false);
+    }
+  } catch {}
 }
 
 ipcMain.handle('blades-open', async () => {
@@ -1903,6 +2046,8 @@ ipcMain.handle('guide-overlay-command', async (_, command = {}) => {
   guideOverlayWindow.webContents.send('guide-overlay-command', command);
   return { ok: true };
 });
+
+ipcMain.handle('skald-shell-focus', async () => focusPreferredSkaldWindow());
 
 ipcMain.handle('blades-select-system', (_, { system }) => {
   // Notify main window to switch system when returning from blades
@@ -3223,34 +3368,84 @@ async function resolvePCSX2StableWindowsDownload() {
 }
 
 async function resolveRPCS3StableWindowsDownload() {
-  const releasesUrl = 'https://api.github.com/repos/RPCS3/rpcs3-binaries-win/releases?per_page=10';
-  const releases = await fetchJson(releasesUrl, { timeoutMs: 30000 });
-  if (!Array.isArray(releases) || !releases.length) {
-    return { ok: false, error: 'Could not read the current RPCS3 Windows releases from GitHub.' };
+  const sourcePage = 'https://rpcs3.net/download';
+  const latestWindowsUrl = 'https://rpcs3.net/latest-windows';
+  const browserUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36';
+
+  const inspectHeaders = (targetUrl, redirectCount = 0, method = 'HEAD') => new Promise((resolve) => {
+    let parsed;
+    try { parsed = new URL(targetUrl); }
+    catch { return resolve({ ok: false, error: 'Invalid RPCS3 Windows download URL.' }); }
+
+    const transport = parsed.protocol === 'http:' ? require('http') : https;
+    const req = transport.request(parsed, {
+      method,
+      headers: {
+        'User-Agent': browserUserAgent,
+        Referer: sourcePage,
+        Accept: '*/*',
+      },
+      timeout: 30000,
+    }, (res) => {
+      const statusCode = Number(res.statusCode || 0);
+      const location = String(res.headers?.location || '').trim();
+      if (statusCode >= 300 && statusCode < 400 && location && redirectCount < 6) {
+        const nextUrl = new URL(location, parsed).toString();
+        res.resume();
+        resolve(inspectHeaders(nextUrl, redirectCount + 1, method));
+        return;
+      }
+      res.resume();
+      resolve({
+        ok: statusCode >= 200 && statusCode < 400,
+        statusCode,
+        finalUrl: targetUrl,
+        headers: res.headers || {},
+        method,
+      });
+    });
+    req.on('timeout', () => req.destroy(new Error('Request timed out')));
+    req.on('error', (error) => resolve({ ok: false, error: error?.message || `Could not inspect the RPCS3 download headers with ${method}.` }));
+    req.end();
+  });
+
+  let headerResult = await inspectHeaders(latestWindowsUrl, 0, 'HEAD');
+  const headFailed = !headerResult?.ok;
+  if (headFailed) {
+    headerResult = await inspectHeaders(latestWindowsUrl, 0, 'GET');
   }
-  const findWindowsAsset = (entry) => (entry?.assets || []).find(asset => {
-    const name = String(asset?.name || '').toLowerCase();
-    if (!name) return false;
-    if (!(name.endsWith('.7z') || name.endsWith('.zip'))) return false;
-    if (name.includes('symbols') || name.includes('debug') || name.includes('source')) return false;
-    return true;
-  }) || null;
-  const release = releases.find(entry => !entry?.draft && !entry?.prerelease && findWindowsAsset(entry))
-    || releases.find(entry => !entry?.draft && findWindowsAsset(entry))
-    || null;
-  if (!release) {
-    return { ok: false, error: 'Could not find a RPCS3 Windows release with downloadable assets.' };
+  if (!headerResult?.ok) {
+    return {
+      ok: false,
+      error: headerResult?.error || 'Could not inspect the current official RPCS3 Windows build before download.',
+    };
   }
-  const asset = findWindowsAsset(release);
-  if (!asset?.browser_download_url) {
-    return { ok: false, error: 'Could not find a Windows RPCS3 package in the current release assets.' };
+
+  const contentDisposition = String(headerResult?.headers?.['content-disposition'] || '').trim();
+  let archiveFileName = '';
+  const utfMatch = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+  const plainMatch = contentDisposition.match(/filename="?([^\";]+)"?/i);
+  archiveFileName = decodeURIComponent(String(utfMatch?.[1] || plainMatch?.[1] || '').trim());
+  if (!archiveFileName) {
+    try {
+      archiveFileName = path.basename(new URL(String(headerResult.finalUrl || latestWindowsUrl)).pathname);
+    } catch {
+      archiveFileName = 'rpcs3-win.7z';
+    }
   }
+  const version = archiveFileName
+    .replace(/^rpcs3-/i, '')
+    .replace(/_win.*$/i, '')
+    .replace(/\.(7z|zip)$/i, '')
+    .trim();
+
   return {
     ok: true,
-    version: String(release.tag_name || release.name || '').trim(),
-    archiveUrl: String(asset.browser_download_url || '').trim(),
-    archiveFileName: String(asset.name || 'rpcs3-win.7z').trim(),
-    sourcePage: String(release.html_url || 'https://github.com/RPCS3/rpcs3-binaries-win/releases'),
+    version: version || 'latest',
+    archiveUrl: latestWindowsUrl,
+    archiveFileName: archiveFileName || 'rpcs3-win.7z',
+    sourcePage,
+    userAgent: browserUserAgent,
   };
 }
 
@@ -3381,7 +3576,10 @@ async function downloadManagedRetroArchRuntime(onProgress = null) {
 
   emitProgress({ stage: 'downloading', percent: 8, message: `Downloading RetroArch ${release.version}…` });
   const downloadResult = await downloadFileToPath(release.archiveUrl, archivePath, {
-    headers: { Referer: release.sourcePage },
+    headers: {
+      Referer: release.sourcePage,
+      ...(release?.userAgent ? { 'User-Agent': release.userAgent } : {}),
+    },
     timeoutMs: 120000,
     onProgress: ({ percent, received, total }) => {
       const scaled = percent == null
@@ -3712,6 +3910,16 @@ async function downloadManagedRPCS3Runtime(onProgress = null) {
   });
   saveSettings(next);
 
+  const verifiedStatus = emulatorManager.getRPCS3RuntimeStatus(loadSettings());
+  if (!verifiedStatus?.ok || !verifiedStatus?.executablePath || !fs.existsSync(verifiedStatus.executablePath)) {
+    return {
+      ok: false,
+      error: 'RPCS3 finished downloading, but SKALD could not verify the managed runtime after import.',
+    };
+  }
+  const welcomeSync = syncRPCS3WelcomeConfigState({ markCompleted: true });
+  if (!welcomeSync?.ok) return welcomeSync;
+
   try { if (fs.existsSync(archivePath)) fs.unlinkSync(archivePath); } catch {}
   try { if (fs.existsSync(extractRoot)) fs.rmSync(extractRoot, { recursive: true, force: true }); } catch {}
 
@@ -3722,8 +3930,387 @@ async function downloadManagedRPCS3Runtime(onProgress = null) {
     archiveUrl: release.archiveUrl,
     managedRuntimeDir,
     executablePath: importResult.executablePath,
+      status: verifiedStatus,
+    };
+  }
+
+  async function downloadManagedRPCS3Firmware(onProgress = null) {
+  const emitProgress = (payload = {}) => {
+    if (typeof onProgress !== 'function') return;
+    try { onProgress(payload); } catch {}
+  };
+  const runtimeStatus = emulatorManager.getRPCS3RuntimeStatus(loadSettings());
+  const runtimeRoot = String(runtimeStatus?.runtimeRoot || runtimeStatus?.managedRuntimeDir || path.join(USER_DATA, 'emulators', 'rpcs3')).trim();
+  const firmwareDir = path.join(runtimeRoot, 'firmware');
+  const firmwarePath = path.join(firmwareDir, 'PS3UPDAT.PUP');
+
+  ensureDir(firmwareDir);
+
+  emitProgress({ stage: 'downloading', percent: 5, message: 'Downloading PS3 firmware package…' });
+  const result = await downloadFileToPath(RPCS3_FIRMWARE_URL, firmwarePath, {
+    timeoutMs: 120000,
+    onProgress: ({ percent, received, total }) => {
+      const scaled = percent == null
+        ? Math.max(5, Math.min(95, 5 + Math.round((Number(received || 0) / (1024 * 1024)) * 2.2)))
+        : Math.max(5, Math.min(95, 5 + Math.round(percent * 0.9)));
+      emitProgress({
+        stage: 'downloading',
+        percent: scaled,
+        received,
+        total,
+        message: total > 0
+          ? `Downloading PS3 firmware… ${Math.round((received / total) * 100)}%`
+          : 'Downloading PS3 firmware…',
+      });
+    },
+  });
+  if (!result?.ok) return result;
+
+  const settings = loadSettings();
+  const next = emulatorManager.normalizeSettings({
+    ...settings,
+    emulators: {
+      ...(settings.emulators || {}),
+      rpcs3: {
+        ...((settings.emulators || {}).rpcs3 || {}),
+        firmwarePackagePath: firmwarePath,
+      },
+    },
+  });
+  saveSettings(next);
+
+    emitProgress({ stage: 'firmware-ready', percent: 92, message: 'PS3 firmware package is ready. Installing into RPCS3…' });
+  return {
+    ok: true,
+    firmwarePath,
+    sourceUrl: RPCS3_FIRMWARE_URL,
+    status: emulatorManager.getRPCS3RuntimeStatus(loadSettings()),
+    };
+  }
+
+  async function installManagedRPCS3Firmware(onProgress = null) {
+    const emitProgress = (payload = {}) => {
+      if (typeof onProgress !== 'function') return;
+      try { onProgress(payload); } catch {}
+    };
+    const runtimeStatus = emulatorManager.getRPCS3RuntimeStatus(loadSettings());
+    if (!runtimeStatus?.ok || !runtimeStatus?.executablePath || !fs.existsSync(runtimeStatus.executablePath)) {
+      return { ok: false, error: 'RPCS3 must be installed before SKALD can install PS3 firmware.' };
+    }
+    if (runtimeStatus?.firmwareInstalled) {
+      emitProgress({ stage: 'complete', percent: 100, message: `PS3 firmware ${runtimeStatus.firmwareVersion || ''} is already installed.`.trim() });
+      return { ok: true, alreadyInstalled: true, status: runtimeStatus };
+    }
+
+    const firmwarePath = getStoredRPCS3FirmwarePath();
+    if (!firmwarePath || !fs.existsSync(firmwarePath)) {
+      return { ok: false, error: 'SKALD does not have a PS3UPDAT.PUP firmware package ready yet.' };
+    }
+
+    if (!runtimeStatus?.firmwareInstalled && runtimeStatus?.firmwareVersionFile && fs.existsSync(runtimeStatus.firmwareVersionFile)) {
+      const runtimeRoot = String(runtimeStatus.runtimeRoot || '').trim();
+      const isManagedRoot = runtimeRoot && path.resolve(runtimeRoot).toLowerCase() === path.resolve(runtimeStatus.managedRuntimeDir || '').toLowerCase();
+      if (isManagedRoot) {
+        for (const dirName of ['dev_flash', 'dev_flash2', 'dev_flash3']) {
+          const targetDir = path.join(runtimeRoot, dirName);
+          try {
+            if (fs.existsSync(targetDir)) fs.rmSync(targetDir, { recursive: true, force: true });
+          } catch (error) {
+            logRPCS3PkgAutomation(`firmware-install-cleanup-error path=${targetDir} error=${error?.message || error}`);
+          }
+        }
+        logRPCS3PkgAutomation(`firmware-install-cleaned-partial missing=${(runtimeStatus.firmwareMissingFiles || []).join('|') || '<unknown>'}`);
+      }
+    }
+
+    syncRPCS3WelcomeConfigState({ markCompleted: true });
+    emitProgress({ stage: 'installing', percent: 8, message: 'Installing PS3 firmware into RPCS3…' });
+    logRPCS3PkgAutomation(`firmware-install-start firmware=${firmwarePath}`);
+
+    const child = spawn(runtimeStatus.executablePath, ['--installfw', firmwarePath], {
+      detached: false,
+      stdio: 'ignore',
+      windowsHide: false,
+      cwd: path.dirname(runtimeStatus.executablePath),
+    });
+
+    let settled = false;
+    child.once('exit', (code) => {
+      settled = true;
+      logRPCS3PkgAutomation(`firmware-install-process-exit pid=${child.pid || 0} code=${code}`);
+    });
+    child.once('error', (error) => {
+      settled = true;
+      logRPCS3PkgAutomation(`firmware-install-process-error pid=${child.pid || 0} error=${error?.message || error}`);
+    });
+
+    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+    const startedAt = Date.now();
+    const maxDurationMs = 240000;
+    let clicked = false;
+    let lastState = '';
+    let lastProgress = 8;
+    let confirmAttempts = 0;
+    let lastConfirmDispatchAt = 0;
+    let firmwareVerifiedAt = 0;
+    let closeAfterVerifyRequested = false;
+    let installLogSize = -1;
+    let installLogStableSince = 0;
+
+    while ((Date.now() - startedAt) < maxDurationMs) {
+      const status = emulatorManager.getRPCS3RuntimeStatus(loadSettings());
+      if (status?.firmwareInstalled) {
+        if (!firmwareVerifiedAt) {
+          firmwareVerifiedAt = Date.now();
+          lastProgress = Math.max(lastProgress, 96);
+          emitProgress({ stage: 'compiling', percent: lastProgress, message: 'RPCS3 is compiling PS3 firmware PPU modules…' });
+          logRPCS3PkgAutomation(`firmware-install-verified version=${status.firmwareVersion || '<unknown>'}`);
+        }
+
+        const compileElapsed = Date.now() - firmwareVerifiedAt;
+        const installLogPath = status?.runtimeRoot ? path.join(status.runtimeRoot, 'log', 'RPCS3.log') : '';
+        if (installLogPath && fs.existsSync(installLogPath)) {
+          try {
+            const currentLogSize = fs.statSync(installLogPath).size;
+            if (currentLogSize !== installLogSize) {
+              installLogSize = currentLogSize;
+              installLogStableSince = Date.now();
+            } else if (!installLogStableSince) {
+              installLogStableSince = Date.now();
+            }
+          } catch {}
+        }
+        const logQuietMs = installLogStableSince ? Date.now() - installLogStableSince : 0;
+        const shouldCloseAfterCompile = compileElapsed >= 5000 && logQuietMs >= 5000;
+        const compileMaxWaitReached = compileElapsed >= 120000;
+        if (!settled && child?.pid && !closeAfterVerifyRequested && (shouldCloseAfterCompile || compileMaxWaitReached)) {
+          closeAfterVerifyRequested = true;
+          try {
+            if (!child.killed) child.kill();
+            logRPCS3PkgAutomation(`firmware-install-close-after-verify pid=${child.pid || 0} elapsed=${Math.round(compileElapsed / 1000)}s logQuiet=${Math.round(logQuietMs / 1000)}s maxWait=${compileMaxWaitReached}`);
+          } catch (error) {
+            logRPCS3PkgAutomation(`firmware-install-close-after-verify-error pid=${child.pid || 0} error=${error?.message || error}`);
+          }
+        }
+
+        if (settled || !child?.pid || closeAfterVerifyRequested) {
+          emitProgress({ stage: 'complete', percent: 100, message: `PS3 firmware ${status.firmwareVersion || ''} installed.`.trim() });
+          logRPCS3PkgAutomation(`firmware-install-complete version=${status.firmwareVersion || '<unknown>'}`);
+          return { ok: true, status };
+        }
+
+        lastProgress = Math.max(lastProgress, Math.min(99, 96 + Math.floor(compileElapsed / 30000)));
+        emitProgress({ stage: 'compiling', percent: lastProgress, message: 'RPCS3 is compiling PS3 firmware PPU modules…' });
+        await sleep(1000);
+        continue;
+      }
+
+      if (!clicked && child?.pid) {
+        confirmAttempts += 1;
+        if (confirmAttempts === 1) {
+          logRPCS3PkgAutomation(`firmware-install-confirm-attempt pid=${child.pid}`);
+        }
+          logRPCS3PkgAutomation(`firmware-install-confirm-dispatch-enter pid=${child.pid}`);
+          const click = dispatchRPCS3FirmwareConfirmWithNativeHelper(child.pid, {
+            timeoutMs: 20000,
+            logPrefix: 'firmware-install-confirm',
+          });
+          lastConfirmDispatchAt = Date.now();
+          if (click?.ok) {
+            logRPCS3PkgAutomation(`firmware-install-confirm-helper-spawned pid=${child.pid} helperPid=${Number(click?.pid || 0)} helper=${click.helperPath || '<none>'}`);
+          } else {
+            logRPCS3PkgAutomation(`firmware-install-confirm-dispatch-error pid=${child.pid} state=${click?.state || '<none>'} error=${String(click?.error || '').trim() || '<none>'}`);
+          }
+          lastState = String(click?.state || '').trim() || lastState;
+        if (click?.ok) {
+          clicked = true;
+          lastProgress = 22;
+          emitProgress({ stage: 'installing', percent: lastProgress, message: 'RPCS3 firmware install confirmed…' });
+          logRPCS3PkgAutomation(`firmware-install-confirmed pid=${child.pid} state=${lastState || '<none>'} helperPid=${Number(click?.pid || 0)}`);
+        } else if (confirmAttempts === 1 || confirmAttempts % 20 === 0) {
+          logRPCS3PkgAutomation(`firmware-install-waiting pid=${child.pid || 0} state=${lastState || '<none>'}`);
+        }
+      } else if (clicked) {
+        const elapsed = Date.now() - startedAt;
+        lastProgress = Math.max(lastProgress, Math.min(96, 22 + Math.round((elapsed / maxDurationMs) * 74)));
+        emitProgress({ stage: 'installing', percent: lastProgress, message: 'RPCS3 is unpacking and installing PS3 firmware…' });
+        if (child?.pid && (Date.now() - lastConfirmDispatchAt) >= 5000) {
+          confirmAttempts += 1;
+          const retry = dispatchRPCS3FirmwareConfirmWithNativeHelper(child.pid, {
+            timeoutMs: 12000,
+            logPrefix: 'firmware-install-confirm-retry',
+          });
+          lastConfirmDispatchAt = Date.now();
+          lastState = String(retry?.state || '').trim() || lastState;
+          logRPCS3PkgAutomation(`firmware-install-confirm-retry pid=${child.pid || 0} attempt=${confirmAttempts} ok=${!!retry?.ok} state=${String(retry?.state || '').trim() || '<none>'} helperPid=${Number(retry?.pid || 0)} error=${String(retry?.error || '').trim() || '<none>'}`);
+        }
+        if (confirmAttempts > 0 && confirmAttempts % 15 === 0) {
+          logRPCS3PkgAutomation(`firmware-install-verifying pid=${child.pid || 0} elapsed=${Math.round(elapsed / 1000)}s`);
+        }
+      }
+
+      if (settled && !child?.pid) break;
+      await sleep(clicked ? 1000 : 250);
+    }
+
+    try {
+      if (child?.pid && !child.killed) child.kill();
+    } catch {}
+    emitProgress({ stage: 'failed', percent: lastProgress, message: 'RPCS3 firmware install did not complete.' });
+    return {
+      ok: false,
+      state: lastState || 'timeout',
+      error: clicked
+        ? 'RPCS3 started the firmware install, but SKALD could not verify that firmware finished installing.'
+        : 'SKALD could not confirm the RPCS3 firmware install prompt.',
+      status: emulatorManager.getRPCS3RuntimeStatus(loadSettings()),
+    };
+  }
+
+  async function uninstallManagedRPCS3Runtime() {
+  const runtimeStatus = emulatorManager.getRPCS3RuntimeStatus(loadSettings());
+  const managedRuntimeDir = String(runtimeStatus?.managedRuntimeDir || path.join(USER_DATA, 'emulators', 'rpcs3')).trim();
+  const downloadsRoot = path.join(USER_DATA, 'emulators', 'downloads');
+  const cleanupPaths = [
+    managedRuntimeDir,
+    path.join(downloadsRoot, 'rpcs3-stable'),
+    path.join(downloadsRoot, 'rpcs3-win.7z'),
+  ];
+
+  for (const targetPath of cleanupPaths) {
+    if (!targetPath || !fs.existsSync(targetPath)) continue;
+    try {
+      const stat = fs.statSync(targetPath);
+      if (stat.isDirectory()) await fs.promises.rm(targetPath, { recursive: true, force: true });
+      else await fs.promises.rm(targetPath, { force: true });
+    } catch (error) {
+      return { ok: false, error: error?.message || `Could not remove ${targetPath}` };
+    }
+  }
+
+  const settings = loadSettings();
+  const next = emulatorManager.normalizeSettings({
+    ...settings,
+    emulators: {
+      ...(settings.emulators || {}),
+      rpcs3: {
+        ...((settings.emulators || {}).rpcs3 || {}),
+        mode: 'bundled',
+        firmwarePackagePath: '',
+        welcomeCompleted: false,
+      },
+    },
+  });
+  saveSettings(next);
+
+  try { if (fs.existsSync(RPCS3_INSTALL_MAP_PATH)) await fs.promises.rm(RPCS3_INSTALL_MAP_PATH, { force: true }); } catch {}
+  try { if (fs.existsSync(RPCS3_PKG_AUTOMATION_LOG_PATH)) await fs.promises.rm(RPCS3_PKG_AUTOMATION_LOG_PATH, { force: true }); } catch {}
+  rpcs3CompatibilityDbCache = null;
+
+  return {
+    ok: true,
+    removedPath: managedRuntimeDir,
     status: emulatorManager.getRPCS3RuntimeStatus(loadSettings()),
   };
+}
+
+function getRPCS3SetupStatus(settings = loadSettings()) {
+  const normalized = emulatorManager.normalizeSettings(settings);
+  const runtime = emulatorManager.getRPCS3RuntimeStatus(normalized);
+  const welcomeCompleted = normalized?.emulators?.rpcs3?.welcomeCompleted === true;
+  let state = 'runtime_missing';
+  if (runtime?.ok) {
+    if (!welcomeCompleted) state = 'welcome_pending';
+    else if (!runtime?.firmwareInstalled) state = 'firmware_missing';
+    else state = 'ready';
+  }
+  return {
+    ok: true,
+    state,
+    welcomeCompleted,
+    runtime,
+  };
+}
+
+function upsertIniKey(content, sectionName, key, value) {
+  const lines = String(content || '').replace(/\r\n/g, '\n').split('\n');
+  const sectionHeader = `[${sectionName}]`;
+  let sectionStart = -1;
+  let sectionEnd = lines.length;
+  for (let i = 0; i < lines.length; i += 1) {
+    if (String(lines[i] || '').trim() === sectionHeader) {
+      sectionStart = i;
+      for (let j = i + 1; j < lines.length; j += 1) {
+        if (/^\s*\[.+\]\s*$/.test(lines[j] || '')) {
+          sectionEnd = j;
+          break;
+        }
+      }
+      break;
+    }
+  }
+  if (sectionStart === -1) {
+    if (lines.length && String(lines[lines.length - 1] || '').trim() !== '') lines.push('');
+    lines.push(sectionHeader);
+    lines.push(`${key}=${value}`);
+    return `${lines.join('\n').replace(/\n+$/,'')}\n`;
+  }
+  for (let i = sectionStart + 1; i < sectionEnd; i += 1) {
+    const line = String(lines[i] || '');
+    if (line.trim().startsWith(`${key}=`)) {
+      lines[i] = `${key}=${value}`;
+      return `${lines.join('\n').replace(/\n+$/,'')}\n`;
+    }
+  }
+  lines.splice(sectionEnd, 0, `${key}=${value}`);
+  return `${lines.join('\n').replace(/\n+$/,'')}\n`;
+}
+
+function syncRPCS3WelcomeConfigState({ markCompleted = false } = {}) {
+  const settings = loadSettings();
+  const runtime = emulatorManager.getRPCS3RuntimeStatus(settings);
+  const runtimeRoot = String(runtime?.runtimeRoot || runtime?.managedRuntimeDir || '').trim();
+  if (!runtimeRoot || !fs.existsSync(runtimeRoot)) {
+    return { ok: false, error: 'RPCS3 runtime is not available yet.' };
+  }
+  const guiConfigsDir = path.join(runtimeRoot, 'GuiConfigs');
+  const currentSettingsPath = path.join(guiConfigsDir, 'CurrentSettings.ini');
+  try {
+    ensureDir(guiConfigsDir);
+    let iniContent = '';
+    try {
+      if (fs.existsSync(currentSettingsPath)) iniContent = String(fs.readFileSync(currentSettingsPath, 'utf8') || '');
+    } catch {}
+      iniContent = upsertIniKey(iniContent, 'main_window', 'infoBoxEnabledWelcome', 'false');
+      iniContent = upsertIniKey(iniContent, 'main_window', 'infoBoxEnabledInstallPUP', 'false');
+      iniContent = upsertIniKey(iniContent, 'main_window', 'infoBoxEnabledInstallPKG', 'false');
+    fs.writeFileSync(currentSettingsPath, iniContent, 'utf8');
+    if (markCompleted) {
+      const next = emulatorManager.normalizeSettings({
+        ...settings,
+        emulators: {
+          ...(settings.emulators || {}),
+          rpcs3: {
+            ...((settings.emulators || {}).rpcs3 || {}),
+            welcomeCompleted: true,
+          },
+        },
+      });
+      saveSettings(next);
+      return {
+        ok: true,
+        currentSettingsPath,
+        status: getRPCS3SetupStatus(next),
+      };
+    }
+    return {
+      ok: true,
+      currentSettingsPath,
+      status: getRPCS3SetupStatus(loadSettings()),
+    };
+  } catch (error) {
+    return { ok: false, error: error?.message || 'Could not update RPCS3 welcome config.' };
+  }
 }
 
 async function downloadManagedVLCRuntime(onProgress = null) {
@@ -4100,6 +4687,70 @@ function getVlcHostExecutableCandidates() {
 
 function resolveVlcHostExecutable() {
   return getVlcHostExecutableCandidates().find(candidate => fs.existsSync(candidate)) || '';
+}
+
+function getRpcs3HelperExecutableCandidates() {
+  const candidates = [];
+  if (process.platform === 'win32') {
+    if (app.isPackaged) {
+      candidates.push(path.join(process.resourcesPath, 'tools', 'Skald.Rpcs3Helper', 'Skald.Rpcs3Helper.exe'));
+      candidates.push(path.join(process.resourcesPath, 'Skald.Rpcs3Helper', 'Skald.Rpcs3Helper.exe'));
+    } else {
+      candidates.push(path.join(APP_ROOT_DIR, 'src', 'native', 'Skald.Rpcs3Helper', 'bin', 'Release', 'net10.0-windows', 'win-x64', 'publish', 'Skald.Rpcs3Helper.exe'));
+      candidates.push(path.join(APP_ROOT_DIR, 'src', 'native', 'Skald.Rpcs3Helper', 'bin', 'Release', 'net10.0-windows', 'win-x64', 'Skald.Rpcs3Helper.exe'));
+      candidates.push(path.join(APP_ROOT_DIR, 'src', 'native', 'Skald.Rpcs3Helper', 'bin', 'Release', 'net10.0-windows', 'publish', 'Skald.Rpcs3Helper.exe'));
+      candidates.push(path.join(APP_ROOT_DIR, 'src', 'native', 'Skald.Rpcs3Helper', 'bin', 'Debug', 'net10.0-windows', 'win-x64', 'publish', 'Skald.Rpcs3Helper.exe'));
+      candidates.push(path.join(APP_ROOT_DIR, 'src', 'native', 'Skald.Rpcs3Helper', 'bin', 'Debug', 'net10.0-windows', 'win-x64', 'Skald.Rpcs3Helper.exe'));
+      candidates.push(path.join(APP_ROOT_DIR, 'src', 'native', 'Skald.Rpcs3Helper', 'bin', 'Debug', 'net10.0-windows', 'publish', 'Skald.Rpcs3Helper.exe'));
+    }
+  }
+  return candidates.filter(Boolean);
+}
+
+function resolveRpcs3HelperExecutable() {
+  return getRpcs3HelperExecutableCandidates().find(candidate => fs.existsSync(candidate)) || '';
+}
+
+function dispatchRPCS3FirmwareConfirmWithNativeHelper(pid, { timeoutMs = 15000, logPrefix = 'firmware-install-confirm' } = {}) {
+  const numericPid = Number(pid);
+  if (!Number.isFinite(numericPid) || numericPid <= 0) {
+    return { ok: false, state: 'invalid-pid', error: 'RPCS3 firmware installer pid is invalid.' };
+  }
+  const helperPath = resolveRpcs3HelperExecutable();
+  if (!helperPath) {
+    const candidates = getRpcs3HelperExecutableCandidates().join('; ');
+    return { ok: false, state: 'helper-not-found', error: `Could not find Skald.Rpcs3Helper.exe. Checked: ${candidates}` };
+  }
+
+  try {
+    const helper = spawn(helperPath, ['confirm-firmware', '--pid', String(numericPid), '--timeout-ms', String(timeoutMs)], {
+      detached: true,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      windowsHide: true,
+    });
+    helper.stdout?.on('data', chunk => {
+      const text = String(chunk || '').trim();
+      if (text) logRPCS3PkgAutomation(`${logPrefix}-helper-stdout pid=${numericPid} helperPid=${helper.pid || 0} output=${text}`);
+    });
+    helper.stderr?.on('data', chunk => {
+      const text = String(chunk || '').trim();
+      if (text) logRPCS3PkgAutomation(`${logPrefix}-helper-stderr pid=${numericPid} helperPid=${helper.pid || 0} output=${text}`);
+    });
+    helper.once('exit', code => {
+      logRPCS3PkgAutomation(`${logPrefix}-helper-exit pid=${numericPid} helperPid=${helper.pid || 0} code=${code}`);
+    });
+    helper.once('error', error => {
+      logRPCS3PkgAutomation(`${logPrefix}-helper-error pid=${numericPid} helperPid=${helper.pid || 0} error=${error?.message || error}`);
+    });
+    helper.unref();
+    return { ok: true, state: 'native-helper-dispatched', pid: helper.pid || 0, helperPath };
+  } catch (error) {
+    return {
+      ok: false,
+      state: 'native-helper-error',
+      error: error?.message || 'Could not launch the RPCS3 native helper.',
+    };
+  }
 }
 
 function getWindowHandleHex(win) {
@@ -5362,11 +6013,112 @@ function writeRPCS3InstallMap(nextMap) {
   } catch {}
 }
 
-function runPowerShellHidden(command, { timeoutMs = 10000 } = {}) {
-  return new Promise((resolve, reject) => {
-    execFile(
-      'powershell.exe',
-      ['-NoProfile', '-NonInteractive', '-Command', command],
+function getManagedRPCS3CompatibilityDbPath() {
+  try {
+    const status = emulatorManager.getRPCS3RuntimeStatus(loadSettings());
+    const runtimeRoot = String(status?.runtimeRoot || '').trim();
+    if (!runtimeRoot) return '';
+    return path.join(runtimeRoot, 'GuiConfigs', 'compat_database.dat');
+  } catch {
+    return '';
+  }
+}
+
+function loadRPCS3CompatibilityDb() {
+  const dbPath = getManagedRPCS3CompatibilityDbPath();
+  if (!dbPath || !fs.existsSync(dbPath)) return {};
+  try {
+    const stat = fs.statSync(dbPath);
+    const cacheValid = rpcs3CompatibilityDbCache
+      && rpcs3CompatibilityDbCache.path === dbPath
+      && Number(rpcs3CompatibilityDbCache.mtimeMs || 0) === Number(stat.mtimeMs || 0)
+      && (Date.now() - Number(rpcs3CompatibilityDbCache.loadedAt || 0)) < RPCS3_COMPATIBILITY_CACHE_TTL_MS;
+    if (cacheValid) return rpcs3CompatibilityDbCache.results || {};
+    const parsed = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
+    const results = parsed?.results && typeof parsed.results === 'object' ? parsed.results : {};
+    rpcs3CompatibilityDbCache = {
+      path: dbPath,
+      mtimeMs: Number(stat.mtimeMs || 0),
+      loadedAt: Date.now(),
+      results,
+    };
+    return results;
+  } catch {
+    return {};
+  }
+}
+
+function getPs3ParamMetadataForTarget(targetPath = '') {
+  const target = String(targetPath || '').trim();
+  if (!target || !fs.existsSync(target)) return null;
+  try {
+    const stat = fs.statSync(target);
+    if (stat.isDirectory()) {
+      const directParam = path.join(target, 'PS3_GAME', 'PARAM.SFO');
+      const nestedParam = path.join(target, 'PARAM.SFO');
+      if (fs.existsSync(directParam)) return readPS3ParamSfoMetadata(directParam) || null;
+      if (fs.existsSync(nestedParam)) return readPS3ParamSfoMetadata(nestedParam) || null;
+      return null;
+    }
+    const lower = target.toLowerCase();
+    if (lower.endsWith('param.sfo')) return readPS3ParamSfoMetadata(target) || null;
+    const parent = path.dirname(target);
+    if (!parent || parent === target) return null;
+    return getPs3ParamMetadataForTarget(parent);
+  } catch {
+    return null;
+  }
+}
+
+function getRPCS3CompatibilityForGame(identifier = '', installDir = '') {
+  const compatDb = loadRPCS3CompatibilityDb();
+  if (!compatDb || typeof compatDb !== 'object' || !Object.keys(compatDb).length) return null;
+  let metadata = getPs3ParamMetadataForTarget(installDir);
+  if ((!metadata?.titleId) && identifier) {
+    const mapped = readRPCS3InstallMap()[String(identifier || '').trim()];
+    if (mapped?.path) metadata = getPs3ParamMetadataForTarget(mapped.path) || metadata;
+  }
+  if ((!metadata?.titleId) && identifier) {
+    const discovered = findMatchingRPCS3InstalledTitle(identifier, installDir);
+    if (discovered?.path) metadata = getPs3ParamMetadataForTarget(discovered.path) || metadata;
+  }
+  const titleId = String(metadata?.titleId || '').trim();
+  if (!titleId) return null;
+  const entry = compatDb[titleId];
+  if (!entry || typeof entry !== 'object') {
+    return {
+      titleId,
+      status: '',
+      date: '',
+      update: '',
+      title: String(metadata?.title || '').trim(),
+    };
+  }
+  return {
+    titleId,
+    status: String(entry.status || '').trim(),
+    date: String(entry.date || '').trim(),
+    update: String(entry.update || '').trim(),
+    title: String(metadata?.title || '').trim(),
+  };
+}
+
+function attachRuntimeCompatibilityMetadata(row) {
+  const next = row && typeof row === 'object' ? { ...row } : row;
+  if (!next || String(next.system || '').trim().toLowerCase() !== 'ps3') return next;
+  const compat = getRPCS3CompatibilityForGame(next.identifier, next.install_dir);
+  next.ps3_game_id = String(compat?.titleId || '').trim();
+  next.rpcs3_compatibility_status = String(compat?.status || '').trim();
+  next.rpcs3_compatibility_date = String(compat?.date || '').trim();
+  next.rpcs3_compatibility_update = String(compat?.update || '').trim();
+  return next;
+}
+
+  function runPowerShellHidden(command, { timeoutMs = 10000 } = {}) {
+    return new Promise((resolve, reject) => {
+      execFile(
+        'powershell.exe',
+        ['-NoProfile', '-NonInteractive', '-Command', command],
       { windowsHide: true, timeout: timeoutMs },
       (error, stdout, stderr) => {
         if (error) {
@@ -5380,11 +6132,11 @@ function runPowerShellHidden(command, { timeoutMs = 10000 } = {}) {
           stderr: String(stderr || '').trim(),
         });
       },
-    );
-  });
-}
+      );
+    });
+  }
 
-function logRPCS3PkgAutomation(message = '') {
+  function logRPCS3PkgAutomation(message = '') {
   const line = `${new Date().toISOString()} ${String(message || '').trim()}`.trim();
   try {
     fs.appendFileSync(RPCS3_PKG_AUTOMATION_LOG_PATH, `${line}\n`, 'utf8');
@@ -5398,6 +6150,481 @@ function clearRPCS3PkgInstallWatcher(sessionId = '') {
   const watcher = activeRPCS3PkgInstallWatchers.get(key);
   if (watcher?.timer) clearTimeout(watcher.timer);
   activeRPCS3PkgInstallWatchers.delete(key);
+}
+
+function clearRPCS3WelcomeWatcher(sessionId = '') {
+  const key = String(sessionId || '').trim();
+  if (!key) return;
+  const watcher = activeRPCS3WelcomeWatchers.get(key);
+  if (watcher?.timer) clearTimeout(watcher.timer);
+  activeRPCS3WelcomeWatchers.delete(key);
+}
+
+function clearRPCS3FirmwareWatcher(sessionId = '') {
+  const key = String(sessionId || '').trim();
+  if (!key) return;
+  const watcher = activeRPCS3FirmwareWatchers.get(key);
+  if (watcher?.timer) clearTimeout(watcher.timer);
+  activeRPCS3FirmwareWatchers.delete(key);
+}
+
+  function getStoredRPCS3FirmwarePath() {
+  try {
+    const settings = loadSettings();
+    return String(settings?.emulators?.rpcs3?.firmwarePackagePath || '').trim();
+  } catch {
+    return '';
+  }
+  }
+
+  async function invokeRPCS3WelcomeContinueForPid(pid) {
+  const numericPid = Number(pid);
+  if (!Number.isFinite(numericPid) || numericPid <= 0) {
+    return { ok: false, state: 'invalid-pid', error: 'RPCS3 session pid is invalid.' };
+  }
+  const command = `
+Add-Type -AssemblyName UIAutomationClient
+Add-Type -AssemblyName UIAutomationTypes
+$null = Add-Type -AssemblyName System.Windows.Forms -ErrorAction SilentlyContinue
+$targetPid = ${numericPid}
+$root = [System.Windows.Automation.AutomationElement]::RootElement
+
+function Find-WelcomeDialog([System.Windows.Automation.AutomationElement]$scopeRoot, [bool]$requirePid) {
+  $walker = [System.Windows.Automation.TreeWalker]::RawViewWalker
+  $node = $walker.GetFirstChild($scopeRoot)
+  while ($node -ne $null) {
+    try {
+      $name = [string]$node.Current.Name
+      $controlType = $node.Current.ControlType
+      $nodePid = [int]$node.Current.ProcessId
+      $pidOk = (-not $requirePid) -or ($nodePid -eq $targetPid)
+      if ($pidOk -and $controlType -eq [System.Windows.Automation.ControlType]::Window -and (($name -eq 'Welcome to RPCS3') -or ($name -like '*Welcome*RPCS3*'))) {
+        return $node
+      }
+      $desc = Find-WelcomeDialog $node $requirePid
+      if ($desc -ne $null) { return $desc }
+    } catch {}
+    $node = $walker.GetNextSibling($node)
+  }
+  return $null
+}
+
+function Find-ByControl([System.Windows.Automation.AutomationElement]$scopeRoot, [string]$nameNeedle, $controlTypeNeedle) {
+  $walker = [System.Windows.Automation.TreeWalker]::RawViewWalker
+  $node = $walker.GetFirstChild($scopeRoot)
+  while ($node -ne $null) {
+    try {
+      $name = [string]$node.Current.Name
+      $controlType = $node.Current.ControlType
+      if ($controlType -eq $controlTypeNeedle -and $name -like $nameNeedle) {
+        return $node
+      }
+      $desc = Find-ByControl $node $nameNeedle $controlTypeNeedle
+      if ($desc -ne $null) { return $desc }
+    } catch {}
+    $node = $walker.GetNextSibling($node)
+  }
+  return $null
+}
+
+function Find-ByExactControl([System.Windows.Automation.AutomationElement]$scopeRoot, [string]$exactName, $controlTypeNeedle) {
+  $walker = [System.Windows.Automation.TreeWalker]::RawViewWalker
+  $node = $walker.GetFirstChild($scopeRoot)
+  while ($node -ne $null) {
+    try {
+      $name = [string]$node.Current.Name
+      $controlType = $node.Current.ControlType
+      if ($controlType -eq $controlTypeNeedle -and $name -eq $exactName) {
+        return $node
+      }
+      $desc = Find-ByExactControl $node $exactName $controlTypeNeedle
+      if ($desc -ne $null) { return $desc }
+    } catch {}
+    $node = $walker.GetNextSibling($node)
+  }
+  return $null
+}
+
+function Set-CheckboxState([System.Windows.Automation.AutomationElement]$checkbox, [System.Windows.Automation.ToggleState]$desiredState) {
+  if ($null -eq $checkbox) { return $false }
+  try {
+    $toggle = $checkbox.GetCurrentPattern([System.Windows.Automation.TogglePattern]::Pattern)
+    if ($null -ne $toggle) {
+      if ($toggle.Current.ToggleState -ne $desiredState) {
+        $toggle.Toggle()
+        Start-Sleep -Milliseconds 80
+      }
+      return $true
+    }
+  } catch {}
+  try {
+    $legacy = $checkbox.GetCurrentPattern([System.Windows.Automation.LegacyIAccessiblePattern]::Pattern)
+    if ($null -ne $legacy) {
+      $legacy.DoDefaultAction()
+      Start-Sleep -Milliseconds 80
+      return $true
+    }
+  } catch {}
+  return $false
+}
+
+function Send-SpaceToggle([System.Windows.Automation.AutomationElement]$checkbox, [int]$count) {
+  if ($null -eq $checkbox) { return $false }
+  try {
+    $checkbox.SetFocus()
+    Start-Sleep -Milliseconds 80
+    for ($i = 0; $i -lt $count; $i++) {
+      [System.Windows.Forms.SendKeys]::SendWait(' ')
+      Start-Sleep -Milliseconds 120
+    }
+    return $true
+  } catch {}
+  return $false
+}
+
+$dialog = Find-WelcomeDialog $root $true
+if ($null -eq $dialog) {
+  $dialog = Find-WelcomeDialog $root $false
+}
+if ($null -eq $dialog) {
+  Write-Output 'not-found'
+  exit 0
+}
+
+$quickstart = Find-ByExactControl $dialog 'I have read the Quickstart guide' ([System.Windows.Automation.ControlType]::CheckBox)
+if ($null -eq $quickstart) {
+  $quickstart = Find-ByControl $dialog '*I have read*Quickstart guide*' ([System.Windows.Automation.ControlType]::CheckBox)
+}
+$doNotShow = Find-ByExactControl $dialog 'Do not show again' ([System.Windows.Automation.ControlType]::CheckBox)
+$showAtStartup = Find-ByExactControl $dialog 'Show at startup' ([System.Windows.Automation.ControlType]::CheckBox)
+if ($null -eq $showAtStartup) {
+  $showAtStartup = Find-ByControl $dialog '*Show at startup*' ([System.Windows.Automation.ControlType]::CheckBox)
+}
+$continueButton = Find-ByExactControl $dialog 'Continue' ([System.Windows.Automation.ControlType]::Button)
+if ($null -eq $continueButton) {
+  $continueButton = Find-ByControl $dialog 'Continue' ([System.Windows.Automation.ControlType]::Button)
+}
+
+if ($null -ne $quickstart) {
+  $toggled = Send-SpaceToggle $quickstart 2
+  if (-not $toggled) {
+    $null = Set-CheckboxState $quickstart ([System.Windows.Automation.ToggleState]::Off)
+    Start-Sleep -Milliseconds 100
+    $null = Set-CheckboxState $quickstart ([System.Windows.Automation.ToggleState]::On)
+  }
+  Start-Sleep -Milliseconds 160
+}
+if ($null -ne $doNotShow) {
+  $null = Set-CheckboxState $doNotShow ([System.Windows.Automation.ToggleState]::On)
+  Start-Sleep -Milliseconds 80
+}
+if ($null -ne $showAtStartup) {
+  $null = Set-CheckboxState $showAtStartup ([System.Windows.Automation.ToggleState]::Off)
+  Start-Sleep -Milliseconds 80
+}
+
+if ($null -eq $continueButton) {
+  Write-Output 'continue-not-found'
+  exit 0
+}
+
+for ($i = 0; $i -lt 12; $i++) {
+  try {
+    if ($continueButton.Current.IsEnabled) { break }
+  } catch {}
+  Start-Sleep -Milliseconds 150
+}
+
+if ($continueButton.Current.IsEnabled) {
+  try {
+    $invoke = $continueButton.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)
+    if ($null -ne $invoke) {
+      $invoke.Invoke()
+      Write-Output 'clicked'
+      exit 0
+    }
+  } catch {}
+  try {
+    $legacy = $continueButton.GetCurrentPattern([System.Windows.Automation.LegacyIAccessiblePattern]::Pattern)
+    if ($null -ne $legacy) {
+      $legacy.DoDefaultAction()
+      Write-Output 'clicked-legacy'
+      exit 0
+    }
+  } catch {}
+}
+
+try {
+  $dialog.SetFocus()
+  Start-Sleep -Milliseconds 100
+  [System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
+  Write-Output 'clicked-enter'
+  exit 0
+} catch {}
+
+if (-not $continueButton.Current.IsEnabled) {
+  Write-Output 'continue-disabled'
+  exit 0
+}
+Write-Output 'invoke-not-supported'
+`.trim();
+  try {
+    const { stdout } = await runPowerShellHidden(command, { timeoutMs: 10000 });
+    const state = String(stdout || '').trim().toLowerCase() || 'unknown';
+    if (['clicked', 'clicked-legacy', 'clicked-enter'].includes(state)) return { ok: true, state };
+    return { ok: false, state };
+  } catch (error) {
+    return {
+      ok: false,
+      state: 'error',
+      error: error?.message || 'Could not inspect the RPCS3 Welcome dialog.',
+      stderr: String(error?.stderr || '').trim(),
+    };
+  }
+}
+
+async function invokeRPCS3WelcomeClickSequenceForPid(pid) {
+  const numericPid = Number(pid);
+  if (!Number.isFinite(numericPid) || numericPid <= 0) {
+    return { ok: false, state: 'invalid-pid', error: 'RPCS3 session pid is invalid.' };
+  }
+  const command = `
+  Add-Type -AssemblyName System.Windows.Forms
+  Add-Type -AssemblyName UIAutomationClient
+  Add-Type -AssemblyName UIAutomationTypes
+  Add-Type @"
+using System;
+using System.Text;
+using System.Runtime.InteropServices;
+public static class Win32 {
+  public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+  [DllImport("user32.dll")] public static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
+  [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr hWnd);
+  [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern int GetWindowTextW(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+  [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+  [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+  [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd);
+  [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+  [DllImport("user32.dll")] public static extern bool SetCursorPos(int X, int Y);
+  [DllImport("user32.dll")] public static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, UIntPtr dwExtraInfo);
+  public const int SW_RESTORE = 9;
+  public const uint MOUSEEVENTF_LEFTDOWN = 0x0002;
+  public const uint MOUSEEVENTF_LEFTUP = 0x0004;
+}
+public struct RECT { public int Left; public int Top; public int Right; public int Bottom; }
+"@
+
+$targetPid = ${numericPid}
+$windowHandle = [IntPtr]::Zero
+[Win32]::EnumWindows({
+  param($hWnd, $lParam)
+  if (-not [Win32]::IsWindowVisible($hWnd)) { return $true }
+  $procId = 0
+  [void][Win32]::GetWindowThreadProcessId($hWnd, [ref]$procId)
+  if ($procId -ne $targetPid) { return $true }
+  $sb = New-Object System.Text.StringBuilder 512
+  [void][Win32]::GetWindowTextW($hWnd, $sb, $sb.Capacity)
+  $title = $sb.ToString()
+  if ($title -like '*Welcome*RPCS3*') {
+    $script:windowHandle = $hWnd
+    return $false
+  }
+  return $true
+}, [IntPtr]::Zero) | Out-Null
+
+if ($windowHandle -eq [IntPtr]::Zero) {
+  Write-Output 'not-found'
+  exit 0
+}
+
+$rect = New-Object RECT
+if (-not [Win32]::GetWindowRect($windowHandle, [ref]$rect)) {
+  Write-Output 'rect-failed'
+  exit 0
+}
+
+[void][Win32]::ShowWindow($windowHandle, [Win32]::SW_RESTORE)
+[void][Win32]::SetForegroundWindow($windowHandle)
+Start-Sleep -Milliseconds 180
+
+$width = [Math]::Max(1, $rect.Right - $rect.Left)
+$height = [Math]::Max(1, $rect.Bottom - $rect.Top)
+
+function Invoke-Click([double]$xRatio, [double]$yRatio) {
+  $x = [int]([Math]::Round($rect.Left + ($width * $xRatio)))
+  $y = [int]([Math]::Round($rect.Top + ($height * $yRatio)))
+  [void][Win32]::SetCursorPos($x, $y)
+  Start-Sleep -Milliseconds 90
+  [Win32]::mouse_event([Win32]::MOUSEEVENTF_LEFTDOWN, 0, 0, 0, [UIntPtr]::Zero)
+  Start-Sleep -Milliseconds 40
+  [Win32]::mouse_event([Win32]::MOUSEEVENTF_LEFTUP, 0, 0, 0, [UIntPtr]::Zero)
+  Start-Sleep -Milliseconds 180
+}
+
+# 1. Uncheck "Show at startup"
+Invoke-Click 0.806 0.935
+# 2. Check "I have read the Quickstart guide"
+Invoke-Click 0.392 0.935
+Start-Sleep -Milliseconds 220
+# 3. Click "Continue"
+Invoke-Click 0.078 0.935
+
+Write-Output 'clicked-sequence'
+`.trim();
+  try {
+    const { stdout } = await runPowerShellHidden(command, { timeoutMs: 10000 });
+    const state = String(stdout || '').trim().toLowerCase() || 'unknown';
+    if (state === 'clicked-sequence') return { ok: true, state };
+    return { ok: false, state };
+  } catch (error) {
+    return {
+      ok: false,
+      state: 'error',
+      error: error?.message || 'Could not run the RPCS3 welcome click sequence.',
+      stderr: String(error?.stderr || '').trim(),
+    };
+  }
+}
+
+async function invokeRPCS3WelcomeGuideActionForPid(pid, action = '') {
+  const numericPid = Number(pid);
+  const normalizedAction = String(action || '').trim().toLowerCase();
+  if (!Number.isFinite(numericPid) || numericPid <= 0) {
+    return { ok: false, state: 'invalid-pid', error: 'RPCS3 session pid is invalid.' };
+  }
+  if (!['show-startup-off', 'quickstart-on', 'continue', 'apply-all'].includes(normalizedAction)) {
+    return { ok: false, state: 'invalid-action', error: 'RPCS3 welcome action is invalid.' };
+  }
+  if (normalizedAction === 'apply-all') {
+    const direct = await invokeRPCS3WelcomeContinueForPid(numericPid);
+    if (direct?.ok) return direct;
+    const fallback = await invokeRPCS3WelcomeClickSequenceForPid(numericPid);
+    if (fallback?.ok) return fallback;
+  }
+  if (normalizedAction === 'continue') {
+    const direct = await invokeRPCS3WelcomeContinueForPid(numericPid);
+    if (direct?.ok) return direct;
+  }
+const command = `
+Add-Type -AssemblyName System.Windows.Forms
+Add-Type -AssemblyName UIAutomationClient
+Add-Type -AssemblyName UIAutomationTypes
+Add-Type @"
+using System;
+using System.Text;
+using System.Runtime.InteropServices;
+public static class Win32 {
+  public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+  [DllImport("user32.dll")] public static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
+  [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr hWnd);
+  [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern int GetWindowTextW(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+  [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+  [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+  [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd);
+  [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+  [DllImport("user32.dll")] public static extern bool SetCursorPos(int X, int Y);
+  [DllImport("user32.dll")] public static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, UIntPtr dwExtraInfo);
+  public const int SW_RESTORE = 9;
+  public const uint MOUSEEVENTF_LEFTDOWN = 0x0002;
+  public const uint MOUSEEVENTF_LEFTUP = 0x0004;
+}
+public struct RECT { public int Left; public int Top; public int Right; public int Bottom; }
+"@
+
+$targetPid = ${numericPid}
+$guideAction = '${normalizedAction}'
+$windowHandle = [IntPtr]::Zero
+[Win32]::EnumWindows({
+  param($hWnd, $lParam)
+  if (-not [Win32]::IsWindowVisible($hWnd)) { return $true }
+  $procId = 0
+  [void][Win32]::GetWindowThreadProcessId($hWnd, [ref]$procId)
+  if ($procId -ne $targetPid) { return $true }
+  $sb = New-Object System.Text.StringBuilder 512
+  [void][Win32]::GetWindowTextW($hWnd, $sb, $sb.Capacity)
+  $title = $sb.ToString()
+  if ($title -like '*Welcome*RPCS3*') {
+    $script:windowHandle = $hWnd
+    return $false
+  }
+  return $true
+}, [IntPtr]::Zero) | Out-Null
+
+if ($windowHandle -eq [IntPtr]::Zero) {
+  Write-Output 'not-found'
+  exit 0
+}
+
+$rect = New-Object RECT
+if (-not [Win32]::GetWindowRect($windowHandle, [ref]$rect)) {
+  Write-Output 'rect-failed'
+  exit 0
+}
+
+[void][Win32]::ShowWindow($windowHandle, [Win32]::SW_RESTORE)
+[void][Win32]::SetForegroundWindow($windowHandle)
+Start-Sleep -Milliseconds 120
+
+$width = [Math]::Max(1, $rect.Right - $rect.Left)
+$height = [Math]::Max(1, $rect.Bottom - $rect.Top)
+
+function Invoke-Click([double]$xRatio, [double]$yRatio) {
+  $x = [int]([Math]::Round($rect.Left + ($width * $xRatio)))
+  $y = [int]([Math]::Round($rect.Top + ($height * $yRatio)))
+  [void][Win32]::SetCursorPos($x, $y)
+  Start-Sleep -Milliseconds 70
+  [Win32]::mouse_event([Win32]::MOUSEEVENTF_LEFTDOWN, 0, 0, 0, [UIntPtr]::Zero)
+  Start-Sleep -Milliseconds 30
+  [Win32]::mouse_event([Win32]::MOUSEEVENTF_LEFTUP, 0, 0, 0, [UIntPtr]::Zero)
+  Start-Sleep -Milliseconds 180
+}
+
+switch ($guideAction) {
+  'show-startup-off' {
+    Invoke-Click 0.806 0.935
+    Write-Output 'show-startup-off'
+    exit 0
+  }
+  'quickstart-on' {
+    Invoke-Click 0.392 0.935
+    Write-Output 'quickstart-on'
+    exit 0
+  }
+  'continue' {
+    Invoke-Click 0.078 0.935
+    Start-Sleep -Milliseconds 120
+    [System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
+    Write-Output 'continue'
+    exit 0
+  }
+  'apply-all' {
+    Invoke-Click 0.806 0.935
+    Invoke-Click 0.392 0.935
+    Start-Sleep -Milliseconds 220
+    Invoke-Click 0.078 0.935
+    Start-Sleep -Milliseconds 120
+    [System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
+    Write-Output 'apply-all'
+    exit 0
+  }
+}
+Write-Output 'unknown'
+`.trim();
+  try {
+    const { stdout } = await runPowerShellHidden(command, { timeoutMs: 10000 });
+    const state = String(stdout || '').trim().toLowerCase() || 'unknown';
+    if (['show-startup-off', 'quickstart-on', 'continue', 'apply-all', 'clicked-sequence', 'clicked', 'clicked-legacy', 'clicked-enter'].includes(state)) {
+      return { ok: true, state };
+    }
+    return { ok: false, state };
+  } catch (error) {
+    return {
+      ok: false,
+      state: 'error',
+      error: error?.message || 'Could not run the RPCS3 welcome guide action.',
+      stderr: String(error?.stderr || '').trim(),
+    };
+  }
 }
 
 async function invokeRPCS3PkgInstallButtonForPid(pid) {
@@ -5511,7 +6738,7 @@ Write-Output 'invoke-not-supported'
   try {
     const { stdout } = await runPowerShellHidden(command, { timeoutMs: 10000 });
     const state = String(stdout || '').trim().toLowerCase() || 'unknown';
-    if (state === 'clicked') return { ok: true, state };
+    if (['clicked', 'clicked-legacy', 'clicked-enter'].includes(state)) return { ok: true, state };
     return { ok: false, state };
   } catch (error) {
     return {
@@ -5523,11 +6750,543 @@ Write-Output 'invoke-not-supported'
   }
 }
 
-function isRPCS3AutoPkgInstallCandidateSession(session) {
+async function invokeRPCS3PkgInstallClickSequenceForPid(pid) {
+  const numericPid = Number(pid);
+  if (!Number.isFinite(numericPid) || numericPid <= 0) {
+    return { ok: false, state: 'invalid-pid', error: 'RPCS3 session pid is invalid.' };
+  }
+  const command = `
+Add-Type -AssemblyName System.Windows.Forms
+Add-Type @"
+using System;
+using System.Text;
+using System.Runtime.InteropServices;
+public static class Win32 {
+  public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+  [DllImport("user32.dll")] public static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
+  [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr hWnd);
+  [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern int GetWindowTextW(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+  [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+  [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+  [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd);
+  [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+  [DllImport("user32.dll")] public static extern bool SetCursorPos(int X, int Y);
+  [DllImport("user32.dll")] public static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, UIntPtr dwExtraInfo);
+  public const int SW_RESTORE = 9;
+  public const uint MOUSEEVENTF_LEFTDOWN = 0x0002;
+  public const uint MOUSEEVENTF_LEFTUP = 0x0004;
+}
+public struct RECT { public int Left; public int Top; public int Right; public int Bottom; }
+"@
+
+$targetPid = ${numericPid}
+$windowHandle = [IntPtr]::Zero
+[Win32]::EnumWindows({
+  param($hWnd, $lParam)
+  if (-not [Win32]::IsWindowVisible($hWnd)) { return $true }
+  $procId = 0
+  [void][Win32]::GetWindowThreadProcessId($hWnd, [ref]$procId)
+  if ($procId -ne $targetPid) { return $true }
+  $sb = New-Object System.Text.StringBuilder 512
+  [void][Win32]::GetWindowTextW($hWnd, $sb, $sb.Capacity)
+  $title = $sb.ToString()
+  if ($title -like '*PKG*Installation*') {
+    $script:windowHandle = $hWnd
+    return $false
+  }
+  return $true
+}, [IntPtr]::Zero) | Out-Null
+
+if ($windowHandle -eq [IntPtr]::Zero) {
+  Write-Output 'not-found'
+  exit 0
+}
+
+[void][Win32]::ShowWindow($windowHandle, [Win32]::SW_RESTORE)
+[void][Win32]::SetForegroundWindow($windowHandle)
+Start-Sleep -Milliseconds 180
+
+$rect = New-Object RECT
+if (-not [Win32]::GetWindowRect($windowHandle, [ref]$rect)) {
+  [System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
+  Write-Output 'clicked-enter-fallback'
+  exit 0
+}
+
+$width = [Math]::Max(1, $rect.Right - $rect.Left)
+$height = [Math]::Max(1, $rect.Bottom - $rect.Top)
+$x = [int]([Math]::Round($rect.Left + ($width * 0.76)))
+$y = [int]([Math]::Round($rect.Top + ($height * 0.93)))
+[void][Win32]::SetCursorPos($x, $y)
+Start-Sleep -Milliseconds 90
+[Win32]::mouse_event([Win32]::MOUSEEVENTF_LEFTDOWN, 0, 0, 0, [UIntPtr]::Zero)
+Start-Sleep -Milliseconds 40
+[Win32]::mouse_event([Win32]::MOUSEEVENTF_LEFTUP, 0, 0, 0, [UIntPtr]::Zero)
+Start-Sleep -Milliseconds 160
+[System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
+Write-Output 'clicked-sequence'
+`.trim();
+  try {
+    const { stdout } = await runPowerShellHidden(command, { timeoutMs: 10000 });
+    const state = String(stdout || '').trim().toLowerCase() || 'unknown';
+    if (['clicked-sequence', 'clicked-enter-fallback'].includes(state)) return { ok: true, state };
+    return { ok: false, state };
+  } catch (error) {
+    return {
+      ok: false,
+      state: 'error',
+      error: error?.message || 'Could not run the RPCS3 PKG click sequence.',
+      stderr: String(error?.stderr || '').trim(),
+    };
+  }
+}
+
+async function invokeRPCS3FirmwareLocateSequenceForPid(pid, firmwarePath = '') {
+  const numericPid = Number(pid);
+  const targetPath = String(firmwarePath || '').trim();
+  if (!Number.isFinite(numericPid) || numericPid <= 0) {
+    return { ok: false, state: 'invalid-pid', error: 'RPCS3 session pid is invalid.' };
+  }
+  if (!targetPath || !fs.existsSync(targetPath)) {
+    return { ok: false, state: 'missing-firmware-path', error: 'SKALD does not have a stored PS3 firmware package ready.' };
+  }
+  const escapedPath = targetPath.replace(/'/g, "''");
+  const command = `
+Add-Type -AssemblyName System.Windows.Forms
+Add-Type @"
+using System;
+using System.Text;
+using System.Runtime.InteropServices;
+public static class Win32 {
+  public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+  [DllImport("user32.dll")] public static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
+  [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr hWnd);
+  [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern int GetWindowTextW(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+  [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+  [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+  [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd);
+  [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+  [DllImport("user32.dll")] public static extern bool SetCursorPos(int X, int Y);
+  [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
+  [DllImport("user32.dll")] public static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, UIntPtr dwExtraInfo);
+  public const int SW_RESTORE = 9;
+  public const uint MOUSEEVENTF_LEFTDOWN = 0x0002;
+  public const uint MOUSEEVENTF_LEFTUP = 0x0004;
+}
+public struct RECT { public int Left; public int Top; public int Right; public int Bottom; }
+"@
+
+$targetPid = ${numericPid}
+$firmwarePath = '${escapedPath}'
+$windowHandle = [IntPtr]::Zero
+
+function Find-TopWindow([string]$titleLike, [bool]$requirePid) {
+  $script:windowHandle = [IntPtr]::Zero
+  [Win32]::EnumWindows({
+    param($hWnd, $lParam)
+    if (-not [Win32]::IsWindowVisible($hWnd)) { return $true }
+    $procId = 0
+    [void][Win32]::GetWindowThreadProcessId($hWnd, [ref]$procId)
+    if ($requirePid -and $procId -ne $targetPid) { return $true }
+    $sb = New-Object System.Text.StringBuilder 512
+    [void][Win32]::GetWindowTextW($hWnd, $sb, $sb.Capacity)
+    $title = $sb.ToString()
+    if ($title -like $titleLike) {
+      $script:windowHandle = $hWnd
+      return $false
+    }
+    return $true
+  }, [IntPtr]::Zero) | Out-Null
+  return $script:windowHandle
+}
+
+  $windowHandle = Find-TopWindow '*Missing Firmware*' $true
+  if ($windowHandle -eq [IntPtr]::Zero) {
+    $windowHandle = Find-TopWindow '*Missing Firmware*' $false
+  }
+
+if ($windowHandle -eq [IntPtr]::Zero) {
+  Write-Output 'not-found'
+  exit 0
+}
+
+$rect = New-Object RECT
+if (-not [Win32]::GetWindowRect($windowHandle, [ref]$rect)) {
+  Write-Output 'rect-failed'
+  exit 0
+}
+
+[void][Win32]::ShowWindow($windowHandle, [Win32]::SW_RESTORE)
+[void][Win32]::SetForegroundWindow($windowHandle)
+Start-Sleep -Milliseconds 220
+
+$width = [Math]::Max(1, $rect.Right - $rect.Left)
+$height = [Math]::Max(1, $rect.Bottom - $rect.Top)
+  $x = [int]([Math]::Round($rect.Left + ($width * 0.69)))
+  $y = [int]([Math]::Round($rect.Top + ($height * 0.82)))
+[void][Win32]::SetCursorPos($x, $y)
+Start-Sleep -Milliseconds 90
+[Win32]::mouse_event([Win32]::MOUSEEVENTF_LEFTDOWN, 0, 0, 0, [UIntPtr]::Zero)
+Start-Sleep -Milliseconds 40
+[Win32]::mouse_event([Win32]::MOUSEEVENTF_LEFTUP, 0, 0, 0, [UIntPtr]::Zero)
+Start-Sleep -Milliseconds 250
+
+$openDialog = [IntPtr]::Zero
+for ($i = 0; $i -lt 40; $i++) {
+  $openDialog = Find-TopWindow 'Open' $false
+  if ($openDialog -ne [IntPtr]::Zero) { break }
+  Start-Sleep -Milliseconds 100
+}
+
+if ($openDialog -eq [IntPtr]::Zero) {
+  Write-Output 'open-dialog-not-found'
+  exit 0
+}
+
+  [void][Win32]::ShowWindow($openDialog, [Win32]::SW_RESTORE)
+  [void][Win32]::SetForegroundWindow($openDialog)
+  Start-Sleep -Milliseconds 180
+
+  $openElement = [System.Windows.Automation.AutomationElement]::FromHandle($openDialog)
+  $editCond = New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::ControlTypeProperty, [System.Windows.Automation.ControlType]::Edit)
+  $edits = $openElement.FindAll([System.Windows.Automation.TreeScope]::Descendants, $editCond)
+  $setValue = $false
+  for ($i = 0; $i -lt $edits.Count; $i++) {
+    try {
+      $valuePattern = $edits.Item($i).GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern)
+      if ($null -ne $valuePattern) {
+        $valuePattern.SetValue($firmwarePath)
+        $setValue = $true
+        break
+      }
+    } catch {}
+  }
+  if (-not $setValue) {
+    [System.Windows.Forms.Clipboard]::SetText($firmwarePath)
+    Start-Sleep -Milliseconds 100
+    [System.Windows.Forms.SendKeys]::SendWait('%n')
+    Start-Sleep -Milliseconds 100
+    [System.Windows.Forms.SendKeys]::SendWait('^v')
+  }
+  Start-Sleep -Milliseconds 160
+  $buttonCond = New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::ControlTypeProperty, [System.Windows.Automation.ControlType]::Button)
+  $buttons = $openElement.FindAll([System.Windows.Automation.TreeScope]::Descendants, $buttonCond)
+  for ($i = 0; $i -lt $buttons.Count; $i++) {
+    try {
+      $name = [string]$buttons.Item($i).Current.Name
+      if ($name -eq 'Open' -or $name -eq '&Open') {
+        $invoke = $buttons.Item($i).GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)
+        if ($null -ne $invoke) {
+          $invoke.Invoke()
+          Write-Output 'clicked-locate-open'
+          exit 0
+        }
+      }
+    } catch {}
+  }
+  [System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
+  Start-Sleep -Milliseconds 200
+  [System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
+  Write-Output 'clicked-locate-open'
+  `.trim();
+  try {
+    const { stdout } = await runPowerShellHidden(command, { timeoutMs: 12000 });
+    const state = String(stdout || '').trim().toLowerCase() || 'unknown';
+    if (state === 'clicked-locate-open') return { ok: true, state };
+    return { ok: false, state };
+  } catch (error) {
+    return {
+      ok: false,
+      state: 'error',
+      error: error?.message || 'Could not run the RPCS3 firmware locate sequence.',
+      stderr: String(error?.stderr || '').trim(),
+    };
+  }
+  }
+
+  async function invokeRPCS3FirmwareMenuInstallSequenceForPid(pid, firmwarePath = '') {
+  const numericPid = Number(pid);
+  const targetPath = String(firmwarePath || '').trim();
+  if (!Number.isFinite(numericPid) || numericPid <= 0) {
+    return { ok: false, state: 'invalid-pid', error: 'RPCS3 session pid is invalid.' };
+  }
+
+  function dispatchRPCS3FirmwareInstallYesForPid(pid) {
+    const numericPid = Number(pid);
+    if (!Number.isFinite(numericPid) || numericPid <= 0) {
+      return { ok: false, state: 'invalid-pid', error: 'RPCS3 firmware installer pid is invalid.' };
+    }
+    return dispatchRPCS3FirmwareConfirmWithNativeHelper(numericPid, {
+      timeoutMs: 15000,
+      logPrefix: 'firmware-menu-install-confirm',
+    });
+  }
+  if (!targetPath || !fs.existsSync(targetPath)) {
+    return { ok: false, state: 'missing-firmware-path', error: 'SKALD does not have a stored PS3 firmware package ready.' };
+  }
+  const escapedPath = targetPath.replace(/'/g, "''");
+  const command = `
+Add-Type -AssemblyName System.Windows.Forms
+Add-Type @"
+using System;
+using System.Text;
+using System.Runtime.InteropServices;
+public static class Win32 {
+  public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+  [DllImport("user32.dll")] public static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
+  [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr hWnd);
+  [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern int GetWindowTextW(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+  [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+  [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd);
+  [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+  public const int SW_RESTORE = 9;
+}
+"@
+
+$targetPid = ${numericPid}
+$firmwarePath = '${escapedPath}'
+$windowHandle = [IntPtr]::Zero
+
+function Find-TopWindow([string]$titleLike, [bool]$requirePid) {
+  $script:windowHandle = [IntPtr]::Zero
+  [Win32]::EnumWindows({
+    param($hWnd, $lParam)
+    if (-not [Win32]::IsWindowVisible($hWnd)) { return $true }
+    $procId = 0
+    [void][Win32]::GetWindowThreadProcessId($hWnd, [ref]$procId)
+    if ($requirePid -and $procId -ne $targetPid) { return $true }
+    $sb = New-Object System.Text.StringBuilder 512
+    [void][Win32]::GetWindowTextW($hWnd, $sb, $sb.Capacity)
+    $title = $sb.ToString()
+    if ($title -like $titleLike) {
+      $script:windowHandle = $hWnd
+      return $false
+    }
+    return $true
+  }, [IntPtr]::Zero) | Out-Null
+  return $script:windowHandle
+}
+
+$windowHandle = Find-TopWindow '*RPCS3*' $true
+if ($windowHandle -eq [IntPtr]::Zero) {
+  Write-Output 'main-window-not-found'
+  exit 0
+}
+
+[void][Win32]::ShowWindow($windowHandle, [Win32]::SW_RESTORE)
+[void][Win32]::SetForegroundWindow($windowHandle)
+Start-Sleep -Milliseconds 350
+[System.Windows.Forms.SendKeys]::SendWait('%f')
+Start-Sleep -Milliseconds 180
+[System.Windows.Forms.SendKeys]::SendWait('i')
+
+$openDialog = [IntPtr]::Zero
+for ($i = 0; $i -lt 40; $i++) {
+  $openDialog = Find-TopWindow 'Open' $false
+  if ($openDialog -ne [IntPtr]::Zero) { break }
+  Start-Sleep -Milliseconds 100
+}
+
+if ($openDialog -eq [IntPtr]::Zero) {
+  Write-Output 'open-dialog-not-found'
+  exit 0
+}
+
+[void][Win32]::ShowWindow($openDialog, [Win32]::SW_RESTORE)
+[void][Win32]::SetForegroundWindow($openDialog)
+Start-Sleep -Milliseconds 180
+
+$openElement = [System.Windows.Automation.AutomationElement]::FromHandle($openDialog)
+$editCond = New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::ControlTypeProperty, [System.Windows.Automation.ControlType]::Edit)
+$edits = $openElement.FindAll([System.Windows.Automation.TreeScope]::Descendants, $editCond)
+$setValue = $false
+for ($i = 0; $i -lt $edits.Count; $i++) {
+  try {
+    $valuePattern = $edits.Item($i).GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern)
+    if ($null -ne $valuePattern) {
+      $valuePattern.SetValue($firmwarePath)
+      $setValue = $true
+      break
+    }
+  } catch {}
+}
+if (-not $setValue) {
+  [System.Windows.Forms.Clipboard]::SetText($firmwarePath)
+  Start-Sleep -Milliseconds 100
+  [System.Windows.Forms.SendKeys]::SendWait('%n')
+  Start-Sleep -Milliseconds 100
+  [System.Windows.Forms.SendKeys]::SendWait('^v')
+}
+Start-Sleep -Milliseconds 160
+$buttonCond = New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::ControlTypeProperty, [System.Windows.Automation.ControlType]::Button)
+$buttons = $openElement.FindAll([System.Windows.Automation.TreeScope]::Descendants, $buttonCond)
+for ($i = 0; $i -lt $buttons.Count; $i++) {
+  try {
+    $name = [string]$buttons.Item($i).Current.Name
+    if ($name -eq 'Open' -or $name -eq '&Open') {
+      $invoke = $buttons.Item($i).GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)
+      if ($null -ne $invoke) {
+        $invoke.Invoke()
+        Write-Output 'firmware-menu-opened'
+        exit 0
+      }
+    }
+  } catch {}
+}
+[System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
+Write-Output 'firmware-menu-opened'
+`.trim();
+  try {
+    const { stdout } = await runPowerShellHidden(command, { timeoutMs: 12000 });
+    const state = String(stdout || '').trim().toLowerCase() || 'unknown';
+    if (state === 'firmware-menu-opened') return { ok: true, state };
+    return { ok: false, state };
+  } catch (error) {
+    return {
+      ok: false,
+      state: 'error',
+      error: error?.message || 'Could not run the RPCS3 firmware menu install sequence.',
+      stderr: String(error?.stderr || '').trim(),
+    };
+  }
+}
+
+  function isRPCS3AutoPkgInstallCandidateSession(session) {
   if (String(session?.emulatorId || '').trim().toLowerCase() !== 'rpcs3') return false;
   const launchPath = String(session?.romPath || session?.sourcePath || '').trim();
   if (!launchPath) return true;
   return path.extname(launchPath).toLowerCase() !== '.pkg';
+}
+
+function startRPCS3WelcomeWatcher(session) {
+  const sessionId = String(session?.id || '').trim();
+  if (!sessionId || String(session?.emulatorId || '').trim().toLowerCase() !== 'rpcs3' || !session?.pid) return;
+  clearRPCS3WelcomeWatcher(sessionId);
+  const startedAt = Date.now();
+  const maxDurationMs = 120000;
+  const watcher = {
+    startedAt,
+    attempts: 0,
+    timer: null,
+  };
+  activeRPCS3WelcomeWatchers.set(sessionId, watcher);
+  logRPCS3PkgAutomation(`welcome-watcher-start session=${sessionId} pid=${session.pid}`);
+
+  const tick = async () => {
+    const current = activeRPCS3WelcomeWatchers.get(sessionId);
+    if (!current) return;
+    if (!current.startedAt) current.startedAt = startedAt;
+    current.attempts = Number(current.attempts || 0) + 1;
+
+    let result = await invokeRPCS3WelcomeContinueForPid(session.pid);
+    if (!result?.ok) {
+      const clickFallback = await invokeRPCS3WelcomeClickSequenceForPid(session.pid);
+      if (clickFallback?.ok) result = clickFallback;
+    }
+    if (result?.ok) {
+      logRPCS3PkgAutomation(`welcome-clicked session=${sessionId} attempt=${current.attempts}`);
+      clearRPCS3WelcomeWatcher(sessionId);
+      return;
+    }
+
+    const state = String(result?.state || '').trim().toLowerCase();
+    if (!['not-found', 'continue-disabled', 'continue-not-found'].includes(state)) {
+      logRPCS3PkgAutomation(`welcome-watcher-stop session=${sessionId} attempt=${current.attempts} state=${state || 'unknown'} error=${String(result?.error || '').trim() || '<none>'}`);
+      clearRPCS3WelcomeWatcher(sessionId);
+      return;
+    }
+
+    if (current.attempts === 1 || current.attempts % 15 === 0) {
+      logRPCS3PkgAutomation(`welcome-watcher-poll session=${sessionId} attempt=${current.attempts} state=${state}`);
+    }
+
+    if ((Date.now() - current.startedAt) >= maxDurationMs) {
+      logRPCS3PkgAutomation(`welcome-watcher-timeout session=${sessionId} attempts=${current.attempts} window=${Math.round(maxDurationMs / 1000)}s`);
+      clearRPCS3WelcomeWatcher(sessionId);
+      return;
+    }
+
+    const attemptDelayMs = current.attempts <= 15 ? 100 : (current.attempts <= 30 ? 250 : 750);
+    current.timer = setTimeout(() => {
+      tick().catch((error) => {
+        console.warn('[rpcs3-welcome] Watcher tick failed:', error?.message || error);
+        clearRPCS3WelcomeWatcher(sessionId);
+      });
+    }, attemptDelayMs);
+    activeRPCS3WelcomeWatchers.set(sessionId, current);
+  };
+
+  tick().catch((error) => {
+    logRPCS3PkgAutomation(`welcome-watcher-error session=${sessionId} error=${error?.message || error}`);
+    clearRPCS3WelcomeWatcher(sessionId);
+  });
+}
+
+function startRPCS3FirmwareWatcher(session) {
+  const sessionId = String(session?.id || '').trim();
+  if (!sessionId || String(session?.emulatorId || '').trim().toLowerCase() !== 'rpcs3' || !session?.pid) return;
+  const runtimeStatus = emulatorManager.getRPCS3RuntimeStatus(loadSettings());
+  const firmwarePath = getStoredRPCS3FirmwarePath();
+  if (runtimeStatus?.firmwareInstalled || !firmwarePath || !fs.existsSync(firmwarePath)) return;
+
+  clearRPCS3FirmwareWatcher(sessionId);
+  const startedAt = Date.now();
+  const maxDurationMs = 120000;
+  const watcher = {
+    startedAt,
+    attempts: 0,
+    timer: null,
+  };
+  activeRPCS3FirmwareWatchers.set(sessionId, watcher);
+  logRPCS3PkgAutomation(`firmware-watcher-start session=${sessionId} pid=${session.pid} firmware=${firmwarePath}`);
+
+  const tick = async () => {
+    const current = activeRPCS3FirmwareWatchers.get(sessionId);
+    if (!current) return;
+    if (!current.startedAt) current.startedAt = startedAt;
+    current.attempts = Number(current.attempts || 0) + 1;
+
+      const launchPath = String(session?.romPath || session?.sourcePath || '').trim();
+      const result = launchPath
+        ? await invokeRPCS3FirmwareLocateSequenceForPid(session.pid, firmwarePath)
+        : await invokeRPCS3FirmwareMenuInstallSequenceForPid(session.pid, firmwarePath);
+      if (result?.ok) {
+        logRPCS3PkgAutomation(`firmware-clicked session=${sessionId} attempt=${current.attempts}`);
+        clearRPCS3FirmwareWatcher(sessionId);
+        return;
+      }
+
+    const state = String(result?.state || '').trim().toLowerCase();
+      if (!['not-found', 'rect-failed', 'main-window-not-found', 'open-dialog-not-found'].includes(state)) {
+      logRPCS3PkgAutomation(`firmware-watcher-stop session=${sessionId} attempt=${current.attempts} state=${state || 'unknown'} error=${String(result?.error || '').trim() || '<none>'}`);
+      clearRPCS3FirmwareWatcher(sessionId);
+      return;
+    }
+
+    if (current.attempts === 1 || current.attempts % 15 === 0) {
+      logRPCS3PkgAutomation(`firmware-watcher-poll session=${sessionId} attempt=${current.attempts} state=${state}`);
+    }
+
+    if ((Date.now() - current.startedAt) >= maxDurationMs) {
+      logRPCS3PkgAutomation(`firmware-watcher-timeout session=${sessionId} attempts=${current.attempts} window=${Math.round(maxDurationMs / 1000)}s`);
+      clearRPCS3FirmwareWatcher(sessionId);
+      return;
+    }
+
+    const attemptDelayMs = current.attempts <= 15 ? 100 : (current.attempts <= 30 ? 250 : 750);
+    current.timer = setTimeout(() => {
+      tick().catch((error) => {
+        console.warn('[rpcs3-firmware] Watcher tick failed:', error?.message || error);
+        clearRPCS3FirmwareWatcher(sessionId);
+      });
+    }, attemptDelayMs);
+    activeRPCS3FirmwareWatchers.set(sessionId, current);
+  };
+
+  tick().catch((error) => {
+    logRPCS3PkgAutomation(`firmware-watcher-error session=${sessionId} error=${error?.message || error}`);
+    clearRPCS3FirmwareWatcher(sessionId);
+  });
 }
 
 function startRPCS3PkgInstallWatcher(session) {
@@ -5535,8 +7294,7 @@ function startRPCS3PkgInstallWatcher(session) {
   if (!sessionId || !isRPCS3AutoPkgInstallCandidateSession(session) || !session?.pid) return;
   clearRPCS3PkgInstallWatcher(sessionId);
   const startedAt = Date.now();
-  const maxDurationMs = 300000;
-  const attemptDelayMs = 1000;
+    const maxDurationMs = 300000;
   const watcher = {
     startedAt,
     attempts: 0,
@@ -5551,19 +7309,31 @@ function startRPCS3PkgInstallWatcher(session) {
     if (!current.startedAt) current.startedAt = startedAt;
     current.attempts = Number(current.attempts || 0) + 1;
 
-    const result = await invokeRPCS3PkgInstallButtonForPid(session.pid);
+      let result = await invokeRPCS3PkgInstallClickSequenceForPid(session.pid);
+      if (!result?.ok) {
+        const automationResult = await invokeRPCS3PkgInstallButtonForPid(session.pid);
+        if (automationResult?.ok) result = automationResult;
+        else if (String(result?.state || '').trim().toLowerCase() === 'not-found') result = automationResult?.state === 'error' ? result : (automationResult || result);
+      }
     if (result?.ok) {
       logRPCS3PkgAutomation(`clicked session=${sessionId} attempt=${current.attempts}`);
+      publishEmulatorRuntimeProgress({
+        stage: 'pkg-installing',
+        percent: 78,
+        message: 'RPCS3 is installing required PS3 game data…',
+      });
+      emulatorManager.minimizeSessionWindow(sessionId).catch(() => null);
+      promoteSkaldLaunchShield(60000);
       clearRPCS3PkgInstallWatcher(sessionId);
       return;
     }
 
     const state = String(result?.state || '').trim().toLowerCase();
-    if (!['not-found', 'button-not-found', 'button-disabled'].includes(state)) {
-      logRPCS3PkgAutomation(`watcher-stop session=${sessionId} attempt=${current.attempts} state=${state || 'unknown'} error=${String(result?.error || '').trim() || '<none>'}`);
-      clearRPCS3PkgInstallWatcher(sessionId);
-      return;
-    }
+      if (!['not-found', 'button-not-found', 'button-disabled', 'error'].includes(state)) {
+        logRPCS3PkgAutomation(`watcher-stop session=${sessionId} attempt=${current.attempts} state=${state || 'unknown'} error=${String(result?.error || '').trim() || '<none>'}`);
+        clearRPCS3PkgInstallWatcher(sessionId);
+        return;
+      }
 
     if (current.attempts === 1 || current.attempts % 15 === 0) {
       logRPCS3PkgAutomation(`watcher-poll session=${sessionId} attempt=${current.attempts} state=${state}`);
@@ -5575,7 +7345,8 @@ function startRPCS3PkgInstallWatcher(session) {
       return;
     }
 
-    current.timer = setTimeout(() => {
+      const attemptDelayMs = current.attempts < 30 ? 250 : 1000;
+      current.timer = setTimeout(() => {
       tick().catch((error) => {
         console.warn('[rpcs3-pkg] Watcher tick failed:', error?.message || error);
         clearRPCS3PkgInstallWatcher(sessionId);
@@ -5838,6 +7609,61 @@ function rememberRPCS3InstalledTitle(identifier, candidate) {
     recordedAt: Date.now(),
   };
   writeRPCS3InstallMap(next);
+}
+
+function isRPCS3InstalledTitlePath(targetPath) {
+  const normalized = path.resolve(String(targetPath || '').trim());
+  if (!normalized) return false;
+  const gameRoot = getManagedRPCS3GameRoot();
+  if (!gameRoot) return false;
+  const root = path.resolve(gameRoot);
+  return normalized.toLowerCase() === root.toLowerCase()
+    || normalized.toLowerCase().startsWith(`${root.toLowerCase()}${path.sep}`);
+}
+
+function shouldAutoRelaunchRPCS3InstalledTitle(session, candidate) {
+  const identifier = String(session?.identifier || '').trim();
+  const targetPath = String(candidate?.path || '').trim();
+  if (!identifier || !targetPath || !isLaunchableRPCS3InstalledTitle(targetPath)) return false;
+  const launchedPath = String(session?.romPath || session?.sourcePath || '').trim();
+  if (!launchedPath) return false;
+  if (path.resolve(launchedPath).toLowerCase() === path.resolve(targetPath).toLowerCase()) return false;
+  if (isRPCS3InstalledTitlePath(launchedPath)) return false;
+
+  const previous = activeRPCS3AutoRelaunches.get(identifier) || null;
+  const now = Date.now();
+  if (previous?.targetPath && path.resolve(previous.targetPath).toLowerCase() === path.resolve(targetPath).toLowerCase() && (now - Number(previous.at || 0)) < 10 * 60 * 1000) {
+    return false;
+  }
+  return true;
+}
+
+function maybeAutoRelaunchRPCS3InstalledTitle(session, candidate) {
+  if (!shouldAutoRelaunchRPCS3InstalledTitle(session, candidate)) return;
+  const identifier = String(session?.identifier || '').trim();
+  const targetPath = String(candidate?.path || '').trim();
+  const title = String(session?.title || candidate?.title || identifier || '').trim();
+  activeRPCS3AutoRelaunches.set(identifier, { targetPath, at: Date.now() });
+  publishEmulatorRuntimeProgress({
+    percent: 98,
+    stage: 'launching',
+    message: 'Required PS3 game data installed. Launching game…',
+  });
+  promoteSkaldLaunchShield(10000);
+  logRPCS3PkgAutomation(`auto-relaunch-scheduled identifier=${identifier} titleId=${candidate?.titleId || ''} path=${targetPath}`);
+  setTimeout(() => {
+    try {
+      const result = emulatorManager.launchRPCS3Rom({
+        romPath: targetPath,
+        system: String(session?.system || 'ps3'),
+        identifier,
+        title,
+      });
+      logRPCS3PkgAutomation(`auto-relaunch-result identifier=${identifier} ok=${!!result?.ok} error=${String(result?.error || '').trim() || '<none>'}`);
+    } catch (error) {
+      logRPCS3PkgAutomation(`auto-relaunch-error identifier=${identifier} error=${error?.message || error}`);
+    }
+  }, 1200);
 }
 
 function resolvePreferredRPCS3LaunchPath(identifier, romPath) {
@@ -7654,14 +9480,22 @@ function parseSizeString(str) {
 
 // ─── ROM launch via emulator manager ────────────────────────────────────────
 
-ipcMain.handle('launch-rom', async (_, { romPath, system, identifier = null, title = null }) => {
+  ipcMain.handle('launch-rom', async (event, { romPath, system, identifier = null, title = null }) => {
   if (String(system || '').toLowerCase() === 'ps2') {
     return emulatorManager.launchPCSX2Rom({ romPath, system, identifier, title });
-  }
-  if (String(system || '').toLowerCase() === 'ps3') {
-    const effectiveRomPath = resolvePreferredRPCS3LaunchPath(identifier, romPath);
-    return emulatorManager.launchRPCS3Rom({ romPath: effectiveRomPath, system, identifier, title });
-  }
+    }
+    if (String(system || '').toLowerCase() === 'ps3') {
+      const runtimeStatus = emulatorManager.getRPCS3RuntimeStatus(loadSettings());
+      if (!runtimeStatus?.firmwareInstalled) {
+        if (!runtimeStatus?.firmwarePackageAvailable) {
+          return { ok: false, error: 'PS3 firmware is not installed yet. Open System > Emulators > RPCS3 and install firmware first.' };
+        }
+        const installed = await installManagedRPCS3Firmware(createEmulatorRuntimeProgressSender(event.sender));
+        if (!installed?.ok) return installed;
+      }
+      const effectiveRomPath = resolvePreferredRPCS3LaunchPath(identifier, romPath);
+      return emulatorManager.launchRPCS3Rom({ romPath: effectiveRomPath, system, identifier, title });
+    }
   if (String(system || '').toLowerCase() === 'x360') {
     return emulatorManager.launchXeniaRom({ romPath, system, identifier, title });
   }
@@ -8494,10 +10328,45 @@ ipcMain.handle('emulator-sessions-get', () => emulatorManager.getSessions());
 ipcMain.handle('emulator-session-focus', async (_, { sessionId } = {}) => emulatorManager.focusSession(sessionId));
 ipcMain.handle('emulator-session-close', async (_, { sessionId } = {}) => emulatorManager.terminateSession(sessionId));
 ipcMain.handle('emulator-session-restart', async (_, { sessionId } = {}) => emulatorManager.restartSession(sessionId));
-ipcMain.handle('emulator-launch-standalone', async (_, { emulatorId } = {}) => emulatorManager.launchStandaloneEmulator(emulatorId));
+ipcMain.handle('emulator-launch-standalone', async (_, { emulatorId, args } = {}) => {
+  if (String(emulatorId || '').trim().toLowerCase() === 'rpcs3') {
+    syncRPCS3WelcomeConfigState({ markCompleted: true });
+  }
+  return emulatorManager.launchStandaloneEmulator(emulatorId, args);
+});
 ipcMain.handle('emulator-runtime-status', () => emulatorManager.getRetroArchRuntimeStatus(loadSettings()));
 ipcMain.handle('pcsx2-runtime-status', () => emulatorManager.getPCSX2RuntimeStatus(loadSettings()));
 ipcMain.handle('rpcs3-runtime-status', () => emulatorManager.getRPCS3RuntimeStatus(loadSettings()));
+ipcMain.handle('rpcs3-setup-status', () => getRPCS3SetupStatus(loadSettings()));
+ipcMain.handle('rpcs3-setup-update', async (_, { welcomeCompleted } = {}) => {
+  const settings = loadSettings();
+  const next = emulatorManager.normalizeSettings({
+    ...settings,
+    emulators: {
+      ...(settings.emulators || {}),
+      rpcs3: {
+        ...((settings.emulators || {}).rpcs3 || {}),
+        welcomeCompleted: welcomeCompleted === true,
+      },
+    },
+  });
+  saveSettings(next);
+  return getRPCS3SetupStatus(next);
+});
+ipcMain.handle('rpcs3-welcome-guide-action', async (_, { action, pid } = {}) => {
+  let targetPid = Number(pid);
+  if (!Number.isFinite(targetPid) || targetPid <= 0) {
+    const sessions = emulatorManager.getSessions();
+    const active = [...sessions]
+      .filter(session => String(session?.emulatorId || '').trim().toLowerCase() === 'rpcs3')
+      .sort((a, b) => Number(b?.startedAt || 0) - Number(a?.startedAt || 0))[0];
+    targetPid = Number(active?.pid || 0);
+  }
+  logRPCS3PkgAutomation(`welcome-guide-action-start action=${String(action || '').trim()} pid=${String(targetPid || 0)}`);
+  const result = await invokeRPCS3WelcomeGuideActionForPid(targetPid, action);
+  logRPCS3PkgAutomation(`welcome-guide-action-result action=${String(action || '').trim()} pid=${String(targetPid || 0)} ok=${!!result?.ok} state=${String(result?.state || '').trim() || '<none>'} error=${String(result?.error || '').trim() || '<none>'}`);
+  return result;
+});
 ipcMain.handle('vlc-runtime-status', () => emulatorManager.getVLCRuntimeStatus(loadSettings()));
 ipcMain.handle('xenia-runtime-status', () => emulatorManager.getXeniaRuntimeStatus(loadSettings()));
 ipcMain.handle('xenia-profile-status', () => emulatorManager.getXeniaProfileStatus(loadSettings()));
@@ -8541,11 +10410,30 @@ function createEmulatorRuntimeProgressSender(webContents) {
     } catch {}
   };
 }
+function publishEmulatorRuntimeProgress(progress = {}) {
+  try {
+    const stage = String(progress?.stage || '');
+    latestEmulatorRuntimeProgress = {
+      active: stage !== 'complete' && stage !== 'failed' && stage !== 'error' && !!stage,
+      percent: Number(progress?.percent || 0),
+      stage,
+      message: String(progress?.message || ''),
+    };
+    for (const candidate of [mainWindow, bladesWindow, guideOverlayWindow]) {
+      try {
+        if (candidate && !candidate.isDestroyed()) candidate.webContents.send('emulator-runtime-progress', latestEmulatorRuntimeProgress);
+      } catch {}
+    }
+  } catch {}
+}
 ipcMain.handle('emulator-runtime-progress-get', () => latestEmulatorRuntimeProgress);
 ipcMain.handle('emulator-runtime-download', async (event) => downloadManagedRetroArchRuntime(createEmulatorRuntimeProgressSender(event.sender)));
 ipcMain.handle('pcsx2-runtime-download', async (event) => downloadManagedPCSX2Runtime(createEmulatorRuntimeProgressSender(event.sender)));
-ipcMain.handle('rpcs3-runtime-download', async (event) => downloadManagedRPCS3Runtime(createEmulatorRuntimeProgressSender(event.sender)));
-ipcMain.handle('vlc-runtime-download', async (event) => downloadManagedVLCRuntime(createEmulatorRuntimeProgressSender(event.sender)));
+  ipcMain.handle('rpcs3-runtime-download', async (event) => downloadManagedRPCS3Runtime(createEmulatorRuntimeProgressSender(event.sender)));
+  ipcMain.handle('rpcs3-runtime-uninstall', async () => uninstallManagedRPCS3Runtime());
+  ipcMain.handle('rpcs3-firmware-download', async (event) => downloadManagedRPCS3Firmware(createEmulatorRuntimeProgressSender(event.sender)));
+  ipcMain.handle('rpcs3-firmware-install', async (event) => installManagedRPCS3Firmware(createEmulatorRuntimeProgressSender(event.sender)));
+  ipcMain.handle('vlc-runtime-download', async (event) => downloadManagedVLCRuntime(createEmulatorRuntimeProgressSender(event.sender)));
 ipcMain.handle('xenia-runtime-download', async (event) => downloadManagedXeniaRuntime(createEmulatorRuntimeProgressSender(event.sender)));
 ipcMain.handle('emulator-core-download', async (event, { system, coreFileName } = {}) => downloadManagedRetroArchCore(system, coreFileName, createEmulatorRuntimeProgressSender(event.sender)));
 ipcMain.handle('emulator-runtime-import', async (_, { executablePath } = {}) => {
@@ -8594,6 +10482,8 @@ ipcMain.handle('pcsx2-runtime-import', async (_, { executablePath } = {}) => {
 ipcMain.handle('rpcs3-runtime-import', async (_, { executablePath } = {}) => {
   const result = emulatorManager.importRPCS3Runtime(executablePath);
   if (result?.ok) {
+    const welcomeSync = syncRPCS3WelcomeConfigState({ markCompleted: true });
+    if (!welcomeSync?.ok) return welcomeSync;
     const settings = loadSettings();
     const next = emulatorManager.normalizeSettings({
       ...settings,
@@ -8963,6 +10853,39 @@ ipcMain.handle('ra-user-summary', async () => {
     };
   } catch (e) {
     return { ok: false, error: e.message || 'ra-fetch-failed' };
+  }
+});
+
+ipcMain.handle('ra-recent-unlocks', async (_, { minutes = 10 } = {}) => {
+  const settings = loadSettings();
+  const raAccount = readThirdPartyAccount('retroachievements');
+  const username = (raAccount.login || settings.retroAchievementsUser || '').trim();
+  const apiKey = (raAccount.secret || settings.retroAchievementsKey || '').trim();
+  if (!username) return { ok: false, error: 'no-user' };
+  if (!apiKey) return { ok: false, error: 'no-key' };
+  const lookbackMinutes = Math.max(1, Math.min(120, Number(minutes || 10) || 10));
+  try {
+    const url = `https://retroachievements.org/API/API_GetUserRecentAchievements.php?u=${encodeURIComponent(username)}&y=${encodeURIComponent(apiKey)}&m=${lookbackMinutes}`;
+    const json = await raFetchJson(url);
+    const rows = Array.isArray(json) ? json : [];
+    return {
+      ok: true,
+      data: rows.map(row => ({
+        id: row.AchievementID ?? row.achievementId ?? row.ID ?? row.id,
+        title: row.Title ?? row.title ?? 'Achievement Unlocked',
+        description: row.Description ?? row.description ?? '',
+        points: Number(row.Points ?? row.points ?? 0) || 0,
+        badgeName: row.BadgeName ?? row.badgeName ?? '',
+        badgeUrl: row.BadgeURL ?? row.badgeUrl ?? '',
+        date: row.Date ?? row.date ?? '',
+        gameId: row.GameID ?? row.gameId ?? null,
+        gameTitle: row.GameTitle ?? row.gameTitle ?? '',
+        consoleName: row.ConsoleName ?? row.consoleName ?? '',
+        hardcore: Boolean(Number(row.HardcoreMode ?? row.hardcoreMode ?? 0)),
+      })),
+    };
+  } catch (e) {
+    return { ok: false, error: e.message || 'ra-recent-fetch-failed' };
   }
 });
 
