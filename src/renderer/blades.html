@@ -3653,6 +3653,8 @@ SKALD LIVE uses Stoat for accounts. If you already have a Stoat account, sign in
             <div class="mkt-scan-status" id="sys-console-details">
               <div class="mkt-scan-title">Version</div>
               <div class="mkt-scan-body" id="sys-console-version">Checking launcher version…</div>
+              <div class="mkt-scan-title" style="margin-top:16px;">Updates</div>
+              <div class="mkt-scan-body" id="sys-console-update">Checking update status…</div>
               <div class="mkt-scan-title" style="margin-top:16px;">Technology and Licenses</div>
               <div class="mkt-scan-body" id="sys-console-tools">Electron powers the desktop shell. Sharp handles local WebP image optimization. Stoat powers social connectivity. RetroAchievements, SteamGridDB, and Archive.org integrate through their respective services and APIs.</div>
               <div class="mkt-scan-title" style="margin-top:16px;">Services and Optimization</div>
@@ -4178,6 +4180,7 @@ let homePromoAds=[];
 let homePromoAd=null;
 let homePromoModalOpen=false;
 let homePromoModalActionIdx=0;
+let appUpdateState={status:'unknown',currentVersion:'',version:'',message:'Checking update status…',releaseNotes:null,releaseDate:null};
 let raUnlockMonitor={timer:null,identifier:'',system:'',title:'',gameId:null,startedAt:0,seen:new Set(),baselineReady:false};
 const sfx={},menuSel=[0,0,0,0,0],subOpen=[false,false,false,false,false];
 let appliedSkaldTheme=null;
@@ -5471,8 +5474,20 @@ async function refreshConsoleSettingsPanel(){
     const tools=document.getElementById('sys-console-tools');
     const service=document.getElementById('sys-console-service');
     const notes=document.getElementById('sys-console-notes');
+    const update=document.getElementById('sys-console-update');
     const metadata=settings.metadataService || {};
     const migration=settings.webpArtMigration || {};
+    const updater=appUpdateState || {};
+    const currentVersion=updater.currentVersion || await window.electronAPI?.getAppVersion?.() || 'unknown';
+    const updateLine=updater.status==='available'
+      ? `Current version: v${currentVersion}\nUpdate available: v${updater.version || 'new build'}\nPress the update toast action or open GitHub Releases to download the latest installer.`
+      : (updater.status==='checking'
+          ? `Current version: v${currentVersion}\nChecking GitHub releases for updates…`
+          : (updater.status==='current'
+              ? `Current version: v${currentVersion}\nSKALD is up to date.`
+              : (updater.status==='dev'
+                  ? `Current version: v${currentVersion}\nDevelopment build: update checks are disabled.`
+                  : `Current version: v${currentVersion}\n${updater.message || 'Update status has not been checked yet.'}`)));
     const metadataStatus=(metadata.enabled !== false)
       ? (metadata.baseUrl
           ? `Cloud metadata service is enabled with override URL:\n${metadata.baseUrl}`
@@ -5482,6 +5497,7 @@ async function refreshConsoleSettingsPanel(){
       ? `Art cache optimized to WebP.\nConverted ${Number(migration.converted||0).toLocaleString()} of ${Number(migration.scanned||0).toLocaleString()} images.`
       : 'Art cache WebP optimization is pending and will run automatically in the background.';
     if(tools) tools.textContent='Electron powers the desktop shell. Sharp handles local WebP image optimization. Stoat powers social connectivity. RetroAchievements, SteamGridDB, and Archive.org integrate through their respective services and APIs.';
+    if(update) update.textContent=updateLine;
     if(service) service.textContent=`${metadataStatus}\n${artStatus}`;
     if(notes) notes.textContent='Third-party assets, APIs, and emulators remain subject to their own licenses and terms. SKALD surfaces this information here as the future home for launcher credits, service notes, and runtime notices.';
   }catch{
@@ -9774,7 +9790,23 @@ document.getElementById('btn-exit').addEventListener('click',()=>exitBlades(fals
       renderMarketplaceSystemCounts('archiveorg');
     }catch{}
   }
-async function loadSysInfo(){try{const v=await window.electronAPI?.getAppVersion?.()??'—';const items=[...document.querySelectorAll('#p-sys .sys-row')];const consoleItem=items.find(el=>el.dataset.sysTitle==='Console Settings');const emuItem=items.find(el=>el.dataset.sysTitle==='Emulators');const storageItem=items.find(el=>el.dataset.sysTitle==='Storage');const networkItem=items.find(el=>el.dataset.sysTitle==='Network Settings');const setupItem=items.find(el=>el.dataset.sysTitle==='Initial Setup');if(consoleItem)consoleItem.dataset.sysDesc=`View launcher version information, platform credits, and third-party technology notes.\nSKALD Launcher v${v}`;if(emuItem)emuItem.dataset.sysDesc=`Manage the SKALD RetroArch runtime, optional custom override, and system core paths for integrated launching.\nSKALD Launcher v${v}`;if(storageItem)storageItem.dataset.sysDesc='Review install paths, download paths, scan folders, and art-cache optimization status.';if(networkItem)networkItem.dataset.sysDesc='Review Stoat, metadata service, Archive.org, RetroAchievements, and SteamGridDB connectivity.';if(setupItem)setupItem.dataset.sysDesc='Review first-run setup, install paths, emulator configuration, and sign-in requirements.';const versionEl=document.getElementById('sys-console-version');if(versionEl)versionEl.textContent=`SKALD Launcher v${v}\nElectron desktop shell with integrated launcher services.`;if(BLADES[activeIdx]?.id==='sys')updateSystemBlade();updateConsoleSettingsPanel();await refreshEmulatorSettingsPanel();await refreshStoragePanel();await refreshNetworkSettingsPanel();await refreshInitialSetupPanel();}catch{}}
+async function loadSysInfo(){try{const v=await window.electronAPI?.getAppVersion?.()??'—';appUpdateState.currentVersion=appUpdateState.currentVersion||v;const items=[...document.querySelectorAll('#p-sys .sys-row')];const consoleItem=items.find(el=>el.dataset.sysTitle==='Console Settings');const emuItem=items.find(el=>el.dataset.sysTitle==='Emulators');const storageItem=items.find(el=>el.dataset.sysTitle==='Storage');const networkItem=items.find(el=>el.dataset.sysTitle==='Network Settings');const setupItem=items.find(el=>el.dataset.sysTitle==='Initial Setup');if(consoleItem)consoleItem.dataset.sysDesc=`View launcher version information, platform credits, update status, and third-party technology notes.\nSKALD Launcher v${v}`;if(emuItem)emuItem.dataset.sysDesc=`Manage the SKALD RetroArch runtime, optional custom override, and system core paths for integrated launching.\nSKALD Launcher v${v}`;if(storageItem)storageItem.dataset.sysDesc='Review install paths, download paths, scan folders, and art-cache optimization status.';if(networkItem)networkItem.dataset.sysDesc='Review Stoat, metadata service, Archive.org, RetroAchievements, and SteamGridDB connectivity.';if(setupItem)setupItem.dataset.sysDesc='Review first-run setup, install paths, emulator configuration, and sign-in requirements.';const versionEl=document.getElementById('sys-console-version');if(versionEl)versionEl.textContent=`SKALD Launcher v${v}\nElectron desktop shell with integrated launcher services.`;await refreshUpdaterStatus(false);if(BLADES[activeIdx]?.id==='sys')updateSystemBlade();updateConsoleSettingsPanel();await refreshEmulatorSettingsPanel();await refreshStoragePanel();await refreshNetworkSettingsPanel();await refreshInitialSetupPanel();}catch{}}
+function applyUpdaterStatus(status={},notify=false){
+  const previousStatus=appUpdateState?.status || '';
+  appUpdateState={...appUpdateState,...(status||{})};
+  const updateEl=document.getElementById('sys-console-update');
+  if(updateEl) refreshConsoleSettingsPanel();
+  if(notify && appUpdateState.status==='available' && previousStatus!=='available'){
+    toast(`SKALD v${appUpdateState.version || 'new build'} is available`);
+  }
+}
+async function refreshUpdaterStatus(notify=false){
+  try{
+    const status=await window.electronAPI?.getUpdaterStatus?.();
+    if(status) applyUpdaterStatus(status,notify);
+  }catch{}
+}
+window.electronAPI?.onUpdaterStatus?.(status=>applyUpdaterStatus(status,true));
 
 function mktRomId(rom){return rom?.groupId || rom?.name || '';}
 function mktRomTitle(rom){return rom?.title || rom?.cleanName || rom?.name || 'Unknown';}

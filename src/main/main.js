@@ -75,6 +75,16 @@ const activeRPCS3FirmwareWatchers = new Map();
 const DOWNLOAD_INACTIVITY_TIMEOUT_MS = 90000;
 let ps3DiscKeyIndexCache = null;
 let rpcs3CompatibilityDbCache = null;
+let latestUpdaterState = {
+  status: app.isPackaged ? 'idle' : 'dev',
+  currentVersion: app.getVersion(),
+  version: '',
+  releaseNotes: null,
+  releaseDate: null,
+  message: app.isPackaged ? '' : 'Update checks are disabled in development builds.',
+  checkedAt: 0,
+};
+let updaterCheckNow = null;
 
 [
   DEFAULT_GAMES_DIR,
@@ -8405,6 +8415,13 @@ ipcMain.handle('archiveorg-check', async () => getArchiveStatus());
 function setupAutoUpdater() {
   if (!app.isPackaged) {
     console.log('[updater] Dev mode — skipping update check');
+    latestUpdaterState = {
+      ...latestUpdaterState,
+      status: 'dev',
+      currentVersion: app.getVersion(),
+      message: 'Update checks are disabled in development builds.',
+      checkedAt: Date.now(),
+    };
     return;
   }
 
@@ -8413,14 +8430,35 @@ function setupAutoUpdater() {
     autoUpdater = require('electron-updater').autoUpdater;
   } catch (e) {
     console.error('[updater] electron-updater not available:', e.message);
+    latestUpdaterState = {
+      ...latestUpdaterState,
+      status: 'error',
+      currentVersion: app.getVersion(),
+      message: e.message || 'electron-updater is not available.',
+      checkedAt: Date.now(),
+    };
     return;
   }
 
   autoUpdater.autoDownload         = false; // don't auto-download — GitHub releases don't report progress
   autoUpdater.allowDowngrade        = false;
+  autoUpdater.allowPrerelease        = /\d+\.\d+\.\d+-/.test(app.getVersion());
+
+  const publishUpdaterState = (next = {}) => {
+    latestUpdaterState = {
+      ...latestUpdaterState,
+      currentVersion: app.getVersion(),
+      checkedAt: Date.now(),
+      ...next,
+    };
+    const payload = { ...latestUpdaterState };
+    mainWindow?.webContents.send('updater-status', payload);
+    bladesWindow?.webContents.send('updater-status', payload);
+  };
 
   autoUpdater.on('checking-for-update', () => {
     console.log('[updater] Checking for update…');
+    publishUpdaterState({ status: 'checking', message: 'Checking for updates…' });
   });
 
   autoUpdater.on('update-available', (info) => {
@@ -8447,17 +8485,19 @@ function setupAutoUpdater() {
     });
 
     fetchNotes().then((releaseNotes) => {
-      mainWindow?.webContents.send('updater-status', {
+      publishUpdaterState({
         status:       'available',
         version:      info.version,
         releaseNotes: releaseNotes || null,
         releaseDate:  info.releaseDate || null,
+        message:      `SKALD Launcher v${info.version} is available.`,
       });
     });
   });
 
   autoUpdater.on('update-not-available', () => {
     console.log('[updater] Up to date.');
+    publishUpdaterState({ status: 'current', version: app.getVersion(), message: 'SKALD is up to date.' });
   });
 
   // No download-progress or update-downloaded handlers needed —
@@ -8471,7 +8511,7 @@ function setupAutoUpdater() {
       return;
     }
     console.error('[updater] Error:', msg);
-    mainWindow?.webContents.send('updater-status', {
+    publishUpdaterState({
       status:  'error',
       message: msg,
     });
@@ -8481,10 +8521,41 @@ function setupAutoUpdater() {
   mainWindow?.once('ready-to-show', () => {
     setTimeout(() => autoUpdater.checkForUpdates(), 3000);
   });
+  updaterCheckNow = () => autoUpdater.checkForUpdates();
 
 }  
 
 // IPC: renderer asks to download update — always registered, opens GitHub releases page
+ipcMain.removeHandler('updater-status-get');
+ipcMain.handle('updater-status-get', () => ({ ...latestUpdaterState, currentVersion: app.getVersion() }));
+
+ipcMain.removeHandler('updater-check');
+ipcMain.handle('updater-check', async () => {
+  if (!app.isPackaged || typeof updaterCheckNow !== 'function') {
+    latestUpdaterState = {
+      ...latestUpdaterState,
+      status: app.isPackaged ? 'unavailable' : 'dev',
+      currentVersion: app.getVersion(),
+      message: app.isPackaged ? 'Update checking is not ready yet.' : 'Update checks are disabled in development builds.',
+      checkedAt: Date.now(),
+    };
+    return { ok: false, state: latestUpdaterState };
+  }
+  try {
+    await updaterCheckNow();
+    return { ok: true, state: latestUpdaterState };
+  } catch (error) {
+    latestUpdaterState = {
+      ...latestUpdaterState,
+      status: 'error',
+      currentVersion: app.getVersion(),
+      message: error?.message || 'Could not check for updates.',
+      checkedAt: Date.now(),
+    };
+    return { ok: false, state: latestUpdaterState };
+  }
+});
+
 ipcMain.removeHandler('updater-install');
 ipcMain.handle('updater-install', () => {
   shell.openExternal('https://github.com/Kilted-Kraken/SKALD/releases/latest');

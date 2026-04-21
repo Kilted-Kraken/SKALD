@@ -5,6 +5,15 @@ on:
   push:
     tags:
       - 'v*.*.*'
+      - 'v*.*.*-beta*'
+      - 'beta-v*.*.*'
+  workflow_dispatch:
+    inputs:
+      prerelease:
+        description: 'Mark the GitHub release as a beta/prerelease build'
+        required: true
+        default: true
+        type: boolean
 
 jobs:
   build:
@@ -56,11 +65,11 @@ jobs:
           }
 
           # Build the draft body
-          $version = "${{ github.ref_name }}"
+          $version = "${{ github.ref_name || github.sha }}"
           $date    = Get-Date -Format "yyyy-MM-dd"
 
           $body = @"
-          ## RohanKar Launcher $version
+          ## SKALD Launcher $version
 
           > ✏️ **This is an auto-generated draft.** Edit the notes below before publishing.
 
@@ -74,7 +83,7 @@ jobs:
           $($commits -join "`n")
 
           ---
-          *Released $date*
+          *Built $date*
           "@
 
           # Write to file so the next step can read it (avoids multiline env issues)
@@ -86,8 +95,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           draft: true           # DRAFT — you review & publish manually
-          prerelease: false
-          name: RohanKar Launcher ${{ github.ref_name }}
+          prerelease: ${{ contains(github.ref_name, 'beta') || inputs.prerelease == true }}
+          name: SKALD Launcher ${{ github.ref_name || github.sha }}
           body_path: release_notes.md
           files: |
             dist/*.exe

@@ -147,6 +147,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Auto-updater
   onUpdaterStatus: (cb) => ipcRenderer.on('updater-status', (_, data) => cb(data)),
+  getUpdaterStatus: () => ipcRenderer.invoke('updater-status-get'),
+  checkForUpdates: () => ipcRenderer.invoke('updater-check'),
   updaterInstall:  ()   => ipcRenderer.invoke('updater-install'),
 
   // Thumbnail cache
