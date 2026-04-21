@@ -1,6 +1,6 @@
 {
   "name": "skald-launcher",
-  "version": "0.1.0",
+  "version": "0.1.1-beta.1",
   "description": "SKALD ROM Launcher — archive.org powered retro gaming library",
   "author": "Kilted-Kraken",
   "main": "src/main/main.js",
@@ -41,9 +41,22 @@
     "files": [
       "src/**/*",
       "assets/**/*",
+      "!assets/tools/7zip/**/*",
       "!assets/roms"
     ],
     "extraResources": [
+      {
+        "from": "assets/tools/7zip",
+        "to": "tools/7zip"
+      },
+      {
+        "from": "src/native/Skald.VlcHost/bin/Release/net10.0-windows/win-x64/publish",
+        "to": "tools/Skald.VlcHost"
+      },
+      {
+        "from": "src/native/Skald.Rpcs3Helper/bin/Release/net10.0-windows/win-x64/publish",
+        "to": "tools/Skald.Rpcs3Helper"
+      },
       {
         "from": "assets/roms",
         "to": "roms"
