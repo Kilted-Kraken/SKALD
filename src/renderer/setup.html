@@ -1,0 +1,824 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SKALD Initial Setup</title>
+  <style>
+    :root{
+      --green-0:#163a0d;
+      --green-1:#4aa11f;
+      --green-2:#82cf42;
+      --green-3:#baf06c;
+      --ink:#173112;
+      --glass:rgba(235,255,218,.24);
+      --line:rgba(40,78,30,.38);
+      --white:rgba(248,255,240,.92);
+    }
+    *{box-sizing:border-box}
+    html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#000;color:var(--ink);font-family:'MC360',"Segoe UI",Tahoma,sans-serif}
+    @font-face{font-family:'MC360';src:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/fonts/MC360.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap}
+    .setup-shell{
+      position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden;
+      background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/background-green-alpha.webp') center/cover no-repeat;
+      transform-origin:0 0;
+      --setup-whitewash-left:373px;
+      --setup-whitewash-width:1267px;
+      --setup-whitewash-right-left:1640px;
+    }
+    .setup-shell:before{
+      content:"";position:absolute;left:var(--setup-whitewash-left);top:0;width:85px;height:1080px;z-index:10;
+      background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/background-overlay-whitewash-left-ws.webp') 0 0/100% 100% no-repeat;
+      pointer-events:none;
+    }
+    .setup-shell:after{
+      content:"";position:absolute;left:var(--setup-whitewash-right-left);top:0;width:171px;height:1080px;z-index:10;
+      background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/background-overlay-whitewash-right-ws.webp') 0 0/100% 100% no-repeat;
+      pointer-events:none;
+    }
+    .green-spine-left{
+      position:absolute;left:calc(var(--setup-whitewash-left) + 85px);top:0;width:calc(var(--setup-whitewash-width) - 85px);height:1080px;z-index:9;pointer-events:none;
+      background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/background-overlay-whitewash-centertile-ws.webp') 0 0/auto 100% repeat-x;
+    }
+    .green-spine-right{
+      position:absolute;left:0;top:0;width:1px;height:1px;z-index:11;pointer-events:none;
+      background:none;
+    }
+    .side-shadow-left{
+      position:absolute;left:-163px;top:-94px;width:341px;height:1268px;z-index:25;pointer-events:none;
+      background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/blades-runner-left.webp') 0 0/100% 100% no-repeat;
+    }
+    .side-shadow-right{
+      position:absolute;left:1773px;top:-94px;width:341px;height:1268px;z-index:25;pointer-events:none;
+      background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/blades-runner-right.webp') 0 0/100% 100% no-repeat;
+    }
+    .left-blade-notch{
+      position:absolute;left:0;top:0;width:1px;height:1px;z-index:26;pointer-events:none;background:none;
+    }
+    .side-tab{
+      display:none;
+    }
+    .setup-blade-layer{position:absolute;left:0;top:-94px;width:1920px;height:1268px;z-index:24;pointer-events:none}
+    .setup-blade-tab{
+      position:absolute;top:0;width:160px;height:1268px;background-size:100% 100%;background-repeat:no-repeat;
+      pointer-events:auto;cursor:pointer;transition:left 180ms ease-out;
+    }
+    .setup-blade-tab-label{
+      position:absolute;top:340px;width:100%;z-index:3;
+      writing-mode:vertical-lr;text-orientation:mixed;text-align:center;line-height:48px;
+      font-size:22px;letter-spacing:3px;color:#555;text-transform:lowercase;
+      pointer-events:none;
+    }
+    .setup-blade-tab.active .setup-blade-tab-label{font-size:24px;color:#333;font-weight:bold}
+    .blade{
+      position:absolute;z-index:30;left:248px;top:0;width:1424px;height:1080px;overflow:hidden;
+      background:transparent;border-radius:0;box-shadow:none;
+    }
+    .blade:before,.blade:after{display:none}
+    .title{position:absolute;z-index:2;left:64px;top:76px;font-size:34px;letter-spacing:1px;color:rgba(245,255,237,.86);text-shadow:0 1px 2px rgba(0,0,0,.24)}
+    .time{position:absolute;z-index:2;right:48px;top:79px;font-size:26px;color:rgba(245,255,237,.72)}
+    .content{position:absolute;z-index:2;left:64px;right:64px;top:150px;bottom:178px;display:grid;grid-template-columns:46% 1fr;gap:28px}
+    .list{padding-top:6px}
+    .item{
+      position:relative;min-height:62px;padding:12px 20px 12px 24px;border-top:2px solid var(--line);
+      display:flex;align-items:center;gap:16px;font-size:24px;color:#24441d;
+    }
+    .item:last-child{border-bottom:2px solid var(--line)}
+    .item.sel{background:linear-gradient(90deg, rgba(240,255,232,.72), rgba(210,250,174,.22));border-radius:9px;box-shadow:inset 0 0 0 2px rgba(41,88,30,.42), 0 8px 22px rgba(28,62,18,.16)}
+    .item-icon{width:42px;height:42px;background:center/contain no-repeat;filter:drop-shadow(0 2px 2px rgba(0,0,0,.18));flex:0 0 auto}
+    .item-copy{display:flex;flex-direction:column;line-height:1.1}
+    .item-meta{font-size:15px;margin-top:6px;color:rgba(24,54,16,.68)}
+    .side-card{
+      min-height:320px;border:2px solid rgba(45,89,32,.35);border-radius:10px;padding:22px 26px;
+      background:rgba(128,206,74,.22);box-shadow:inset 0 0 18px rgba(30,75,18,.1);
+      font-size:25px;line-height:1.36;color:#24441d;
+    }
+    .card-head{display:flex;align-items:center;gap:18px;margin-bottom:20px;border-bottom:2px solid rgba(45,89,32,.22);padding-bottom:14px}
+    .card-icon{width:72px;height:72px;border-radius:10px;background:center/contain no-repeat rgba(238,255,218,.34);box-shadow:inset 0 0 0 2px rgba(45,89,32,.28)}
+    .card-title{font-size:29px;color:#1d3717}
+    .card-body{white-space:pre-line}
+    .status{margin-top:18px;padding:14px 16px;background:rgba(239,255,224,.22);border-radius:9px;border:1px solid rgba(45,89,32,.22);font-size:17px;line-height:1.35}
+    .progress{position:absolute;z-index:2;left:64px;bottom:154px;right:64px;height:7px;background:rgba(35,82,23,.22);border-radius:999px;overflow:hidden}
+    .progress-fill{height:100%;width:0;background:linear-gradient(90deg,#e8ffd3,#ffffff);box-shadow:0 0 16px rgba(255,255,255,.6)}
+    .legend{position:absolute;z-index:2;left:64px;right:64px;bottom:34px;display:flex;justify-content:space-between;align-items:center;color:rgba(238,255,225,.88);font-size:24px;text-shadow:0 1px 2px rgba(0,0,0,.28)}
+    .legend-group{display:flex;gap:28px;align-items:center}
+    .btn{display:inline-flex;align-items:center;gap:8px}
+    .control-icon{width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 2px 3px rgba(0,0,0,.32))}
+    .control-icon.shoulder{width:52px}
+    .orb{min-width:32px;height:32px;padding:0 7px;border-radius:999px;display:inline-grid;place-items:center;font-weight:700;color:#17230f;text-shadow:none;box-shadow:inset 0 2px 4px rgba(255,255,255,.55),0 2px 4px rgba(0,0,0,.22)}
+    .orb.a{background:#7be45c}.orb.b{background:#df4b43}.orb.y{background:#e8d54d}.orb.x{background:#4da8e8}
+    .skip-warning{font-size:17px;color:rgba(28,54,20,.76);margin-top:18px}
+    .folder-browser-modal{
+      position:absolute;inset:0;z-index:80;display:none;align-items:center;justify-content:center;
+      background:rgba(0,0,0,.62);
+    }
+    .folder-browser-modal.on{display:flex}
+    .folder-browser-panel{
+      width:1040px;max-height:790px;display:flex;flex-direction:column;padding:28px 34px 24px;
+      color:#111;background:linear-gradient(180deg,rgba(242,244,238,.97),rgba(202,205,196,.94));
+      border:2px solid rgba(64,64,58,.55);border-radius:16px;
+      box-shadow:inset 0 2px 0 rgba(255,255,255,.72),0 28px 70px rgba(0,0,0,.38);
+    }
+    .folder-browser-title{font-size:34px;line-height:1;margin-bottom:10px;color:#111}
+    .folder-browser-path{font-size:17px;line-height:1.25;color:rgba(0,0,0,.58);margin-bottom:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .folder-browser-list{min-height:360px;max-height:520px;overflow:hidden;border-top:2px solid rgba(80,80,74,.18);border-bottom:2px solid rgba(80,80,74,.18)}
+    .folder-browser-item{
+      min-height:58px;display:flex;align-items:center;gap:16px;padding:0 16px;
+      border-bottom:1px solid rgba(80,80,74,.16);font-size:24px;color:#111;
+    }
+    .folder-browser-item.sel{background:linear-gradient(180deg,rgba(255,255,255,.82),rgba(226,230,218,.68))}
+    .folder-browser-icon{width:31px;height:31px;flex:0 0 auto;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-folder.webp') center/contain no-repeat}
+    .folder-browser-item.drive .folder-browser-icon{background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-memory.webp')}
+    .folder-browser-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .folder-browser-empty{padding:28px 16px;font-size:22px;line-height:1.35;color:rgba(0,0,0,.58)}
+    .folder-browser-footer{display:flex;justify-content:space-between;align-items:center;margin-top:18px;font-size:22px;color:rgba(0,0,0,.74)}
+    .folder-browser-hints{display:flex;gap:24px;align-items:center}
+    .folder-browser-hint{display:inline-flex;align-items:center;gap:8px}
+    .folder-browser-hint img{width:30px;height:30px;object-fit:contain}
+    .setup-vk-modal{
+      position:absolute;inset:0;z-index:90;display:none;align-items:stretch;justify-content:flex-start;
+      background:rgba(0,0,0,.48);
+    }
+    .setup-vk-modal.on{display:flex}
+    .setup-vk-panel{
+      position:relative;width:1584px;height:1080px;padding:96px 318px 92px 72px;
+      background:transparent;
+      border-radius:0;box-shadow:none;border:none;overflow:hidden;transform:translateX(-1584px);transition:transform 250ms ease-out;
+    }
+    .setup-vk-modal.on .setup-vk-panel{transform:translateX(0)}
+    .setup-vk-tile{position:absolute;left:0;top:0;width:1317px;height:1080px;background:#d9d9d6 url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/guide-blade-overlay-tile.webp') repeat-x left top;background-size:auto 100%;pointer-events:none;z-index:0}
+    .setup-vk-edge{position:absolute;left:1317px;top:0;width:267px;height:1080px;background:none;pointer-events:none;overflow:hidden;z-index:0}
+    .setup-vk-edge::before{content:'';position:absolute;inset:0;background:#d9d9d6;clip-path:polygon(0 0,64% 0,75% 10%,72% 31%,74% 45%,72% 61%,75% 90%,64% 100%,0 100%);z-index:0}
+    .setup-vk-edge::after{content:'';position:absolute;inset:0;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/guide-blade-overlay-edge-left.webp') no-repeat;background-size:100% 100%;z-index:1}
+    .setup-vk-panel>*{position:relative;z-index:1}
+    .setup-vk-panel>.setup-vk-tile,.setup-vk-panel>.setup-vk-edge{position:absolute;z-index:0}
+    .setup-vk-title{font-size:34px;color:#222;margin-bottom:12px;text-shadow:0 1px 0 rgba(255,255,255,.55)}
+    .setup-vk-target{min-height:76px;padding:14px 18px;background:rgba(255,255,255,.62);border:2px solid rgba(0,0,0,.18);font-size:31px;color:#111;margin-bottom:22px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;box-shadow:inset 0 2px 6px rgba(0,0,0,.12),0 1px 0 rgba(255,255,255,.55)}
+    .setup-vk-layout{display:grid;grid-template-columns:172px 1fr 172px;gap:22px;align-items:stretch}
+    .setup-vk-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:12px;align-content:start}
+    .setup-vk-side{display:grid;grid-template-rows:repeat(3,112px) 1fr;gap:14px}
+    .setup-vk-side.right{grid-template-rows:repeat(2,112px) 1fr}
+    .setup-vk-side-card{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:112px;padding:12px 10px;border-radius:13px;background:linear-gradient(180deg,rgba(249,250,246,.86),rgba(210,213,204,.72));border:2px solid rgba(92,92,86,.34);box-shadow:inset 0 1px 0 rgba(255,255,255,.72),0 2px 5px rgba(0,0,0,.16);font-size:22px;color:#111}
+    .setup-vk-side-card.dim{opacity:.45}
+    .setup-vk-side-card.done{min-height:238px;background:linear-gradient(180deg,rgba(224,255,197,.92),rgba(132,217,91,.86))}
+    .setup-vk-side-card img{width:66px;height:44px;object-fit:contain;filter:drop-shadow(0 1px 1px rgba(0,0,0,.22))}
+    .setup-vk-side-card .setup-vk-stick-icon{width:58px;height:58px}
+    .setup-vk-key{height:66px;border:none;background:center/100% 100% no-repeat transparent;font-family:inherit;font-size:24px;color:#222;cursor:pointer;position:relative}
+    .setup-vk-key.sel{filter:brightness(1.05);box-shadow:0 0 0 4px rgba(132,203,70,.92),0 0 16px rgba(132,203,70,.45);border-radius:10px}
+    .setup-vk-key-label{position:absolute;inset:0;display:grid;place-items:center;font-size:25px;color:#111;text-shadow:0 1px 0 rgba(255,255,255,.55);pointer-events:none}
+    .setup-vk-key.wide-2{grid-column:span 2}
+    .setup-vk-key.wide-3{grid-column:span 3}
+    .setup-vk-hints{display:flex;gap:28px;margin-top:20px;font-size:21px;color:rgba(0,0,0,.68)}
+    .setup-vk-hints span{display:flex;align-items:center;gap:7px}
+    .setup-vk-hints img{width:24px;height:24px;object-fit:contain}
+  </style>
+</head>
+<body>
+  <main class="setup-shell">
+    <div class="green-spine-left"></div>
+    <div class="green-spine-right"></div>
+    <div class="side-shadow-left"></div>
+    <div class="side-shadow-right"></div>
+    <div class="left-blade-notch"></div>
+    <div class="side-tab">SKALD</div>
+    <div id="setup-blade-layer" class="setup-blade-layer"></div>
+    <section class="blade">
+      <div id="step-title" class="title">Initial Setup</div>
+      <div id="time" class="time"></div>
+      <div class="content">
+        <div id="setup-list" class="list"></div>
+        <aside class="side-card">
+          <div class="card-head">
+            <div id="card-icon" class="card-icon"></div>
+            <div id="card-title" class="card-title">Welcome to SKALD</div>
+          </div>
+          <div id="card-body" class="card-body"></div>
+          <div id="card-status" class="status"></div>
+        </aside>
+      </div>
+      <div class="progress"><div id="progress-fill" class="progress-fill"></div></div>
+      <div class="legend">
+        <div class="legend-group">
+          <span class="btn"><img class="control-icon" src="file:///C:/Projects/SKALD/assets/icons/Controls/button-y.webp" alt=""> Skip Setup</span>
+          <span class="btn"><img class="control-icon shoulder" src="file:///C:/Projects/SKALD/assets/icons/Controls/xbox_lb.webp" alt=""><img class="control-icon shoulder" src="file:///C:/Projects/SKALD/assets/icons/Controls/xbox_rb.webp" alt=""> Switch Blades</span>
+        </div>
+        <div class="legend-group">
+          <span class="btn"><img class="control-icon" src="file:///C:/Projects/SKALD/assets/icons/Controls/button-b.webp" alt=""> Back</span>
+          <span class="btn"><img class="control-icon" src="file:///C:/Projects/SKALD/assets/icons/Controls/button-a.webp" alt=""> Select</span>
+        </div>
+      </div>
+    </section>
+    <div id="folder-browser-modal" class="folder-browser-modal">
+      <div class="folder-browser-panel">
+        <div class="folder-browser-title">Select Folder</div>
+        <div class="folder-browser-path">Choose a drive</div>
+        <div class="folder-browser-list"></div>
+        <div class="folder-browser-footer">
+          <div class="folder-browser-hints">
+            <span class="folder-browser-hint"><img src="file:///C:/Projects/SKALD/assets/icons/Controls/button-a.webp" alt=""> Open</span>
+            <span class="folder-browser-hint"><img src="file:///C:/Projects/SKALD/assets/icons/Controls/button-y.webp" alt=""> Select Folder</span>
+            <span class="folder-browser-hint"><img src="file:///C:/Projects/SKALD/assets/icons/Controls/button-x.webp" alt=""> New Folder</span>
+          </div>
+          <div class="folder-browser-hints">
+            <span class="folder-browser-hint"><img src="file:///C:/Projects/SKALD/assets/icons/Controls/button-b.webp" alt=""> Back</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="setup-vk-modal" class="setup-vk-modal">
+      <div class="setup-vk-panel">
+        <div class="setup-vk-tile"></div>
+        <div class="setup-vk-edge"></div>
+        <div id="setup-vk-title" class="setup-vk-title">Keyboard</div>
+        <div id="setup-vk-target" class="setup-vk-target"></div>
+        <div class="setup-vk-layout">
+          <div class="setup-vk-side left">
+            <div class="setup-vk-side-card"><img src="file:///C:/Projects/SKALD/assets/icons/Controls/xbox_lb.webp" alt="">Cursor</div>
+            <div class="setup-vk-side-card dim"><img src="file:///C:/Projects/SKALD/assets/icons/Controls/xbox_lt.webp" alt="">Symbols</div>
+            <div class="setup-vk-side-card dim"><img class="setup-vk-stick-icon" src="file:///C:/Projects/SKALD/assets/icons/Controls/xbox_stick_l.webp" alt="">Caps</div>
+          </div>
+          <div id="setup-vk-grid" class="setup-vk-grid"></div>
+          <div class="setup-vk-side right">
+            <div class="setup-vk-side-card"><img src="file:///C:/Projects/SKALD/assets/icons/Controls/xbox_rb.webp" alt="">Cursor</div>
+            <div class="setup-vk-side-card dim"><img src="file:///C:/Projects/SKALD/assets/icons/Controls/xbox_rt.webp" alt="">Accents</div>
+            <div class="setup-vk-side-card done"><img src="file:///C:/Projects/SKALD/assets/icons/Controls/button-a.webp" alt="">Done</div>
+          </div>
+        </div>
+        <div class="setup-vk-hints">
+          <span><img src="file:///C:/Projects/SKALD/assets/icons/Controls/button-a.webp" alt="">Type</span>
+          <span><img src="file:///C:/Projects/SKALD/assets/icons/Controls/button-x.webp" alt="">Backspace</span>
+          <span><img src="file:///C:/Projects/SKALD/assets/icons/Controls/button-y.webp" alt="">Space</span>
+          <span><img src="file:///C:/Projects/SKALD/assets/icons/Controls/button-b.webp" alt="">Cancel</span>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script>
+    const asset=(path)=>`file:///C:/Projects/SKALD/${path}`;
+    const bladeAsset=(name)=>`file:///C:/Projects/RG-THEMES/X360 BLADES/blades/${name}`;
+    const state={step:0,sel:0,settings:{},stoat:null,archive:null,ra:null,sgdb:null,runtime:null};
+    const SETUP_BLADE_W=160;
+    const SETUP_OFFSET=72;
+    const SETUP_LEFT_ANCHOR=78;
+    const SETUP_RIGHT_EDGE=1873;
+    const SETUP_CONTENT_OFFSET=170;
+    const folderBrowserState={open:false,title:'Select Folder',currentPath:'',parentPath:null,entries:[],selectedIdx:0,resolve:null,error:''};
+    const setupVkState={open:false,value:'',sel:0,onSubmit:null,title:'Keyboard'};
+    const SETUP_VK_KEYS=[
+      '1','2','3','4','5','6','7','8','9','0',
+      'q','w','e','r','t','y','u','i','o','p',
+      'a','s','d','f','g','h','j','k','l','@',
+      'z','x','c','v','b','n','m','.','-','_',
+      {label:'Space',value:' ',cls:'wide-3'},
+      {label:'Back',action:'backspace',cls:'wide-2'},
+      {label:'Clear',action:'clear',cls:'wide-2'},
+      {label:'Done',action:'done',cls:'wide-3'}
+    ];
+    function esc(value){
+      return String(value ?? '').replace(/[&<>"']/g,(ch)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    }
+    function scaleSetupStage(){
+      const stage=document.querySelector('.setup-shell');
+      if(!stage) return;
+      const scale=Math.min(window.innerWidth/1920, window.innerHeight/1080);
+      const offX=Math.round((window.innerWidth-1920*scale)/2);
+      const offY=Math.round((window.innerHeight-1080*scale)/2);
+      stage.style.transform=`scale(${scale})`;
+      stage.style.left=`${offX}px`;
+      stage.style.top=`${offY}px`;
+    }
+    window.addEventListener('resize',scaleSetupStage);
+    const steps=[
+      {
+        id:'welcome',
+        title:'Welcome to SKALD',
+        icon:asset('assets/icons/Systems/SKALD_LIVE.webp'),
+        body:'Welcome to SKALD. Let us get your profile, storage, online services, and emulator basics ready before the main Blades open.',
+        actions:[
+          {label:'Start Setup',meta:'Walk through the recommended SKALD first-run setup.',action:'next',icon:bladeAsset('button-a.webp')},
+          {label:'Skip Initial Setup',meta:'Open SKALD now and configure everything later from System settings.',action:'skip',icon:bladeAsset('icon-power.webp')}
+        ]
+      },
+      {
+        id:'profile',
+        title:'Gamer Profile',
+        icon:asset('assets/icons/Media/Stoat.webp'),
+        body:'Every SKALD user needs a profile. SKALD LIVE powers your gamer card, Stoat chat, synced profile identity, and future social features.',
+        status:()=>state.stoat?.connected ? `Signed in as ${state.stoat?.user?.username || 'SKALD profile'}.` : 'No SKALD LIVE profile is signed in yet. You can continue offline and sign in later from the SKALD LIVE blade.',
+        actions:[
+          {label:'Use Current Profile',meta:'Continue with the current SKALD LIVE/local profile status.',action:'next',icon:asset('assets/icons/Systems/SKALD_LIVE.webp')},
+          {label:'Continue Offline',meta:'Use SKALD without signing in for now.',action:'next',icon:bladeAsset('icon-profile.webp')}
+        ]
+      },
+      {
+        id:'storage',
+        title:'Storage',
+        icon:bladeAsset('icon-folder.webp'),
+        body:'Choose where SKALD should keep installed games and incoming downloads. SKALD will organize installed games by system inside your games folder.',
+        status:()=>`Install Folder: ${state.settings.installPath || 'Not set'}\nDownload Folder: ${state.settings.downloadPath || 'Not set'}`,
+        actions:[
+          {label:'Set Install Folder',meta:'Choose where games should live after install/extract.',action:'install-folder',icon:bladeAsset('icon-folder.webp')},
+          {label:'Set Download Folder',meta:'Choose where incoming archives/downloads should land.',action:'download-folder',icon:bladeAsset('icon-update.webp')},
+          {label:'Keep Current Storage',meta:'Continue with the paths shown on the right.',action:'next',icon:bladeAsset('button-a.webp')}
+        ]
+      },
+      {
+        id:'services',
+        title:'Online Services',
+        icon:bladeAsset('icon-network.webp'),
+        body:'SKALD can use Archive.org for marketplace sources, RetroAchievements for achievement data, and SteamGridDB for artwork and logos.',
+        status:()=>`Archive.org: ${state.archive?.loggedIn ? 'Signed in' : 'Not signed in'}\nRetroAchievements: ${state.ra?.secret ? 'Configured' : 'Not configured'}\nSteamGridDB: ${state.sgdb?.secret ? 'Configured' : 'Not configured'}`,
+        actions:[
+          {label:'Review Later in System',meta:'Manage connected services from System > 3rd Party Accounts.',action:'next',icon:bladeAsset('icon-profile.webp')},
+          {label:'Continue',meta:'Move to emulator setup.',action:'next',icon:bladeAsset('button-a.webp')}
+        ]
+      },
+      {
+        id:'emulators',
+        title:'Emulator Setup',
+        icon:bladeAsset('icon-systeminfo.webp'),
+        body:'SKALD launches games through managed emulator integrations. You can install and tune each emulator later from System > Emulators.',
+        status:()=>`RetroArch: ${state.runtime?.ok ? 'Installed' : 'Not installed'}\nRPCS3, Xenia Canary, PCSX2, VLC: review from System > Emulators as needed.`,
+        actions:[
+          {label:'Configure Later',meta:'Open SKALD now and install emulators as systems are needed.',action:'next',icon:bladeAsset('icon-system.webp')},
+          {label:'Continue',meta:'Move to family and safety settings.',action:'next',icon:bladeAsset('button-a.webp')}
+        ]
+      },
+      {
+        id:'family',
+        title:'Family Settings',
+        icon:bladeAsset('icon-partymode.webp'),
+        body:'Family settings will eventually manage content visibility, online safety, download restrictions, and activity review.',
+        status:()=>'Family restrictions are not active yet. This setup step is reserved so the flow already has a native place for them.',
+        actions:[
+          {label:'Keep Defaults',meta:'Use the current unrestricted SKALD defaults.',action:'next',icon:bladeAsset('button-a.webp')},
+          {label:'Review Later',meta:'Family settings can be revisited from System.',action:'next',icon:bladeAsset('icon-system.webp')}
+        ]
+      },
+      {
+        id:'complete',
+        title:'Initial Setup Complete',
+        icon:asset('assets/icons/Systems/SKALD_LIVE.webp'),
+        body:'You can now play games, explore the Marketplace, tune emulators, or customize your system from the main Blades.',
+        status:()=>state.stoat?.connected ? `Ready for ${state.stoat?.user?.username || 'your SKALD profile'}.` : 'Ready to enter SKALD. You can sign in to SKALD LIVE later.',
+        actions:[
+          {label:'Enter SKALD',meta:'Save setup as complete and open the main Blades.',action:'finish',icon:bladeAsset('button-a.webp')},
+          {label:'Back to Setup',meta:'Return to the previous setup step.',action:'back',icon:bladeAsset('button-b.webp')}
+        ]
+      }
+    ];
+
+    function setTime(){
+      const el=document.getElementById('time');
+      if(!el) return;
+      el.textContent=new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+    }
+    function current(){return steps[state.step] || steps[0];}
+    function statusText(step){
+      if(typeof step.status==='function') return step.status();
+      return 'Press A to continue, or Y to skip setup and configure SKALD later.';
+    }
+    function render(){
+      const step=current();
+      state.sel=Math.max(0,Math.min(state.sel,(step.actions||[]).length-1));
+      renderSetupBlades();
+      const setupTitle=`INITIAL SETUP: ${step.title}`;
+      document.getElementById('step-title').textContent=setupTitle;
+      document.getElementById('card-title').textContent=setupTitle;
+      document.getElementById('card-body').textContent=step.body;
+      document.getElementById('card-status').textContent=statusText(step);
+      document.getElementById('card-icon').style.backgroundImage=`url("${step.icon}")`;
+      document.getElementById('progress-fill').style.width=`${Math.round(((state.step+1)/steps.length)*100)}%`;
+      const list=document.getElementById('setup-list');
+      list.innerHTML=(step.actions||[]).map((item,idx)=>`
+        <div class="item ${idx===state.sel?'sel':''}" data-index="${idx}">
+          <div class="item-icon" style="background-image:url('${item.icon || bladeAsset('button-a.webp')}')"></div>
+          <div class="item-copy">
+            <div>${item.label}</div>
+            <div class="item-meta">${item.meta || ''}</div>
+          </div>
+        </div>`).join('');
+      list.querySelectorAll('.item').forEach(el=>el.addEventListener('click',()=>{
+        state.sel=Number(el.dataset.index)||0;
+        activate();
+      }));
+    }
+    function setupBladeLabel(step){
+      const label=String(step?.title || '').replace(/^Initial Setup\s*/i,'').trim();
+      return (label || 'Setup').toLowerCase();
+    }
+    function moveStep(dir){
+      const next=Math.max(0,Math.min(steps.length-1,state.step+dir));
+      if(next===state.step) return;
+      state.step=next;
+      state.sel=0;
+      render();
+    }
+    function renderSetupBlades(){
+      const layer=document.getElementById('setup-blade-layer');
+      const blade=document.querySelector('.blade');
+      if(!layer || !blade) return;
+      layer.innerHTML='';
+      const activeIdx=state.step;
+      const numRight=steps.length-1-activeIdx;
+      steps.forEach((step,i)=>{
+        const dist=i-activeIdx;
+        let x,z;
+        if(i<activeIdx){
+          x=SETUP_LEFT_ANCHOR + i*SETUP_OFFSET;
+          z=21+i;
+        }else if(i===activeIdx){
+          x=SETUP_LEFT_ANCHOR + activeIdx*SETUP_OFFSET;
+          z=30;
+        }else{
+          const j=i-activeIdx-1;
+          x=SETUP_RIGHT_EDGE - SETUP_BLADE_W - (numRight-1-j)*SETUP_OFFSET;
+          z=25-j;
+        }
+        const img=dist===0
+          ? bladeAsset('blades-size4-header.webp')
+          : dist<0
+            ? bladeAsset('blades-size3-left-nf.webp')
+            : bladeAsset('blades-size3-right-nf.webp');
+        const tab=document.createElement('div');
+        tab.className=`setup-blade-tab ${dist===0?'active':'inactive'}`;
+        tab.style.left=`${x}px`;
+        tab.style.zIndex=String(z);
+        tab.style.backgroundImage=`url('${img}')`;
+        const lbl=document.createElement('div');
+        lbl.className='setup-blade-tab-label';
+        lbl.textContent=setupBladeLabel(step);
+        lbl.style.left=dist>0?'35px':'65px';
+        tab.appendChild(lbl);
+        tab.addEventListener('click',()=>{
+          if(i===state.step) return;
+          state.step=i;
+          state.sel=0;
+          render();
+        });
+        layer.appendChild(tab);
+      });
+      const activeX=SETUP_LEFT_ANCHOR + activeIdx*SETUP_OFFSET;
+      const contentLeft=activeX + SETUP_CONTENT_OFFSET;
+      const nearestRightX = numRight > 0
+        ? SETUP_RIGHT_EDGE - SETUP_BLADE_W - (numRight - 1) * SETUP_OFFSET
+        : SETUP_RIGHT_EDGE - 86;
+      const contentRight = Math.max(contentLeft + 920, nearestRightX - 44);
+      const whitewashLeft = Math.max(160, contentLeft - 94);
+      const whitewashRight = Math.min(1640, contentRight + 18);
+      blade.style.left=`${contentLeft}px`;
+      blade.style.width=`${Math.max(920, contentRight - contentLeft)}px`;
+      const shell=document.querySelector('.setup-shell');
+      if(shell){
+        shell.style.setProperty('--setup-whitewash-left', `${whitewashLeft}px`);
+        shell.style.setProperty('--setup-whitewash-width', `${Math.max(420, whitewashRight - whitewashLeft)}px`);
+        shell.style.setProperty('--setup-whitewash-right-left', `${whitewashRight}px`);
+      }
+    }
+    async function refreshStatus(){
+      try{
+        const api=window.electronAPI || {};
+        const [settings, stoat, archive, ra, sgdb, runtime]=await Promise.all([
+          api.getSettings?.() || {},
+          api.stoatStatus ? api.stoatStatus().catch(()=>null) : null,
+          api.archiveCheck ? api.archiveCheck().catch(()=>null) : null,
+          api.getThirdPartyAccount ? api.getThirdPartyAccount({provider:'retroachievements'}).catch(()=>null) : null,
+          api.getThirdPartyAccount ? api.getThirdPartyAccount({provider:'steamgriddb'}).catch(()=>null) : null,
+          api.getEmulatorRuntimeStatus ? api.getEmulatorRuntimeStatus().catch(()=>null) : null
+        ]);
+        state.settings=settings || {};
+        state.stoat=stoat;
+        state.archive=archive;
+        state.ra=ra;
+        state.sgdb=sgdb;
+        state.runtime=runtime;
+      }catch{}
+      render();
+    }
+    function renderFolderBrowser(){
+      const modal=document.getElementById('folder-browser-modal');
+      if(!modal) return;
+      const title=modal.querySelector('.folder-browser-title');
+      const pathEl=modal.querySelector('.folder-browser-path');
+      const list=modal.querySelector('.folder-browser-list');
+      if(title) title.textContent=folderBrowserState.title || 'Select Folder';
+      if(pathEl) pathEl.textContent=folderBrowserState.error || folderBrowserState.currentPath || 'Choose a drive';
+      if(!list) return;
+      if(!folderBrowserState.entries.length){
+        list.innerHTML=`<div class="folder-browser-empty">${esc(folderBrowserState.error || 'This folder has no subfolders. Press Y to select it.')}</div>`;
+        return;
+      }
+      folderBrowserState.selectedIdx=Math.max(0,Math.min(folderBrowserState.selectedIdx,folderBrowserState.entries.length-1));
+      list.innerHTML=folderBrowserState.entries.map((entry,idx)=>`
+        <div class="folder-browser-item ${entry.type==='drive'?'drive':''} ${idx===folderBrowserState.selectedIdx?'sel':''}" data-folder-idx="${idx}">
+          <div class="folder-browser-icon"></div>
+          <div class="folder-browser-name">${esc(entry.name || entry.path || 'Folder')}</div>
+        </div>
+      `).join('');
+      list.querySelectorAll('.folder-browser-item').forEach(item=>item.addEventListener('click',()=>{
+        folderBrowserState.selectedIdx=Number(item.dataset.folderIdx || 0);
+        openSelectedFolderBrowserEntry();
+      }));
+      list.querySelector('.folder-browser-item.sel')?.scrollIntoView({block:'nearest'});
+    }
+    async function loadFolderBrowserPath(dir,preserveSelection=false){
+      const result=await window.electronAPI?.listFolders?.({dir:dir||null});
+      if(!result?.ok){
+        folderBrowserState.error=result?.error || 'Could not read this folder.';
+        folderBrowserState.entries=[];
+        renderFolderBrowser();
+        return false;
+      }
+      folderBrowserState.currentPath=result.dir || '';
+      folderBrowserState.parentPath=result.parent || null;
+      folderBrowserState.entries=Array.isArray(result.entries) ? result.entries : [];
+      folderBrowserState.error='';
+      if(!preserveSelection) folderBrowserState.selectedIdx=0;
+      renderFolderBrowser();
+      return true;
+    }
+    async function openSkaldFolderBrowser({title='Select Folder',startPath=''}={}){
+      if(folderBrowserState.open) closeFolderBrowser(false);
+      folderBrowserState.open=true;
+      folderBrowserState.title=title;
+      folderBrowserState.currentPath='';
+      folderBrowserState.parentPath=null;
+      folderBrowserState.entries=[];
+      folderBrowserState.selectedIdx=0;
+      folderBrowserState.error='';
+      document.getElementById('folder-browser-modal')?.classList.add('on');
+      await loadFolderBrowserPath(startPath || null);
+      return new Promise(resolve=>{
+        folderBrowserState.resolve=resolve;
+      });
+    }
+    function closeFolderBrowser(value=null){
+      if(!folderBrowserState.open) return false;
+      const resolve=folderBrowserState.resolve;
+      folderBrowserState.open=false;
+      folderBrowserState.resolve=null;
+      document.getElementById('folder-browser-modal')?.classList.remove('on');
+      if(resolve) resolve(value);
+      return true;
+    }
+    async function openSelectedFolderBrowserEntry(){
+      if(!folderBrowserState.open) return false;
+      const entry=folderBrowserState.entries[folderBrowserState.selectedIdx];
+      if(!entry?.path) return false;
+      await loadFolderBrowserPath(entry.path);
+      return true;
+    }
+    function moveFolderBrowserSelection(delta){
+      if(!folderBrowserState.open || !folderBrowserState.entries.length) return false;
+      folderBrowserState.selectedIdx=(folderBrowserState.selectedIdx+delta+folderBrowserState.entries.length)%folderBrowserState.entries.length;
+      renderFolderBrowser();
+      return true;
+    }
+    async function folderBrowserBack(){
+      if(!folderBrowserState.open) return false;
+      if(folderBrowserState.parentPath){
+        await loadFolderBrowserPath(folderBrowserState.parentPath);
+        return true;
+      }
+      if(folderBrowserState.currentPath){
+        await loadFolderBrowserPath(null);
+        return true;
+      }
+      closeFolderBrowser(null);
+      return true;
+    }
+    function chooseCurrentFolderBrowserPath(){
+      if(!folderBrowserState.open) return false;
+      if(!folderBrowserState.currentPath){
+        const entry=folderBrowserState.entries[folderBrowserState.selectedIdx];
+        if(entry?.path){
+          closeFolderBrowser(entry.path);
+          return true;
+        }
+        return false;
+      }
+      closeFolderBrowser(folderBrowserState.currentPath);
+      return true;
+    }
+    function renderSetupKeyboard(){
+      const modal=document.getElementById('setup-vk-modal');
+      const title=document.getElementById('setup-vk-title');
+      const target=document.getElementById('setup-vk-target');
+      const grid=document.getElementById('setup-vk-grid');
+      if(!modal || !grid) return;
+      const keyAsset=(obj)=>{
+        const raw=String(obj.asset || obj.value || obj.label || '').toLowerCase();
+        const map={
+          ' ':'keyboard_space.webp',
+          'space':'keyboard_space.webp',
+          'backspace':'keyboard_backspace.webp',
+          'clear':'keyboard_delete.webp',
+          'done':'keyboard_enter.webp',
+          '.':'keyboard_period.webp',
+          '-':'keyboard_minus.webp',
+          '_':'keyboard_minus.webp',
+          '@':'keyboard_space.webp',
+          "'":'keyboard_apostrophe.webp',
+          '"':'keyboard_quote.webp',
+          ':':'keyboard_colon.webp',
+          ';':'keyboard_semicolon.webp',
+          ',':'keyboard_comma.webp',
+          '/':'keyboard_slash_forward.webp',
+          '\\':'keyboard_slash_back.webp',
+          '?':'keyboard_question.webp',
+          '!':'keyboard_exclamation.webp',
+          '=':'keyboard_equals.webp',
+          '+':'keyboard_plus.webp',
+        };
+        const file=map[raw] || (/^[a-z0-9]$/.test(raw) ? `keyboard_${raw}.webp` : 'keyboard_space.webp');
+        return `file:///C:/Projects/SKALD/assets/icons/Controls/Keyboard/${file}`;
+      };
+      if(title) title.textContent=setupVkState.title || 'Keyboard';
+      if(target) target.textContent=setupVkState.value || '';
+      grid.innerHTML=SETUP_VK_KEYS.map((key,idx)=>{
+        const obj=typeof key==='string' ? {label:key,value:key,cls:''} : key;
+        const action=obj.action || obj.value || '';
+        const needsLabel=['_','@'].includes(String(obj.value||obj.label||'')) || ['done','clear'].includes(String(obj.action||''));
+        return `<button class="setup-vk-key ${obj.cls||''} ${idx===setupVkState.sel?'sel':''}" data-vk-idx="${idx}" aria-label="${esc(obj.label||obj.value||action)}" style="background-image:url('${keyAsset({...obj,asset:obj.action||obj.value||obj.label})}')">${needsLabel?`<span class="setup-vk-key-label">${esc(obj.label||obj.value||'')}</span>`:''}</button>`;
+      }).join('');
+      grid.querySelectorAll('.setup-vk-key').forEach(btn=>btn.addEventListener('click',()=>{
+        setupVkState.sel=Number(btn.dataset.vkIdx || 0);
+        activateSetupKeyboardKey();
+      }));
+    }
+    function openSetupKeyboard({title='Keyboard',value='',onSubmit=null}={}){
+      setupVkState.open=true;
+      setupVkState.value=value;
+      setupVkState.sel=0;
+      setupVkState.onSubmit=typeof onSubmit==='function' ? onSubmit : null;
+      setupVkState.title=title;
+      document.getElementById('setup-vk-modal')?.classList.add('on');
+      renderSetupKeyboard();
+    }
+    function closeSetupKeyboard(submit=false){
+      const value=setupVkState.value;
+      const onSubmit=setupVkState.onSubmit;
+      setupVkState.open=false;
+      setupVkState.onSubmit=null;
+      document.getElementById('setup-vk-modal')?.classList.remove('on');
+      if(submit && onSubmit) onSubmit(value);
+    }
+    function moveSetupKeyboard(delta){
+      setupVkState.sel=Math.max(0,Math.min(SETUP_VK_KEYS.length-1,setupVkState.sel+delta));
+      renderSetupKeyboard();
+    }
+    function applySetupKeyboardAction(action){
+      if(action==='backspace') setupVkState.value=setupVkState.value.slice(0,-1);
+      else if(action==='clear') setupVkState.value='';
+      else if(action==='done'){closeSetupKeyboard(true);return;}
+      else setupVkState.value+=action;
+      renderSetupKeyboard();
+    }
+    function activateSetupKeyboardKey(){
+      const key=SETUP_VK_KEYS[setupVkState.sel];
+      const obj=typeof key==='string' ? {value:key} : key;
+      applySetupKeyboardAction(obj.action || obj.value || '');
+    }
+    async function createFolderBrowserFolderNamed(rawName){
+      if(!folderBrowserState.open) return false;
+      if(!folderBrowserState.currentPath){
+        folderBrowserState.error='Open a drive or folder before creating a new folder.';
+        renderFolderBrowser();
+        return false;
+      }
+      const result=await window.electronAPI?.createFolder?.({parentDir:folderBrowserState.currentPath,name:rawName});
+      if(!result?.ok){
+        folderBrowserState.error=result?.error || 'Could not create folder.';
+        renderFolderBrowser();
+        return false;
+      }
+      await loadFolderBrowserPath(folderBrowserState.currentPath,true);
+      const idx=folderBrowserState.entries.findIndex(entry=>entry.path===result.path);
+      if(idx>=0) folderBrowserState.selectedIdx=idx;
+      renderFolderBrowser();
+      return true;
+    }
+    async function createFolderBrowserFolder(){
+      if(!folderBrowserState.open) return false;
+      if(!folderBrowserState.currentPath){
+        folderBrowserState.error='Open a drive or folder before creating a new folder.';
+        renderFolderBrowser();
+        return false;
+      }
+      openSetupKeyboard({
+        title:'New Folder Name',
+        value:'',
+        onSubmit:(value)=>{ void createFolderBrowserFolderNamed(value); },
+      });
+      return true;
+    }
+    async function chooseStorage(kind){
+      const currentSettings=await window.electronAPI?.getSettings?.() || {};
+      const picked=await openSkaldFolderBrowser({
+        title:kind==='install' ? 'Select Install Folder' : 'Select Download Folder',
+        startPath:kind==='install' ? '' : (currentSettings.downloadPath || currentSettings.installPath || ''),
+      });
+      if(!picked) return;
+      const settings=await window.electronAPI?.getSettings?.() || {};
+      if(kind==='install') settings.installPath=picked;
+      else settings.downloadPath=picked;
+      await window.electronAPI?.saveSettings?.(settings);
+      await refreshStatus();
+    }
+    async function complete(skipped=false){
+      const result=await window.electronAPI?.completeInitialSetup?.({skipped});
+      if(!result?.ok) {
+        const status=document.getElementById('card-status');
+        if(status) status.textContent=result?.error || 'Could not complete setup.';
+      }
+    }
+    async function activate(){
+      const action=current().actions[state.sel]?.action;
+      if(action==='next'){moveStep(1);return;}
+      if(action==='back'){back();return;}
+      if(action==='skip'){await complete(true);return;}
+      if(action==='finish'){await complete(false);return;}
+      if(action==='install-folder'){await chooseStorage('install');return;}
+      if(action==='download-folder'){await chooseStorage('download');return;}
+    }
+    function back(){
+      if(state.step<=0) return;
+      moveStep(-1);
+    }
+    document.addEventListener('keydown',async(event)=>{
+      if(setupVkState.open){
+        if(event.key==='ArrowLeft') moveSetupKeyboard(-1);
+        else if(event.key==='ArrowRight') moveSetupKeyboard(1);
+        else if(event.key==='ArrowUp') moveSetupKeyboard(-10);
+        else if(event.key==='ArrowDown') moveSetupKeyboard(10);
+        else if(event.key==='Enter' || event.key===' ') activateSetupKeyboardKey();
+        else if(event.key==='Backspace') applySetupKeyboardAction('backspace');
+        else if(event.key==='Escape' || event.key.toLowerCase()==='b') closeSetupKeyboard(false);
+        else if(event.key.length===1) applySetupKeyboardAction(event.key);
+        else return;
+        event.preventDefault();
+        return;
+      }
+      if(folderBrowserState.open){
+        if(event.key==='ArrowUp') moveFolderBrowserSelection(-1);
+        else if(event.key==='ArrowDown') moveFolderBrowserSelection(1);
+        else if(event.key==='Enter' || event.key===' ') await openSelectedFolderBrowserEntry();
+        else if(event.key.toLowerCase()==='x') await createFolderBrowserFolder();
+        else if(event.key.toLowerCase()==='y') chooseCurrentFolderBrowserPath();
+        else if(event.key==='Escape' || event.key==='Backspace' || event.key.toLowerCase()==='b') await folderBrowserBack();
+        else return;
+        event.preventDefault();
+        return;
+      }
+      if(event.key==='ArrowUp'){state.sel=Math.max(0,state.sel-1);render();}
+      else if(event.key==='ArrowDown'){state.sel=Math.min((current().actions||[]).length-1,state.sel+1);render();}
+      else if(event.key==='ArrowLeft' || event.key==='PageUp' || event.key.toLowerCase()==='q'){moveStep(-1);}
+      else if(event.key==='ArrowRight' || event.key==='PageDown' || event.key.toLowerCase()==='e'){moveStep(1);}
+      else if(event.key==='Enter'){await activate();}
+      else if(event.key==='Escape' || event.key==='Backspace'){back();}
+      else if(event.key.toLowerCase()==='y'){await complete(true);}
+    });
+    const PAD={A:0,B:1,X:2,Y:3,LB:4,RB:5,DU:12,DD:13,DL:14,DR:15};
+    let prev={};
+    function pollGamepad(){
+      const gp=navigator.getGamepads?.().find(Boolean);
+      if(gp){
+        const just=(button)=>gp.buttons[button]?.pressed && !prev[button];
+        if(setupVkState.open){
+          if(just(PAD.DL)) moveSetupKeyboard(-1);
+          if(just(PAD.DR)) moveSetupKeyboard(1);
+          if(just(PAD.DU)) moveSetupKeyboard(-10);
+          if(just(PAD.DD)) moveSetupKeyboard(10);
+          if(just(PAD.A)) activateSetupKeyboardKey();
+          if(just(PAD.X)) applySetupKeyboardAction('backspace');
+          if(just(PAD.Y)) applySetupKeyboardAction(' ');
+          if(just(PAD.B)) closeSetupKeyboard(false);
+        }else if(folderBrowserState.open){
+          if(just(PAD.DU)) moveFolderBrowserSelection(-1);
+          if(just(PAD.DD)) moveFolderBrowserSelection(1);
+          if(just(PAD.A)) openSelectedFolderBrowserEntry();
+          if(just(PAD.X)) createFolderBrowserFolder();
+          if(just(PAD.Y)) chooseCurrentFolderBrowserPath();
+          if(just(PAD.B)) folderBrowserBack();
+        }else{
+          if(just(PAD.DU)){state.sel=Math.max(0,state.sel-1);render();}
+          if(just(PAD.DD)){state.sel=Math.min((current().actions||[]).length-1,state.sel+1);render();}
+          if(just(PAD.DL) || just(PAD.LB)) moveStep(-1);
+          if(just(PAD.DR) || just(PAD.RB)) moveStep(1);
+          if(just(PAD.A)) activate();
+          if(just(PAD.B)) back();
+          if(just(PAD.Y)) complete(true);
+        }
+        prev={};
+        gp.buttons.forEach((button,idx)=>{prev[idx]=button.pressed;});
+      }
+      requestAnimationFrame(pollGamepad);
+    }
+    scaleSetupStage();
+    setTime();
+    setInterval(setTime,15000);
+    refreshStatus();
+    pollGamepad();
+  </script>
+</body>
+</html>

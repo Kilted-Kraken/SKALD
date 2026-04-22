@@ -14,26 +14,41 @@
     "create:pack:batch": "node scripts/create-marketplace-pack-batch.js",
     "create:pack:quality-batch": "node scripts/create-marketplace-pack-quality-batch.js",
     "fetch:pack:screenscraper": "node scripts/fetch-screenscraper-pack-batch.js",
-    "report:minerva:torrent": "node scripts/report-minerva-torrent.js",
-    "build:minerva:index": "node scripts/build-minerva-index.js",
-    "prototype:minerva:download": "node scripts/prototype-minerva-download.mjs",
     "validate:pack:batch": "node scripts/validate-marketplace-pack-batch.js",
     "validate:pack": "node scripts/validate-marketplace-pack.js",
     "merge:pack": "node scripts/merge-marketplace-pack-batch.js"
   },
   "devDependencies": {
-    "electron": "latest",
+    "electron": "40.8.5",
     "electron-builder": "latest"
   },
   "dependencies": {
-    "axios": "^1.0.0",
+    "axios": "^1.15.2",
     "better-sqlite3": "^12.6.2",
     "electron-updater": "^6.3.9",
     "extract-zip": "^2.0.1",
     "howlongtobeat-core": "^1.1.1",
     "sharp": "^0.34.5",
-    "stoat.js": "^7.3.6",
-    "webtorrent": "^2.8.5"
+    "stoat.js": "^7.3.6"
+  },
+  "overrides": {
+    "@xmldom/xmldom": "0.8.12",
+    "follow-redirects": "1.16.0",
+    "lodash": "4.18.1",
+    "picomatch": "4.0.4",
+    "tar": "7.5.13",
+    "minimatch@3.1.5": {
+      "brace-expansion": "1.1.13"
+    },
+    "minimatch@5.1.9": {
+      "brace-expansion": "2.0.3"
+    },
+    "minimatch@9.0.9": {
+      "brace-expansion": "2.0.3"
+    },
+    "minimatch@10.2.4": {
+      "brace-expansion": "5.0.5"
+    }
   },
   "build": {
     "appId": "com.skald.launcher",

@@ -1832,6 +1832,7 @@ body.guide-shell-only #stage{background:transparent !important;}
   .sys-row.r5{top:144px;}
   .sys-row.r6{top:183px;}
   .sys-row.r7{top:223px;}
+  .sys-row.r8{top:264px;}
   .sys-desc{padding-top:92px;max-width:420px;color:rgba(0,0,0,.84);}
   .sys-desc-title{font-size:28px;line-height:1.1;margin-bottom:14px;}
   .sys-desc-body{font-size:21px;line-height:1.35;white-space:pre-line;}
@@ -2725,17 +2726,33 @@ body:has(#guide.on) #blade-layer{visibility:hidden;}
 .vk-field.is-password{letter-spacing:4px;}
 .vk-label{display:block;font-size:13px;color:rgba(0,0,0,.45);margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;}
 .vk-btn{padding:10px 28px;font-size:18px;font-family:inherit;cursor:pointer;background:rgba(255,255,255,.7);border:1px solid rgba(0,0,0,.2);}
-#vk-overlay{position:absolute;inset:0;z-index:70;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.35);}
+#vk-overlay{position:absolute;inset:0;z-index:70;display:none;align-items:stretch;justify-content:flex-start;background:rgba(0,0,0,.48);}
 #vk-overlay.on{display:flex;}
-#vk-panel{width:980px;min-height:520px;padding:26px 30px 22px;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/background-grey.webp') no-repeat center/cover;border-radius:20px;box-shadow:0 22px 60px rgba(0,0,0,.45);}
-#vk-title{font-size:28px;color:#222;margin-bottom:10px;}
-#vk-target{min-height:56px;padding:12px 16px;background:rgba(255,255,255,.7);border:1px solid rgba(0,0,0,.14);font-size:24px;color:#111;margin-bottom:18px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
-#vk-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:10px;}
-.vk-key{height:64px;border:none;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/systemhomebutton-1a.webp') no-repeat center/100% 100%;font-family:inherit;font-size:24px;color:#222;cursor:pointer;position:relative;}
-.vk-key.sel{filter:brightness(0.92);box-shadow:0 0 0 3px rgba(149,205,76,.9);}
+    #vk-panel{position:relative;width:1584px;height:1080px;padding:96px 318px 92px 72px;background:transparent;border-radius:0;box-shadow:none;border:none;overflow:hidden;transform:translateX(-1584px);transition:transform 250ms ease-out;}
+#vk-overlay.on #vk-panel{transform:translateX(0);}
+#vk-tile{position:absolute;left:0;top:0;width:1317px;height:1080px;background:#d9d9d6 url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/guide-blade-overlay-tile.webp') repeat-x left top;background-size:auto 100%;pointer-events:none;z-index:0;}
+#vk-edge{position:absolute;left:1317px;top:0;width:267px;height:1080px;background:none;pointer-events:none;overflow:hidden;z-index:0;}
+#vk-edge::before{content:'';position:absolute;inset:0;background:#d9d9d6;clip-path:polygon(0 0,64% 0,75% 10%,72% 31%,74% 45%,72% 61%,75% 90%,64% 100%,0 100%);z-index:0;}
+#vk-edge::after{content:'';position:absolute;inset:0;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/guide-blade-overlay-edge-left.webp') no-repeat;background-size:100% 100%;z-index:1;}
+#vk-panel>*{position:relative;z-index:1;}
+#vk-panel>#vk-tile,#vk-panel>#vk-edge{position:absolute;z-index:0;}
+#vk-title{font-size:34px;color:#222;margin-bottom:12px;text-shadow:0 1px 0 rgba(255,255,255,.55);}
+#vk-target{min-height:76px;padding:14px 18px;background:rgba(255,255,255,.62);border:2px solid rgba(0,0,0,.18);font-size:31px;color:#111;margin-bottom:22px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;box-shadow:inset 0 2px 6px rgba(0,0,0,.12),0 1px 0 rgba(255,255,255,.55);}
+#vk-layout{display:grid;grid-template-columns:172px 1fr 172px;gap:22px;align-items:stretch;}
+#vk-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:12px;align-content:start;}
+.vk-side{display:grid;grid-template-rows:repeat(3,112px) 1fr;gap:14px;}
+.vk-side.right{grid-template-rows:repeat(2,112px) 1fr;}
+.vk-side-card{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:112px;padding:12px 10px;border-radius:13px;background:linear-gradient(180deg,rgba(249,250,246,.86),rgba(210,213,204,.72));border:2px solid rgba(92,92,86,.34);box-shadow:inset 0 1px 0 rgba(255,255,255,.72),0 2px 5px rgba(0,0,0,.16);font-size:22px;color:#111;}
+.vk-side-card.dim{opacity:.45;}
+.vk-side-card.done{min-height:238px;background:linear-gradient(180deg,rgba(224,255,197,.92),rgba(132,217,91,.86));}
+.vk-side-card img{width:66px;height:44px;object-fit:contain;filter:drop-shadow(0 1px 1px rgba(0,0,0,.22));}
+.vk-side-card .vk-stick-icon{width:58px;height:58px;}
+.vk-key{height:66px;border:none;background:center/100% 100% no-repeat transparent;font-family:inherit;font-size:24px;color:#222;cursor:pointer;position:relative;}
+.vk-key.sel{filter:brightness(1.05);box-shadow:0 0 0 4px rgba(132,203,70,.92),0 0 16px rgba(132,203,70,.45);border-radius:10px;}
+.vk-key-label{position:absolute;inset:0;display:grid;place-items:center;font-size:25px;color:#111;text-shadow:0 1px 0 rgba(255,255,255,.55);pointer-events:none;}
 .vk-key.wide-2{grid-column:span 2;}
 .vk-key.wide-3{grid-column:span 3;}
-#vk-hints{display:flex;gap:22px;margin-top:18px;font-size:18px;color:rgba(0,0,0,.65);}
+#vk-hints{display:flex;gap:28px;margin-top:20px;font-size:21px;color:rgba(0,0,0,.68);}
 #vk-hints span{display:flex;align-items:center;gap:7px;}
 #vk-hints img{width:24px;height:24px;object-fit:contain;}
 </style>
@@ -3630,8 +3647,11 @@ SKALD LIVE uses Stoat for accounts. If you already have a Stoat account, sign in
             <li class="mitem sys-row r6" data-sub="thirdparty-accounts" data-sys-title="3rd Party Accounts" data-sys-desc="Manage Archive.org, RetroAchievements, SteamGridDB, and future connected services for the current Stoat profile.">
               <div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-profile.webp')"></div>3rd Party Accounts
             </li>
-            <li class="mitem sys-row r7" data-sub="initial-setup" data-sys-title="Initial Setup" data-sys-desc="Review first-run setup, install paths, emulator configuration, and sign-in requirements.">
+            <li class="mitem sys-row r7" data-action="opensetup" data-sys-title="Initial Setup" data-sys-desc="Open the dedicated first-run setup wizard for profile, storage, services, emulators, and safety defaults.">
               <div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-power.webp')"></div>Initial Setup
+            </li>
+            <li class="mitem sys-row r8" data-action="openlegacy" data-sys-title="Open Legacy Launcher" data-sys-desc="Leave Blades and open the original SKALD launcher window as a temporary fallback while Blades becomes the primary shell.">
+              <div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-system.webp')"></div>Open Legacy Launcher
             </li>
           </ul>
         </div>
@@ -3828,7 +3848,14 @@ SKALD LIVE uses Stoat for accounts. If you already have a Stoat account, sign in
         <div class="mkt-scan-layout">
           <div class="mkt-scan-left">
             <div class="mkt-scan-list" id="initial-setup-list">
-              <div class="subnav-item emu-item setup-item sel" data-setup-action="set-install" data-setup-title="Set Install Folder" data-setup-desc="Choose the main folder where SKALD should install or track downloaded games. This is also used as a fallback scan location.">
+              <div class="subnav-item emu-item setup-item sel" data-setup-action="open-skald-live" data-setup-title="Sign In to SKALD LIVE" data-setup-desc="Sign in with Stoat/SKALD LIVE or create a Stoat account so SKALD can sync your profile, gamer card, chat, and connected-service credentials.">
+                <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/SKALD_LIVE.webp')"></div>
+                <div class="mkt-account-copy">
+                  <div class="mkt-scan-label">Sign In to SKALD LIVE</div>
+                  <div class="mkt-action-meta" id="setup-live-display">Checking…</div>
+                </div>
+              </div>
+              <div class="subnav-item emu-item setup-item" data-setup-action="set-install" data-setup-title="Set Install Folder" data-setup-desc="Choose the main folder where SKALD should install or track downloaded games. This is also used as a fallback scan location.">
                 <div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-folder.webp')"></div>
                 <div class="mkt-account-copy">
                   <div class="mkt-scan-label">Set Install Folder</div>
@@ -4021,9 +4048,23 @@ Open this entry to manage the runtime and system cores.</div>
   <div id="guide2" data-mode="account"><div id="g2-black"></div><div id="g2-panel"></div><div id="g2-tile"></div><div id="g2-edge"></div><div id="g2-content"><div id="g2-account-head"><img id="g2-account-head-icon" src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-profile.webp" alt=""><div id="g2-account-title">Archive.org</div></div><div id="g2-account-shell"><div id="g2-account-body"><div id="g2-account-desc"></div><div id="g2-account-status"></div><input id="g2a-login-input" type="text" autocomplete="off" style="display:none;"/><input id="g2a-secret-input" type="password" autocomplete="new-password" style="display:none;"/><div id="g2-account-list"><div class="g2a-item sel" data-vk-target="g2a-login-input"><div class="gicon" id="g2a-login-icon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-profile.webp')"></div><div class="g2a-copy"><div class="g2a-label" id="g2a-login-label">Login</div><div class="g2a-value dim" id="g2a-login-display">Not set</div></div></div><div class="g2a-item" data-vk-target="g2a-secret-input"><div class="gicon" id="g2a-secret-icon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-system.webp')"></div><div class="g2a-copy"><div class="g2a-label" id="g2a-secret-label">Secret</div><div class="g2a-value dim" id="g2a-secret-display">Not set</div></div></div><div class="g2a-item" data-ga-action="toggle-save"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-system.webp')"></div><div class="g2a-copy"><div class="g2a-label">Save to Stoat Profile</div><div class="g2a-value" id="g2a-save-display">On</div></div></div><div class="g2a-item" data-ga-action="primary"><div class="gicon" id="g2a-primary-icon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-a.webp')"></div><div class="g2a-copy"><div class="g2a-label" id="g2a-primary-label">Save</div><div class="g2a-meta" id="g2a-primary-meta">Apply changes for this provider.</div></div></div><div class="g2a-item" data-ga-action="secondary"><div class="gicon" id="g2a-secondary-icon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-x.webp')"></div><div class="g2a-copy"><div class="g2a-label" id="g2a-secondary-label">Clear Saved</div><div class="g2a-meta" id="g2a-secondary-meta">Remove stored credentials for this Stoat profile.</div></div></div></div><div id="g2-retroarch-body"><div id="g2-retroarch-desc"></div><div id="g2-retroarch-status"></div><div id="emu-progress-wrap" class="emu-progress-wrap"><div class="emu-progress-top"><div id="emu-progress-label" class="mkt-action-meta emu-progress-label">Preparing RetroArch…</div><div id="emu-progress-percent" class="emu-progress-percent">0%</div></div><div class="emu-progress-shell"><div id="emu-progress-fill" class="emu-progress-fill"></div></div></div><div id="g2-retroarch-list"><div class="g2r-item sel" data-emu-action="download-runtime" data-emu-title="Download Managed Runtime" data-emu-desc="Download the current official stable Windows RetroArch package from RetroArch's own distribution pipeline and install it into SKALD's managed runtime folder." data-emu-picker="none"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-system.webp')"></div><div class="g2r-copy"><div class="g2r-label">Download Managed Runtime</div><div class="g2r-value dim" id="emu-retroarch-display">Managed runtime not available</div></div></div><div class="g2r-item" data-emu-action="import-runtime" data-emu-title="Import Existing Runtime" data-emu-desc="Copy a full RetroArch install into SKALD's managed runtime folder from an existing local install. Use this when you already have a working RetroArch setup on disk." data-emu-picker="exe"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-downloads.webp')"></div><div class="g2r-copy"><div class="g2r-label">Import Existing Runtime</div><div class="g2r-value dim" id="emu-retroarch-import-display">Pick retroarch.exe from an existing install</div></div></div><div class="g2r-item" data-emu-key="retroarchPath" data-emu-title="Custom Runtime Override" data-emu-desc="SKALD prefers its bundled RetroArch runtime. Choose a custom RetroArch executable only if you want to override the built-in runtime during development or troubleshooting." data-emu-picker="exe"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-settings.webp')"></div><div class="g2r-copy"><div class="g2r-label">Custom Runtime Override</div><div class="g2r-value dim" id="emu-retroarch-override-display">Using SKALD managed runtime</div></div></div><div class="g2r-item" data-emu-key="snes" data-emu-title="Super Nintendo Core" data-emu-desc="Choose the libretro core DLL SKALD should load for Super Nintendo games." data-emu-picker="core"><div class="gicon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/CONTROLLER-snes.svg')"></div><div class="g2r-copy"><div class="g2r-label">Super Nintendo Core</div><div class="g2r-value dim" id="emu-snes-display">Not set</div></div></div><div class="g2r-item" data-emu-key="genesis" data-emu-title="Sega Genesis Core" data-emu-desc="Choose the libretro core DLL SKALD should load for Sega Genesis games." data-emu-picker="core"><div class="gicon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/Genesis.webp')"></div><div class="g2r-copy"><div class="g2r-label">Sega Genesis Core</div><div class="g2r-value dim" id="emu-genesis-display">Not set</div></div></div><div class="g2r-item" data-emu-key="psx" data-emu-title="PlayStation Core" data-emu-desc="Choose the libretro core DLL SKALD should load for PlayStation games." data-emu-picker="core"><div class="gicon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/CONTROLLER-playstation1.svg')"></div><div class="g2r-copy"><div class="g2r-label">PlayStation Core</div><div class="g2r-value dim" id="emu-psx-display">Not set</div></div></div><div class="g2r-item" data-emu-key="ps2" data-emu-title="PlayStation 2 Core" data-emu-desc="Choose the libretro core DLL SKALD should load for PlayStation 2 games." data-emu-picker="core"><div class="gicon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/CONTROLLER-playstation2.svg')"></div><div class="g2r-copy"><div class="g2r-label">PlayStation 2 Core</div><div class="g2r-value dim" id="emu-ps2-display">Not set</div></div></div><div class="g2r-item" data-emu-key="psp" data-emu-title="PSP Core" data-emu-desc="Choose the libretro core DLL SKALD should load for PSP games." data-emu-picker="core"><div class="gicon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/CONTROLLER-playstation1.svg')"></div><div class="g2r-copy"><div class="g2r-label">PSP Core</div><div class="g2r-value dim" id="emu-psp-display">Not set</div></div></div><div class="g2r-item" data-emu-key="dc" data-emu-title="Dreamcast Core" data-emu-desc="Choose the libretro core DLL SKALD should load for Sega Dreamcast games." data-emu-picker="core"><div class="gicon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/Dreamcast.webp')"></div><div class="g2r-copy"><div class="g2r-label">Dreamcast Core</div><div class="g2r-value dim" id="emu-dc-display">Not set</div></div></div></div></div><div id="g2-pcsx2-body"><div id="g2-pcsx2-desc"></div><div id="g2-pcsx2-status"></div><div id="emu-progress-wrap-pcsx2" class="emu-progress-wrap"><div class="emu-progress-top"><div id="emu-progress-label-pcsx2" class="mkt-action-meta emu-progress-label">Preparing PCSX2…</div><div id="emu-progress-percent-pcsx2" class="emu-progress-percent">0%</div></div><div class="emu-progress-shell"><div id="emu-progress-fill-pcsx2" class="emu-progress-fill"></div></div></div><div id="g2-pcsx2-list"><div class="g2r-item sel" data-pcsx2-action="download-runtime" data-pcsx2-title="Download Managed Runtime" data-pcsx2-desc="Download the current official stable Windows PCSX2 package from the official GitHub releases and install it into SKALD's managed runtime folder." data-pcsx2-picker="none"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-system.webp')"></div><div class="g2r-copy"><div class="g2r-label">Download Managed Runtime</div><div class="g2r-value dim" id="emu-pcsx2-runtime-display">Managed runtime not available</div></div></div><div class="g2r-item" data-pcsx2-action="import-runtime" data-pcsx2-title="Import Existing Runtime" data-pcsx2-desc="Copy a full PCSX2 install into SKALD's managed runtime folder from an existing local install. Use this when you already have a working PCSX2 setup on disk." data-pcsx2-picker="exe"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-downloads.webp')"></div><div class="g2r-copy"><div class="g2r-label">Import Existing Runtime</div><div class="g2r-value dim" id="emu-pcsx2-import-display">Pick pcsx2-qt.exe from an existing install</div></div></div><div class="g2r-item" data-pcsx2-key="pcsx2Path" data-pcsx2-title="Custom Runtime Override" data-pcsx2-desc="SKALD will eventually prefer its managed PCSX2 runtime. Choose a custom PCSX2 executable only if you need a temporary override during setup or troubleshooting." data-pcsx2-picker="exe"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-settings.webp')"></div><div class="g2r-copy"><div class="g2r-label">Custom Runtime Override</div><div class="g2r-value dim" id="emu-pcsx2-override-display">Using SKALD managed runtime when available</div></div></div><div class="g2r-item" data-pcsx2-action="set-bios-folder" data-pcsx2-title="BIOS Folder" data-pcsx2-desc="Choose the folder containing your legally dumped PlayStation 2 BIOS files. SKALD will use this path for the managed PCSX2 integration." data-pcsx2-picker="folder"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-system.webp')"></div><div class="g2r-copy"><div class="g2r-label">BIOS Folder</div><div class="g2r-value dim" id="emu-pcsx2-bios-display">Not set</div></div></div></div></div></div><div id="g2-account-foot"><div class="gaf-hint"><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-b.webp" alt="">Back</div><div class="gaf-hint"><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-a.webp" alt="">Select</div></div></div></div></div>
   <div id="vk-overlay">
     <div id="vk-panel">
+      <div id="vk-tile"></div>
+      <div id="vk-edge"></div>
       <div id="vk-title">Keyboard</div>
       <div id="vk-target"></div>
-      <div id="vk-grid"></div>
+      <div id="vk-layout">
+        <div class="vk-side left">
+          <div class="vk-side-card"><img src="file:///C:/Projects/SKALD/assets/icons/Controls/xbox_lb.webp" alt="">Cursor</div>
+          <div class="vk-side-card dim"><img src="file:///C:/Projects/SKALD/assets/icons/Controls/xbox_lt.webp" alt="">Symbols</div>
+          <div class="vk-side-card dim"><img class="vk-stick-icon" src="file:///C:/Projects/SKALD/assets/icons/Controls/xbox_stick_l.webp" alt="">Caps</div>
+        </div>
+        <div id="vk-grid"></div>
+        <div class="vk-side right">
+          <div class="vk-side-card"><img src="file:///C:/Projects/SKALD/assets/icons/Controls/xbox_rb.webp" alt="">Cursor</div>
+          <div class="vk-side-card dim"><img src="file:///C:/Projects/SKALD/assets/icons/Controls/xbox_rt.webp" alt="">Accents</div>
+          <div class="vk-side-card done"><img src="file:///C:/Projects/SKALD/assets/icons/Controls/button-a.webp" alt="">Done</div>
+        </div>
+      </div>
       <div id="vk-hints">
         <span><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-a.webp" alt="A"/>Type</span>
         <span><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-x.webp" alt="X"/>Backspace</span>
@@ -4115,7 +4156,7 @@ const SKALD_THEME_BACKGROUND_SLOTS=Object.freeze({
   mkt:'image4',
 });
 const SYS_ROW_ASSET_COUNT=10;
-const SYS_FRAME_TOPS=[17,17,7,9,5,1,-1];
+const SYS_FRAME_TOPS=[17,17,7,9,5,1,-1,-1];
 const EMU_FRAME_TOPS=[17,17,7,9,5,1,-1];
   const THIRD_PARTY_GUIDE_META={
     archiveorg:{
@@ -4407,6 +4448,7 @@ let subSelIdx=0;
 let vkOpen=false;
 let vkSelIdx=0;
 let vkFieldId=null;
+let vkSubmitHandler=null;
 const VK_KEYS=[
   '1','2','3','4','5','6','7','8','9','0',
   'q','w','e','r','t','y','u','i','o','p',
@@ -5750,22 +5792,25 @@ function updateFamilySettingsPanel(){
 }
 async function refreshInitialSetupPanel(){
   try{
-    const [settings, runtime, coreStatus, archive, raAccount, sgdbAccount] = await Promise.all([
+    const [settings, runtime, coreStatus, archive, raAccount, sgdbAccount, stoatStatus] = await Promise.all([
       window.electronAPI?.getSettings?.() || {},
       window.electronAPI?.getEmulatorRuntimeStatus?.() || {},
       window.electronAPI?.getLibretroCoreStatus?.() || {},
       window.electronAPI?.archiveCheck?.(),
       window.electronAPI?.getThirdPartyAccount?.({provider:'retroachievements'}),
       window.electronAPI?.getThirdPartyAccount?.({provider:'steamgriddb'}),
+      window.electronAPI?.stoatStatus?.(),
     ]);
     const hasCore=(key)=>!!coreStatus?.[key]?.available;
     const setText=(id,value)=>{ const el=document.getElementById(id); if(el) el.textContent=value; };
+    setText('setup-live-display', stoatStatus?.connected ? `Signed in as ${stoatStatus?.user?.username || 'SKALD profile'}` : 'Sign in or create account');
     setText('setup-install-display', settings.installPath || 'Not set');
     setText('setup-download-display', settings.downloadPath || 'Not set');
     setText('setup-emulators-display', runtime?.ok && hasCore('snes') && hasCore('genesis') && hasCore('psx') && hasCore('ps2') && hasCore('psp') && hasCore('dc') ? 'Runtime + cores ready' : 'Needs runtime + cores');
     setText('setup-accounts-display', archive?.loggedIn || (raAccount?.secret) || (sgdbAccount?.secret) ? 'Some providers configured' : 'No providers configured');
     setText('setup-network-display', settings?.metadataService?.enabled ? 'Cloud metadata reviewed' : 'Review service status');
     const missing=[];
+    if(!stoatStatus?.connected) missing.push('SKALD LIVE');
     if(!settings.installPath) missing.push('Install Folder');
     if(!settings.downloadPath) missing.push('Download Folder');
     if(!runtime?.ok || !hasCore('snes') || !hasCore('genesis') || !hasCore('psx') || !hasCore('ps2') || !hasCore('psp') || !hasCore('dc')) missing.push('Emulators');
@@ -5791,6 +5836,14 @@ function updateInitialSetupPanel(){
   const meta=document.getElementById('setup-meta');
   if(title) title.textContent=item.dataset.setupTitle||item.textContent.trim();
   if(meta) meta.textContent=item.dataset.setupDesc||'';
+}
+function openSkaldLiveSetupFromInitialSetup(){
+  activeIdx=1;
+  buildBlades();
+  applyBg();
+  applyPanel();
+  if(stoatConnected) openStoatProfileSubpanel('sub-profile-manager');
+  else openStoatProfileHubFromSignedOut();
 }
 function renderGameLaunchBusyOverlay(){
   const overlay=document.getElementById('game-launch-busy');
@@ -6440,6 +6493,52 @@ function renderGamesScanResults(){
       </div>
     </div>
   `).join('');
+}
+async function activateGamesScanAction(action){
+  if(!action) return;
+  const items=getSubItems();
+  const idx=items.indexOf(action);
+  if(idx>=0){
+    subSelIdx=idx;
+    applySubSel();
+  }
+  const scanAction=action.dataset.scanAction || '';
+  if(scanAction==='system'){
+    setGamesScanView('system');
+    subSelIdx=0;
+    applySubSel();
+    return;
+  }
+  if(scanAction==='system-back'){
+    setGamesScanView('root');
+    subSelIdx=0;
+    applySubSel();
+    return;
+  }
+  if(scanAction==='system-set'){
+    const system=action.dataset.scanSystem || '';
+    const ok=await saveMarketplaceSystemScanFolder(system);
+    if(ok){
+      const status=document.getElementById('games-scan-status');
+      if(status) status.textContent=`Saved ${getScanSystemLabel(system)} scan folder.`;
+      await refreshStoragePanel();
+      renderGamesScanResults();
+      applySubSel();
+      toast(`${getScanSystemLabel(system)} scan folder saved`);
+    }
+    return;
+  }
+  if(scanAction==='system-all'){
+    await marketplaceScanAllSystems();
+    renderGamesScanResults();
+    return;
+  }
+  if(scanAction==='system-run'){
+    await marketplaceScanForGames('system', action.dataset.scanSystem || '');
+  }else if(scanAction){
+    await marketplaceScanForGames(scanAction);
+  }
+  renderGamesScanResults();
 }
 function setGamesScanView(view){
   marketplaceState.scanView=view;
@@ -7467,6 +7566,13 @@ if(isArchiveGamesOpen()){archiveGamesSelect();return;}
   }
   const sub=getActiveSubpanel();
   if(sub?.id==='sub-library' && activateHomeSidePane()) return;
+  if(sub?.id==='sub-library-scan'){
+    const item=getSubItems()[subSelIdx];
+    if(item?.classList?.contains('mkt-scan-action')){
+      await activateGamesScanAction(item);
+      return;
+    }
+  }
     if(sub?.id==='sub-profile'){
       const items=getStoatProfileMenuItems();
       const item=items[Math.max(0,Math.min(subSelIdx,items.length-1))];
@@ -7768,6 +7874,8 @@ if(BLADES[activeIdx]?.id==='mkt' && sub?.id==='sub-market-media' && marketVideos
 }
 function handleAction(a){
   if(a==='opensettings'){playSfx('select.wav');exitBlades(true);}
+  if(a==='opensetup'){playSfx('select.wav');setTimeout(()=>window.electronAPI?.openInitialSetup?.(),180);}
+  if(a==='openlegacy'){playSfx('select.wav');setTimeout(()=>window.electronAPI?.openLegacyLauncher?.(),180);}
   if(a==='exit')exitBlades(false);
 }
 const guideEl=document.getElementById('guide');
@@ -8637,9 +8745,12 @@ async function handlePCSX2GuideItem(btn){
       return;
     }
     if(action==='set-bios-folder' || picker==='folder'){
-      const picked=await window.electronAPI?.chooseFolder?.();
-      if(!picked) return;
       const settings=await window.electronAPI?.getSettings?.() || {};
+      const picked=await openSkaldFolderBrowser({
+        title:'Select PCSX2 BIOS Folder',
+        startPath:settings?.emulators?.pcsx2?.biosPath || settings?.installPath || settings?.downloadPath || '',
+      });
+      if(!picked) return;
       const next={...settings, emulators:{...(settings.emulators||{}), pcsx2:{...((settings.emulators||{}).pcsx2||{}), biosPath:picked}}};
       await window.electronAPI?.saveSettings?.(next);
       await window.electronAPI?.syncPCSX2Runtime?.().catch(()=>null);
@@ -9091,7 +9202,7 @@ document.addEventListener('keydown',e=>{
   }
   if(guide2Open||guideOpen){if(handlePhysicalTextKey(e)){e.preventDefault();return;}if(e.key==='ArrowUp')guideMoveDirectional(0,-1);else if(e.key==='ArrowDown')guideMoveDirectional(0,1);else if(e.key==='ArrowLeft')guideLeft();else if(e.key==='ArrowRight')guideRight();else if(e.key==='Enter'||e.key===' ')guideSelect();else if(e.key==='Escape'||e.key==='b')guideBack();e.preventDefault();return;}
   if(folderBrowserState.open){
-    if(e.key==='ArrowUp')moveFolderBrowserSelection(-1);else if(e.key==='ArrowDown')moveFolderBrowserSelection(1);else if(e.key==='Enter'||e.key===' ')openSelectedFolderBrowserEntry();else if(e.key==='y'||e.key==='Y')chooseCurrentFolderBrowserPath();else if(e.key==='Escape'||e.key==='Backspace'||e.key==='b')folderBrowserBack();
+    if(e.key==='ArrowUp')moveFolderBrowserSelection(-1);else if(e.key==='ArrowDown')moveFolderBrowserSelection(1);else if(e.key==='Enter'||e.key===' ')openSelectedFolderBrowserEntry();else if(e.key==='x'||e.key==='X')createFolderBrowserFolder();else if(e.key==='y'||e.key==='Y')chooseCurrentFolderBrowserPath();else if(e.key==='Escape'||e.key==='Backspace'||e.key==='b')folderBrowserBack();
     e.preventDefault();return;
   }
   if(isMarketplaceVideoPlaybackActive()){
@@ -9243,6 +9354,7 @@ function padPoll(){
     if(just(PAD.DU)||(axU<-DEAD&&!padPrev._aU))moveFolderBrowserSelection(-1);
     if(just(PAD.DD)||(axU>DEAD&&!padPrev._aD))moveFolderBrowserSelection(1);
     if(just(PAD.A))openSelectedFolderBrowserEntry();
+    if(just(PAD.X))createFolderBrowserFolder();
     if(just(PAD.Y))chooseCurrentFolderBrowserPath();
     if(just(PAD.B)||just(PAD.GUIDE))folderBrowserBack();
   }else if(gameSearchState.open){
@@ -9375,10 +9487,19 @@ document.querySelectorAll('#sub-initial-setup .setup-item').forEach(item=>item.a
   if(idx>=0){subSelIdx=idx;applySubSel();}
   const action=item.dataset.setupAction;
   if(!action) return;
+  if(action==='open-skald-live'){
+    openSkaldLiveSetupFromInitialSetup();
+    return;
+  }
   if(action==='set-install' || action==='set-download'){
-    const picked=await window.electronAPI?.chooseFolder?.();
-    if(!picked) return;
     const settings=await window.electronAPI?.getSettings?.() || {};
+    const picked=await openSkaldFolderBrowser({
+      title:action==='set-install' ? 'Select Install Folder' : 'Select Download Folder',
+      startPath:action==='set-install'
+        ? ''
+        : (settings.downloadPath || settings.installPath || ''),
+    });
+    if(!picked) return;
     if(action==='set-install') settings.installPath=picked;
     else settings.downloadPath=picked;
     await window.electronAPI?.saveSettings?.(settings);
@@ -10724,6 +10845,7 @@ function controlLegendForContext(){
         { icons:['dpadVertical','leftStickVertical'], label:'Folders' },
         { icons:['a'], label:'Open' },
         { icons:['y'], label:'Select Folder' },
+        { icons:['x'], label:'New Folder' },
         { icons:['b'], label:'Back' },
       ],
     };
@@ -12200,7 +12322,7 @@ function ensureFolderBrowserModal(){
   modal=document.createElement('div');
   modal.id='folder-browser-modal';
   modal.className='folder-browser-modal';
-  modal.innerHTML=`<div class="folder-browser-head"><div><div class="folder-browser-title">Select Folder</div><div class="folder-browser-path"></div></div><div class="folder-browser-hints"><div class="folder-browser-hint"><img src="${CONTROL_ICONS.a}" alt=""/>Open</div><div class="folder-browser-hint"><img src="${CONTROL_ICONS.y}" alt=""/>Select</div><div class="folder-browser-hint"><img src="${CONTROL_ICONS.b}" alt=""/>Back</div></div></div><div class="folder-browser-list"></div>`;
+  modal.innerHTML=`<input id="folder-browser-new-folder-input" type="text" style="display:none;"/><div class="folder-browser-head"><div><div class="folder-browser-title">Select Folder</div><div class="folder-browser-path"></div></div><div class="folder-browser-hints"><div class="folder-browser-hint"><img src="${CONTROL_ICONS.a}" alt=""/>Open</div><div class="folder-browser-hint"><img src="${CONTROL_ICONS.y}" alt=""/>Select</div><div class="folder-browser-hint"><img src="${CONTROL_ICONS.x}" alt=""/>New Folder</div><div class="folder-browser-hint"><img src="${CONTROL_ICONS.b}" alt=""/>Back</div></div></div><div class="folder-browser-list"></div>`;
   document.getElementById('stage')?.appendChild(modal);
   return modal;
 }
@@ -12311,6 +12433,43 @@ function chooseCurrentFolderBrowserPath(){
     return false;
   }
   closeFolderBrowser(folderBrowserState.currentPath);
+  return true;
+}
+async function createFolderBrowserFolderNamed(rawName){
+  if(!folderBrowserState.open) return false;
+  if(!folderBrowserState.currentPath){
+    folderBrowserState.error='Open a drive or folder before creating a new folder.';
+    renderFolderBrowser();
+    return false;
+  }
+  const result=await window.electronAPI?.createFolder?.({parentDir:folderBrowserState.currentPath,name:rawName});
+  if(!result?.ok){
+    folderBrowserState.error=result?.error || 'Could not create folder.';
+    renderFolderBrowser();
+    return false;
+  }
+  await loadFolderBrowserPath(folderBrowserState.currentPath,true);
+  const idx=folderBrowserState.entries.findIndex(entry=>entry.path===result.path);
+  if(idx>=0) folderBrowserState.selectedIdx=idx;
+  renderFolderBrowser();
+  playSfx('select.wav');
+  return true;
+}
+async function createFolderBrowserFolder(){
+  if(!folderBrowserState.open) return false;
+  if(!folderBrowserState.currentPath){
+    folderBrowserState.error='Open a drive or folder before creating a new folder.';
+    renderFolderBrowser();
+    return false;
+  }
+  const input=ensureFolderBrowserModal().querySelector('#folder-browser-new-folder-input');
+  if(input) input.value='';
+  openKeyboard('folder-browser-new-folder-input',{
+    label:'New Folder Name',
+    onSubmit:async(value)=>{
+      await createFolderBrowserFolderNamed(value);
+    },
+  });
   return true;
 }
 function syncGamesInstalledSelection(){
@@ -16709,41 +16868,7 @@ async function initMarketplace(){
     const action=e.target.closest?.('.mkt-scan-action');
     if(!action) return;
     playSfx('select.wav');
-    const items=getSubItems();
-    const idx=items.indexOf(action);
-    if(idx>=0){subSelIdx=idx;applySubSel();}
-    if(action.dataset.scanAction==='system'){
-      setGamesScanView('system');
-      subSelIdx=0;
-      applySubSel();
-      return;
-    }
-    if(action.dataset.scanAction==='system-back'){
-      setGamesScanView('root');
-      subSelIdx=0;
-      applySubSel();
-      return;
-    }
-    if(action.dataset.scanAction==='system-set'){
-      const ok=await saveMarketplaceSystemScanFolder(action.dataset.scanSystem || '');
-      if(ok){
-        const status=document.getElementById('games-scan-status');
-        if(status) status.textContent=`Saved ${getScanSystemLabel(action.dataset.scanSystem || '')} scan folder.`;
-        await refreshStoragePanel();
-        renderGamesScanResults();
-        applySubSel();
-        toast(`${getScanSystemLabel(action.dataset.scanSystem || '')} scan folder saved`);
-      }
-      return;
-    }
-    if(action.dataset.scanAction==='system-all'){
-      await marketplaceScanAllSystems();
-      renderGamesScanResults();
-      return;
-    }
-    if(action.dataset.scanAction==='system-run') await marketplaceScanForGames('system', action.dataset.scanSystem || '');
-    else if(action.dataset.scanAction) await marketplaceScanForGames(action.dataset.scanAction);
-    renderGamesScanResults();
+    await activateGamesScanAction(action);
   });
   document.getElementById('sub-music')?.addEventListener('click',async(e)=>{
     const row=e.target.closest?.('.music-item,.music-player-control');
@@ -16872,17 +16997,47 @@ function syncStoatFieldDisplays(){
 
 function renderKeyboard(){
   if(!vkGrid) return;
+  const keyAsset=(obj)=>{
+    const raw=String(obj.asset || obj.value || obj.label || '').toLowerCase();
+    const map={
+      ' ':'keyboard_space.webp',
+      'space':'keyboard_space.webp',
+      'backspace':'keyboard_backspace.webp',
+      'clear':'keyboard_delete.webp',
+      'done':'keyboard_enter.webp',
+      '.':'keyboard_period.webp',
+      '-':'keyboard_minus.webp',
+      '_':'keyboard_minus.webp',
+      '@':'keyboard_space.webp',
+      "'":'keyboard_apostrophe.webp',
+      '"':'keyboard_quote.webp',
+      ':':'keyboard_colon.webp',
+      ';':'keyboard_semicolon.webp',
+      ',':'keyboard_comma.webp',
+      '/':'keyboard_slash_forward.webp',
+      '\\':'keyboard_slash_back.webp',
+      '?':'keyboard_question.webp',
+      '!':'keyboard_exclamation.webp',
+      '=':'keyboard_equals.webp',
+      '+':'keyboard_plus.webp',
+    };
+    const file=map[raw] || (/^[a-z0-9]$/.test(raw) ? `keyboard_${raw}.webp` : 'keyboard_space.webp');
+    return `file:///C:/Projects/SKALD/assets/icons/Controls/Keyboard/${file}`;
+  };
   vkGrid.innerHTML=VK_KEYS.map((k,i)=>{
     const obj=typeof k==='string'?{label:k,value:k,cls:''}:k;
-    return `<button class="vk-key ${obj.cls||''} ${i===vkSelIdx?'sel':''}" data-idx="${i}">${obj.label}</button>`;
+    const action=obj.action || obj.value || '';
+    const needsLabel=['_','@'].includes(String(obj.value||obj.label||'')) || ['done','clear'].includes(String(obj.action||''));
+    return `<button class="vk-key ${obj.cls||''} ${i===vkSelIdx?'sel':''}" data-idx="${i}" aria-label="${esc(obj.label||obj.value||action)}" style="background-image:url('${keyAsset({...obj,asset:obj.action||obj.value||obj.label})}')">${needsLabel?`<span class="vk-key-label">${esc(obj.label||obj.value||'')}</span>`:''}</button>`;
   }).join('');
   vkGrid.querySelectorAll('.vk-key').forEach(btn=>{
     btn.addEventListener('click',()=>{vkSelIdx=Number(btn.dataset.idx)||0;renderKeyboard();vkActivate();});
   });
 }
 
-function openKeyboard(fieldId){
+function openKeyboard(fieldId,opts={}){
   vkFieldId=fieldId;
+  vkSubmitHandler=typeof opts.onSubmit==='function' ? opts.onSubmit : null;
   vkOpen=true;
   vkSelIdx=0;
   const input=document.getElementById(fieldId);
@@ -16894,8 +17049,9 @@ function openKeyboard(fieldId){
     'emu-metadata-url':'Metadata Service URL',
     'emu-metadata-key':'Metadata Service API Key',
     'game-search-input':'Game Search',
+    'folder-browser-new-folder-input':'New Folder Name',
   };
-  const label=labelMap[fieldId] || 'Text';
+  const label=opts.label || labelMap[fieldId] || 'Text';
   if(vkTarget) vkTarget.textContent=(input?.value || '');
   const title=document.getElementById('vk-title');
   if(title) title.textContent=`${label} Keyboard`;
@@ -16904,15 +17060,20 @@ function openKeyboard(fieldId){
   updateControlLegend();
 }
 
-function closeKeyboard(keepSelection=false){
+async function closeKeyboard(keepSelection=false,submit=false){
+  const fieldId=vkFieldId;
+  const submitHandler=vkSubmitHandler;
+  const value=document.getElementById(fieldId)?.value || '';
   vkOpen=false;
   vkFieldId=null;
+  vkSubmitHandler=null;
   vkOverlay?.classList.remove('on');
   syncStoatFieldDisplays();
   syncMetadataServiceDisplays();
   if(!keepSelection) subSelIdx=0;
   applySubSel();
   updateControlLegend();
+  if(submit && submitHandler) await submitHandler(value);
 }
 
 function updateKeyboardTarget(){
@@ -16941,7 +17102,7 @@ function vkApply(action){
   if(!input) return;
   if(action==='backspace') input.value=input.value.slice(0,-1);
   else if(action==='clear') input.value='';
-  else if(action==='done'){ closeKeyboard(true); return; }
+  else if(action==='done'){ void closeKeyboard(true,true); return; }
   else input.value += action;
   updateKeyboardTarget();
 }

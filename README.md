@@ -45,7 +45,6 @@ Current direction:
 - Super Nintendo is the current end-to-end test system.
 - Downloaded Marketplace games are registered into the local Games library.
 - Archive.org signed-in download probing is supported for sources that require session access.
-- Minerva torrent indexing has been prototyped as a possible future fallback/source, but it is not the primary Marketplace path right now.
 
 ### Local Metadata Packs
 
@@ -132,7 +131,7 @@ Key areas:
 - `assets/icons/Ratings/` - rating badge assets
 - `assets/icons/Systems/` - system logo assets
 - `services/metadata-worker/` - Cloudflare metadata worker
-- `scripts/` - metadata pack, report, validation, ScreenScraper, and Minerva prototype tooling
+- `scripts/` - metadata pack, report, validation, and ScreenScraper tooling
 - `reports/` - generated metadata-pack and source-analysis reports
 
 ---
@@ -187,13 +186,12 @@ npm run report:pack:candidates -- --provider archiveorg --system snes --write
 - [Archive.org](https://archive.org/) as the current Marketplace download source
 - [RetroAchievements](https://retroachievements.org/) for achievement data
 - [SteamGridDB](https://www.steamgriddb.com/) and local caches for artwork enrichment
-- Minerva/WebTorrent prototype tooling for future source experiments
 
 ---
 
 ## Notes
 
-SKALD is not affiliated with Microsoft, Xbox, Archive.org, RetroAchievements, SteamGridDB, ScreenScraper, Minerva, or any console manufacturer.
+SKALD is not affiliated with Microsoft, Xbox, Archive.org, RetroAchievements, SteamGridDB, ScreenScraper, or any console manufacturer.
 
 All games, ROMs, metadata, artwork, and trademarks belong to their respective owners. SKALD is a launcher/platform shell and does not claim ownership of third-party content.
 
