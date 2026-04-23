@@ -11,6 +11,11 @@
   media-src file:;
 ">
 <title>SKALD — Blades</title>
+<script>
+if(new URLSearchParams(window.location.search).get('guideOverlay')==='1'){
+  document.documentElement.classList.add('guide-overlay-mode');
+}
+</script>
 <style>
 @font-face{font-family:'MC360';src:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/fonts/MC360.ttf') format('truetype');}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -18,19 +23,26 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'MC
 html.guide-overlay-mode,body.guide-overlay-mode{background:transparent !important;}
 html.guide-shell-only,body.guide-shell-only{background:transparent !important;}
 body.guide-overlay-mode #stage{opacity:1 !important;}
-body.guide-overlay-mode #stage > :not(#guide):not(#guide2):not(#vk-overlay):not(#toast){display:none !important;}
+body.guide-overlay-mode #stage > :not(#guide):not(#guide2):not(#folder-browser-modal):not(#vk-overlay):not(#toast){display:none !important;}
 body.guide-overlay-mode #panel-title-layer,
 body.guide-overlay-mode #ctrl-hint,
 body.guide-overlay-mode #btn-hints,
 body.guide-overlay-mode #blade-layer,
 body.guide-overlay-mode #toast{display:none !important;}
-body.guide-shell-only #stage > :not(#guide):not(#guide2):not(#vk-overlay):not(#toast){display:none !important;}
+body.guide-shell-only #stage > :not(#guide):not(#guide2):not(#folder-browser-modal):not(#vk-overlay):not(#toast){display:none !important;}
 body.guide-shell-only #panel-title-layer,
 body.guide-shell-only #ctrl-hint,
 body.guide-shell-only #btn-hints,
 body.guide-shell-only #blade-layer,
 body.guide-shell-only #toast{display:none !important;}
 body.guide-shell-only #stage{background:transparent !important;}
+#boot-animation-overlay{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:#000;opacity:1;transition:opacity 460ms ease;pointer-events:none;}
+#boot-animation-overlay.is-hiding{opacity:0;}
+#boot-animation-overlay.is-gone{display:none;}
+#boot-animation-video{width:100%;height:100%;object-fit:cover;background:#000;}
+html.guide-overlay-mode #boot-animation-overlay,
+body.guide-overlay-mode #boot-animation-overlay,
+body.guide-shell-only #boot-animation-overlay{display:none !important;}
 #stage{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden;opacity:0;transition:opacity 500ms;transform-origin:0 0;}
 #stage.loaded{opacity:1;}
 #stage.custom-theme-active::before{content:'';position:absolute;inset:0;z-index:2;pointer-events:none;background:transparent;}
@@ -799,7 +811,7 @@ body.guide-shell-only #stage{background:transparent !important;}
   left:72px;
   top:22px;
   width:410px;
-  height:276px;
+  height:300px;
   list-style:none;
   padding:0;
   margin:0;
@@ -824,16 +836,18 @@ body.guide-shell-only #stage{background:transparent !important;}
   line-height:1;
   display:flex;
   align-items:center;
+  box-sizing:border-box;
 }
 #sub-emulators .emu-item .micon{
   width:32px;
   height:32px;
   opacity:.9;
-  margin-right:16px;
-  flex:0 0 auto;
+  margin-right:0;
+  flex:0 0 32px;
 }
 #sub-emulators .emu-item .mkt-account-copy{
   min-width:0;
+  flex:1 1 auto;
   display:flex;
   align-items:center;
   height:100%;
@@ -846,6 +860,13 @@ body.guide-shell-only #stage{background:transparent !important;}
   align-items:center;
   min-height:38px;
 }
+#sub-emulators .emu-item.r1{top:0;}
+#sub-emulators .emu-item.r2{top:34px;}
+#sub-emulators .emu-item.r3{top:69px;}
+#sub-emulators .emu-item.r4{top:104px;}
+#sub-emulators .emu-item.r5{top:139px;}
+#sub-emulators .emu-item.r6{top:174px;}
+#sub-emulators .emu-item.r7{top:209px;}
 #sub-emulators .emu-item .mkt-action-meta{
   display:none;
 }
@@ -1166,7 +1187,7 @@ body.guide-shell-only #stage{background:transparent !important;}
 .game-search-result-title{font-size:20px;line-height:1.08;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .game-search-result-meta{font-size:14px;color:rgba(0,0,0,.56);white-space:nowrap;}
 .game-search-empty{padding:24px 12px;font-size:20px;color:rgba(0,0,0,.55);text-align:center;}
-.folder-browser-modal{position:absolute;left:50%;top:50%;z-index:49;display:none;width:min(760px,calc(100% - 120px));height:min(660px,calc(100% - 120px));padding:22px;border-radius:16px;background:linear-gradient(180deg,rgba(241,241,234,.98),rgba(204,204,197,.98));box-shadow:0 18px 48px rgba(0,0,0,.36),inset 0 2px 0 rgba(255,255,255,.58);border:3px solid rgba(118,118,118,.35);transform:translate(-50%,-50%);box-sizing:border-box;}
+.folder-browser-modal{position:absolute;left:50%;top:50%;z-index:72;display:none;width:min(760px,calc(100% - 120px));height:min(660px,calc(100% - 120px));padding:22px;border-radius:16px;background:linear-gradient(180deg,rgba(241,241,234,.98),rgba(204,204,197,.98));box-shadow:0 18px 48px rgba(0,0,0,.36),inset 0 2px 0 rgba(255,255,255,.58);border:3px solid rgba(118,118,118,.35);transform:translate(-50%,-50%);box-sizing:border-box;}
 .folder-browser-modal.on{display:flex;flex-direction:column;}
 .folder-browser-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:14px;}
 .folder-browser-title{font-size:30px;line-height:1;color:#111;margin-bottom:8px;}
@@ -2226,6 +2247,7 @@ body.guide-shell-only #stage{background:transparent !important;}
 body.guide-main-open #blade-layer{visibility:hidden;}
 #stage:has(#guide.on) + #blade-layer,
 body:has(#guide.on) #blade-layer{visibility:hidden;}
+body:has(#vk-overlay.on) #blade-layer{visibility:hidden;}
 #g-black{
   position:absolute;inset:0;z-index:70;
   background:
@@ -2327,12 +2349,40 @@ body:has(#guide.on) #blade-layer{visibility:hidden;}
 #guide2[data-mode="xenia"] #g2a-login-input,
 #guide2[data-mode="xenia"] #g2a-secret-input,
 #guide2[data-mode="xenia"] #g2-account-list,
-#guide2[data-mode="xenia"] #g2-retroarch-body,
-#guide2[data-mode="xenia"] #g2-pcsx2-body,
-#guide2[data-mode="xenia"] #g2-vlc-body{display:none;}
-#guide2[data-mode="xenia"] #g2-xenia-body{display:block;}
-#g2-xenia-body{display:none;}
-#g2-retroarch-desc{
+  #guide2[data-mode="xenia"] #g2-retroarch-body,
+  #guide2[data-mode="xenia"] #g2-pcsx2-body,
+  #guide2[data-mode="xenia"] #g2-vlc-body{display:none;}
+  #guide2[data-mode="xenia"] #g2-xenia-body{display:block;}
+  #g2-xenia-body{display:none;}
+  #guide2[data-mode="duckstation"] #g2-account-desc,
+  #guide2[data-mode="duckstation"] #g2-account-status,
+  #guide2[data-mode="duckstation"] #g2a-login-input,
+  #guide2[data-mode="duckstation"] #g2a-secret-input,
+  #guide2[data-mode="duckstation"] #g2-account-list,
+  #guide2[data-mode="duckstation"] #g2-retroarch-body,
+  #guide2[data-mode="duckstation"] #g2-pcsx2-body,
+  #guide2[data-mode="duckstation"] #g2-vlc-body,
+  #guide2[data-mode="duckstation"] #g2-xenia-body,
+  #guide2[data-mode="duckstation"] #g2-dolphin-body,
+  #guide2[data-mode="duckstation"] #g2-rpcs3-body{display:none;}
+  #guide2[data-mode="duckstation"] #g2-account-body{top:32px;padding:8px 26px 0;}
+  #guide2[data-mode="duckstation"] #g2-duckstation-body{display:block;}
+  #g2-duckstation-body{display:none;}
+  #guide2[data-mode="dolphin"] #g2-account-desc,
+  #guide2[data-mode="dolphin"] #g2-account-status,
+  #guide2[data-mode="dolphin"] #g2a-login-input,
+  #guide2[data-mode="dolphin"] #g2a-secret-input,
+  #guide2[data-mode="dolphin"] #g2-account-list,
+  #guide2[data-mode="dolphin"] #g2-retroarch-body,
+  #guide2[data-mode="dolphin"] #g2-pcsx2-body,
+  #guide2[data-mode="dolphin"] #g2-vlc-body,
+  #guide2[data-mode="dolphin"] #g2-xenia-body,
+  #guide2[data-mode="dolphin"] #g2-duckstation-body,
+  #guide2[data-mode="dolphin"] #g2-rpcs3-body{display:none;}
+  #guide2[data-mode="dolphin"] #g2-account-body{top:32px;padding:8px 26px 0;}
+  #guide2[data-mode="dolphin"] #g2-dolphin-body{display:block;}
+  #g2-dolphin-body{display:none;}
+  #g2-retroarch-desc{
   font-size:16px;
   line-height:1.34;
   color:rgba(24,24,24,.9);
@@ -2430,11 +2480,51 @@ body:has(#guide.on) #blade-layer{visibility:hidden;}
   white-space:pre-line;
   min-height:32px;
 }
-#g2-vlc-list{display:flex;flex-direction:column;gap:0;max-width:700px;}
-#g2-vlc-list .g2r-label{font-size:17px;line-height:1.1;color:rgba(28,28,28,.84);}
-#g2-vlc-list .g2r-value{white-space:pre-line;line-height:1.1;font-size:17px;}
-#g2-vlc-list .g2r-item{min-height:58px;}
-#g2-xenia-desc{
+  #g2-vlc-list{display:flex;flex-direction:column;gap:0;max-width:700px;}
+  #g2-vlc-list .g2r-label{font-size:17px;line-height:1.1;color:rgba(28,28,28,.84);}
+  #g2-vlc-list .g2r-value{white-space:pre-line;line-height:1.1;font-size:17px;}
+  #g2-vlc-list .g2r-item{min-height:58px;}
+  #g2-duckstation-desc{
+    font-size:16px;
+    line-height:1.34;
+    color:rgba(24,24,24,.9);
+    max-width:620px;
+    margin-bottom:10px;
+    white-space:pre-line;
+  }
+  #g2-duckstation-status{
+    font-size:15px;
+    color:rgba(45,45,45,.72);
+    line-height:1.3;
+    white-space:pre-line;
+    margin:2px 0 12px;
+    max-width:620px;
+  }
+  #g2-duckstation-list{display:flex;flex-direction:column;gap:0;max-width:700px;}
+  #g2-duckstation-list .g2r-label{font-size:17px;line-height:1.1;color:rgba(28,28,28,.84);}
+  #g2-duckstation-list .g2r-value{white-space:pre-line;line-height:1.1;font-size:17px;}
+  #g2-duckstation-list .g2r-item{min-height:58px;}
+  #g2-dolphin-desc{
+    font-size:16px;
+    line-height:1.34;
+    color:rgba(24,24,24,.9);
+    max-width:620px;
+    margin-bottom:10px;
+    white-space:pre-line;
+  }
+  #g2-dolphin-status{
+    font-size:15px;
+    color:rgba(45,45,45,.72);
+    line-height:1.3;
+    white-space:pre-line;
+    margin:2px 0 12px;
+    max-width:620px;
+  }
+  #g2-dolphin-list{display:flex;flex-direction:column;gap:0;max-width:700px;}
+  #g2-dolphin-list .g2r-label{font-size:17px;line-height:1.1;color:rgba(28,28,28,.84);}
+  #g2-dolphin-list .g2r-value{white-space:pre-line;line-height:1.1;font-size:17px;}
+  #g2-dolphin-list .g2r-item{min-height:58px;}
+  #g2-xenia-desc{
   font-size:16px;
   line-height:1.34;
   color:rgba(24,24,24,.9);
@@ -2726,9 +2816,9 @@ body:has(#guide.on) #blade-layer{visibility:hidden;}
 .vk-field.is-password{letter-spacing:4px;}
 .vk-label{display:block;font-size:13px;color:rgba(0,0,0,.45);margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;}
 .vk-btn{padding:10px 28px;font-size:18px;font-family:inherit;cursor:pointer;background:rgba(255,255,255,.7);border:1px solid rgba(0,0,0,.2);}
-#vk-overlay{position:absolute;inset:0;z-index:70;display:none;align-items:stretch;justify-content:flex-start;background:rgba(0,0,0,.48);}
+#vk-overlay{position:fixed;inset:0;z-index:130;display:none;align-items:stretch;justify-content:flex-start;background:rgba(0,0,0,.48);}
 #vk-overlay.on{display:flex;}
-    #vk-panel{position:relative;width:1584px;height:1080px;padding:96px 318px 92px 72px;background:transparent;border-radius:0;box-shadow:none;border:none;overflow:hidden;transform:translateX(-1584px);transition:transform 250ms ease-out;}
+    #vk-panel{position:relative;width:1584px;height:1080px;padding:270px 318px 36px 72px;background:transparent;border-radius:0;box-shadow:none;border:none;overflow:hidden;transform:translateX(-1584px);transition:transform 250ms ease-out;}
 #vk-overlay.on #vk-panel{transform:translateX(0);}
 #vk-tile{position:absolute;left:0;top:0;width:1317px;height:1080px;background:#d9d9d6 url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/guide-blade-overlay-tile.webp') repeat-x left top;background-size:auto 100%;pointer-events:none;z-index:0;}
 #vk-edge{position:absolute;left:1317px;top:0;width:267px;height:1080px;background:none;pointer-events:none;overflow:hidden;z-index:0;}
@@ -2738,26 +2828,41 @@ body:has(#guide.on) #blade-layer{visibility:hidden;}
 #vk-panel>#vk-tile,#vk-panel>#vk-edge{position:absolute;z-index:0;}
 #vk-title{font-size:34px;color:#222;margin-bottom:12px;text-shadow:0 1px 0 rgba(255,255,255,.55);}
 #vk-target{min-height:76px;padding:14px 18px;background:rgba(255,255,255,.62);border:2px solid rgba(0,0,0,.18);font-size:31px;color:#111;margin-bottom:22px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;box-shadow:inset 0 2px 6px rgba(0,0,0,.12),0 1px 0 rgba(255,255,255,.55);}
+.vk-caret{display:inline-block;width:3px;height:35px;margin:0 2px -6px;background:#111;animation:vk-caret-blink 1s steps(2,start) infinite;}
+@keyframes vk-caret-blink{50%{opacity:0;}}
 #vk-layout{display:grid;grid-template-columns:172px 1fr 172px;gap:22px;align-items:stretch;}
-#vk-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:12px;align-content:start;}
+#vk-grid{position:relative;display:grid;grid-template-columns:repeat(10,1fr);gap:8px;align-content:start;}
+#vk-grid::after{content:'';position:absolute;left:calc((100% - 72px) * .7 + 52px);top:0;width:2px;height:288px;background:linear-gradient(180deg,rgba(80,86,72,.08),rgba(80,86,72,.5),rgba(80,86,72,.08));box-shadow:1px 0 0 rgba(255,255,255,.45);pointer-events:none;}
 .vk-side{display:grid;grid-template-rows:repeat(3,112px) 1fr;gap:14px;}
 .vk-side.right{grid-template-rows:repeat(2,112px) 1fr;}
 .vk-side-card{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:112px;padding:12px 10px;border-radius:13px;background:linear-gradient(180deg,rgba(249,250,246,.86),rgba(210,213,204,.72));border:2px solid rgba(92,92,86,.34);box-shadow:inset 0 1px 0 rgba(255,255,255,.72),0 2px 5px rgba(0,0,0,.16);font-size:22px;color:#111;}
 .vk-side-card.dim{opacity:.45;}
-.vk-side-card.done{min-height:238px;background:linear-gradient(180deg,rgba(224,255,197,.92),rgba(132,217,91,.86));}
-.vk-side-card img{width:66px;height:44px;object-fit:contain;filter:drop-shadow(0 1px 1px rgba(0,0,0,.22));}
+.vk-side-card.caps-on,.vk-side-card.symbols-on,.vk-side-card.accents-on{opacity:1;box-shadow:inset 0 1px 0 rgba(255,255,255,.72),0 0 0 4px rgba(132,203,70,.7),0 2px 5px rgba(0,0,0,.16);}
+.vk-side-card.done{min-height:112px;background:linear-gradient(180deg,rgba(249,250,246,.86),rgba(210,213,204,.72));}
+.vk-side-card.sel{filter:brightness(1.05);box-shadow:0 0 0 4px rgba(132,203,70,.92),0 0 16px rgba(132,203,70,.45),inset 0 1px 0 rgba(255,255,255,.72);}
+.vk-side-card img{width:66px;height:44px;object-fit:contain;filter:brightness(0) drop-shadow(0 1px 1px rgba(0,0,0,.22));}
 .vk-side-card .vk-stick-icon{width:58px;height:58px;}
-.vk-key{height:66px;border:none;background:center/100% 100% no-repeat transparent;font-family:inherit;font-size:24px;color:#222;cursor:pointer;position:relative;}
+.vk-key{height:66px;border:none;background:transparent;font-family:inherit;font-size:24px;color:#222;cursor:pointer;position:relative;}
+.vk-key::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(253,253,250,.96),rgba(198,202,194,.9));border:2px solid rgba(78,78,72,.38);border-radius:10px;box-shadow:inset 0 1px 0 rgba(255,255,255,.8),inset 0 -5px 12px rgba(120,126,112,.24),0 2px 4px rgba(0,0,0,.18);pointer-events:none;}
+.vk-key.text-key::before{background:linear-gradient(180deg,rgba(253,253,250,.96),rgba(198,202,194,.9));-webkit-mask:none;mask:none;border:2px solid rgba(78,78,72,.38);border-radius:10px;box-shadow:inset 0 1px 0 rgba(255,255,255,.8),inset 0 -5px 12px rgba(120,126,112,.24),0 2px 4px rgba(0,0,0,.18);}
 .vk-key.sel{filter:brightness(1.05);box-shadow:0 0 0 4px rgba(132,203,70,.92),0 0 16px rgba(132,203,70,.45);border-radius:10px;}
-.vk-key-label{position:absolute;inset:0;display:grid;place-items:center;font-size:25px;color:#111;text-shadow:0 1px 0 rgba(255,255,255,.55);pointer-events:none;}
+.vk-key-label{position:absolute;inset:0;z-index:1;display:grid;place-items:center;font-size:25px;line-height:1;color:#111;text-shadow:0 1px 0 rgba(255,255,255,.55);pointer-events:none;transform:translateY(-3px);}
+.vk-key-label.with-hint{display:flex;align-items:center;justify-content:flex-start;gap:12px;box-sizing:border-box;padding-left:22px;transform:translateY(-3px);}
+.vk-key-hint-icon{width:31px;height:31px;object-fit:contain;flex:0 0 auto;}
+.vk-key-spacer{height:66px;}
 .vk-key.wide-2{grid-column:span 2;}
 .vk-key.wide-3{grid-column:span 3;}
-#vk-hints{display:flex;gap:28px;margin-top:20px;font-size:21px;color:rgba(0,0,0,.68);}
+.vk-key.wide-5{grid-column:span 5;}
+#vk-grid.symbols-on::after,#vk-grid.accents-on::after{display:none;}
+#vk-hints{display:flex;justify-content:flex-end;gap:28px;margin-top:20px;font-size:21px;color:rgba(0,0,0,.68);}
 #vk-hints span{display:flex;align-items:center;gap:7px;}
 #vk-hints img{width:24px;height:24px;object-fit:contain;}
 </style>
 </head>
 <body>
+<div id="boot-animation-overlay" aria-hidden="true">
+  <video id="boot-animation-video" src="file:///C:/Projects/SKALD/assets/Boot%20Animation/Xbox%20360%20blades%20HD.webm" autoplay playsinline preload="auto"></video>
+</div>
 <div id="stage">
   <div id="drag"></div>
   <button id="btn-exit">✕ Exit</button>
@@ -3929,25 +4034,37 @@ SKALD LIVE uses Stoat for accounts. If you already have a Stoat account, sign in
                   <div class="mkt-scan-label">RetroArch</div>
                 </div>
               </li>
-              <li class="sitem home-row r2 subnav-item emu-item" data-home-title="PCSX2" data-home-desc="Open the integrated PCSX2 manager to prepare a SKALD-managed runtime, set a BIOS folder, and define a temporary custom override while the native PS2 path grows." data-emu-guide="pcsx2" data-emu-title="PCSX2" data-emu-desc="Open the integrated PCSX2 manager to prepare a SKALD-managed runtime, set a BIOS folder, and define a temporary custom override while the native PS2 path grows." data-emu-status="PS2-native path is starting here.\nOpen this entry to manage the runtime and BIOS setup.">
-                <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/PCSX2.webp')"></div>
-                <div class="mkt-account-copy">
-                  <div class="mkt-scan-label">PCSX2</div>
-                </div>
-              </li>
-              <li class="sitem home-row r3 subnav-item emu-item" data-home-title="VLC" data-home-desc="Open the integrated VLC manager to install a SKALD-managed media runtime, set a custom override when needed, and power Archive.org video playback through a native backend instead of web embeds." data-emu-guide="vlc" data-emu-title="VLC" data-emu-desc="Open the integrated VLC manager to install a SKALD-managed media runtime, set a custom override when needed, and power Archive.org video playback through a native backend instead of web embeds." data-emu-status="Integrated media backend.\nOpen this entry to manage the runtime that will handle SKALD video playback.">
+                <li class="sitem home-row r2 subnav-item emu-item" data-home-title="PCSX2" data-home-desc="Open the integrated PCSX2 manager to prepare a SKALD-managed runtime, set a BIOS folder, and define a temporary custom override while the native PS2 path grows." data-emu-guide="pcsx2" data-emu-title="PCSX2" data-emu-desc="Open the integrated PCSX2 manager to prepare a SKALD-managed runtime, set a BIOS folder, and define a temporary custom override while the native PS2 path grows." data-emu-status="PS2-native path is starting here.\nOpen this entry to manage the runtime and BIOS setup.">
+                  <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/PCSX2.webp')"></div>
+                  <div class="mkt-account-copy">
+                    <div class="mkt-scan-label">PCSX2</div>
+                  </div>
+                </li>
+                <li class="sitem home-row r3 subnav-item emu-item" data-home-title="DuckStation" data-home-desc="Open the integrated DuckStation manager to install or import the SKALD-managed PS1 runtime. PlayStation games launch through DuckStation instead of RetroArch." data-emu-guide="duckstation" data-emu-title="DuckStation" data-emu-desc="Open the integrated DuckStation manager to install or import the SKALD-managed PS1 runtime. PlayStation games launch through DuckStation instead of RetroArch." data-emu-status="PS1-native path is starting here.\nOpen this entry to manage DuckStation.">
+                  <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/DuckStation.webp')"></div>
+                  <div class="mkt-account-copy">
+                    <div class="mkt-scan-label">DuckStation</div>
+                  </div>
+                </li>
+                <li class="sitem home-row r4 subnav-item emu-item" data-home-title="Dolphin" data-home-desc="Open the integrated Dolphin manager to install or import the SKALD-managed GameCube and Wii runtime. GameCube games launch through official Dolphin instead of RetroArch." data-emu-guide="dolphin" data-emu-title="Dolphin" data-emu-desc="Open the integrated Dolphin manager to install or import the SKALD-managed GameCube and Wii runtime. GameCube games launch through official Dolphin instead of RetroArch." data-emu-status="GameCube and Wii native path starts here.\nOpen this entry to manage Dolphin.">
+                  <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/Dolphin.webp')"></div>
+                  <div class="mkt-account-copy">
+                    <div class="mkt-scan-label">Dolphin</div>
+                  </div>
+                </li>
+              <li class="sitem home-row r5 subnav-item emu-item" data-home-title="VLC" data-home-desc="Open the integrated VLC manager to install a SKALD-managed media runtime, set a custom override when needed, and power Archive.org video playback through a native backend instead of web embeds." data-emu-guide="vlc" data-emu-title="VLC" data-emu-desc="Open the integrated VLC manager to install a SKALD-managed media runtime, set a custom override when needed, and power Archive.org video playback through a native backend instead of web embeds." data-emu-status="Integrated media backend.\nOpen this entry to manage the runtime that will handle SKALD video playback.">
                 <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/VLC.webp')"></div>
                 <div class="mkt-account-copy">
                   <div class="mkt-scan-label">VLC</div>
                 </div>
               </li>
-            <li class="sitem home-row r4 subnav-item emu-item" data-home-title="Xenia Canary" data-home-desc="Open the integrated Xenia Canary manager to prepare a SKALD-managed Xbox 360 runtime, import an existing install, and define a temporary custom override while the native Xbox 360 path grows." data-emu-guide="xenia" data-emu-title="Xenia Canary" data-emu-desc="Open the integrated Xenia Canary manager to prepare a SKALD-managed Xbox 360 runtime, import an existing install, and define a temporary custom override while the native Xbox 360 path grows." data-emu-status="Xbox 360-native path starts here.\nOpen this entry to manage the Xenia Canary runtime and launch backend.">
+            <li class="sitem home-row r6 subnav-item emu-item" data-home-title="Xenia Canary" data-home-desc="Open the integrated Xenia Canary manager to prepare a SKALD-managed Xbox 360 runtime, import an existing install, and define a temporary custom override while the native Xbox 360 path grows." data-emu-guide="xenia" data-emu-title="Xenia Canary" data-emu-desc="Open the integrated Xenia Canary manager to prepare a SKALD-managed Xbox 360 runtime, import an existing install, and define a temporary custom override while the native Xbox 360 path grows." data-emu-status="Xbox 360-native path starts here.\nOpen this entry to manage the Xenia Canary runtime and launch backend.">
                 <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/Xenia_Canary.webp')"></div>
                 <div class="mkt-account-copy">
               <div class="mkt-scan-label">Xenia Canary</div>
                 </div>
               </li>
-              <li class="sitem home-row r5 subnav-item emu-item" data-home-title="RPCS3" data-home-desc="Open the integrated RPCS3 manager to prepare a SKALD-managed PlayStation 3 runtime, import an existing install, and define a temporary custom override while the native PS3 path grows." data-emu-guide="rpcs3" data-emu-title="RPCS3" data-emu-desc="Open the integrated RPCS3 manager to prepare a SKALD-managed PlayStation 3 runtime, import an existing install, and define a temporary custom override while the native PS3 path grows." data-emu-status="PlayStation 3-native path starts here.\nOpen this entry to manage the RPCS3 runtime and launch backend.">
+              <li class="sitem home-row r7 subnav-item emu-item" data-home-title="RPCS3" data-home-desc="Open the integrated RPCS3 manager to prepare a SKALD-managed PlayStation 3 runtime, import an existing install, and define a temporary custom override while the native PS3 path grows." data-emu-guide="rpcs3" data-emu-title="RPCS3" data-emu-desc="Open the integrated RPCS3 manager to prepare a SKALD-managed PlayStation 3 runtime, import an existing install, and define a temporary custom override while the native PS3 path grows." data-emu-status="PlayStation 3-native path starts here.\nOpen this entry to manage the RPCS3 runtime and launch backend.">
                   <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/RPCS3.webp')"></div>
                   <div class="mkt-account-copy">
                   <div class="mkt-scan-label">RPCS3</div>
@@ -4055,21 +4172,18 @@ Open this entry to manage the runtime and system cores.</div>
       <div id="vk-layout">
         <div class="vk-side left">
           <div class="vk-side-card"><img src="file:///C:/Projects/SKALD/assets/icons/Controls/xbox_lb.webp" alt="">Cursor</div>
-          <div class="vk-side-card dim"><img src="file:///C:/Projects/SKALD/assets/icons/Controls/xbox_lt.webp" alt="">Symbols</div>
-          <div class="vk-side-card dim"><img class="vk-stick-icon" src="file:///C:/Projects/SKALD/assets/icons/Controls/xbox_stick_l.webp" alt="">Caps</div>
+          <div id="vk-symbols-card" class="vk-side-card dim"><img src="file:///C:/Projects/SKALD/assets/icons/Controls/xbox_lt.webp" alt="">Symbols</div>
+          <div id="vk-caps-card" class="vk-side-card dim"><img class="vk-stick-icon" src="file:///C:/Projects/SKALD/assets/icons/Controls/xbox_stick_side_l.webp" alt="">Caps</div>
         </div>
         <div id="vk-grid"></div>
         <div class="vk-side right">
           <div class="vk-side-card"><img src="file:///C:/Projects/SKALD/assets/icons/Controls/xbox_rb.webp" alt="">Cursor</div>
-          <div class="vk-side-card dim"><img src="file:///C:/Projects/SKALD/assets/icons/Controls/xbox_rt.webp" alt="">Accents</div>
-          <div class="vk-side-card done"><img src="file:///C:/Projects/SKALD/assets/icons/Controls/button-a.webp" alt="">Done</div>
+          <div id="vk-accents-card" class="vk-side-card dim"><img src="file:///C:/Projects/SKALD/assets/icons/Controls/xbox_rt.webp" alt="">Accents</div>
+          <div id="vk-done-card" class="vk-side-card done"><img src="file:///C:/Projects/SKALD/assets/icons/Controls/xbox_button_menu.webp" alt="">Done</div>
         </div>
       </div>
       <div id="vk-hints">
-        <span><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-a.webp" alt="A"/>Type</span>
-        <span><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-x.webp" alt="X"/>Backspace</span>
-        <span><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-y.webp" alt="Y"/>Space</span>
-        <span><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-b.webp" alt="B"/>Close</span>
+        <span><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-b.webp" alt="B"/>Back</span>
       </div>
     </div>
   </div>
@@ -4213,6 +4327,46 @@ const IMG_ACT=`${A}/blades-size4-header.webp`;
 const IMG_L_INACTIVE=`${A}/blades-size3-left-nf.webp`;
 const IMG_R_INACTIVE=`${A}/blades-size3-right-nf.webp`;
 const guideOverlayMode=new URLSearchParams(window.location.search).get('guideOverlay')==='1';
+const bootAnimationState={startedAt:performance.now(),hideTimer:null,hidden:false};
+function hideBootAnimation(force=false){
+  const overlay=document.getElementById('boot-animation-overlay');
+  if(!overlay || bootAnimationState.hidden) return;
+  bootAnimationState.hidden=true;
+  const video=document.getElementById('boot-animation-video');
+  if(force){
+    overlay.classList.add('is-gone');
+    try{video?.pause?.();}catch{}
+    return;
+  }
+  overlay.classList.add('is-hiding');
+  clearTimeout(bootAnimationState.hideTimer);
+  bootAnimationState.hideTimer=setTimeout(()=>{
+    overlay.classList.add('is-gone');
+    try{video?.pause?.();}catch{}
+  },520);
+}
+function scheduleBootAnimationHide(waitForPromise){
+  if(guideOverlayMode){
+    hideBootAnimation(true);
+    return;
+  }
+  const overlay=document.getElementById('boot-animation-overlay');
+  const video=document.getElementById('boot-animation-video');
+  if(!overlay) return;
+  if(video){
+    video.muted=false;
+    video.volume=1;
+    video.play?.().catch(()=>{});
+  }
+  const minMs=3600;
+  const maxMs=7600;
+  const elapsed=performance.now()-bootAnimationState.startedAt;
+  const minDelay=new Promise(resolve=>setTimeout(resolve,Math.max(0,minMs-elapsed)));
+  const ready=Promise.allSettled([minDelay,Promise.resolve(waitForPromise)]);
+  const timeout=new Promise(resolve=>setTimeout(resolve,maxMs));
+  Promise.race([ready,timeout]).then(()=>hideBootAnimation()).catch(()=>hideBootAnimation());
+  video?.addEventListener('error',()=>hideBootAnimation(),{once:true});
+}
 
 let activeIdx=2,guideOpen=false,frameIdx=0,audioCtx=null;
 let guideOverlayProxyActive=false;
@@ -4447,17 +4601,38 @@ const vkTarget=document.getElementById('vk-target');
 let subSelIdx=0;
 let vkOpen=false;
 let vkSelIdx=0;
+let vkCaps=false;
+let vkSymbols=false;
+let vkAccents=false;
+let vkDoneSel=false;
+let vkCursorPos=0;
 let vkFieldId=null;
 let vkSubmitHandler=null;
 const VK_KEYS=[
+  'a','b','c','d','e','f','g','1','2','3',
+  'h','i','j','k','l','m','n','4','5','6',
+  'o','p','q','r','s','t','u','7','8','9',
+  'v','w','x','y','z','-','@','_','0','.',
+  {label:'Space',value:' ',cls:'wide-5 text-key',hint:'y'},
+  {label:'Backspace',action:'backspace',cls:'wide-5 text-key',hint:'x'}
+];
+const VK_SYMBOL_KEYS=[
   '1','2','3','4','5','6','7','8','9','0',
-  'q','w','e','r','t','y','u','i','o','p',
-  'a','s','d','f','g','h','j','k','l','@',
-  'z','x','c','v','b','n','m','.','-','_',
-  {label:'Space',value:' ',cls:'wide-3'},
-  {label:'Back',action:'backspace',cls:'wide-2'},
-  {label:'Clear',action:'clear',cls:'wide-2'},
-  {label:'Done',action:'done',cls:'wide-3'}
+  ',',';',':',"'",'"','!','?','¡','¿','%',
+  '[',']','{','}','`','$','£','«','»','#',
+  '<','>','(',')','€','¥','¢','~','^','\\',
+  '|','=','*','/','+','-','@','_','&','.',
+  {label:'Space',value:' ',cls:'wide-5 text-key',hint:'y'},
+  {label:'Backspace',action:'backspace',cls:'wide-5 text-key',hint:'x'}
+];
+const VK_ACCENT_KEYS=[
+  '1','2','3','4','5','6','7','8','9','0',
+  'À','Á','Â','Ã','Ä','Å','Ñ','È','É','Ê',
+  'Ë','Ì','Í','Î','Ï','Ç','Ð','Ù','Ú','Û',
+  'Ü','Ò','Ó','Ô','Ö','Õ','Ø','Œ','Æ','Ç',
+  'Ù','Ý','·','•','_','Ü','µ','§','_','Ð',
+  {label:'Space',value:' ',cls:'wide-5 text-key',hint:'y'},
+  {label:'Backspace',action:'backspace',cls:'wide-5 text-key',hint:'x'}
 ];
 
 function scaleStage(){
@@ -5875,11 +6050,12 @@ function renderGameLaunchBusyOverlay(){
   }
 }
 function renderEmulatorRuntimeProgress(){
-  const runtimeMode=(guide2Open && (guide2Mode==='pcsx2' || guide2Mode==='vlc' || guide2Mode==='xenia' || guide2Mode==='rpcs3')) ? guide2Mode : 'retroarch';
-  const wrapId=runtimeMode==='pcsx2' ? 'emu-progress-wrap-pcsx2' : (runtimeMode==='vlc' ? 'emu-progress-wrap-vlc' : (runtimeMode==='xenia' ? 'emu-progress-wrap-xenia' : (runtimeMode==='rpcs3' ? 'emu-progress-wrap-rpcs3' : 'emu-progress-wrap')));
-  const fillId=runtimeMode==='pcsx2' ? 'emu-progress-fill-pcsx2' : (runtimeMode==='vlc' ? 'emu-progress-fill-vlc' : (runtimeMode==='xenia' ? 'emu-progress-fill-xenia' : (runtimeMode==='rpcs3' ? 'emu-progress-fill-rpcs3' : 'emu-progress-fill')));
-  const labelId=runtimeMode==='pcsx2' ? 'emu-progress-label-pcsx2' : (runtimeMode==='vlc' ? 'emu-progress-label-vlc' : (runtimeMode==='xenia' ? 'emu-progress-label-xenia' : (runtimeMode==='rpcs3' ? 'emu-progress-label-rpcs3' : 'emu-progress-label')));
-  const percentId=runtimeMode==='pcsx2' ? 'emu-progress-percent-pcsx2' : (runtimeMode==='vlc' ? 'emu-progress-percent-vlc' : (runtimeMode==='xenia' ? 'emu-progress-percent-xenia' : (runtimeMode==='rpcs3' ? 'emu-progress-percent-rpcs3' : 'emu-progress-percent')));
+  const runtimeMode=(guide2Open && (guide2Mode==='pcsx2' || guide2Mode==='duckstation' || guide2Mode==='dolphin' || guide2Mode==='vlc' || guide2Mode==='xenia' || guide2Mode==='rpcs3')) ? guide2Mode : 'retroarch';
+  const progressSuffix=runtimeMode==='retroarch' ? '' : `-${runtimeMode}`;
+  const wrapId=runtimeMode==='retroarch' ? 'emu-progress-wrap' : `emu-progress-wrap${progressSuffix}`;
+  const fillId=runtimeMode==='retroarch' ? 'emu-progress-fill' : `emu-progress-fill${progressSuffix}`;
+  const labelId=runtimeMode==='retroarch' ? 'emu-progress-label' : `emu-progress-label${progressSuffix}`;
+  const percentId=runtimeMode==='retroarch' ? 'emu-progress-percent' : `emu-progress-percent${progressSuffix}`;
   const wrap=document.getElementById(wrapId);
   const fill=document.getElementById(fillId);
   const label=document.getElementById(labelId);
@@ -5895,7 +6071,7 @@ function renderEmulatorRuntimeProgress(){
     }
     emulatorRuntimeProgressVisualPercent=0;
     fill.style.width='0%';
-label.textContent=runtimeMode==='pcsx2' ? 'Preparing PCSX2…' : (runtimeMode==='vlc' ? 'Preparing VLC…' : (runtimeMode==='xenia' ? 'Preparing Xenia Canary…' : (runtimeMode==='rpcs3' ? 'Preparing RPCS3…' : 'Preparing RetroArch…')));
+label.textContent=runtimeMode==='pcsx2' ? 'Preparing PCSX2…' : (runtimeMode==='duckstation' ? 'Preparing DuckStation...' : (runtimeMode==='dolphin' ? 'Preparing Dolphin...' : (runtimeMode==='vlc' ? 'Preparing VLC…' : (runtimeMode==='xenia' ? 'Preparing Xenia Canary…' : (runtimeMode==='rpcs3' ? 'Preparing RPCS3…' : 'Preparing RetroArch…')))));
     percentEl.textContent='0%';
     return;
   }
@@ -5935,7 +6111,7 @@ label.textContent=runtimeMode==='pcsx2' ? 'Preparing PCSX2…' : (runtimeMode===
   emulatorRuntimeProgressVisualPercent=Math.max(targetPercent, emulatorRuntimeProgressVisualPercent);
   fill.style.width=`${emulatorRuntimeProgressVisualPercent.toFixed(1)}%`;
   percentEl.textContent=`${Math.round(emulatorRuntimeProgressVisualPercent)}%`;
-const runtimeLabel=runtimeMode==='pcsx2' ? 'Preparing PCSX2…' : (runtimeMode==='vlc' ? 'Preparing VLC…' : (runtimeMode==='xenia' ? 'Preparing Xenia Canary…' : (runtimeMode==='rpcs3' ? 'Preparing RPCS3…' : 'Preparing RetroArch…')));
+const runtimeLabel=runtimeMode==='pcsx2' ? 'Preparing PCSX2…' : (runtimeMode==='duckstation' ? 'Preparing DuckStation...' : (runtimeMode==='dolphin' ? 'Preparing Dolphin...' : (runtimeMode==='vlc' ? 'Preparing VLC…' : (runtimeMode==='xenia' ? 'Preparing Xenia Canary…' : (runtimeMode==='rpcs3' ? 'Preparing RPCS3…' : 'Preparing RetroArch…')))));
   label.textContent=emulatorRuntimeProgressState.message || `${runtimeLabel} ${Math.round(emulatorRuntimeProgressVisualPercent)}%`;
 }
 function completeEmulatorRuntimeProgress(message='RetroArch is ready in SKALD.'){
@@ -6073,7 +6249,9 @@ async function refreshPCSX2SettingsPanel(){
     const overrideDisplay=document.getElementById('emu-pcsx2-override-display');
     const biosDisplay=document.getElementById('emu-pcsx2-bios-display');
     if(runtimeDisplay){
-      if(runtime?.bundledAvailable) runtimeDisplay.textContent=`Managed Runtime\n${runtime.bundledExecutablePath||runtime.executablePath||'Ready'}`;
+      const stable=runtime?.builds?.stable?.available;
+      const dev=runtime?.builds?.development?.available;
+      if(stable || dev) runtimeDisplay.textContent=`Managed Builds\nStable: ${stable?'Installed':'Missing'}\nDevelopment: ${dev?'Installed':'Missing'}`;
       else if(runtime?.managedRuntimeDir) runtimeDisplay.textContent=`Managed Runtime Missing\n${runtime.managedRuntimeDir}`;
       else runtimeDisplay.textContent='Managed runtime not available';
     }
@@ -6147,6 +6325,93 @@ async function refreshVLCSettingsPanel(){
   }catch{
     const status=document.getElementById('g2-vlc-status');
     if(status) status.textContent='Could not read VLC settings.';
+    renderEmulatorRuntimeProgress();
+  }
+}
+async function refreshDuckStationSettingsPanel(){
+  try{
+    ensureDuckStationGuideBody();
+    const runtime=await window.electronAPI?.getDuckStationRuntimeStatus?.() || {};
+      const runtimeDisplay=document.getElementById('emu-duckstation-runtime-display');
+      const importDisplay=document.getElementById('emu-duckstation-import-display');
+      const overrideDisplay=document.getElementById('emu-duckstation-override-display');
+      const biosDisplay=document.getElementById('emu-duckstation-bios-display');
+    if(runtimeDisplay){
+      if(runtime?.bundledAvailable) runtimeDisplay.textContent=`Managed Runtime\n${runtime.bundledExecutablePath||runtime.executablePath||'Ready'}`;
+      else if(runtime?.managedRuntimeDir) runtimeDisplay.textContent=`Managed Runtime Missing\n${runtime.managedRuntimeDir}`;
+      else runtimeDisplay.textContent='Managed runtime not available';
+    }
+    if(importDisplay){
+      importDisplay.textContent=runtime?.managedRuntimeDir
+        ? `Target Folder\n${runtime.managedRuntimeDir}`
+        : 'Pick duckstation-qt.exe from an existing install';
+    }
+      if(overrideDisplay){
+        if(runtime?.usingCustom) overrideDisplay.textContent=`Active Override\n${runtime.executablePath||'Ready'}`;
+        else if(runtime?.customExecutablePath && runtime?.customAvailable) overrideDisplay.textContent=`Stored Override\n${runtime.customExecutablePath}`;
+        else if(runtime?.customExecutablePath) overrideDisplay.textContent=`Override Missing\n${runtime.customExecutablePath}`;
+        else overrideDisplay.textContent='Using SKALD managed runtime when available';
+      }
+      if(biosDisplay){
+        if(runtime?.configuredBiosAvailable) biosDisplay.textContent=`Configured BIOS Folder\n${runtime.biosPath}`;
+        else if(runtime?.portableBiosAvailable) biosDisplay.textContent=`Managed BIOS Folder\n${runtime.portableBiosPath}`;
+        else if(runtime?.biosPath) biosDisplay.textContent=`No BIOS files found\n${runtime.biosPath}`;
+        else biosDisplay.textContent='Not set';
+      }
+      const status=document.getElementById('g2-duckstation-status');
+      if(status){
+        const runtimeStatus=runtime?.ok
+          ? (runtime.usingBundled
+              ? `Runtime: SKALD managed DuckStation\n${runtime.executablePath}`
+              : `Runtime: custom override\n${runtime.executablePath}`)
+          : 'Runtime: SKALD managed DuckStation not found yet. Install it into SKALD or import an existing local DuckStation install.';
+        const biosLine=runtime?.biosAvailable
+          ? `\nBIOS: ready (${Number(runtime.configuredBiosCount||runtime.portableBiosCount||0)} file${Number(runtime.configuredBiosCount||runtime.portableBiosCount||0)===1?'':'s'})`
+          : (runtime?.biosPath ? `\nBIOS folder has no .bin/.rom files:\n${runtime.biosPath}` : '\nBIOS folder: not configured yet.');
+        status.textContent=`${runtimeStatus}${biosLine}`;
+      }
+    renderEmulatorRuntimeProgress();
+  }catch{
+    const status=document.getElementById('g2-duckstation-status');
+    if(status) status.textContent='Could not read DuckStation settings.';
+    renderEmulatorRuntimeProgress();
+  }
+}
+async function refreshDolphinSettingsPanel(){
+  try{
+    ensureDolphinGuideBody();
+    const runtime=await window.electronAPI?.getDolphinRuntimeStatus?.() || {};
+    const runtimeDisplay=document.getElementById('emu-dolphin-runtime-display');
+    const importDisplay=document.getElementById('emu-dolphin-import-display');
+    const overrideDisplay=document.getElementById('emu-dolphin-override-display');
+    if(runtimeDisplay){
+      if(runtime?.bundledAvailable) runtimeDisplay.textContent=`Managed Runtime\n${runtime.bundledExecutablePath||runtime.executablePath||'Ready'}`;
+      else if(runtime?.managedRuntimeDir) runtimeDisplay.textContent=`Managed Runtime Missing\n${runtime.managedRuntimeDir}`;
+      else runtimeDisplay.textContent='Managed runtime not available';
+    }
+    if(importDisplay){
+      importDisplay.textContent=runtime?.managedRuntimeDir
+        ? `Target Folder\n${runtime.managedRuntimeDir}`
+        : 'Pick Dolphin.exe from an existing install';
+    }
+    if(overrideDisplay){
+      if(runtime?.usingCustom) overrideDisplay.textContent=`Active Override\n${runtime.executablePath||'Ready'}`;
+      else if(runtime?.customExecutablePath && runtime?.customAvailable) overrideDisplay.textContent=`Stored Override\n${runtime.customExecutablePath}`;
+      else if(runtime?.customExecutablePath) overrideDisplay.textContent=`Override Missing\n${runtime.customExecutablePath}`;
+      else overrideDisplay.textContent='Using SKALD managed runtime when available';
+    }
+    const status=document.getElementById('g2-dolphin-status');
+    if(status){
+      status.textContent=runtime?.ok
+        ? (runtime.usingBundled
+            ? `Runtime: SKALD managed Dolphin (${runtime.buildChannel==='development'?'Development':'Stable'})\n${runtime.executablePath}`
+            : `Runtime: custom override\n${runtime.executablePath}`)
+        : 'Runtime: SKALD managed Dolphin not found yet. Install it into SKALD or import an existing local Dolphin install.';
+    }
+    renderEmulatorRuntimeProgress();
+  }catch{
+    const status=document.getElementById('g2-dolphin-status');
+    if(status) status.textContent='Could not read Dolphin settings.';
     renderEmulatorRuntimeProgress();
   }
 }
@@ -6236,41 +6501,47 @@ async function refreshXeniaSettingsPanel(){
     renderEmulatorRuntimeProgress();
   }
 }
+function syncRPCS3RuntimeGuideDisplays(runtime={}){
+  const runtimeDisplay=document.getElementById('emu-rpcs3-runtime-display');
+  const importDisplay=document.getElementById('emu-rpcs3-import-display');
+  const firmwarePackageDisplay=document.getElementById('emu-rpcs3-firmware-package-display');
+  const overrideDisplay=document.getElementById('emu-rpcs3-override-display');
+  const firmwareDisplay=document.getElementById('emu-rpcs3-firmware-display');
+  if(runtimeDisplay){
+    if(runtime?.bundledAvailable) runtimeDisplay.textContent='Managed Runtime\nReady';
+    else if(runtime?.managedRuntimeDir) runtimeDisplay.textContent='Managed Runtime Missing\nManaged folder detected';
+    else runtimeDisplay.textContent='Managed runtime not available';
+  }
+  if(importDisplay){
+    importDisplay.textContent=runtime?.managedRuntimeDir
+      ? 'Target Folder\nSKALD managed RPCS3 folder'
+      : 'Pick rpcs3.exe from an existing install';
+  }
+  if(overrideDisplay){
+    if(runtime?.usingCustom) overrideDisplay.textContent=`Active Override\n${runtime.executablePath||'Ready'}`;
+    else if(runtime?.customExecutablePath && runtime?.customAvailable) overrideDisplay.textContent=`Stored Override\n${runtime.customExecutablePath}`;
+    else if(runtime?.customExecutablePath) overrideDisplay.textContent=`Override Missing\n${runtime.customExecutablePath}`;
+    else overrideDisplay.textContent='Using SKALD managed runtime when available';
+  }
+  if(firmwareDisplay){
+    if(runtime?.firmwareInstalled) firmwareDisplay.textContent=`Installed\nPS3 Firmware ${runtime?.firmwareVersion||'Detected'}`;
+    else firmwareDisplay.textContent='Missing\nInstall PS3UPDAT.PUP in RPCS3';
+  }
+  if(firmwarePackageDisplay){
+    if(runtime?.firmwarePackageAvailable) firmwarePackageDisplay.textContent=`Ready\n${runtime?.firmwarePackagePath||'PS3UPDAT.PUP'}`;
+    else if(runtime?.firmwarePackagePath) firmwarePackageDisplay.textContent=`Missing\n${runtime?.firmwarePackagePath}`;
+    else firmwarePackageDisplay.textContent='Pick PS3UPDAT.PUP';
+  }
+}
 async function refreshRPCS3SettingsPanel(){
   try{
     const runtime=await window.electronAPI?.getRPCS3RuntimeStatus?.() || {};
     const setupStatus=await window.electronAPI?.getRPCS3SetupStatus?.() || null;
+    const configStatus=await window.electronAPI?.getRPCS3Config?.() || null;
+    const controllerStatus=await window.electronAPI?.getRPCS3ControllerConfig?.() || null;
     rpcs3SetupStatusCache=setupStatus;
-    const runtimeDisplay=document.getElementById('emu-rpcs3-runtime-display');
-    const importDisplay=document.getElementById('emu-rpcs3-import-display');
-    const firmwarePackageDisplay=document.getElementById('emu-rpcs3-firmware-package-display');
-    const overrideDisplay=document.getElementById('emu-rpcs3-override-display');
-    const firmwareDisplay=document.getElementById('emu-rpcs3-firmware-display');
-    if(runtimeDisplay){
-      if(runtime?.bundledAvailable) runtimeDisplay.textContent='Managed Runtime\nReady';
-      else if(runtime?.managedRuntimeDir) runtimeDisplay.textContent='Managed Runtime Missing\nManaged folder detected';
-      else runtimeDisplay.textContent='Managed runtime not available';
-    }
-    if(importDisplay){
-      importDisplay.textContent=runtime?.managedRuntimeDir
-        ? 'Target Folder\nSKALD managed RPCS3 folder'
-        : 'Pick rpcs3.exe from an existing install';
-    }
-    if(overrideDisplay){
-      if(runtime?.usingCustom) overrideDisplay.textContent=`Active Override\n${runtime.executablePath||'Ready'}`;
-      else if(runtime?.customExecutablePath && runtime?.customAvailable) overrideDisplay.textContent=`Stored Override\n${runtime.customExecutablePath}`;
-      else if(runtime?.customExecutablePath) overrideDisplay.textContent=`Override Missing\n${runtime.customExecutablePath}`;
-      else overrideDisplay.textContent='Using SKALD managed runtime when available';
-    }
-    if(firmwareDisplay){
-      if(runtime?.firmwareInstalled) firmwareDisplay.textContent=`Installed\nPS3 Firmware ${runtime?.firmwareVersion||'Detected'}`;
-      else firmwareDisplay.textContent='Missing\nInstall PS3UPDAT.PUP in RPCS3';
-    }
-    if(firmwarePackageDisplay){
-      if(runtime?.firmwarePackageAvailable) firmwarePackageDisplay.textContent=`Ready\n${runtime?.firmwarePackagePath||'PS3UPDAT.PUP'}`;
-      else if(runtime?.firmwarePackagePath) firmwarePackageDisplay.textContent=`Missing\n${runtime?.firmwarePackagePath}`;
-      else firmwarePackageDisplay.textContent='Pick PS3UPDAT.PUP';
-    }
+    rpcs3ConfigStatusCache=configStatus;
+    rpcs3ControllerStatusCache=controllerStatus;
     const status=document.getElementById('g2-rpcs3-status');
     if(status){
       const setupLine=setupStatus?.state==='runtime_missing'
@@ -6297,6 +6568,9 @@ async function refreshRPCS3SettingsPanel(){
     }
     if(rpcs3GuideSubview==='home') renderRPCS3GuideHome(setupStatus);
     if(rpcs3GuideSubview==='firmware-setup') renderRPCS3FirmwareSetupPrompt(runtime);
+    if(rpcs3GuideSubview==='settings') renderRPCS3SettingsGuide(configStatus);
+    if(rpcs3GuideSubview==='controllers') renderRPCS3ControllerGuide(controllerStatus);
+    syncRPCS3RuntimeGuideDisplays(runtime);
     renderEmulatorRuntimeProgress();
   }catch{
     const status=document.getElementById('g2-rpcs3-status');
@@ -6362,6 +6636,7 @@ async function refreshStoragePanel(){
     if(s.systemScanPaths?.ps2) scanParts.push(`PlayStation 2`);
     if(s.systemScanPaths?.psp) scanParts.push(`PSP`);
     if(s.systemScanPaths?.dc) scanParts.push(`Dreamcast`);
+    if(s.systemScanPaths?.gamecube) scanParts.push(`GameCube`);
     if(s.systemScanPaths?.x360) scanParts.push(`Xbox 360`);
     if(artDisplay) artDisplay.textContent=artText;
     if(installDisplay) installDisplay.textContent=s.installPath || 'Not set';
@@ -7886,10 +8161,12 @@ let retroArchCorePickerState={system:'',title:'',mainGuideIdx:0};
 const retroArchGuideHomeMarkup=document.getElementById('g2-retroarch-list')?.innerHTML || '';
 let rpcs3GuideSubview='home';
 let rpcs3SetupStatusCache=null;
+let rpcs3ConfigStatusCache=null;
+let rpcs3ControllerStatusCache=null;
 let debugPanels=false;
 function getGuideItems(){
   if(guide2Open){
-    if(guide2Mode==='retroarch' || guide2Mode==='pcsx2' || guide2Mode==='vlc' || guide2Mode==='xenia' || guide2Mode==='rpcs3') return [...document.querySelectorAll('#guide2 .g2r-item')].filter(el=>el.offsetParent!==null);
+    if(guide2Mode==='retroarch' || guide2Mode==='pcsx2' || guide2Mode==='duckstation' || guide2Mode==='dolphin' || guide2Mode==='vlc' || guide2Mode==='xenia' || guide2Mode==='rpcs3') return [...document.querySelectorAll('#guide2 .g2r-item')].filter(el=>el.offsetParent!==null);
     return [...document.querySelectorAll('#guide2 .g2a-item')].filter(el=>el.offsetParent!==null);
   }
   return[...document.querySelectorAll('#guide .gbtn')].filter(el=>el.offsetParent!==null);
@@ -8038,7 +8315,23 @@ function guideBack(){
       });
       return;
     }
-    closeGuide(); return;
+      if(guide2Mode==='rpcs3' && rpcs3GuideSubview==='settings'){
+        renderRPCS3GuideHome();
+        refreshRPCS3SettingsPanel().then(()=>{
+          guideSelIdx=0;
+          applyGSel();
+        });
+        return;
+      }
+      if(guide2Mode==='rpcs3' && rpcs3GuideSubview==='controllers'){
+        renderRPCS3GuideHome();
+        refreshRPCS3SettingsPanel().then(()=>{
+          guideSelIdx=0;
+          applyGSel();
+        });
+        return;
+      }
+      closeGuide(); return;
   }
   if(guidePage==='chat'){
     guidePage='home';
@@ -8109,6 +8402,25 @@ function ensureStandaloneGuideLaunchRows(){
       importRow.insertAdjacentHTML('afterend', `<div class="g2r-item" data-pcsx2-action="launch-emulator" data-pcsx2-title="Launch Emulator" data-pcsx2-desc="Launch PCSX2 directly from SKALD using the active managed runtime or custom override." data-pcsx2-picker="none"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-a.webp')"></div><div class="g2r-copy"><div class="g2r-label">Launch Emulator</div><div class="g2r-value dim">Open PCSX2 directly</div></div></div>`);
     }
   }
+  ensureEmulatorUninstallRows();
+}
+function ensureEmulatorUninstallRows(){
+  const rows=[
+    ['g2-retroarch-list','[data-emu-action="uninstall-runtime"]','[data-emu-key="retroarchPath"]',`<div class="g2r-item" data-emu-action="uninstall-runtime" data-emu-title="Uninstall RetroArch" data-emu-desc="Remove the SKALD-managed RetroArch runtime folder. Custom override paths and core choices remain saved." data-emu-picker="none"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-delete.webp')"></div><div class="g2r-copy"><div class="g2r-label">Uninstall RetroArch</div><div class="g2r-value dim">Remove managed RetroArch install</div></div></div>`],
+    ['g2-pcsx2-list','[data-pcsx2-action="uninstall-runtime"]','[data-pcsx2-key="pcsx2Path"]',`<div class="g2r-item" data-pcsx2-action="uninstall-runtime" data-pcsx2-title="Uninstall PCSX2" data-pcsx2-desc="Remove the SKALD-managed PCSX2 runtime folder. BIOS folder and custom override settings remain saved." data-pcsx2-picker="none"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-delete.webp')"></div><div class="g2r-copy"><div class="g2r-label">Uninstall PCSX2</div><div class="g2r-value dim">Remove managed PCSX2 install</div></div></div>`],
+    ['g2-vlc-list','[data-vlc-action="uninstall-runtime"]','[data-vlc-key="vlcPath"]',`<div class="g2r-item" data-vlc-action="uninstall-runtime" data-vlc-title="Uninstall VLC" data-vlc-desc="Remove the SKALD-managed VLC runtime folder. Custom override settings remain saved." data-vlc-picker="none"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-delete.webp')"></div><div class="g2r-copy"><div class="g2r-label">Uninstall VLC</div><div class="g2r-value dim">Remove managed VLC install</div></div></div>`],
+    ['g2-duckstation-list','[data-duckstation-action="uninstall-runtime"]','[data-duckstation-key="duckstationPath"]',`<div class="g2r-item" data-duckstation-action="uninstall-runtime" data-duckstation-title="Uninstall DuckStation" data-duckstation-desc="Remove the SKALD-managed DuckStation runtime folder. BIOS folder and custom override settings remain saved." data-duckstation-picker="none"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-delete.webp')"></div><div class="g2r-copy"><div class="g2r-label">Uninstall DuckStation</div><div class="g2r-value dim">Remove managed DuckStation install</div></div></div>`],
+    ['g2-dolphin-list','[data-dolphin-action="uninstall-runtime"][data-dolphin-channel="stable"]','[data-dolphin-key="dolphinPath"]',`<div class="g2r-item" data-dolphin-action="uninstall-runtime" data-dolphin-channel="stable" data-dolphin-title="Uninstall Dolphin Stable" data-dolphin-desc="Remove only the SKALD-managed Dolphin Stable runtime. Development builds remain installed separately." data-dolphin-picker="none"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-delete.webp')"></div><div class="g2r-copy"><div class="g2r-label">Uninstall Dolphin Stable</div><div class="g2r-value dim">Remove managed Stable build</div></div></div>`],
+    ['g2-dolphin-list','[data-dolphin-action="uninstall-runtime"][data-dolphin-channel="development"]','[data-dolphin-key="dolphinPath"]',`<div class="g2r-item" data-dolphin-action="uninstall-runtime" data-dolphin-channel="development" data-dolphin-title="Uninstall Dolphin Development" data-dolphin-desc="Remove only the SKALD-managed Dolphin Development runtime. Stable builds remain installed separately." data-dolphin-picker="none"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-delete.webp')"></div><div class="g2r-copy"><div class="g2r-label">Uninstall Dolphin Development</div><div class="g2r-value dim">Remove managed Development build</div></div></div>`],
+    ['g2-xenia-list','[data-xenia-action="uninstall-runtime"]','[data-xenia-key="xeniaPath"]',`<div class="g2r-item" data-xenia-action="uninstall-runtime" data-xenia-title="Uninstall Xenia Canary" data-xenia-desc="Remove the SKALD-managed Xenia Canary runtime folder. SKALD profile sync data remains saved." data-xenia-picker="none"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-delete.webp')"></div><div class="g2r-copy"><div class="g2r-label">Uninstall Xenia Canary</div><div class="g2r-value dim">Remove managed Xenia install</div></div></div>`],
+  ];
+  rows.forEach(([listId,existsSelector,beforeSelector,markup])=>{
+    const list=document.getElementById(listId);
+    if(!list || list.querySelector(existsSelector)) return;
+    const before=list.querySelector(beforeSelector);
+    if(before) before.insertAdjacentHTML('beforebegin', markup);
+    else list.insertAdjacentHTML('beforeend', markup);
+  });
 }
 function ensureVLCGuideBody(){
   if(document.getElementById('g2-vlc-body')) return;
@@ -8120,12 +8432,53 @@ function ensureVLCGuideBody(){
   body.innerHTML=`<div id="g2-vlc-desc"></div><div id="g2-vlc-status"></div><div id="emu-progress-wrap-vlc" class="emu-progress-wrap"><div class="emu-progress-top"><div id="emu-progress-label-vlc" class="mkt-action-meta emu-progress-label">Preparing VLC…</div><div id="emu-progress-percent-vlc" class="emu-progress-percent">0%</div></div><div class="emu-progress-shell"><div id="emu-progress-fill-vlc" class="emu-progress-fill"></div></div></div><div id="g2-vlc-list"><div class="g2r-item sel" data-vlc-action="download-runtime" data-vlc-title="Download Managed Runtime" data-vlc-desc="Download the current official Windows VLC zip from VideoLAN and install it into SKALD's managed runtime folder for native video playback." data-vlc-picker="none"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-videos.webp')"></div><div class="g2r-copy"><div class="g2r-label">Download Managed Runtime</div><div class="g2r-value dim" id="emu-vlc-runtime-display">Managed runtime not available</div></div></div><div class="g2r-item" data-vlc-action="import-runtime" data-vlc-title="Import Existing Runtime" data-vlc-desc="Copy a full VLC install into SKALD's managed runtime folder from an existing local install." data-vlc-picker="exe"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-downloads.webp')"></div><div class="g2r-copy"><div class="g2r-label">Import Existing Runtime</div><div class="g2r-value dim" id="emu-vlc-import-display">Pick vlc.exe from an existing install</div></div></div><div class="g2r-item" data-vlc-action="launch-emulator" data-vlc-title="Launch Emulator" data-vlc-desc="Launch VLC directly from SKALD using the active managed runtime or custom override." data-vlc-picker="none"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-a.webp')"></div><div class="g2r-copy"><div class="g2r-label">Launch Emulator</div><div class="g2r-value dim">Open VLC directly</div></div></div><div class="g2r-item" data-vlc-key="vlcPath" data-vlc-title="Custom Runtime Override" data-vlc-desc="SKALD will prefer its managed VLC runtime. Choose a custom VLC executable only if you need a temporary override during setup or troubleshooting." data-vlc-picker="exe"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-settings.webp')"></div><div class="g2r-copy"><div class="g2r-label">Custom Runtime Override</div><div class="g2r-value dim" id="emu-vlc-override-display">Using SKALD managed runtime when available</div></div></div></div>`;
   body.innerHTML=body.innerHTML.replace("file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-videos.webp","file:///C:/Projects/SKALD/assets/icons/Systems/VLC.webp");
   shell.insertBefore(body, foot);
+  ensureEmulatorUninstallRows();
 }
 function getGuideVLCRefs(){
   ensureVLCGuideBody();
   return{
     desc:document.getElementById('g2-vlc-desc'),
     status:document.getElementById('g2-vlc-status'),
+    title:document.getElementById('g2-account-title'),
+    headIcon:document.getElementById('g2-account-head-icon'),
+  };
+}
+function ensureDuckStationGuideBody(){
+  if(document.getElementById('g2-duckstation-body')) return;
+  const shell=document.getElementById('g2-account-shell');
+  const foot=document.getElementById('g2-account-foot');
+  if(!shell || !foot) return;
+  const body=document.createElement('div');
+  body.id='g2-duckstation-body';
+  body.innerHTML=`<div id="g2-duckstation-desc"></div><div id="g2-duckstation-status"></div><div id="emu-progress-wrap-duckstation" class="emu-progress-wrap"><div class="emu-progress-top"><div id="emu-progress-label-duckstation" class="mkt-action-meta emu-progress-label">Preparing DuckStation...</div><div id="emu-progress-percent-duckstation" class="emu-progress-percent">0%</div></div><div class="emu-progress-shell"><div id="emu-progress-fill-duckstation" class="emu-progress-fill"></div></div></div><div id="g2-duckstation-list"><div class="g2r-item sel" data-duckstation-action="download-runtime" data-duckstation-title="Install DuckStation" data-duckstation-desc="Download the current official Windows DuckStation package from GitHub releases and install it into SKALD's managed runtime folder." data-duckstation-picker="none"><div class="gicon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/DuckStation.webp')"></div><div class="g2r-copy"><div class="g2r-label">Install DuckStation</div><div class="g2r-value dim" id="emu-duckstation-runtime-display">Managed runtime not available</div></div></div><div class="g2r-item" data-duckstation-action="import-runtime" data-duckstation-title="Import Existing Runtime" data-duckstation-desc="Copy a full DuckStation install into SKALD's managed runtime folder from an existing local install." data-duckstation-picker="exe"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-downloads.webp')"></div><div class="g2r-copy"><div class="g2r-label">Import Existing Runtime</div><div class="g2r-value dim" id="emu-duckstation-import-display">Pick duckstation-qt.exe from an existing install</div></div></div><div class="g2r-item" data-duckstation-action="set-bios-folder" data-duckstation-title="BIOS Folder" data-duckstation-desc="Choose the folder containing your legally dumped PlayStation BIOS files. SKALD syncs .bin/.rom files into DuckStation's managed portable bios folder before launch." data-duckstation-picker="folder"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-system.webp')"></div><div class="g2r-copy"><div class="g2r-label">BIOS Folder</div><div class="g2r-value dim" id="emu-duckstation-bios-display">Not set</div></div></div><div class="g2r-item" data-duckstation-action="launch-emulator" data-duckstation-title="Launch Emulator" data-duckstation-desc="Launch DuckStation directly from SKALD using the active managed runtime or custom override." data-duckstation-picker="none"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-a.webp')"></div><div class="g2r-copy"><div class="g2r-label">Launch Emulator</div><div class="g2r-value dim">Open DuckStation directly</div></div></div><div class="g2r-item" data-duckstation-key="duckstationPath" data-duckstation-title="Custom Runtime Override" data-duckstation-desc="SKALD will prefer its managed DuckStation runtime. Choose a custom DuckStation executable only if you need a temporary override during setup or troubleshooting." data-duckstation-picker="exe"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-settings.webp')"></div><div class="g2r-copy"><div class="g2r-label">Custom Runtime Override</div><div class="g2r-value dim" id="emu-duckstation-override-display">Using SKALD managed runtime when available</div></div></div></div>`;
+  shell.insertBefore(body, foot);
+  ensureEmulatorUninstallRows();
+}
+function getGuideDuckStationRefs(){
+  ensureDuckStationGuideBody();
+  return{
+    desc:document.getElementById('g2-duckstation-desc'),
+    status:document.getElementById('g2-duckstation-status'),
+    title:document.getElementById('g2-account-title'),
+    headIcon:document.getElementById('g2-account-head-icon'),
+  };
+}
+function ensureDolphinGuideBody(){
+  if(document.getElementById('g2-dolphin-body')) return;
+  const shell=document.getElementById('g2-account-shell');
+  const foot=document.getElementById('g2-account-foot');
+  if(!shell || !foot) return;
+  const body=document.createElement('div');
+  body.id='g2-dolphin-body';
+  body.innerHTML=`<div id="g2-dolphin-desc"></div><div id="g2-dolphin-status"></div><div id="emu-progress-wrap-dolphin" class="emu-progress-wrap"><div class="emu-progress-top"><div id="emu-progress-label-dolphin" class="mkt-action-meta emu-progress-label">Preparing Dolphin...</div><div id="emu-progress-percent-dolphin" class="emu-progress-percent">0%</div></div><div class="emu-progress-shell"><div id="emu-progress-fill-dolphin" class="emu-progress-fill"></div></div></div><div id="g2-dolphin-list"><div class="g2r-item sel" data-dolphin-action="download-runtime" data-dolphin-channel="stable" data-dolphin-title="Install Dolphin Stable" data-dolphin-desc="Download the latest official Windows x64 Dolphin Stable package and install it into SKALD's managed runtime folder. This is the safest default for most users." data-dolphin-picker="none"><div class="gicon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/Dolphin.webp')"></div><div class="g2r-copy"><div class="g2r-label">Install Dolphin Stable</div><div class="g2r-value dim" id="emu-dolphin-runtime-display">Managed runtime not available</div></div></div><div class="g2r-item" data-dolphin-action="download-runtime" data-dolphin-channel="development" data-dolphin-title="Install Dolphin Development" data-dolphin-desc="Download the latest official Windows x64 Dolphin Development build. Use this if you need newer fixes or compatibility improvements." data-dolphin-picker="none"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-downloads.webp')"></div><div class="g2r-copy"><div class="g2r-label">Install Dolphin Development</div><div class="g2r-value dim">Latest development build</div></div></div><div class="g2r-item" data-dolphin-action="import-runtime" data-dolphin-title="Import Existing Runtime" data-dolphin-desc="Copy a full Dolphin install into SKALD's managed runtime folder from an existing local install." data-dolphin-picker="exe"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-downloads.webp')"></div><div class="g2r-copy"><div class="g2r-label">Import Existing Runtime</div><div class="g2r-value dim" id="emu-dolphin-import-display">Pick Dolphin.exe from an existing install</div></div></div><div class="g2r-item" data-dolphin-action="launch-emulator" data-dolphin-title="Launch Emulator" data-dolphin-desc="Launch Dolphin directly from SKALD using the active managed runtime or custom override." data-dolphin-picker="none"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-a.webp')"></div><div class="g2r-copy"><div class="g2r-label">Launch Emulator</div><div class="g2r-value dim">Open Dolphin directly</div></div></div><div class="g2r-item" data-dolphin-key="dolphinPath" data-dolphin-title="Custom Runtime Override" data-dolphin-desc="SKALD will prefer its managed Dolphin runtime. Choose a custom Dolphin executable only if you need a temporary override during setup or troubleshooting." data-dolphin-picker="exe"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-settings.webp')"></div><div class="g2r-copy"><div class="g2r-label">Custom Runtime Override</div><div class="g2r-value dim" id="emu-dolphin-override-display">Using SKALD managed runtime when available</div></div></div></div>`;
+  shell.insertBefore(body, foot);
+  ensureEmulatorUninstallRows();
+}
+function getGuideDolphinRefs(){
+  ensureDolphinGuideBody();
+  return{
+    desc:document.getElementById('g2-dolphin-desc'),
+    status:document.getElementById('g2-dolphin-status'),
     title:document.getElementById('g2-account-title'),
     headIcon:document.getElementById('g2-account-head-icon'),
   };
@@ -8140,6 +8493,7 @@ function ensureXeniaGuideBody(){
   body.innerHTML=`<div id="g2-xenia-desc"></div><div id="g2-xenia-status"></div><div id="emu-progress-wrap-xenia" class="emu-progress-wrap"><div class="emu-progress-top"><div id="emu-progress-label-xenia" class="mkt-action-meta emu-progress-label">Preparing Xenia Canary…</div><div id="emu-progress-percent-xenia" class="emu-progress-percent">0%</div></div><div class="emu-progress-shell"><div id="emu-progress-fill-xenia" class="emu-progress-fill"></div></div></div><div id="g2-xenia-list"><div class="g2r-item sel" data-xenia-action="download-runtime" data-xenia-title="Download Managed Runtime" data-xenia-desc="Download the current official Windows Xenia Canary build from the xenia-canary releases feed and install it into SKALD's managed runtime folder." data-xenia-picker="none"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-system.webp')"></div><div class="g2r-copy"><div class="g2r-label">Download Managed Runtime</div><div class="g2r-value dim" id="emu-xenia-runtime-display">Managed runtime not available</div></div></div><div class="g2r-item" data-xenia-action="import-runtime" data-xenia-title="Import Existing Runtime" data-xenia-desc="Copy a full Xenia Canary install into SKALD's managed runtime folder from an existing local install." data-xenia-picker="exe"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-downloads.webp')"></div><div class="g2r-copy"><div class="g2r-label">Import Existing Runtime</div><div class="g2r-value dim" id="emu-xenia-import-display">Pick xenia_canary.exe from an existing install</div></div></div><div class="g2r-item" data-xenia-action="launch-emulator" data-xenia-title="Launch Emulator" data-xenia-desc="Launch Xenia Canary directly from SKALD using the active managed runtime or custom override." data-xenia-picker="none"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-a.webp')"></div><div class="g2r-copy"><div class="g2r-label">Launch Emulator</div><div class="g2r-value dim">Open Xenia Canary directly</div></div></div><div class="g2r-item" data-xenia-action="sync-profile" data-xenia-title="Sync SKALD Profile" data-xenia-desc="Seed or repair the managed Xenia Canary profile slot from the active Stoat profile so Xbox 360 launches use the same SKALD identity." data-xenia-picker="none"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-profile.webp')"></div><div class="g2r-copy"><div class="g2r-label">Sync SKALD Profile</div><div class="g2r-value dim" id="emu-xenia-profile-display">Waiting for active Stoat profile</div></div></div><div class="g2r-item" data-xenia-key="xeniaPath" data-xenia-title="Custom Runtime Override" data-xenia-desc="SKALD will prefer its managed Xenia Canary runtime. Choose a custom Xenia executable only if you need a temporary override during setup or troubleshooting." data-xenia-picker="exe"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-settings.webp')"></div><div class="g2r-copy"><div class="g2r-label">Custom Runtime Override</div><div class="g2r-value dim" id="emu-xenia-override-display">Using SKALD managed runtime when available</div></div></div></div>`;
   body.innerHTML=body.innerHTML.replace("file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-system.webp","file:///C:/Projects/SKALD/assets/icons/Systems/Xenia_Canary.webp");
   shell.insertBefore(body, foot);
+  ensureEmulatorUninstallRows();
 }
 function ensureRPCS3GuideBody(){
   if(document.getElementById('g2-rpcs3-body')) return;
@@ -8158,15 +8512,57 @@ function buildRPCS3GuideHomeMarkup(setupStatus=rpcs3SetupStatusCache){
     return `<div class="g2r-item sel" data-rpcs3-action="download-runtime" data-rpcs3-title="Install RPCS3" data-rpcs3-desc="Download the current official RPCS3 Windows build and install it into SKALD's managed runtime folder."><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-system.webp')"></div><div class="g2r-copy"><div class="g2r-label">Install RPCS3</div><div class="g2r-value dim" id="emu-rpcs3-runtime-display">Managed runtime not available</div></div></div><div class="g2r-item" data-rpcs3-action="import-runtime" data-rpcs3-title="Import Existing Runtime" data-rpcs3-desc="Copy a full RPCS3 install into SKALD's managed runtime folder from an existing local install."><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-downloads.webp')"></div><div class="g2r-copy"><div class="g2r-label">Import Existing Runtime</div><div class="g2r-value dim" id="emu-rpcs3-import-display">Pick rpcs3.exe from an existing install</div></div></div><div class="g2r-item" data-rpcs3-key="rpcs3Path" data-rpcs3-title="Custom Runtime Override" data-rpcs3-desc="SKALD will prefer its managed RPCS3 runtime. Choose a custom RPCS3 executable only if you need a temporary override during setup or troubleshooting."><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-settings.webp')"></div><div class="g2r-copy"><div class="g2r-label">Custom Runtime Override</div><div class="g2r-value dim" id="emu-rpcs3-override-display">Using SKALD managed runtime when available</div></div></div>`;
   }
     if(state==='firmware_missing' || state==='welcome_pending'){
-      return `<div class="g2r-item sel" data-rpcs3-action="open-firmware-setup" data-rpcs3-title="Install Firmware" data-rpcs3-desc="Open the PS3 firmware setup prompt. RPCS3 needs official system software before PlayStation 3 games can boot reliably."><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-downloads.webp')"></div><div class="g2r-copy"><div class="g2r-label">Install Firmware</div><div class="g2r-value dim" id="emu-rpcs3-firmware-package-display">Pick or download PS3UPDAT.PUP</div></div></div><div class="g2r-item" data-rpcs3-title="Firmware Status" data-rpcs3-desc="RPCS3 needs official PS3 system software before games can boot reliably. SKALD shows whether firmware is installed and which version is active in the managed runtime."><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-settings.webp')"></div><div class="g2r-copy"><div class="g2r-label">Firmware Status</div><div class="g2r-value dim" id="emu-rpcs3-firmware-display">Checking firmware…</div></div></div><div class="g2r-item" data-rpcs3-action="launch-emulator" data-rpcs3-title="Launch Emulator" data-rpcs3-desc="Launch RPCS3 directly from SKALD using the active managed runtime or custom override."><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-a.webp')"></div><div class="g2r-copy"><div class="g2r-label">Launch Emulator</div><div class="g2r-value dim">Open RPCS3 directly</div></div></div><div class="g2r-item" data-rpcs3-action="uninstall-runtime" data-rpcs3-title="Uninstall RPCS3" data-rpcs3-desc="Remove the SKALD-managed RPCS3 runtime, firmware package cache, and runtime state so you can run the setup flow from a clean baseline."><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-delete.webp')"></div><div class="g2r-copy"><div class="g2r-label">Uninstall RPCS3</div><div class="g2r-value dim">Remove managed RPCS3 install</div></div></div><div class="g2r-item" data-rpcs3-key="rpcs3Path" data-rpcs3-title="Custom Runtime Override" data-rpcs3-desc="SKALD will prefer its managed RPCS3 runtime. Choose a custom RPCS3 executable only if you need a temporary override during setup or troubleshooting."><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-settings.webp')"></div><div class="g2r-copy"><div class="g2r-label">Custom Runtime Override</div><div class="g2r-value dim" id="emu-rpcs3-override-display">Using SKALD managed runtime when available</div></div></div>`;
+      return `<div class="g2r-item sel" data-rpcs3-action="open-firmware-setup" data-rpcs3-title="Install Firmware" data-rpcs3-desc="Open the PS3 firmware setup prompt. RPCS3 needs official system software before PlayStation 3 games can boot reliably."><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-downloads.webp')"></div><div class="g2r-copy"><div class="g2r-label">Install Firmware</div><div class="g2r-value dim" id="emu-rpcs3-firmware-package-display">Pick or download PS3UPDAT.PUP</div></div></div><div class="g2r-item" data-rpcs3-title="Firmware Status" data-rpcs3-desc="RPCS3 needs official PS3 system software before games can boot reliably. SKALD shows whether firmware is installed and which version is active in the managed runtime."><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-settings.webp')"></div><div class="g2r-copy"><div class="g2r-label">Firmware Status</div><div class="g2r-value dim" id="emu-rpcs3-firmware-display">Checking firmware…</div></div></div><div class="g2r-item" data-rpcs3-action="open-settings" data-rpcs3-title="RPCS3 Settings" data-rpcs3-desc="Open the native SKALD settings page for core RPCS3 video, audio, and launch behavior. Changes are written to the managed RPCS3 config.yml."><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-settings.webp')"></div><div class="g2r-copy"><div class="g2r-label">RPCS3 Settings</div><div class="g2r-value dim">Video, audio, and launch defaults</div></div></div><div class="g2r-item" data-rpcs3-action="launch-emulator" data-rpcs3-title="Launch Emulator" data-rpcs3-desc="Launch RPCS3 directly from SKALD using the active managed runtime or custom override."><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-a.webp')"></div><div class="g2r-copy"><div class="g2r-label">Launch Emulator</div><div class="g2r-value dim">Open RPCS3 directly</div></div></div><div class="g2r-item" data-rpcs3-action="uninstall-runtime" data-rpcs3-title="Uninstall RPCS3" data-rpcs3-desc="Remove the SKALD-managed RPCS3 runtime, firmware package cache, and runtime state so you can run the setup flow from a clean baseline."><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-delete.webp')"></div><div class="g2r-copy"><div class="g2r-label">Uninstall RPCS3</div><div class="g2r-value dim">Remove managed RPCS3 install</div></div></div><div class="g2r-item" data-rpcs3-key="rpcs3Path" data-rpcs3-title="Custom Runtime Override" data-rpcs3-desc="SKALD will prefer its managed RPCS3 runtime. Choose a custom RPCS3 executable only if you need a temporary override during setup or troubleshooting."><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-settings.webp')"></div><div class="g2r-copy"><div class="g2r-label">Custom Runtime Override</div><div class="g2r-value dim" id="emu-rpcs3-override-display">Using SKALD managed runtime when available</div></div></div>`;
     }
-  return `<div class="g2r-item sel" data-rpcs3-action="launch-emulator" data-rpcs3-title="Launch Emulator" data-rpcs3-desc="Launch RPCS3 directly from SKALD using the active managed runtime or custom override."><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-a.webp')"></div><div class="g2r-copy"><div class="g2r-label">Launch Emulator</div><div class="g2r-value dim">Open RPCS3 directly</div></div></div><div class="g2r-item" data-rpcs3-title="Firmware Status" data-rpcs3-desc="RPCS3 needs official PS3 system software before games can boot reliably. SKALD shows whether firmware is installed and which version is active in the managed runtime."><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-settings.webp')"></div><div class="g2r-copy"><div class="g2r-label">Firmware Status</div><div class="g2r-value dim" id="emu-rpcs3-firmware-display">Checking firmware…</div></div></div><div class="g2r-item" data-rpcs3-action="uninstall-runtime" data-rpcs3-title="Uninstall RPCS3" data-rpcs3-desc="Remove the SKALD-managed RPCS3 runtime, firmware package cache, and runtime state so you can run the setup flow from a clean baseline."><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-delete.webp')"></div><div class="g2r-copy"><div class="g2r-label">Uninstall RPCS3</div><div class="g2r-value dim">Remove managed RPCS3 install</div></div></div><div class="g2r-item" data-rpcs3-key="rpcs3Path" data-rpcs3-title="Custom Runtime Override" data-rpcs3-desc="SKALD will prefer its managed RPCS3 runtime. Choose a custom RPCS3 executable only if you need a temporary override during setup or troubleshooting."><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-settings.webp')"></div><div class="g2r-copy"><div class="g2r-label">Custom Runtime Override</div><div class="g2r-value dim" id="emu-rpcs3-override-display">Using SKALD managed runtime when available</div></div></div>`;
+  return `<div class="g2r-item sel" data-rpcs3-action="launch-emulator" data-rpcs3-title="Launch Emulator" data-rpcs3-desc="Launch RPCS3 directly from SKALD using the active managed runtime or custom override."><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-a.webp')"></div><div class="g2r-copy"><div class="g2r-label">Launch Emulator</div><div class="g2r-value dim">Open RPCS3 directly</div></div></div><div class="g2r-item" data-rpcs3-action="open-settings" data-rpcs3-title="RPCS3 Settings" data-rpcs3-desc="Open the native SKALD settings page for core RPCS3 video, audio, and launch behavior. Changes are written to the managed RPCS3 config.yml."><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-settings.webp')"></div><div class="g2r-copy"><div class="g2r-label">RPCS3 Settings</div><div class="g2r-value dim">Video, audio, and launch defaults</div></div></div><div class="g2r-item" data-rpcs3-title="Firmware Status" data-rpcs3-desc="RPCS3 needs official PS3 system software before games can boot reliably. SKALD shows whether firmware is installed and which version is active in the managed runtime."><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-settings.webp')"></div><div class="g2r-copy"><div class="g2r-label">Firmware Status</div><div class="g2r-value dim" id="emu-rpcs3-firmware-display">Checking firmware…</div></div></div><div class="g2r-item" data-rpcs3-action="uninstall-runtime" data-rpcs3-title="Uninstall RPCS3" data-rpcs3-desc="Remove the SKALD-managed RPCS3 runtime, firmware package cache, and runtime state so you can run the setup flow from a clean baseline."><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-delete.webp')"></div><div class="g2r-copy"><div class="g2r-label">Uninstall RPCS3</div><div class="g2r-value dim">Remove managed RPCS3 install</div></div></div><div class="g2r-item" data-rpcs3-key="rpcs3Path" data-rpcs3-title="Custom Runtime Override" data-rpcs3-desc="SKALD will prefer its managed RPCS3 runtime. Choose a custom RPCS3 executable only if you need a temporary override during setup or troubleshooting."><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-settings.webp')"></div><div class="g2r-copy"><div class="g2r-label">Custom Runtime Override</div><div class="g2r-value dim" id="emu-rpcs3-override-display">Using SKALD managed runtime when available</div></div></div>`;
 }
   function buildRPCS3FirmwareSetupMarkup(){
     return `<div class="g2r-item sel" data-rpcs3-action="download-latest-firmware" data-rpcs3-title="Download Latest Firmware" data-rpcs3-desc="Download the latest PS3UPDAT.PUP and install it into SKALD's managed RPCS3 runtime."><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-downloads.webp')"></div><div class="g2r-copy"><div class="g2r-label">Download Latest Firmware</div><div class="g2r-value dim">Fetch and install official PS3 system software</div></div></div><div class="g2r-item" data-rpcs3-action="locate-existing-firmware" data-rpcs3-title="Locate Existing Firmware" data-rpcs3-desc="Choose an existing PS3UPDAT.PUP file on disk, then install it into SKALD's managed RPCS3 runtime."><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-system.webp')"></div><div class="g2r-copy"><div class="g2r-label">Locate Existing Firmware</div><div class="g2r-value dim">Use and install a PS3UPDAT.PUP you already have</div></div></div><div class="g2r-item" data-rpcs3-action="back-firmware-setup" data-rpcs3-title="Back" data-rpcs3-desc="Return to the main RPCS3 setup guide."><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-b.webp')"></div><div class="g2r-copy"><div class="g2r-label">Back</div><div class="g2r-value dim">Return to the main RPCS3 guide</div></div></div>`;
   }
 function buildRPCS3WelcomeSetupMarkup(){
   return `<div class="g2r-item sel" data-rpcs3-action="welcome-show-startup-off" data-rpcs3-title="Show at Startup" data-rpcs3-desc="Turn Show at startup off in the live RPCS3 welcome window."><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-settings.webp')"></div><div class="g2r-copy"><div class="g2r-label">Show at Startup</div><div class="g2r-value dim">Set to Off</div></div></div><div class="g2r-item" data-rpcs3-action="welcome-quickstart-on" data-rpcs3-title="Quickstart Guide" data-rpcs3-desc="Check I have read the Quickstart guide in the live RPCS3 welcome window."><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-downloads.webp')"></div><div class="g2r-copy"><div class="g2r-label">Quickstart Guide</div><div class="g2r-value dim">Set to On</div></div></div><div class="g2r-item" data-rpcs3-action="welcome-continue" data-rpcs3-title="Continue" data-rpcs3-desc="Press Continue in the live RPCS3 welcome window after the two setup checks are ready."><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-a.webp')"></div><div class="g2r-copy"><div class="g2r-label">Continue</div><div class="g2r-value dim">Advance past the RPCS3 welcome screen</div></div></div><div class="g2r-item" data-rpcs3-action="welcome-apply-all" data-rpcs3-title="Apply All" data-rpcs3-desc="Turn Show at startup off, check the Quickstart guide, and press Continue in one step."><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-system.webp')"></div><div class="g2r-copy"><div class="g2r-label">Apply All</div><div class="g2r-value dim">Run the full first-run welcome flow</div></div></div><div class="g2r-item" data-rpcs3-action="back-welcome-setup" data-rpcs3-title="Back" data-rpcs3-desc="Return to the main RPCS3 setup guide."><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-b.webp')"></div><div class="g2r-copy"><div class="g2r-label">Back</div><div class="g2r-value dim">Return to the main RPCS3 guide</div></div></div>`;
+}
+function buildRPCS3SettingsMarkup(configStatus=rpcs3ConfigStatusCache){
+  const values=configStatus?.values || {};
+  const controllerStatus=rpcs3ControllerStatusCache || {};
+  const controllerLabel=controllerStatus?.preset==='xinput-default'
+    ? 'Xbox/XInput Default'
+    : (controllerStatus?.handler ? `${controllerStatus.handler}${controllerStatus.device ? ` · ${controllerStatus.device}` : ''}` : 'Not configured');
+  const controllerMarkup=`<div class="g2r-item sel" data-rpcs3-action="open-controllers" data-rpcs3-title="Controller Mapping" data-rpcs3-desc="Open SKALD's native controller mapping tools for RPCS3. First pass manages the global Default profile used by PlayStation 3 games."><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-settings.webp')"></div><div class="g2r-copy"><div class="g2r-label">Controller Mapping</div><div class="g2r-value dim">${esc(controllerLabel)}</div></div></div>`;
+  const rows=[
+    ['videoRenderer','Video Renderer','Choose the RPCS3 graphics backend. Vulkan is recommended for most modern systems.'],
+    ['resolutionScale','Resolution Scale','Raise internal resolution for cleaner output. Higher values need more GPU power.'],
+    ['frameLimit','Frame Limit','Choose RPCS3 frame limiting behavior. Auto is safest for most games.'],
+    ['vsyncMode','VSync','Reduce tearing when the game is presented through RPCS3.'],
+    ['startFullscreen','Start Fullscreen','Launch games fullscreen so SKALD only gives way once gameplay is ready.'],
+    ['autoStartGames','Auto-start Games','Automatically start games after boot or package install.'],
+    ['exitOnFinish','Exit When Finished','Close RPCS3 when the emulated process exits. Useful for returning to SKALD cleanly.'],
+    ['audioRenderer','Audio Renderer','Choose RPCS3 audio output backend. Cubeb is the normal Windows default.'],
+    ['audioFormat','Audio Format','Choose stereo or surround output for RPCS3.'],
+    ['masterVolume','Master Volume','Set RPCS3 master audio volume.'],
+  ];
+  const markup=rows.map(([id,label,desc],idx)=>{
+    const setting=values[id] || {};
+    const value=String(setting.value ?? '');
+    const options=Array.isArray(setting.values) ? setting.values.join('|') : '';
+    return `<div class="g2r-item" data-rpcs3-action="cycle-setting" data-rpcs3-setting="${esc(id)}" data-rpcs3-setting-options="${esc(options)}" data-rpcs3-title="${esc(label)}" data-rpcs3-desc="${esc(desc)}"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-settings.webp')"></div><div class="g2r-copy"><div class="g2r-label">${esc(label)}</div><div class="g2r-value dim">${esc(formatRPCS3GuideSettingValue(id,value))}</div></div></div>`;
+  }).join('');
+  return `${controllerMarkup}${markup}<div class="g2r-item" data-rpcs3-action="back-settings" data-rpcs3-title="Back" data-rpcs3-desc="Return to the main RPCS3 guide."><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-b.webp')"></div><div class="g2r-copy"><div class="g2r-label">Back</div><div class="g2r-value dim">Return to RPCS3 setup</div></div></div>`;
+}
+function formatRPCS3GuideSettingValue(id,value){
+  const raw=String(value ?? '').trim();
+  if(id==='resolutionScale') return `${raw || '100'}%`;
+  if(id==='masterVolume') return `${raw || '100'}%`;
+  if(raw==='true') return 'On';
+  if(raw==='false') return 'Off';
+  return raw || 'Default';
+}
+function buildRPCS3ControllerMarkup(controllerStatus=rpcs3ControllerStatusCache){
+  const status=controllerStatus || {};
+  const active=status?.preset==='xinput-default';
+  const handler=status?.handler || 'Not configured';
+  const device=status?.device || 'No device profile yet';
+  return `<div class="g2r-item sel" data-rpcs3-action="apply-controller-preset" data-rpcs3-preset="xinput-default" data-rpcs3-title="Apply Xbox/XInput Default" data-rpcs3-desc="Write SKALD's first RPCS3 controller preset to the managed global Default profile. This maps an Xbox-style controller to a PS3 DualShock layout."><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-a.webp')"></div><div class="g2r-copy"><div class="g2r-label">Apply Xbox/XInput Default</div><div class="g2r-value dim">${active?'Active':'Recommended first pass'}</div></div></div><div class="g2r-item" data-rpcs3-title="Player 1 Handler" data-rpcs3-desc="The active RPCS3 handler written in the global Default input profile."><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-settings.webp')"></div><div class="g2r-copy"><div class="g2r-label">Player 1 Handler</div><div class="g2r-value dim">${esc(handler)}</div></div></div><div class="g2r-item" data-rpcs3-title="Player 1 Device" data-rpcs3-desc="The active device target written in the global Default input profile."><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-settings.webp')"></div><div class="g2r-copy"><div class="g2r-label">Player 1 Device</div><div class="g2r-value dim">${esc(device)}</div></div></div><div class="g2r-item" data-rpcs3-action="back-controllers" data-rpcs3-title="Back" data-rpcs3-desc="Return to RPCS3 settings."><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-b.webp')"></div><div class="g2r-copy"><div class="g2r-label">Back</div><div class="g2r-value dim">Return to RPCS3 settings</div></div></div>`;
 }
 function renderRPCS3GuideHome(setupStatus=rpcs3SetupStatusCache){
   const list=document.getElementById('g2-rpcs3-list');
@@ -8205,6 +8601,33 @@ function renderRPCS3WelcomeSetupPrompt(){
   if(refs.desc) refs.desc.textContent='Use the SKALD guide to finish the RPCS3 first-run welcome screen without reaching over to the popup itself.';
   if(refs.status){
     refs.status.textContent='RPCS3 first-run setup is open.\nSet Show at startup to Off, check the Quickstart guide, then Continue.\nApply All will do the whole sequence in one step.';
+  }
+}
+function renderRPCS3SettingsGuide(configStatus=rpcs3ConfigStatusCache){
+  const list=document.getElementById('g2-rpcs3-list');
+  const refs=getGuideRPCS3Refs();
+  if(!list) return;
+  rpcs3GuideSubview='settings';
+  list.innerHTML=buildRPCS3SettingsMarkup(configStatus);
+  if(refs.desc) refs.desc.textContent='Tune the managed RPCS3 runtime from SKALD. These settings are written directly to RPCS3 config.yml.';
+  if(refs.status){
+    const path=configStatus?.configPath || '';
+    refs.status.textContent=configStatus?.configAvailable
+      ? `RPCS3 native settings are ready.\nA = cycle selected value\nConfig: ${path}`
+      : 'RPCS3 config.yml is not available yet. Install and launch RPCS3 once, then return here.';
+  }
+}
+function renderRPCS3ControllerGuide(controllerStatus=rpcs3ControllerStatusCache){
+  const list=document.getElementById('g2-rpcs3-list');
+  const refs=getGuideRPCS3Refs();
+  if(!list) return;
+  rpcs3GuideSubview='controllers';
+  list.innerHTML=buildRPCS3ControllerMarkup(controllerStatus);
+  if(refs.desc) refs.desc.textContent='Manage RPCS3 controller mappings from SKALD. This first pass writes the global Default profile.';
+  if(refs.status){
+    const path=controllerStatus?.profilePath || '';
+    const active=controllerStatus?.preset==='xinput-default' ? 'Preset: Xbox/XInput Default active' : 'Preset: not yet managed by SKALD';
+    refs.status.textContent=`${active}\nA = apply selected preset\nProfile: ${path || 'waiting for RPCS3 runtime'}`;
   }
 }
   async function openRPCS3FirmwareSetupPrompt(){
@@ -8339,6 +8762,20 @@ function syncGuideVLCDisplays(){
   const item=items[Math.max(0,Math.min(guideSelIdx,items.length-1))];
   if(refs.desc) refs.desc.textContent=item?.dataset.vlcDesc || 'Manage the integrated SKALD VLC runtime for native video playback.';
 }
+function syncGuideDuckStationDisplays(){
+  const refs=getGuideDuckStationRefs();
+  const items=[...document.querySelectorAll('#guide2 #g2-duckstation-list .g2r-item')].filter(el=>el.offsetParent!==null);
+  if(!items.length) return;
+  const item=items[Math.max(0,Math.min(guideSelIdx,items.length-1))];
+  if(refs.desc) refs.desc.textContent=item?.dataset.duckstationDesc || 'Manage the integrated SKALD DuckStation runtime for native PlayStation playback.';
+}
+function syncGuideDolphinDisplays(){
+  const refs=getGuideDolphinRefs();
+  const items=[...document.querySelectorAll('#guide2 #g2-dolphin-list .g2r-item')].filter(el=>el.offsetParent!==null);
+  if(!items.length) return;
+  const item=items[Math.max(0,Math.min(guideSelIdx,items.length-1))];
+  if(refs.desc) refs.desc.textContent=item?.dataset.dolphinDesc || 'Manage the integrated SKALD Dolphin runtime for native GameCube and Wii playback.';
+}
 function syncGuideXeniaDisplays(){
   const refs=getGuideXeniaRefs();
   const items=[...document.querySelectorAll('#guide2 #g2-xenia-list .g2r-item')].filter(el=>el.offsetParent!==null);
@@ -8358,12 +8795,13 @@ function syncGuideRPCS3Displays(){
       : 'Manage the integrated SKALD RPCS3 runtime for native PlayStation 3 playback.'));
 }
 const GAMES_ALL_SYSTEM='all';
-const MARKETPLACE_GAME_SYSTEMS=['snes','genesis','psx','ps2','ps3','psp','dc','xbox','x360'];
-const GAMES_LIBRARY_SYSTEMS=['snes','genesis','psx','ps2','ps3','psp','dc','xbox','x360'];
-const ACHIEVEMENT_SYSTEMS=['snes','genesis','psx'];
+const MARKETPLACE_GAME_SYSTEMS=['snes','genesis','psx','ps2','ps3','psp','dc','gamecube','xbox','x360'];
+const GAMES_LIBRARY_SYSTEMS=['snes','genesis','psx','ps2','ps3','psp','dc','gamecube','xbox','x360'];
+const ACHIEVEMENT_SYSTEMS=['snes','genesis','psx','ps3'];
+const RA_ACHIEVEMENT_SYSTEMS=['snes','genesis','psx'];
   const gamesState={system:'snes',selectedId:null,filter:'all',pane:'list',actionIdx:0,systemSelectorSource:'library',achievementIdx:0,achievementGameId:null,achievementModalOpen:false,achievementListModalOpen:false,currentAchievements:[],mediaIdx:0,mediaModalOpen:false,deleteModalOpen:false,filterRegion:[],filterRating:[],filterGenre:[],filterTab:'region'};
 const gameSearchState={open:false,context:null,query:'',focus:'input',resultIdx:0,results:[]};
-const folderBrowserState={open:false,title:'Select Folder',currentPath:'',parentPath:null,entries:[],selectedIdx:0,resolve:null,error:''};
+const folderBrowserState={open:false,title:'Select Folder',currentPath:'',parentPath:null,entries:[],selectedIdx:0,resolve:null,error:'',preferredStartPath:''};
 const bladeAssetPreloadRefs=[];
 function syncGuideAccountDisplays(){
   const refs=getGuideAccountRefs();
@@ -8500,13 +8938,33 @@ async function openPCSX2Guide(){
   applyGSel();
 }
 async function openVLCGuide(){
-  ensureVLCGuideBody();
-  openGuide2('vlc');
+    ensureVLCGuideBody();
+    openGuide2('vlc');
   const refs=getGuideVLCRefs();
   if(refs.title) refs.title.textContent='VLC';
   if(refs.headIcon) refs.headIcon.src='file:///C:/Projects/SKALD/assets/icons/Systems/VLC.webp';
   await refreshVLCSettingsPanel();
-  syncGuideVLCDisplays();
+    syncGuideVLCDisplays();
+    applyGSel();
+  }
+async function openDuckStationGuide(){
+    ensureDuckStationGuideBody();
+    openGuide2('duckstation');
+    const refs=getGuideDuckStationRefs();
+    if(refs.title) refs.title.textContent='DuckStation';
+    if(refs.headIcon) refs.headIcon.src='file:///C:/Projects/SKALD/assets/icons/Systems/DuckStation.webp';
+    await refreshDuckStationSettingsPanel();
+    syncGuideDuckStationDisplays();
+    applyGSel();
+  }
+async function openDolphinGuide(){
+  ensureDolphinGuideBody();
+  openGuide2('dolphin');
+  const refs=getGuideDolphinRefs();
+  if(refs.title) refs.title.textContent='Dolphin';
+  if(refs.headIcon) refs.headIcon.src='file:///C:/Projects/SKALD/assets/icons/Systems/Dolphin.webp';
+  await refreshDolphinSettingsPanel();
+  syncGuideDolphinDisplays();
   applyGSel();
 }
 async function openXeniaGuide(){
@@ -8532,9 +8990,11 @@ function applyGSel(){
   const items=getGuideItems();
   guideSelIdx=Math.max(0,Math.min(guideSelIdx,Math.max(0,items.length-1)));
   items.forEach((b,i)=>b.classList.toggle('sel',i===guideSelIdx));
-  if(guide2Open && guide2Mode==='retroarch' && !isRetroArchCorePickerOpen()) syncGuideRetroArchDisplays();
-  if(guide2Open && guide2Mode==='pcsx2') syncGuidePCSX2Displays();
-  if(guide2Open && guide2Mode==='vlc') syncGuideVLCDisplays();
+    if(guide2Open && guide2Mode==='retroarch' && !isRetroArchCorePickerOpen()) syncGuideRetroArchDisplays();
+    if(guide2Open && guide2Mode==='pcsx2') syncGuidePCSX2Displays();
+    if(guide2Open && guide2Mode==='duckstation') syncGuideDuckStationDisplays();
+    if(guide2Open && guide2Mode==='dolphin') syncGuideDolphinDisplays();
+    if(guide2Open && guide2Mode==='vlc') syncGuideVLCDisplays();
   if(guide2Open && guide2Mode==='xenia') syncGuideXeniaDisplays();
   if(guide2Open && guide2Mode==='rpcs3') syncGuideRPCS3Displays();
   if(guidePage==='chat') renderGuideChatPanel();
@@ -8675,6 +9135,14 @@ async function handleRetroArchGuideItem(btn){
     else toast(result?.error || 'Could not download RetroArch');
     return;
   }
+  if(action==='uninstall-runtime'){
+    if(status) status.textContent='Removing the SKALD-managed RetroArch runtime...';
+    const result=await window.electronAPI?.uninstallEmulatorRuntime?.();
+    await refreshEmulatorSettingsPanel();
+    if(result?.ok) toast('RetroArch uninstalled from SKALD');
+    else toast(result?.error || 'Could not uninstall RetroArch');
+    return;
+  }
   if(action==='launch-emulator'){
     const result=await window.electronAPI?.launchStandaloneEmulator?.({emulatorId:'retroarch'});
     if(result?.ok) toast('Launching RetroArch');
@@ -8738,6 +9206,14 @@ async function handlePCSX2GuideItem(btn){
     else toast(result?.error || 'Could not download PCSX2');
     return;
     }
+    if(action==='uninstall-runtime'){
+      if(status) status.textContent='Removing the SKALD-managed PCSX2 runtime...';
+      const result=await window.electronAPI?.uninstallPCSX2Runtime?.();
+      await refreshPCSX2SettingsPanel();
+      if(result?.ok) toast('PCSX2 uninstalled from SKALD');
+      else toast(result?.error || 'Could not uninstall PCSX2');
+      return;
+    }
     if(action==='launch-emulator'){
       const result=await window.electronAPI?.launchStandaloneEmulator?.({emulatorId:'pcsx2'});
       if(result?.ok) toast('Launching PCSX2');
@@ -8798,6 +9274,14 @@ async function handleVLCGuideItem(btn){
     else toast(result?.error || 'Could not download VLC');
     return;
   }
+  if(action==='uninstall-runtime'){
+    if(status) status.textContent='Removing the SKALD-managed VLC runtime...';
+    const result=await window.electronAPI?.uninstallVLCRuntime?.();
+    await refreshVLCSettingsPanel();
+    if(result?.ok) toast('VLC uninstalled from SKALD');
+    else toast(result?.error || 'Could not uninstall VLC');
+    return;
+  }
   if(action==='launch-emulator'){
     const result=await window.electronAPI?.launchStandaloneEmulator?.({emulatorId:'vlc'});
     if(result?.ok) toast('Launching VLC');
@@ -8820,6 +9304,127 @@ async function handleVLCGuideItem(btn){
     await window.electronAPI?.saveSettings?.(next);
     await refreshVLCSettingsPanel();
     toast(`${btn.dataset.vlcTitle||'VLC setting'} saved`);
+  }
+}
+async function handleDuckStationGuideItem(btn){
+  ensureDuckStationGuideBody();
+  const key=btn.dataset.duckstationKey;
+  const action=btn.dataset.duckstationAction;
+  const status=document.getElementById('g2-duckstation-status');
+  if(action==='download-runtime'){
+    emulatorRuntimeProgressState={active:true,percent:2,stage:'starting',message:'Starting DuckStation download...'};
+    renderEmulatorRuntimeProgress();
+    if(status) status.textContent='Downloading DuckStation from the current official GitHub release and preparing the SKALD managed runtime...';
+    const result=await window.electronAPI?.downloadDuckStationRuntime?.();
+    if(result?.ok) completeEmulatorRuntimeProgress(`DuckStation ${result.version||''} is ready in SKALD.`.trim());
+    else{
+      emulatorRuntimeProgressState={active:false,percent:0,stage:'',message:''};
+      renderEmulatorRuntimeProgress();
+    }
+    await refreshDuckStationSettingsPanel();
+    if(result?.ok) toast(`DuckStation ${result.version||''} installed for SKALD`.trim());
+    else toast(result?.error || 'Could not download DuckStation');
+    return;
+  }
+  if(action==='uninstall-runtime'){
+    if(status) status.textContent='Removing the SKALD-managed DuckStation runtime...';
+    const result=await window.electronAPI?.uninstallDuckStationRuntime?.();
+    await refreshDuckStationSettingsPanel();
+    if(result?.ok) toast('DuckStation uninstalled from SKALD');
+    else toast(result?.error || 'Could not uninstall DuckStation');
+    return;
+  }
+  if(action==='launch-emulator'){
+    const result=await window.electronAPI?.launchStandaloneEmulator?.({emulatorId:'duckstation'});
+    if(result?.ok) toast('Launching DuckStation');
+    else toast(result?.error || 'Could not launch DuckStation');
+    return;
+  }
+  if(action==='set-bios-folder' || btn.dataset.duckstationPicker==='folder'){
+    const settings=await window.electronAPI?.getSettings?.() || {};
+    const picked=await openSkaldFolderBrowser({
+      title:'Select DuckStation BIOS Folder',
+      startPath:settings?.emulators?.duckstation?.biosPath || settings?.installPath || settings?.downloadPath || '',
+    });
+    if(!picked) return;
+    const next={...settings, emulators:{...(settings.emulators||{}), duckstation:{...((settings.emulators||{}).duckstation||{}), biosPath:picked}}};
+    await window.electronAPI?.saveSettings?.(next);
+    await refreshDuckStationSettingsPanel();
+    toast('DuckStation BIOS folder saved');
+    return;
+  }
+  const filters=[{name:'Executables',extensions:['exe']},{name:'All Files',extensions:['*']}];
+  const picked=await window.electronAPI?.chooseFile?.({filters});
+  if(!picked) return;
+  if(action==='import-runtime'){
+    const result=await window.electronAPI?.importDuckStationRuntime?.({executablePath:picked});
+    await refreshDuckStationSettingsPanel();
+    if(result?.ok) toast('DuckStation imported into SKALD');
+    else toast(result?.error || 'Could not import DuckStation');
+    return;
+  }
+  const settings=await window.electronAPI?.getSettings?.() || {};
+  const next={...settings, emulators:{...(settings.emulators||{}), duckstation:{...((settings.emulators||{}).duckstation||{}), customExecutablePath:picked, executablePath:picked, mode:'custom'}}};
+  if(key==='duckstationPath'){
+    await window.electronAPI?.saveSettings?.(next);
+    await refreshDuckStationSettingsPanel();
+    toast(`${btn.dataset.duckstationTitle||'DuckStation setting'} saved`);
+  }
+}
+async function handleDolphinGuideItem(btn){
+  ensureDolphinGuideBody();
+  const key=btn.dataset.dolphinKey;
+  const action=btn.dataset.dolphinAction;
+  const status=document.getElementById('g2-dolphin-status');
+  if(action==='download-runtime'){
+    const channel=String(btn.dataset.dolphinChannel||'stable').trim().toLowerCase()==='development' ? 'development' : 'stable';
+    const label=channel==='development' ? 'Development' : 'Stable';
+    emulatorRuntimeProgressState={active:true,percent:2,stage:'starting',message:`Starting Dolphin ${label} download...`};
+    renderEmulatorRuntimeProgress();
+    if(status) status.textContent=`Downloading Dolphin ${label} Windows x64 from the official download page and preparing the SKALD managed runtime...`;
+    const result=await window.electronAPI?.downloadDolphinRuntime?.({channel});
+    if(result?.ok) completeEmulatorRuntimeProgress(`Dolphin ${label} ${result.version||''} is ready in SKALD.`.trim());
+    else{
+      emulatorRuntimeProgressState={active:false,percent:0,stage:'',message:''};
+      renderEmulatorRuntimeProgress();
+    }
+    await refreshDolphinSettingsPanel();
+    if(result?.ok) toast(`Dolphin ${label} ${result.version||''} installed for SKALD`.trim());
+    else toast(result?.error || 'Could not download Dolphin');
+    return;
+  }
+  if(action==='uninstall-runtime'){
+    const channel=String(btn.dataset.dolphinChannel||'stable').trim().toLowerCase()==='development' ? 'development' : 'stable';
+    const label=channel==='development' ? 'Development' : 'Stable';
+    if(status) status.textContent=`Removing the SKALD-managed Dolphin ${label} runtime...`;
+    const result=await window.electronAPI?.uninstallDolphinRuntime?.({channel});
+    await refreshDolphinSettingsPanel();
+    if(result?.ok) toast(`Dolphin ${label} uninstalled from SKALD`);
+    else toast(result?.error || `Could not uninstall Dolphin ${label}`);
+    return;
+  }
+  if(action==='launch-emulator'){
+    const result=await window.electronAPI?.launchStandaloneEmulator?.({emulatorId:'dolphin'});
+    if(result?.ok) toast('Launching Dolphin');
+    else toast(result?.error || 'Could not launch Dolphin');
+    return;
+  }
+  const filters=[{name:'Executables',extensions:['exe']},{name:'All Files',extensions:['*']}];
+  const picked=await window.electronAPI?.chooseFile?.({filters});
+  if(!picked) return;
+  if(action==='import-runtime'){
+    const result=await window.electronAPI?.importDolphinRuntime?.({executablePath:picked});
+    await refreshDolphinSettingsPanel();
+    if(result?.ok) toast('Dolphin imported into SKALD');
+    else toast(result?.error || 'Could not import Dolphin');
+    return;
+  }
+  const settings=await window.electronAPI?.getSettings?.() || {};
+  const next={...settings, emulators:{...(settings.emulators||{}), dolphin:{...((settings.emulators||{}).dolphin||{}), customExecutablePath:picked, executablePath:picked, mode:'custom'}}};
+  if(key==='dolphinPath'){
+    await window.electronAPI?.saveSettings?.(next);
+    await refreshDolphinSettingsPanel();
+    toast(`${btn.dataset.dolphinTitle||'Dolphin setting'} saved`);
   }
 }
 async function handleXeniaGuideItem(btn){
@@ -8860,6 +9465,14 @@ async function handleXeniaGuideItem(btn){
     await refreshXeniaSettingsPanel();
     if(result?.ok) toast(`Xenia Canary ${result.version||''} installed for SKALD`.trim());
     else toast(result?.error || 'Could not download Xenia Canary');
+    return;
+  }
+  if(action==='uninstall-runtime'){
+    if(status) status.textContent='Removing the SKALD-managed Xenia Canary runtime...';
+    const result=await window.electronAPI?.uninstallXeniaRuntime?.();
+    await refreshXeniaSettingsPanel();
+    if(result?.ok) toast('Xenia Canary uninstalled from SKALD');
+    else toast(result?.error || 'Could not uninstall Xenia Canary');
     return;
   }
   const filters=[{name:'Executables',extensions:['exe']},{name:'All Files',extensions:['*']}];
@@ -8911,6 +9524,58 @@ async function handleRPCS3GuideItem(btn){
     renderRPCS3WelcomeSetupPrompt();
     guideSelIdx=0;
     applyGSel();
+    return;
+  }
+  if(action==='open-settings'){
+    const configStatus=await window.electronAPI?.getRPCS3Config?.() || null;
+    rpcs3ConfigStatusCache=configStatus;
+    rpcs3ControllerStatusCache=await window.electronAPI?.getRPCS3ControllerConfig?.() || null;
+    renderRPCS3SettingsGuide(configStatus);
+    guideSelIdx=0;
+    applyGSel();
+    return;
+  }
+  if(action==='open-controllers'){
+    const controllerStatus=await window.electronAPI?.getRPCS3ControllerConfig?.() || null;
+    rpcs3ControllerStatusCache=controllerStatus;
+    renderRPCS3ControllerGuide(controllerStatus);
+    guideSelIdx=0;
+    applyGSel();
+    return;
+  }
+  if(action==='apply-controller-preset'){
+    const preset=String(btn.dataset.rpcs3Preset||'xinput-default').trim();
+    const result=await window.electronAPI?.applyRPCS3ControllerPreset?.({preset});
+    if(result?.ok){
+      rpcs3ControllerStatusCache=result.status || await window.electronAPI?.getRPCS3ControllerConfig?.();
+      renderRPCS3ControllerGuide(rpcs3ControllerStatusCache);
+      guideSelIdx=0;
+      applyGSel();
+      toast('RPCS3 controller mapping applied');
+    }else{
+      toast(result?.error || 'Could not update RPCS3 controller mapping');
+    }
+    return;
+  }
+  if(action==='cycle-setting'){
+    const settingId=String(btn.dataset.rpcs3Setting||'').trim();
+    const options=String(btn.dataset.rpcs3SettingOptions||'').split('|').filter(Boolean);
+    const current=String(rpcs3ConfigStatusCache?.values?.[settingId]?.value ?? '').trim();
+    const foundIdx=options.indexOf(current);
+    const currentIdx=foundIdx>=0 ? foundIdx : -1;
+    const nextValue=options.length ? options[(currentIdx+1)%options.length] : '';
+    if(!settingId || !nextValue) return;
+    const result=await window.electronAPI?.setRPCS3Config?.({settingId,value:nextValue});
+    if(result?.ok){
+      rpcs3ConfigStatusCache=result.status || await window.electronAPI?.getRPCS3Config?.();
+      const returnIdx=guideSelIdx;
+      renderRPCS3SettingsGuide(rpcs3ConfigStatusCache);
+      guideSelIdx=returnIdx;
+      applyGSel();
+      toast(`${btn.dataset.rpcs3Title||'RPCS3 setting'}: ${formatRPCS3GuideSettingValue(settingId,nextValue)}`);
+    }else{
+      toast(result?.error || 'Could not update RPCS3 setting');
+    }
     return;
   }
   if(action==='launch-emulator'){
@@ -9041,6 +9706,19 @@ async function handleRPCS3GuideItem(btn){
       await syncRPCS3GuideToSetupState();
       return;
     }
+      if(action==='back-settings'){
+        await syncRPCS3GuideToSetupState();
+        return;
+      }
+      if(action==='back-controllers'){
+        const configStatus=await window.electronAPI?.getRPCS3Config?.() || null;
+        rpcs3ConfigStatusCache=configStatus;
+        rpcs3ControllerStatusCache=await window.electronAPI?.getRPCS3ControllerConfig?.() || null;
+        renderRPCS3SettingsGuide(configStatus);
+        guideSelIdx=0;
+        applyGSel();
+        return;
+      }
   const filters=[{name:'Executables',extensions:['exe']},{name:'All Files',extensions:['*']}];
   const picked=await window.electronAPI?.chooseFile?.({filters});
   if(!picked) return;
@@ -9069,13 +9747,21 @@ async function guideSelect(){
       await handleRetroArchGuideItem(btn);
       return;
     }
-    if(guide2Mode==='pcsx2'){
-      await handlePCSX2GuideItem(btn);
-      return;
-    }
-    if(guide2Mode==='vlc'){
-      await handleVLCGuideItem(btn);
-      return;
+      if(guide2Mode==='pcsx2'){
+        await handlePCSX2GuideItem(btn);
+        return;
+      }
+      if(guide2Mode==='duckstation'){
+        await handleDuckStationGuideItem(btn);
+        return;
+      }
+      if(guide2Mode==='dolphin'){
+        await handleDolphinGuideItem(btn);
+        return;
+      }
+      if(guide2Mode==='vlc'){
+        await handleVLCGuideItem(btn);
+        return;
     }
       if(guide2Mode==='xenia'){
         await handleXeniaGuideItem(btn);
@@ -9197,14 +9883,14 @@ document.addEventListener('keydown',e=>{
   }
   if(vkOpen){
     if(handlePhysicalTextKey(e)){e.preventDefault();return;}
-    if(e.key==='ArrowLeft')vkMove(-1);else if(e.key==='ArrowRight')vkMove(1);else if(e.key==='ArrowUp')vkMove(-10);else if(e.key==='ArrowDown')vkMove(10);else if(e.key==='Enter'||e.key===' ')vkActivate();else if(e.key==='Backspace')vkBackspace();else if(e.key==='Escape'||e.key==='b')closeKeyboard(true);
+    if(e.key==='ArrowLeft')vkMove(-1);else if(e.key==='ArrowRight')vkMove(1);else if(e.key==='ArrowUp')vkMove(-10);else if(e.key==='ArrowDown')vkMove(10);else if(e.key==='PageUp')vkMoveCursor(-1);else if(e.key==='PageDown')vkMoveCursor(1);else if(e.key==='CapsLock')vkToggleCaps();else if(e.key==='Tab')vkToggleSymbols();else if(e.key==='AltGraph')vkToggleAccents();else if(e.key==='Enter'||e.key===' ')vkActivate();else if(e.key==='Backspace')vkBackspace();else if(e.key==='Escape'||e.key==='b')closeKeyboard(true);
     e.preventDefault();return;
   }
-  if(guide2Open||guideOpen){if(handlePhysicalTextKey(e)){e.preventDefault();return;}if(e.key==='ArrowUp')guideMoveDirectional(0,-1);else if(e.key==='ArrowDown')guideMoveDirectional(0,1);else if(e.key==='ArrowLeft')guideLeft();else if(e.key==='ArrowRight')guideRight();else if(e.key==='Enter'||e.key===' ')guideSelect();else if(e.key==='Escape'||e.key==='b')guideBack();e.preventDefault();return;}
   if(folderBrowserState.open){
     if(e.key==='ArrowUp')moveFolderBrowserSelection(-1);else if(e.key==='ArrowDown')moveFolderBrowserSelection(1);else if(e.key==='Enter'||e.key===' ')openSelectedFolderBrowserEntry();else if(e.key==='x'||e.key==='X')createFolderBrowserFolder();else if(e.key==='y'||e.key==='Y')chooseCurrentFolderBrowserPath();else if(e.key==='Escape'||e.key==='Backspace'||e.key==='b')folderBrowserBack();
     e.preventDefault();return;
   }
+  if(guide2Open||guideOpen){if(handlePhysicalTextKey(e)){e.preventDefault();return;}if(e.key==='ArrowUp')guideMoveDirectional(0,-1);else if(e.key==='ArrowDown')guideMoveDirectional(0,1);else if(e.key==='ArrowLeft')guideLeft();else if(e.key==='ArrowRight')guideRight();else if(e.key==='Enter'||e.key===' ')guideSelect();else if(e.key==='Escape'||e.key==='b')guideBack();e.preventDefault();return;}
   if(isMarketplaceVideoPlaybackActive()){
     if(e.key==='Enter'||e.key===' '||e.key.toLowerCase()==='a'){
       void activateMarketplaceVideoEpisodeSelection();
@@ -9268,7 +9954,7 @@ document.addEventListener('keydown',e=>{
   }else if(e.key==='ArrowUp')subOpen[activeIdx]?subUp():menuUp();else if(e.key==='ArrowDown')subOpen[activeIdx]?subDown():menuDown();else if(e.key==='Enter'||e.key===' ')menuSelect();else if(e.key==='Backspace'||e.key==='b')menuBack();else if(e.key==='x'||e.key==='X'){if(getActiveSubpanel()?.id==='sub-profile-manager' && selectedProfileManagerRow()?.classList.contains('profile-active')) signOutCurrentProfileFromManager(); else if(isArchiveGamesOpen()) toggleArchiveHideInstalled(); else if(isGamesInstalledOpen() && !isGamesAchievementsOpen()) openGamesDeleteModal(); else if(isMarketplaceCosmeticsOpen()) marketplaceCosmeticsDeleteSelected();}else if(e.key==='y'||e.key==='Y'){if(!openGameSearchModal()) return;}else if((e.key==='v'||e.key==='V')&&isArchiveGamesOpen()){openMarketplaceFiltersModal();}else if((e.key==='v'||e.key==='V')&&isGamesInstalledOpen()&&!isGamesAchievementsOpen()&&!isGamesDemosOpen()){openGamesFiltersModal();}else if(e.key==='Escape')exitBlades(false);else if(e.key==='g'||e.key==='G')openGuide();
   e.preventDefault();
 });
-const PAD={A:0,B:1,X:2,Y:3,LB:4,RB:5,LT:6,RT:7,SELECT:8,START:9,DU:12,DD:13,DL:14,DR:15,GUIDE:16};const padPrev={};const DEAD=0.5;
+const PAD={A:0,B:1,X:2,Y:3,LB:4,RB:5,LT:6,RT:7,SELECT:8,START:9,LS:10,DU:12,DD:13,DL:14,DR:15,GUIDE:16};const padPrev={};const DEAD=0.5;
 const padVerticalHold={dir:0,nextAt:0,delay:360};
 function activateVerticalNav(dir){
   if(dir<0)(subOpen[activeIdx]?subUp():menuUp());
@@ -9328,8 +10014,14 @@ function padPoll(){
     if(just(PAD.DU)||(axU<-DEAD&&!padPrev._aU))vkMove(-10);
     if(just(PAD.DD)||(axU>DEAD&&!padPrev._aD))vkMove(10);
     if(just(PAD.A))vkActivate();
+    if(just(PAD.LB))vkMoveCursor(-1);
+    if(just(PAD.RB))vkMoveCursor(1);
+    if(just(PAD.LT))vkToggleSymbols();
+    if(just(PAD.RT))vkToggleAccents();
     if(just(PAD.X))vkBackspace();
     if(just(PAD.Y))vkSpace();
+    if(just(PAD.LS))vkToggleCaps();
+    if(just(PAD.START))closeKeyboard(true,true);
     if(just(PAD.B)||just(PAD.GUIDE))closeKeyboard(true);
   }else if(isMarketplaceVideoPlaybackActive()){
     const verticalDir=(just(PAD.DU)||(axU<-DEAD&&!padPrev._aU))?-1:((just(PAD.DD)||(axU>DEAD&&!padPrev._aD))?1:0);
@@ -9341,14 +10033,6 @@ function padPoll(){
     padPrev._aD=axU>DEAD;
     padPrev._aRY=axRY;
     return;
-  }else if(guide2Open||guideOpen){
-    updatePadVerticalHold(0);
-    if(just(PAD.DL)||(axL<-DEAD&&!padPrev._aL))guideLeft();
-    if(just(PAD.DR)||(axL>DEAD&&!padPrev._aR))guideRight();
-    if(just(PAD.DU)||(axU<-DEAD&&!padPrev._aU))guideMoveDirectional(0,-1);
-    if(just(PAD.DD)||(axU>DEAD&&!padPrev._aD))guideMoveDirectional(0,1);
-    if(just(PAD.A))guideSelect();
-    if(just(PAD.B)||just(PAD.GUIDE))guideBack();
   }else if(folderBrowserState.open){
     updatePadVerticalHold(0);
     if(just(PAD.DU)||(axU<-DEAD&&!padPrev._aU))moveFolderBrowserSelection(-1);
@@ -9357,6 +10041,14 @@ function padPoll(){
     if(just(PAD.X))createFolderBrowserFolder();
     if(just(PAD.Y))chooseCurrentFolderBrowserPath();
     if(just(PAD.B)||just(PAD.GUIDE))folderBrowserBack();
+  }else if(guide2Open||guideOpen){
+    updatePadVerticalHold(0);
+    if(just(PAD.DL)||(axL<-DEAD&&!padPrev._aL))guideLeft();
+    if(just(PAD.DR)||(axL>DEAD&&!padPrev._aR))guideRight();
+    if(just(PAD.DU)||(axU<-DEAD&&!padPrev._aU))guideMoveDirectional(0,-1);
+    if(just(PAD.DD)||(axU>DEAD&&!padPrev._aD))guideMoveDirectional(0,1);
+    if(just(PAD.A))guideSelect();
+    if(just(PAD.B)||just(PAD.GUIDE))guideBack();
   }else if(gameSearchState.open){
       updatePadVerticalHold(0);
       if(gameSearchState.context==='archive-filters' || gameSearchState.context==='games-filters'){
@@ -9631,12 +10323,22 @@ document.querySelectorAll('#sub-emulators .emu-item').forEach(item=>item.addEven
     await refreshEmulatorSettingsPanel();
     return;
   }
-  if(guideMode==='pcsx2'){
+    if(guideMode==='pcsx2'){
     await openPCSX2Guide();
     await refreshPCSX2SettingsPanel();
-    return;
-  }
-  if(guideMode==='vlc'){
+      return;
+    }
+    if(guideMode==='duckstation'){
+      await openDuckStationGuide();
+      await refreshDuckStationSettingsPanel();
+      return;
+    }
+    if(guideMode==='dolphin'){
+      await openDolphinGuide();
+      await refreshDolphinSettingsPanel();
+      return;
+    }
+    if(guideMode==='vlc'){
     await openVLCGuide();
     await refreshVLCSettingsPanel();
     return;
@@ -9658,12 +10360,32 @@ document.querySelectorAll('#guide2 .g2r-item').forEach((item,i)=>item.addEventLi
   guideSelIdx=i;
   applyGSel();
   if(guide2Mode==='pcsx2') await handlePCSX2GuideItem(item);
-  else if(guide2Mode==='vlc') await handleVLCGuideItem(item);
+    else if(guide2Mode==='duckstation') await handleDuckStationGuideItem(item);
+    else if(guide2Mode==='dolphin') await handleDolphinGuideItem(item);
+    else if(guide2Mode==='vlc') await handleVLCGuideItem(item);
     else if(guide2Mode==='xenia') await handleXeniaGuideItem(item);
     else if(guide2Mode==='rpcs3') await handleRPCS3GuideItem(item);
     else await handleRetroArchGuideItem(item);
   }));
   document.getElementById('guide2')?.addEventListener('click',async(e)=>{
+  const duckStationItem=e.target.closest('#g2-duckstation-list .g2r-item');
+  if(duckStationItem && duckStationItem.offsetParent){
+    playSfx('select.wav');
+    const items=getGuideItems();
+    const idx=items.indexOf(duckStationItem);
+    if(idx>=0){guideSelIdx=idx;applyGSel();}
+    await handleDuckStationGuideItem(duckStationItem);
+    return;
+  }
+  const dolphinItem=e.target.closest('#g2-dolphin-list .g2r-item');
+  if(dolphinItem && dolphinItem.offsetParent){
+    playSfx('select.wav');
+    const items=getGuideItems();
+    const idx=items.indexOf(dolphinItem);
+    if(idx>=0){guideSelIdx=idx;applyGSel();}
+    await handleDolphinGuideItem(dolphinItem);
+    return;
+  }
   const item=e.target.closest('#g2-vlc-list .g2r-item');
   if(item && item.offsetParent){
     playSfx('select.wav');
@@ -9967,8 +10689,10 @@ function marketplaceSystemLogoUrl(system){
   if(system==='genesis') return `${base}/Genesis.webp`;
   if(system==='psx') return `${base}/PlayStation.webp`;
   if(system==='ps2') return `${base}/PlayStation_2.webp`;
+  if(system==='ps3') return `${base}/PlayStation_3.webp`;
   if(system==='psp') return `${base}/PSP.webp`;
   if(system==='dc') return `${base}/Dreamcast.webp`;
+  if(system==='gamecube') return `${base}/Gamecube.webp`;
   if(system==='xbox') return `${base}/XBOX.webp`;
   if(system==='x360') return `${base}/Xbox_360.webp`;
   if(system){
@@ -9987,6 +10711,7 @@ function marketplaceSystemBadgeUrl(system){
   if(system==='ps3') return logo || "file:///C:/Projects/SKALD/assets/icons/Systems/PlayStation_3.webp";
   if(system==='psp') return logo || "file:///C:/Projects/SKALD/assets/icons/CONTROLLER-playstation1.svg";
   if(system==='dc') return logo || marketplaceDefaultIcon();
+  if(system==='gamecube') return logo || "file:///C:/Projects/SKALD/assets/icons/Systems/Gamecube.webp";
   if(system==='xbox') return logo || "file:///C:/Projects/SKALD/assets/icons/Systems/XBOX.webp";
   if(system==='x360') return logo || "file:///C:/Projects/SKALD/assets/icons/Systems/Xbox_360.webp";
   return logo || marketplaceDefaultIcon();
@@ -10665,6 +11390,7 @@ function marketplaceSystemLabel(system){
   if(system==='ps3') return 'PlayStation 3';
   if(system==='psp') return 'PSP';
   if(system==='dc') return 'Dreamcast';
+  if(system==='gamecube') return 'GameCube';
   if(system==='xbox') return 'Xbox';
   if(system==='x360') return 'Xbox 360';
   return String(system || '').toUpperCase();
@@ -10751,6 +11477,18 @@ function handleGuideOverlayCommand(command={}){
 }
 function controlLegendForContext(){
   const isHomePanel=!subOpen[activeIdx] && !guideOpen && !guide2Open && !vkOpen && !guideOverlayProxyActive;
+  if(folderBrowserState.open){
+    return {
+      title:'Control Legend',
+      entries:[
+        { icons:['dpadVertical','leftStickVertical'], label:'Folders' },
+        { icons:['a'], label:'Open' },
+        { icons:['y'], label:'Select Folder' },
+        { icons:['x'], label:'New Folder' },
+        { icons:['b'], label:'Back' },
+      ],
+    };
+  }
   if(guide2Open){
     return {
       title:'Control Legend',
@@ -10838,18 +11576,6 @@ function controlLegendForContext(){
         ],
       };
     }
-  if(folderBrowserState.open){
-    return {
-      title:'Control Legend',
-      entries:[
-        { icons:['dpadVertical','leftStickVertical'], label:'Folders' },
-        { icons:['a'], label:'Open' },
-        { icons:['y'], label:'Select Folder' },
-        { icons:['x'], label:'New Folder' },
-        { icons:['b'], label:'Back' },
-      ],
-    };
-  }
   if(isGamesAchievementsOpen()){
     if(gamesState.achievementModalOpen || gamesState.achievementListModalOpen){
       return {
@@ -11678,10 +12404,11 @@ function showSelectedGamesAchievement(){
   const idx=Math.max(0,Math.min(gamesState.achievementIdx||0,achievements.length-1));
   const achievement=achievements[idx];
   const modal=ensureGamesAchievementModal();
-  const badge=achievement.badgeName?`https://media.retroachievements.org/Badge/${achievement.badgeName}.png`:'file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-trophy.webp';
+  const badge=achievement.badgeUrl || (achievement.badgeName?`https://media.retroachievements.org/Badge/${achievement.badgeName}.png`:'file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-trophy.webp');
   modal.querySelector('.games-ach-modal-badge').style.backgroundImage=`url('${badge}')`;
   modal.querySelector('.games-ach-modal-title').textContent=achievement.title||'Achievement';
-  modal.querySelector('.games-ach-modal-points').textContent=`${Number(achievement.points||0)} point${Number(achievement.points||0)===1?'':'s'}${achievement.dateEarned?' · Unlocked':' · Locked'}`;
+  const unit=achievement.source==='rpcs3-local' ? 'trophy points' : 'points';
+  modal.querySelector('.games-ach-modal-points').textContent=`${Number(achievement.points||0)} ${unit}${achievement.dateEarned?' - Unlocked':' - Locked'}`;
   modal.querySelector('.games-ach-modal-desc').textContent=achievement.description||'No achievement description available.';
   gamesState.achievementModalOpen=true;
   modal.classList.add('on');
@@ -11727,12 +12454,13 @@ function renderGamesAchievementListModal(){
   if(!achievements.length){
     grid.innerHTML='<div class="games-ach-list-empty">Achievement details are still loading for this title.</div>';
     return;
+    }
+    grid.innerHTML=achievements.map(a=>{
+      const badge=a.badgeUrl || (a.badgeName?`https://media.retroachievements.org/Badge/${a.badgeName}.png`:'file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-trophy.webp');
+      const unit=a.source==='rpcs3-local' ? 'trophy points' : 'points';
+      return `<div class="games-ach-list-card ${a.dateEarned?'unlocked':'locked'}"><div class="games-ach-list-badge" style="background-image:url('${badge}')"></div><div><div class="games-ach-list-card-title">${esc(a.title||'Achievement')}</div><div class="games-ach-list-card-meta">${Number(a.points||0)} ${unit}${a.dateEarned?' - Unlocked':' - Locked'}</div><div class="games-ach-list-card-desc">${esc(a.description||'No description available.')}</div></div></div>`;
+    }).join('');
   }
-  grid.innerHTML=achievements.map(a=>{
-    const badge=a.badgeName?`https://media.retroachievements.org/Badge/${a.badgeName}.png`:'file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-trophy.webp';
-    return `<div class="games-ach-list-card ${a.dateEarned?'unlocked':'locked'}"><div class="games-ach-list-badge" style="background-image:url('${badge}')"></div><div><div class="games-ach-list-card-title">${esc(a.title||'Achievement')}</div><div class="games-ach-list-card-meta">${Number(a.points||0)} point${Number(a.points||0)===1?'':'s'}${a.dateEarned?' · Unlocked':' · Locked'}</div><div class="games-ach-list-card-desc">${esc(a.description||'No description available.')}</div></div></div>`;
-  }).join('');
-}
 function openGamesAchievementListModal(){
   if(!isGamesAchievementsOpen()) return false;
   closeGamesAchievementModal();
@@ -12374,10 +13102,11 @@ async function openSkaldFolderBrowser({title='Select Folder',startPath=''}={}){
   folderBrowserState.entries=[];
   folderBrowserState.selectedIdx=0;
   folderBrowserState.error='';
+  folderBrowserState.preferredStartPath=String(startPath||'').trim();
   const modal=ensureFolderBrowserModal();
   modal.classList.add('on');
   updateControlLegend();
-  await loadFolderBrowserPath(startPath||null);
+  await loadFolderBrowserPath(null);
   return new Promise(resolve=>{
     folderBrowserState.resolve=resolve;
   });
@@ -14348,37 +15077,59 @@ async function refreshMarketplaceSources(){
   }
 }
 function ensureMarketplaceSystemEntries(){
-  const system='xbox';
-  const label=marketplaceSystemLabel(system);
-  const badge=marketplaceSystemBadgeUrl(system);
-  const archiveList=document.getElementById('mkt-archive-system-list');
-  if(archiveList && !archiveList.querySelector(`[data-system="${system}"]`)){
-    const item=document.createElement('div');
-    item.className='subnav-item games-system-item';
-    item.dataset.system=system;
-    item.dataset.archiveTitle=label;
-    item.dataset.archiveDesc='Browse the Archive.org Xbox repository and see everything currently available to download from this source.';
-    item.innerHTML=`<div class="micon" style="background-image:url('${badge}')"></div><div class="mkt-account-copy"><div class="mkt-scan-label">${label}</div><div class="mkt-action-meta" id="cnt-archive-xbox">Loading…</div></div>`;
-    archiveList.appendChild(item);
-  }
-  const browseGrid=document.getElementById('mkt-system-grid');
-  if(browseGrid && !browseGrid.querySelector(`[data-system="${system}"]`)){
-    const card=document.createElement('div');
-    card.className='sys-card mkt-system-card';
-    card.dataset.system=system;
-    card.innerHTML=`<div class="sys-card-copy"><div class="sys-card-icon" style="background-image:url('${badge}')"></div><div class="sys-card-text"><div class="sys-card-title">${label}</div><div class="sys-card-count" id="cnt-xbox">Loading…</div></div></div>`;
-    browseGrid.appendChild(card);
-  }
-  const gamesList=document.getElementById('games-system-list');
-  if(gamesList && !gamesList.querySelector(`[data-system="${system}"]`)){
-    const item=document.createElement('div');
-    item.className='subnav-item games-system-item';
-    item.dataset.system=system;
-    item.dataset.gamesTitle=label;
-    item.dataset.gamesDesc='Browse your installed and scanned-in Xbox library from the Games blade.';
-    item.innerHTML=`<div class="micon" style="background-image:url('${badge}')"></div><div class="mkt-account-copy"><div class="mkt-scan-label">${label}</div><div class="mkt-action-meta" id="cnt-xbox2">Loading…</div></div>`;
-    gamesList.appendChild(item);
-  }
+  const systems=['gamecube','xbox'];
+  systems.forEach(system=>{
+    const label=marketplaceSystemLabel(system);
+    const badge=marketplaceSystemBadgeUrl(system);
+    const archiveList=document.getElementById('mkt-archive-system-list');
+    if(archiveList && !archiveList.querySelector(`[data-system="${system}"]`)){
+      const item=document.createElement('div');
+      item.className='subnav-item games-system-item';
+      item.dataset.system=system;
+      item.dataset.archiveTitle=label;
+      item.dataset.archiveDesc=`Browse the Archive.org ${label} repository and see everything currently available to download from this source.`;
+      item.innerHTML=`<div class="micon" style="background-image:url('${badge}')"></div><div class="mkt-account-copy"><div class="mkt-scan-label">${label}</div><div class="mkt-action-meta" id="cnt-archive-${system}">Loading…</div></div>`;
+      archiveList.appendChild(item);
+    }
+    const browseGrid=document.getElementById('mkt-system-grid');
+    if(browseGrid && !browseGrid.querySelector(`[data-system="${system}"]`)){
+      const card=document.createElement('div');
+      card.className='sys-card mkt-system-card';
+      card.dataset.system=system;
+      card.innerHTML=`<div class="sys-card-copy"><div class="sys-card-icon" style="background-image:url('${badge}')"></div><div class="sys-card-text"><div class="sys-card-title">${label}</div><div class="sys-card-count" id="cnt-${system}">Loading…</div></div></div>`;
+      browseGrid.appendChild(card);
+    }
+    const gamesList=document.getElementById('games-system-list');
+    if(gamesList && !gamesList.querySelector(`[data-system="${system}"]`)){
+      const item=document.createElement('div');
+      item.className='subnav-item games-system-item';
+      item.dataset.system=system;
+      item.dataset.gamesTitle=label;
+      item.dataset.gamesDesc=`Browse your installed and scanned-in ${label} library from the Games blade.`;
+      item.innerHTML=`<div class="micon" style="background-image:url('${badge}')"></div><div class="mkt-account-copy"><div class="mkt-scan-label">${label}</div><div class="mkt-action-meta" id="cnt-${system}2">Loading…</div></div>`;
+      gamesList.appendChild(item);
+    }
+    ['mkt-scan-system-list','games-scan-system-list'].forEach(listId=>{
+      const list=document.getElementById(listId);
+      if(!list || list.querySelector(`[data-scan-system="${system}"]`)) return;
+      const run=document.createElement('div');
+      run.className='subnav-item mkt-scan-action';
+      run.dataset.scanAction='system-run';
+      run.dataset.scanSystem=system;
+      run.dataset.scanTitle=`Scan ${label}`;
+      run.dataset.scanDesc=`Scan the configured SKALD folder for ${label} installs only. This uses the system-specific path when one exists, and otherwise falls back to the main install or download folders.`;
+      run.innerHTML=`<div class="micon" style="background-image:url('${badge}')"></div><div class="mkt-account-copy"><div class="mkt-scan-label">${label}</div><div class="mkt-action-meta">Scan only ${label} matches</div></div>`;
+      const set=document.createElement('div');
+      set.className='subnav-item mkt-scan-action';
+      set.dataset.scanAction='system-set';
+      set.dataset.scanSystem=system;
+      set.dataset.scanTitle=`Set ${label} Scan Folder`;
+      set.dataset.scanDesc=`Choose a dedicated ${label} scan folder. SKALD will use it before falling back to the general install or download folders.`;
+      set.innerHTML=`<div class="micon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-search.webp')"></div><div class="mkt-account-copy"><div class="mkt-scan-label">Set ${label} Scan Folder</div><div class="mkt-action-meta">Choose a dedicated folder</div></div>`;
+      list.appendChild(run);
+      list.appendChild(set);
+    });
+  });
 }
 function syncMetadataServiceDisplays(){
   const urlInput=document.getElementById('emu-metadata-url');
@@ -14603,7 +15354,7 @@ async function marketplaceScanForGames(source='install', system=''){
   else if(scanSource==='custom'){
     scanDir=await openSkaldFolderBrowser({
       title:'Select Folder to Scan',
-      startPath:marketplaceState.scanCustomDir || settings?.installPath || settings?.downloadPath || '',
+      startPath:'',
     });
     if(scanDir) marketplaceState.scanCustomDir=scanDir;
   }
@@ -14873,12 +15624,17 @@ function gamesHomeGameCardIcon(identifier,entry,ra){
   ) || gamesDefaultIcon();
 }
 function gamesHomeRecentAchievements(ra){
-  return (ra?.achievements||[])
-    .filter(a=>a?.dateEarned)
+  const rows=(ra?.achievements||[]);
+  const unlocked=rows.filter(a=>a?.dateEarned);
+  const sourceRows=unlocked.length ? unlocked : (ra?.source==='rpcs3-local' ? rows : []);
+  return sourceRows
     .sort((a,b)=>Date.parse(b.dateEarned||0)-Date.parse(a.dateEarned||0))
     .slice(0,5);
 }
 function gamesHomeGameCardScore(entry,ra){
+  if(ra?.source==='rpcs3-local'){
+    return `${Number(ra.numAchievements||0)} trophies`;
+  }
   if(ra?.achievements){
     const earned=(ra.achievements||[]).reduce((sum,a)=>sum + (a.dateEarned ? Number(a.points||0) : 0),0);
     const total=Number(ra.totalPoints||0);
@@ -14918,7 +15674,7 @@ function renderGamesHomeGameCard(){
   const trophy="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-trophy.webp";
   const achievementHtml=Array.from({length:5}).map((_,i)=>{
     const ach=recentAchievements[i];
-    const badge=ach?.badgeName ? `https://media.retroachievements.org/Badge/${ach.badgeName}.png` : trophy;
+    const badge=ach?.badgeUrl || (ach?.badgeName ? `https://media.retroachievements.org/Badge/${ach.badgeName}.png` : trophy);
     const name=ach ? `${ach.title||'Achievement'}${ach.points?` - ${ach.points} pts`:''}` : 'No recent achievement';
     return `<div class="games-home-gamecard-ach ${ach?'':'is-empty'}" title="${esc(String(name))}"><div class="games-home-gamecard-ach-icon" style="background-image:url('${badge}')"></div></div>`;
   }).join('');
@@ -14936,7 +15692,7 @@ function renderGamesHomeGameCard(){
   });
   applyHomeFocusPane();
   const system=String(entry?.system||gamesState.system||'').toLowerCase();
-  if(!ra && ACHIEVEMENT_SYSTEMS.includes(system) && window.electronAPI?.raGameSearch && !gamesRaPending.has(key)){
+  if(!ra && ACHIEVEMENT_SYSTEMS.includes(system) && !gamesRaPending.has(key)){
     void loadGamesHomeGameCardRa(identifier,entry,key);
   }
 }
@@ -14944,8 +15700,14 @@ async function loadGamesHomeGameCardRa(identifier,entry,key=gamesRaDetailKey(ide
   if(gamesRaPending.has(key)) return;
   gamesRaPending.add(key);
   try{
-    const result=await window.electronAPI?.raGameSearch?.({cleanName:entry?.title||identifier,system:entry?.system||gamesState.system});
-    if(result?.ok && result.data) gamesRaCache.set(key,result.data);
+    const system=String(entry?.system||gamesState.system||'').toLowerCase();
+    const result=system==='ps3'
+      ? await window.electronAPI?.getRPCS3TrophiesForGame?.({identifier,title:entry?.title||identifier,system})
+      : await window.electronAPI?.raGameSearch?.({cleanName:entry?.title||identifier,system:entry?.system||gamesState.system});
+    if(result?.ok && result.data){
+      if(system==='ps3') result.data.achievements=(result.data.achievements||[]).map(a=>({...a,source:'rpcs3-local'}));
+      gamesRaCache.set(key,result.data);
+    }
   }catch{}
   finally{
     gamesRaPending.delete(key);
@@ -15341,7 +16103,7 @@ async function pollRaUnlocks(){
 async function startRaUnlockMonitor(identifier,entry={}){
   const system=String(entry?.system||gamesState.system||'').toLowerCase();
   stopRaUnlockMonitor();
-  if(!ACHIEVEMENT_SYSTEMS.includes(system) || !window.electronAPI?.raRecentUnlocks) return;
+  if(!RA_ACHIEVEMENT_SYSTEMS.includes(system) || !window.electronAPI?.raRecentUnlocks) return;
   raUnlockMonitor={
     timer:null,
     identifier:String(identifier||''),
@@ -15388,14 +16150,15 @@ async function loadGamesLocalMetadata(selected){
   }
 }
 async function loadGamesRaDetail(selected){
-  if(!selected){
-    return;
-  }
-  const {identifier,entry}=selected;
-  const key=`${entry.system||gamesState.system}::${entry.title||identifier}`;
-  const scoreEl=document.getElementById('games-score-value');
-  const iconEl=document.getElementById('games-detail-icon');
-  const gridEl=document.getElementById('games-ach-grid');
+    if(!selected){
+      return;
+    }
+    const {identifier,entry}=selected;
+    const key=`${entry.system||gamesState.system}::${entry.title||identifier}`;
+    const system=String(entry.system||gamesState.system||'').toLowerCase();
+    const scoreEl=document.getElementById('games-score-value');
+    const iconEl=document.getElementById('games-detail-icon');
+    const gridEl=document.getElementById('games-ach-grid');
   if(gamesRaCache.has(key)){
     applyGamesRaDetail(gamesRaCache.get(key));
     return;
@@ -15406,27 +16169,32 @@ async function loadGamesRaDetail(selected){
   gamesState.currentAchievements=[];
   gamesState.achievementIdx=0;
   stopGamesAchievementAutoScroll();
-  if(gridEl){
-    gridEl.classList.remove('scrollable');
-    gridEl.scrollTop=0;
-    gridEl.innerHTML='<div class="games-ach-empty">Loading RetroAchievements data…</div>';
-  }
-  try{
-    const result=await window.electronAPI?.raGameSearch?.({cleanName:entry.title||identifier,system:entry.system||gamesState.system});
-    if(result?.ok && result.data){
-      gamesRaCache.set(key,result.data);
-      if(gamesSelectedEntry()?.identifier===identifier) applyGamesRaDetail(result.data);
-    }else if(gamesSelectedEntry()?.identifier===identifier){
-      const debug=result?.debug;
-      const extra=debug?.targets?.length ? ` Tried: ${debug.targets.join(', ')}.` : '';
-      applyGamesRaDetail(null,`${result?.error||'No RetroAchievements match found for this game.'}${extra}`);
+    if(gridEl){
+      gridEl.classList.remove('scrollable');
+      gridEl.scrollTop=0;
+      gridEl.innerHTML=`<div class="games-ach-empty">${system==='ps3'?'Loading local RPCS3 trophies...':'Loading RetroAchievements data...'}</div>`;
     }
-  }catch{
-    if(gamesSelectedEntry()?.identifier===identifier) applyGamesRaDetail(null,'Could not load RetroAchievements data.');
-  }finally{
-    gamesRaPending.delete(key);
+    try{
+      const result=system==='ps3'
+        ? await window.electronAPI?.getRPCS3TrophiesForGame?.({identifier,title:entry.title||identifier,system})
+        : await window.electronAPI?.raGameSearch?.({cleanName:entry.title||identifier,system:entry.system||gamesState.system});
+      if(result?.ok && result.data){
+        if(system==='ps3'){
+          result.data.achievements=(result.data.achievements||[]).map(a=>({...a,source:'rpcs3-local'}));
+        }
+        gamesRaCache.set(key,result.data);
+        if(gamesSelectedEntry()?.identifier===identifier) applyGamesRaDetail(result.data);
+      }else if(gamesSelectedEntry()?.identifier===identifier){
+        const debug=result?.debug;
+        const extra=debug?.targets?.length ? ` Tried: ${debug.targets.join(', ')}.` : '';
+        applyGamesRaDetail(null,`${result?.error||(system==='ps3'?'No local RPCS3 trophy set found for this game yet.':'No RetroAchievements match found for this game.')}${extra}`);
+      }
+    }catch{
+      if(gamesSelectedEntry()?.identifier===identifier) applyGamesRaDetail(null,system==='ps3'?'Could not load local RPCS3 trophy data.':'Could not load RetroAchievements data.');
+    }finally{
+      gamesRaPending.delete(key);
+    }
   }
-}
 function applyGamesRaDetail(data,error){
   const scoreEl=document.getElementById('games-score-value');
   const iconEl=document.getElementById('games-detail-icon');
@@ -15451,10 +16219,13 @@ function applyGamesRaDetail(data,error){
     }
     return;
   }
-  const earnedPoints=(data.achievements||[]).reduce((sum,a)=>sum + (a.dateEarned ? Number(a.points||0) : 0),0);
-  if(scoreEl) scoreEl.textContent=`${earnedPoints}/${Number(data.totalPoints||0)}`;
+    const isRpcs3Trophies=data.source==='rpcs3-local' || (data.achievements||[]).some(a=>a.source==='rpcs3-local');
+    const earnedPoints=(data.achievements||[]).reduce((sum,a)=>sum + (a.dateEarned ? Number(a.points||0) : 0),0);
+    if(scoreEl) scoreEl.textContent=isRpcs3Trophies ? `${Number(data.numAchievements||0)} trophies` : `${earnedPoints}/${Number(data.totalPoints||0)}`;
   const statusEl=document.getElementById('games-installed-status');
-  if(achCountEl) achCountEl.textContent=`${Number(data.numAchievements||0)} achievements · ${Number(data.totalPoints||0)} points`;
+    if(achCountEl) achCountEl.textContent=isRpcs3Trophies
+      ? `${Number(data.numAchievements||0)} trophies - local RPCS3 set`
+      : `${Number(data.numAchievements||0)} achievements - ${Number(data.totalPoints||0)} points`;
   if(statusEl){
     const session=currentSelected && emulatorSessionMatches(currentSelected.identifier,currentSelected.entry?.system) ? emulatorPrimarySession() : null;
     statusEl.textContent=session ? emulatorSessionStatusLine(session) : '';
@@ -15470,12 +16241,12 @@ function applyGamesRaDetail(data,error){
     if(achievements.length<=12) gridEl.scrollTop=0;
     if(!achievements.length){
       gridEl.innerHTML='<div class="games-ach-empty">No achievements available for this game.</div>';
-    }else{
-      gridEl.innerHTML=achievements.map((a,i)=>{
-        const badge=a.badgeName?`https://media.retroachievements.org/Badge/${a.badgeName}.png`:''; 
-        const title=esc(`${a.title||'Achievement'}${a.points?` — ${a.points} pts`:''}`);
-        return `<div class="games-ach-item ${a.dateEarned?'unlocked':'locked'}" data-ach-idx="${i}" title="${title}"><div class="games-ach-badge" style="background-image:url('${badge||'file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-trophy.webp'}')"></div></div>`;
-      }).join('');
+      }else{
+        gridEl.innerHTML=achievements.map((a,i)=>{
+          const badge=a.badgeUrl || (a.badgeName?`https://media.retroachievements.org/Badge/${a.badgeName}.png`:''); 
+          const title=esc(`${a.title||'Achievement'}${a.points?` - ${a.points} pts`:''}`);
+          return `<div class="games-ach-item ${a.dateEarned?'unlocked':'locked'}" data-ach-idx="${i}" title="${title}"><div class="games-ach-badge" style="background-image:url('${badge||'file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-trophy.webp'}')"></div></div>`;
+        }).join('');
       gridEl.querySelectorAll('.games-ach-item').forEach(item=>item.addEventListener('click',()=>{
         gamesState.pane='actions';
         gamesState.achievementIdx=Number(item.dataset.achIdx||0);
@@ -16955,9 +17726,11 @@ window.electronAPI?.onEmulatorRuntimeProgress?.((progress)=>{
     const now=Date.now();
     const shouldRefresh=!emulatorRuntimeProgressState.active || stage==='complete' || stage==='failed' || stage==='error';
     if(shouldRefresh){
-      emulatorRuntimeProgressLastPanelRefresh=now;
-        if(guide2Open && guide2Mode==='pcsx2') refreshPCSX2SettingsPanel();
-        else if(guide2Open && guide2Mode==='vlc') refreshVLCSettingsPanel();
+        emulatorRuntimeProgressLastPanelRefresh=now;
+          if(guide2Open && guide2Mode==='pcsx2') refreshPCSX2SettingsPanel();
+          else if(guide2Open && guide2Mode==='duckstation') refreshDuckStationSettingsPanel();
+          else if(guide2Open && guide2Mode==='dolphin') refreshDolphinSettingsPanel();
+          else if(guide2Open && guide2Mode==='vlc') refreshVLCSettingsPanel();
         else if(guide2Open && guide2Mode==='xenia') refreshXeniaSettingsPanel();
         else if(guide2Open && guide2Mode==='rpcs3') refreshRPCS3SettingsPanel();
         else refreshEmulatorSettingsPanel();
@@ -16997,6 +17770,20 @@ function syncStoatFieldDisplays(){
 
 function renderKeyboard(){
   if(!vkGrid) return;
+  const capsCard=document.getElementById('vk-caps-card');
+  if(capsCard) capsCard.classList.toggle('caps-on',vkCaps);
+  if(capsCard) capsCard.onclick=vkToggleCaps;
+  const symbolsCard=document.getElementById('vk-symbols-card');
+  if(symbolsCard) symbolsCard.classList.toggle('symbols-on',vkSymbols);
+  if(symbolsCard) symbolsCard.onclick=vkToggleSymbols;
+  vkGrid.classList.toggle('symbols-on',vkSymbols);
+  const accentsCard=document.getElementById('vk-accents-card');
+  if(accentsCard) accentsCard.classList.toggle('accents-on',vkAccents);
+  if(accentsCard) accentsCard.onclick=vkToggleAccents;
+  vkGrid.classList.toggle('accents-on',vkAccents);
+  const doneCard=document.getElementById('vk-done-card');
+  if(doneCard) doneCard.classList.toggle('sel',vkDoneSel);
+  if(doneCard) doneCard.onclick=()=>{ void closeKeyboard(true,true); };
   const keyAsset=(obj)=>{
     const raw=String(obj.asset || obj.value || obj.label || '').toLowerCase();
     const map={
@@ -17021,17 +17808,26 @@ function renderKeyboard(){
       '=':'keyboard_equals.webp',
       '+':'keyboard_plus.webp',
     };
-    const file=map[raw] || (/^[a-z0-9]$/.test(raw) ? `keyboard_${raw}.webp` : 'keyboard_space.webp');
+    const baseFile=map[raw] || (/^[a-z0-9]$/.test(raw) ? `keyboard_${raw}.webp` : 'keyboard_space.webp');
+    const file=baseFile.replace(/\.webp$/,'_outline.webp');
     return `file:///C:/Projects/SKALD/assets/icons/Controls/Keyboard/${file}`;
   };
-  vkGrid.innerHTML=VK_KEYS.map((k,i)=>{
+  const keys=vkActiveKeys();
+  vkGrid.innerHTML=keys.map((k,i)=>{
     const obj=typeof k==='string'?{label:k,value:k,cls:''}:k;
+    if(obj.disabled) return '<div class="vk-key-spacer" aria-hidden="true"></div>';
     const action=obj.action || obj.value || '';
-    const needsLabel=['_','@'].includes(String(obj.value||obj.label||'')) || ['done','clear'].includes(String(obj.action||''));
-    return `<button class="vk-key ${obj.cls||''} ${i===vkSelIdx?'sel':''}" data-idx="${i}" aria-label="${esc(obj.label||obj.value||action)}" style="background-image:url('${keyAsset({...obj,asset:obj.action||obj.value||obj.label})}')">${needsLabel?`<span class="vk-key-label">${esc(obj.label||obj.value||'')}</span>`:''}</button>`;
+    const rawLabel=obj.label || obj.value || '';
+    const labelText=/^[a-z]$/.test(String(rawLabel)) && vkCaps ? String(rawLabel).toUpperCase() : rawLabel;
+    const hintIcon=obj.hint==='y' ? 'file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-y.webp' : obj.hint==='x' ? 'file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-x.webp' : '';
+    const needsLabel=true;
+    const labelMarkup=obj.hint
+      ? `<span class="vk-key-label with-hint"><img class="vk-key-hint-icon" src="${hintIcon}" alt="${esc(String(obj.hint).toUpperCase())}">${esc(labelText)}</span>`
+      : (needsLabel ? `<span class="vk-key-label">${esc(labelText)}</span>` : '');
+    return `<button class="vk-key ${obj.cls||''} ${!vkDoneSel&&i===vkSelIdx?'sel':''}" data-idx="${i}" aria-label="${esc(labelText||action)}">${labelMarkup}</button>`;
   }).join('');
   vkGrid.querySelectorAll('.vk-key').forEach(btn=>{
-    btn.addEventListener('click',()=>{vkSelIdx=Number(btn.dataset.idx)||0;renderKeyboard();vkActivate();});
+    btn.addEventListener('click',()=>{vkDoneSel=false;vkSelIdx=Number(btn.dataset.idx)||0;renderKeyboard();vkActivate();});
   });
 }
 
@@ -17040,7 +17836,12 @@ function openKeyboard(fieldId,opts={}){
   vkSubmitHandler=typeof opts.onSubmit==='function' ? opts.onSubmit : null;
   vkOpen=true;
   vkSelIdx=0;
+  vkCaps=false;
+  vkSymbols=false;
+  vkAccents=false;
+  vkDoneSel=false;
   const input=document.getElementById(fieldId);
+  vkCursorPos=input?.value?.length || 0;
   const labelMap={
     'stoat-email':'Email',
     'stoat-pass':'Password',
@@ -17052,7 +17853,7 @@ function openKeyboard(fieldId,opts={}){
     'folder-browser-new-folder-input':'New Folder Name',
   };
   const label=opts.label || labelMap[fieldId] || 'Text';
-  if(vkTarget) vkTarget.textContent=(input?.value || '');
+  renderKeyboardTarget();
   const title=document.getElementById('vk-title');
   if(title) title.textContent=`${label} Keyboard`;
   vkOverlay?.classList.add('on');
@@ -17079,7 +17880,7 @@ async function closeKeyboard(keepSelection=false,submit=false){
 function updateKeyboardTarget(){
   if(!vkFieldId) return;
   const input=document.getElementById(vkFieldId);
-  if(vkTarget) vkTarget.textContent=input?.value || '';
+  renderKeyboardTarget();
   if(vkFieldId==='game-search-input'){
     gameSearchState.query=input?.value || '';
     gameSearchState.resultIdx=0;
@@ -17090,9 +17891,51 @@ function updateKeyboardTarget(){
   syncMetadataServiceDisplays();
 }
 
+function renderKeyboardTarget(){
+  if(!vkTarget || !vkFieldId) return;
+  const input=document.getElementById(vkFieldId);
+  const value=input?.value || '';
+  vkCursorPos=Math.max(0,Math.min(value.length,vkCursorPos));
+  const displayValue=input?.type==='password' ? '•'.repeat(value.length) : value;
+  const before=displayValue.slice(0,vkCursorPos);
+  const after=displayValue.slice(vkCursorPos);
+  vkTarget.innerHTML=`${esc(before)}<span class="vk-caret" aria-hidden="true"></span>${esc(after)}`;
+}
+
+function vkMoveCursor(delta){
+  if(!vkFieldId) return;
+  const input=document.getElementById(vkFieldId);
+  const value=input?.value || '';
+  vkCursorPos=Math.max(0,Math.min(value.length,vkCursorPos+delta));
+  try{ input?.setSelectionRange?.(vkCursorPos,vkCursorPos); }catch{}
+  renderKeyboardTarget();
+}
+
 function vkMove(delta){
-  const max=VK_KEYS.length-1;
-  vkSelIdx=Math.max(0,Math.min(max,vkSelIdx+delta));
+  const keys=vkActiveKeys();
+  if(vkDoneSel){
+    if(delta<0){
+      vkDoneSel=false;
+      vkSelIdx=9;
+      renderKeyboard();
+    }
+    return;
+  }
+  if(delta>0 && (vkSelIdx%10)===9){
+    vkDoneSel=true;
+    renderKeyboard();
+    return;
+  }
+  const max=keys.length-1;
+  let next=Math.max(0,Math.min(max,vkSelIdx+delta));
+  const step=delta>=0 ? 1 : -1;
+  let guard=0;
+  while(keys[next]?.disabled && guard<keys.length){
+    next=Math.max(0,Math.min(max,next+step));
+    if((next===0 && step<0) || (next===max && step>0)) break;
+    guard+=1;
+  }
+  vkSelIdx=keys[next]?.disabled ? vkSelIdx : next;
   renderKeyboard();
 }
 
@@ -17100,17 +17943,58 @@ function vkApply(action){
   if(!vkFieldId) return;
   const input=document.getElementById(vkFieldId);
   if(!input) return;
-  if(action==='backspace') input.value=input.value.slice(0,-1);
-  else if(action==='clear') input.value='';
+  const value=input.value || '';
+  vkCursorPos=Math.max(0,Math.min(value.length,vkCursorPos));
+  if(action==='backspace'){
+    if(vkCursorPos>0){
+      input.value=value.slice(0,vkCursorPos-1)+value.slice(vkCursorPos);
+      vkCursorPos-=1;
+    }
+  }
+  else if(action==='clear'){ input.value=''; vkCursorPos=0; }
   else if(action==='done'){ void closeKeyboard(true,true); return; }
-  else input.value += action;
+  else{
+    input.value=value.slice(0,vkCursorPos)+action+value.slice(vkCursorPos);
+    vkCursorPos+=String(action).length;
+  }
+  try{ input.setSelectionRange?.(vkCursorPos,vkCursorPos); }catch{}
   updateKeyboardTarget();
 }
 
+function vkToggleCaps(){
+  vkCaps=!vkCaps;
+  renderKeyboard();
+}
+
+function vkToggleSymbols(){
+  vkSymbols=!vkSymbols;
+  if(vkSymbols) vkAccents=false;
+  vkSelIdx=Math.min(vkSelIdx,vkActiveKeys().length-1);
+  vkDoneSel=false;
+  renderKeyboard();
+}
+
+function vkToggleAccents(){
+  vkAccents=!vkAccents;
+  if(vkAccents) vkSymbols=false;
+  vkSelIdx=Math.min(vkSelIdx,vkActiveKeys().length-1);
+  vkDoneSel=false;
+  renderKeyboard();
+}
+
+function vkActiveKeys(){
+  if(vkAccents) return VK_ACCENT_KEYS;
+  return vkSymbols ? VK_SYMBOL_KEYS : VK_KEYS;
+}
+
 function vkActivate(){
-  const key=VK_KEYS[vkSelIdx];
+  if(vkDoneSel){ void closeKeyboard(true,true); return; }
+  const key=vkActiveKeys()[vkSelIdx];
+  if(!key || key.disabled) return;
   const obj=typeof key==='string'?{value:key}:key;
-  vkApply(obj.action || obj.value || '');
+  const value=obj.value || '';
+  const action=obj.action || (/^[a-z]$/.test(String(value)) && vkCaps ? String(value).toUpperCase() : value);
+  vkApply(action);
 }
 function vkBackspace(){ vkApply('backspace'); }
 function vkSpace(){ vkApply(' '); }
@@ -17614,6 +18498,7 @@ async function init(){
   loadAllSfx().catch(()=>{});
   await initEmulatorSessions();
   if(guideOverlayMode){
+    hideBootAnimation(true);
     stage.classList.add('loaded');
     setTimeout(()=>window.focus(),10);
     setTimeout(()=>openGuide(),40);
@@ -17625,9 +18510,10 @@ async function init(){
   updateProfileGamerPicPanel();
   loadRomCounts();
   loadSysInfo();
-  initMarketplace().catch(()=>{});
+  const marketplaceBootPromise=initMarketplace().catch(()=>{});
+  scheduleBootAnimationHide(marketplaceBootPromise);
   setTimeout(()=>stage.classList.add('loaded'),80);
-  setTimeout(()=>toast('Welcome to SKALD'),1000);
+  setTimeout(()=>toast('Welcome to SKALD'),4200);
 }
 init();
 syncStoatDisplayName();

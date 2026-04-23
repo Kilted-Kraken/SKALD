@@ -1293,7 +1293,6 @@ const emulatorManager = createEmulatorManager({
         percent: isInstalledTitleLaunch ? 92 : 38,
         message: isInstalledTitleLaunch ? 'Launching PlayStation 3 game…' : 'Preparing PlayStation 3 game…',
       });
-      promoteSkaldLaunchShield(isInstalledTitleLaunch ? 8200 : 12000);
       activeRPCS3InstallSnapshots.set(String(session.id || ''), {
         takenAt: Date.now(),
         gameRoot,
@@ -1316,28 +1315,23 @@ const emulatorManager = createEmulatorManager({
         });
       }, 8000);
       if (!isInstalledTitleLaunch) {
-        setTimeout(() => promoteSkaldLaunchShield(12000), 1200);
-        const keepSkaldFront = setInterval(() => promoteSkaldLaunchShield(12000), 1200);
-        setTimeout(() => clearInterval(keepSkaldFront), 9000);
         setTimeout(() => {
           const currentStage = String(latestEmulatorRuntimeProgress?.stage || '');
           if (currentStage === 'pkg-installing') return;
           releaseSkaldLaunchShield();
-          emulatorManager.focusSession(sessionId).catch(() => null);
-        }, 6500);
+          focusEmulatorSessionRepeatedly(sessionId, { attempts: 8, intervalMs: 650 });
+        }, 1800);
         setTimeout(() => {
           const currentStage = String(latestEmulatorRuntimeProgress?.stage || '');
           if (currentStage === 'pkg-installing') return;
           publishEmulatorRuntimeProgress({ stage: 'complete', percent: 100, message: 'Game launched.' });
-        }, 7600);
+        }, 3200);
       } else {
-        const keepSkaldFront = setInterval(() => promoteSkaldLaunchShield(8200), 900);
-        setTimeout(() => clearInterval(keepSkaldFront), 5200);
         setTimeout(() => {
           releaseSkaldLaunchShield();
-          emulatorManager.focusSession(sessionId).catch(() => null);
-        }, 6500);
-        setTimeout(() => publishEmulatorRuntimeProgress({ stage: 'complete', percent: 100, message: 'Game launched.' }), 7600);
+          focusEmulatorSessionRepeatedly(sessionId, { attempts: 8, intervalMs: 650 });
+        }, 1200);
+        setTimeout(() => publishEmulatorRuntimeProgress({ stage: 'complete', percent: 100, message: 'Game launched.' }), 2800);
       }
       // Firmware is installed through SKALD's setup flow before launch now.
       // Avoid steering RPCS3's missing-firmware file picker during gameplay.
@@ -1708,13 +1702,14 @@ async function getArchiveStatus() {
   return { loggedIn, username: s.archiveOrgUser || null };
 }
 
-function createWindow() {
+function createWindow({ show = true } = {}) {
   const ses = getSession();
 
   mainWindow = new BrowserWindow({
     width:  1280,
     height: 800,
     frame:  false,
+    show,
     webPreferences: {
       preload:          path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -1723,10 +1718,19 @@ function createWindow() {
     },
   });
   mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
+  return mainWindow;
+}
+
+function isInitialSetupComplete(settings = loadSettings()) {
+  return !!settings?.initialSetup?.complete;
 }
 
 app.whenReady().then(() => {
-  createWindow();
+  createWindow({ show: false });
+  const shellPromise = isInitialSetupComplete()
+    ? openBladesWindow()
+    : openInitialSetupWindow();
+  shellPromise.catch(err => console.error('[shell] Could not open default shell:', err?.message || err));
   setupAutoUpdater();
   // Validate installs on every launch — clears DB entries whose folders were deleted
   validateInstalls();
@@ -1741,7 +1745,15 @@ app.on('window-all-closed', async () => {
   try { await getSession().cookies.flushStore(); } catch {}
   if (process.platform !== 'darwin') app.quit();
 });
-app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
+app.on('activate', () => {
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow({ show: false });
+    const shellPromise = isInitialSetupComplete()
+      ? openBladesWindow()
+      : openInitialSetupWindow();
+    shellPromise.catch(err => console.error('[shell] Could not open shell on activate:', err?.message || err));
+  }
+});
 
 // ─── Window controls ─────────────────────────────────────────────────────────
 
@@ -1818,6 +1830,7 @@ ipcMain.on('window-close', () => mainWindow?.close());
 // ─── Blades Theme Window ──────────────────────────────────────────────────────
 
 let bladesWindow = null;
+let initialSetupWindow = null;
 let thirdPartyWindow = null;
 let guideOverlayWindow = null;
 let youtubeVideoWindow = null;
@@ -1834,6 +1847,18 @@ let bladesOverlayState = {
   wasAlwaysOnTop: false,
   wasFullScreen: false,
 };
+
+function focusEmulatorSessionRepeatedly(sessionId, { attempts = 8, intervalMs = 700 } = {}) {
+  const id = String(sessionId || '').trim();
+  if (!id) return;
+  let count = 0;
+  const tick = () => {
+    count += 1;
+    emulatorManager.focusSession(id).catch(() => null);
+    if (count < attempts) setTimeout(tick, intervalMs);
+  };
+  tick();
+}
 
 function emitGuideOverlayState(active) {
   BrowserWindow.getAllWindows().forEach(win => {
@@ -1948,7 +1973,7 @@ function releaseSkaldLaunchShield() {
   } catch {}
 }
 
-ipcMain.handle('blades-open', async () => {
+async function openBladesWindow() {
   if (bladesWindow && !bladesWindow.isDestroyed()) {
     bladesWindow.focus();
     return { ok: true };
@@ -1980,17 +2005,90 @@ ipcMain.handle('blades-open', async () => {
   bladesWindow.loadFile(path.join(__dirname, '../renderer/blades.html'));
   bladesWindow.on('closed', () => { bladesWindow = null; });
   return { ok: true };
+}
+
+async function openInitialSetupWindow() {
+  if (initialSetupWindow && !initialSetupWindow.isDestroyed()) {
+    initialSetupWindow.show();
+    initialSetupWindow.focus();
+    initialSetupWindow.moveTop?.();
+    return { ok: true };
+  }
+  const ses = getSession();
+  const displayBounds = screen.getPrimaryDisplay?.().bounds || { x: 0, y: 0, width: 1920, height: 1080 };
+  initialSetupWindow = new BrowserWindow({
+    x:               displayBounds.x,
+    y:               displayBounds.y,
+    width:           displayBounds.width,
+    height:          displayBounds.height,
+    frame:           false,
+    transparent:     true,
+    fullscreenable:  true,
+    fullscreen:      false,
+    resizable:       false,
+    backgroundColor: '#00000000',
+    webPreferences: {
+      preload:          path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration:  false,
+      webviewTag:       true,
+      session:          ses,
+    },
+  });
+  initialSetupWindow.setBounds(displayBounds);
+  initialSetupWindow.show();
+  initialSetupWindow.focus();
+  initialSetupWindow.loadFile(path.join(__dirname, '../renderer/setup.html'));
+  initialSetupWindow.on('closed', () => { initialSetupWindow = null; });
+  return { ok: true };
+}
+
+ipcMain.handle('blades-open', async () => openBladesWindow());
+
+ipcMain.handle('initial-setup-open', async () => {
+  guideOverlayWindow?.close();
+  bladesWindow?.close();
+  return openInitialSetupWindow();
+});
+
+ipcMain.handle('initial-setup-complete', async (_, opts = {}) => {
+  const settings = loadSettings();
+  settings.initialSetup = {
+    ...(settings.initialSetup || {}),
+    complete: true,
+    skipped: !!opts.skipped,
+    completedAt: new Date().toISOString(),
+    version: 1,
+  };
+  saveSettings(settings);
+  if (initialSetupWindow && !initialSetupWindow.isDestroyed()) initialSetupWindow.close();
+  await openBladesWindow();
+  return { ok: true, settings };
+});
+
+ipcMain.handle('legacy-launcher-open', async () => {
+  if (!mainWindow || mainWindow.isDestroyed()) createWindow({ show: true });
+  else mainWindow.show();
+  mainWindow?.focus();
+  mainWindow?.moveTop?.();
+  guideOverlayWindow?.close();
+  bladesWindow?.close();
+  initialSetupWindow?.close();
+  return { ok: true };
 });
 
 ipcMain.handle('blades-close', () => {
+  const closeHiddenLegacyShell = !!(mainWindow && !mainWindow.isDestroyed() && !mainWindow.isVisible());
   guideOverlayWindow?.close();
   bladesWindow?.close();
+  initialSetupWindow?.close();
+  if (closeHiddenLegacyShell) mainWindow?.close();
   return { ok: true };
 });
 
 ipcMain.handle('blades-guide-overlay-state', async (_, { active } = {}) => applyBladesGuideOverlayState(active));
 
-ipcMain.handle('guide-overlay-open', async () => {
+async function openGuideOverlayWindow() {
   const activeSession = emulatorManager.getSessions().find(session => session.status === 'running' || session.status === 'suspended');
   if (guideOverlayWindow && !guideOverlayWindow.isDestroyed()) {
     guideOverlayWindow.show();
@@ -2040,16 +2138,20 @@ ipcMain.handle('guide-overlay-open', async () => {
     emitGuideOverlayState(false);
   });
   return { ok: true };
-});
+}
 
-ipcMain.handle('guide-overlay-close', async () => {
+async function closeGuideOverlayWindow() {
   const suspendedSession = emulatorManager.getSessions().find(session => session.status === 'suspended');
   if (suspendedSession?.id) {
     await emulatorManager.resumeSession(suspendedSession.id);
   }
   guideOverlayWindow?.close();
   return { ok: true };
-});
+}
+
+ipcMain.handle('guide-overlay-open', async () => openGuideOverlayWindow());
+
+ipcMain.handle('guide-overlay-close', async () => closeGuideOverlayWindow());
 
 ipcMain.handle('guide-overlay-command', async (_, command = {}) => {
   if (!guideOverlayWindow || guideOverlayWindow.isDestroyed()) return { ok: false, error: 'Guide overlay is not open.' };
@@ -2265,6 +2367,28 @@ ipcMain.handle('folder-browser-list', async (_, { dir } = {}) => {
   const parent = path.dirname(resolved);
   const isRoot = parent === resolved;
   return { ok: true, dir: resolved, parent: isRoot ? null : parent, roots: false, entries };
+});
+ipcMain.handle('folder-browser-create', async (_, { parentDir, name } = {}) => {
+  try {
+    const parent = path.resolve(String(parentDir || '').trim());
+    const rawName = String(name || '').trim();
+    if (!parent || !fs.existsSync(parent)) return { ok: false, error: 'Choose a parent folder first.' };
+    if (!fs.statSync(parent).isDirectory()) return { ok: false, error: 'Parent path is not a folder.' };
+    if (!rawName) return { ok: false, error: 'Enter a folder name.' };
+    if (/[<>:"/\\|?*\x00-\x1F]/.test(rawName) || rawName === '.' || rawName === '..') {
+      return { ok: false, error: 'Folder name contains invalid characters.' };
+    }
+    const cleanName = rawName.replace(/[. ]+$/g, '').trim();
+    if (!cleanName) return { ok: false, error: 'Folder name is not valid.' };
+    const target = path.resolve(parent, cleanName);
+    const rel = path.relative(parent, target);
+    if (rel.startsWith('..') || path.isAbsolute(rel)) return { ok: false, error: 'Folder must be created inside the current folder.' };
+    if (fs.existsSync(target)) return { ok: false, error: 'A folder with that name already exists.', path: target };
+    fs.mkdirSync(target, { recursive: false });
+    return { ok: true, path: target, name: cleanName };
+  } catch (e) {
+    return { ok: false, error: e.message || 'Could not create folder.' };
+  }
 });
 ipcMain.handle('storage-rerun-art-migration', async () => {
   const settings = loadSettings();
@@ -3377,6 +3501,119 @@ async function resolvePCSX2StableWindowsDownload() {
   };
 }
 
+async function resolveDuckStationStableWindowsDownload() {
+  const releasesUrl = 'https://api.github.com/repos/stenzek/duckstation/releases?per_page=10';
+  const releases = await fetchJson(releasesUrl, { timeoutMs: 30000 });
+  if (!Array.isArray(releases) || !releases.length) {
+    return { ok: false, error: 'Could not read the current DuckStation releases from GitHub.' };
+  }
+  const findWindowsAsset = (entry) => {
+    const assets = Array.isArray(entry?.assets) ? entry.assets : [];
+    const isPackage = (asset) => {
+      const name = String(asset?.name || '').toLowerCase();
+      return !!name
+        && (name.endsWith('.zip') || name.endsWith('.7z'))
+        && name.includes('duckstation')
+        && !name.includes('symbols')
+        && !name.includes('debug')
+        && !name.includes('src')
+        && !name.includes('source')
+        && !name.includes('arm64')
+        && !name.includes('aarch64')
+        && !name.includes('mac')
+        && !name.includes('linux')
+        && !name.includes('android');
+    };
+    return assets.find(asset => {
+      const name = String(asset?.name || '').toLowerCase();
+      return isPackage(asset) && (name.includes('windows-x64') || name.includes('win64') || /(^|[-_])x64([-_.]|$)/i.test(name));
+    }) || assets.find(asset => {
+      const name = String(asset?.name || '').toLowerCase();
+      return isPackage(asset) && name.includes('windows');
+    }) || assets.find(asset => {
+      return isPackage(asset);
+    }) || null;
+  };
+  const stableRelease = releases.find(entry => !entry?.draft && !entry?.prerelease && findWindowsAsset(entry)) || null;
+  const fallbackRelease = releases.find(entry => !entry?.draft && findWindowsAsset(entry)) || null;
+  const release = stableRelease || fallbackRelease;
+  if (!release) {
+    return { ok: false, error: 'Could not find a DuckStation release with downloadable Windows assets.' };
+  }
+  const asset = findWindowsAsset(release);
+  if (!asset?.browser_download_url) {
+    return { ok: false, error: 'Could not find a Windows DuckStation package in the current release assets.' };
+  }
+  return {
+    ok: true,
+    version: String(release.tag_name || release.name || '').trim(),
+    archiveUrl: asset.browser_download_url,
+    archiveFileName: asset.name,
+    sourcePage: String(release.html_url || 'https://github.com/stenzek/duckstation/releases'),
+    prerelease: !!release.prerelease,
+  };
+}
+
+async function resolveDolphinStableWindowsDownload({ channel = 'stable' } = {}) {
+  const sourcePage = 'https://dolphin-emu.org/download/?ref=btn';
+  const browserUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36';
+  const normalizedChannel = String(channel || '').trim().toLowerCase() === 'development' ? 'development' : 'stable';
+  const html = await fetchText(sourcePage, {
+    headers: { 'User-Agent': browserUserAgent, Accept: 'text/html,application/xhtml+xml' },
+    timeoutMs: 30000,
+  });
+  const sectionStartPattern = normalizedChannel === 'development'
+    ? /<h[1-6][^>]*>\s*Development versions\s*<\/h[1-6]>/i
+    : /<h[1-6][^>]*>\s*Releases\s*<\/h[1-6]>/i;
+  const startMatch = sectionStartPattern.exec(html);
+  const sectionStart = startMatch ? startMatch.index : 0;
+  const sectionRemainder = html.slice(sectionStart);
+  const nextSectionMatch = /<h[1-6][^>]*>\s*(?:Development versions|Linux distributions|Source code)\s*<\/h[1-6]>/i.exec(sectionRemainder.slice(startMatch ? startMatch[0].length : 0));
+  const sectionHtml = nextSectionMatch
+    ? sectionRemainder.slice(0, (startMatch ? startMatch[0].length : 0) + nextSectionMatch.index)
+    : sectionRemainder;
+  const candidates = [];
+  const hrefPattern = /<a\b[^>]*href\s*=\s*["']([^"']+\.(?:7z|zip)(?:\?[^"']*)?)["'][^>]*>([\s\S]*?)<\/a>/gi;
+  let match;
+  while ((match = hrefPattern.exec(sectionHtml))) {
+    const rawHref = String(match[1] || '').trim();
+    const linkText = String(match[2] || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    if (!rawHref) continue;
+    let archiveUrl = '';
+    try { archiveUrl = new URL(rawHref, sourcePage).toString(); } catch { continue; }
+    const decodedUrl = decodeURIComponent(archiveUrl);
+    const name = path.basename(new URL(archiveUrl).pathname || '').trim();
+    const lower = `${decodedUrl} ${name} ${linkText}`.toLowerCase();
+    if (!lower.includes('dolphin')) continue;
+    if (!/windows?\s+x64/.test(lower) && !/(^|[-_])x64(?:\.|[-_]|$)/.test(lower)) continue;
+    if (lower.includes('arm64') || lower.includes('aarch64') || lower.includes('android') || lower.includes('mac') || lower.includes('linux') || lower.includes('source') || lower.includes('symbols')) continue;
+    if (normalizedChannel === 'stable' && !decodedUrl.includes('/releases/')) continue;
+    if (normalizedChannel === 'development' && !decodedUrl.includes('/builds/')) continue;
+    const score =
+      (lower.includes('release') ? 30 : 0)
+      + (lower.includes('stable') ? 20 : 0)
+      + (lower.includes('beta') ? 12 : 0)
+      + (lower.endsWith('.7z') ? 4 : 0)
+      + (lower.includes('x64') ? 3 : 0);
+    const version = (name.match(/(?:dolphin[-_]?)([0-9][0-9a-zA-Z._-]*)/i)?.[1] || name.replace(/\.(7z|zip)$/i, '') || 'latest').trim();
+    candidates.push({ archiveUrl, archiveFileName: name || 'dolphin-windows-x64.7z', version, sourcePage, userAgent: browserUserAgent, score, channel: normalizedChannel });
+  }
+  candidates.sort((a, b) => Number(b.score || 0) - Number(a.score || 0));
+  const selected = candidates[0] || null;
+  if (!selected) {
+    return { ok: false, error: `Could not find a Windows x64 Dolphin ${normalizedChannel} package on the official Dolphin download page.` };
+  }
+  return {
+    ok: true,
+    version: selected.version || 'latest',
+    archiveUrl: selected.archiveUrl,
+    archiveFileName: selected.archiveFileName,
+    sourcePage,
+    userAgent: browserUserAgent,
+    channel: normalizedChannel,
+  };
+}
+
 async function resolveRPCS3StableWindowsDownload() {
   const sourcePage = 'https://rpcs3.net/download';
   const latestWindowsUrl = 'https://rpcs3.net/latest-windows';
@@ -3554,6 +3791,66 @@ function findFileRecursive(dirPath, expectedName) {
       const fullPath = path.join(current, entry.name);
       if (entry.isFile() && entry.name.toLowerCase() === expectedName.toLowerCase()) return fullPath;
       if (entry.isDirectory()) queue.push(fullPath);
+    }
+  }
+  return '';
+}
+
+function findDuckStationExecutableRecursive(dirPath) {
+  if (!dirPath || !fs.existsSync(dirPath)) return '';
+  const exactNames = [
+    'duckstation-qt-x64-ReleaseLTCG.exe',
+    'duckstation-qt-x64-Release.exe',
+    'duckstation-qt-x64.exe',
+    'duckstation-qt.exe',
+    'duckstation.exe',
+  ];
+  for (const name of exactNames) {
+    const found = findFileRecursive(dirPath, name);
+    if (found) return found;
+  }
+  const queue = [dirPath];
+  while (queue.length) {
+    const current = queue.shift();
+    let entries = [];
+    try { entries = fs.readdirSync(current, { withFileTypes: true }); } catch { continue; }
+    for (const entry of entries) {
+      const fullPath = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        queue.push(fullPath);
+        continue;
+      }
+      const lower = String(entry.name || '').toLowerCase();
+      if (lower.startsWith('duckstation') && lower.endsWith('.exe') && !lower.includes('arm64') && !lower.includes('updater') && !lower.includes('uninstaller')) {
+        return fullPath;
+      }
+    }
+  }
+  return '';
+}
+
+function findDolphinExecutableRecursive(dirPath) {
+  if (!dirPath || !fs.existsSync(dirPath)) return '';
+  const exactNames = ['Dolphin.exe', 'DolphinQt2.exe', 'DolphinQt.exe', 'dolphin.exe'];
+  for (const name of exactNames) {
+    const found = findFileRecursive(dirPath, name);
+    if (found) return found;
+  }
+  const queue = [dirPath];
+  while (queue.length) {
+    const current = queue.shift();
+    let entries = [];
+    try { entries = fs.readdirSync(current, { withFileTypes: true }); } catch { continue; }
+    for (const entry of entries) {
+      const fullPath = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        queue.push(fullPath);
+        continue;
+      }
+      const lower = String(entry.name || '').toLowerCase();
+      if (lower.startsWith('dolphin') && lower.endsWith('.exe') && !lower.includes('updater') && !lower.includes('uninstall')) {
+        return fullPath;
+      }
     }
   }
   return '';
@@ -3831,6 +4128,214 @@ async function downloadManagedPCSX2Runtime(onProgress = null) {
     managedRuntimeDir,
     executablePath: importResult.executablePath,
     status: emulatorManager.getPCSX2RuntimeStatus(loadSettings()),
+  };
+}
+
+async function downloadManagedDuckStationRuntime(onProgress = null) {
+  const emitProgress = (payload = {}) => {
+    if (typeof onProgress !== 'function') return;
+    try { onProgress(payload); } catch {}
+  };
+  const runtimeStatus = emulatorManager.getDuckStationRuntimeStatus(loadSettings());
+  const managedRuntimeDir = runtimeStatus?.managedRuntimeDir || path.join(USER_DATA, 'emulators', 'duckstation');
+  const stagingRoot = path.join(USER_DATA, 'emulators', 'downloads');
+  const extractRoot = path.join(stagingRoot, 'duckstation-stable');
+  const sevenZ = resolveSevenZipExecutable();
+
+  emitProgress({ stage: 'resolving', percent: 5, message: 'Checking the official DuckStation release...' });
+  const release = await resolveDuckStationStableWindowsDownload();
+  if (!release?.ok) return release;
+
+  const archivePath = path.join(stagingRoot, release.archiveFileName || 'duckstation-windows.zip');
+  if (fs.existsSync(extractRoot)) {
+    try { fs.rmSync(extractRoot, { recursive: true, force: true }); } catch {}
+  }
+  ensureDir(stagingRoot);
+
+  emitProgress({ stage: 'downloading', percent: 8, message: `Downloading DuckStation ${release.version}...` });
+  const downloadResult = await downloadFileToPath(release.archiveUrl, archivePath, {
+    headers: { Referer: release.sourcePage },
+    timeoutMs: 120000,
+    onProgress: ({ percent, received, total }) => {
+      const scaled = percent == null
+        ? Math.max(10, Math.min(55, 10 + Math.round((Number(received || 0) / (1024 * 1024)) * 2.4)))
+        : Math.max(8, Math.min(55, 8 + Math.round(percent * 0.47)));
+      emitProgress({
+        stage: 'downloading',
+        percent: scaled,
+        received,
+        total,
+        message: total > 0
+          ? `Downloading DuckStation ${release.version}... ${Math.round((received / total) * 100)}%`
+          : `Downloading DuckStation ${release.version}...`,
+      });
+    },
+  });
+  if (!downloadResult?.ok) return downloadResult;
+
+  emitProgress({ stage: 'extracting', percent: 58, message: 'Extracting the DuckStation package...' });
+  const lowerArchive = String(archivePath || '').toLowerCase();
+  if (lowerArchive.endsWith('.zip')) {
+    try {
+      await extractZip(archivePath, { dir: extractRoot });
+    } catch (error) {
+      return { ok: false, error: error?.message || 'Could not extract the DuckStation archive.' };
+    }
+  } else {
+    if (!fs.existsSync(sevenZ)) {
+      return { ok: false, error: 'SKALD could not find its 7-Zip runtime. Bundle the 7-Zip tools or install 7-Zip on Windows.' };
+    }
+    const extractResult = await new Promise((resolve) => {
+      execFile(sevenZ, ['x', archivePath, `-o${extractRoot}`, '-y'], (err) => {
+        if (err) return resolve({ ok: false, error: err.message || 'Could not extract the DuckStation archive.' });
+        resolve({ ok: true });
+      });
+    });
+    if (!extractResult?.ok) return extractResult;
+  }
+
+  const extractedExe = findDuckStationExecutableRecursive(extractRoot);
+  if (!extractedExe) {
+    return { ok: false, error: 'DuckStation downloaded, but SKALD could not find the emulator executable in the extracted package.' };
+  }
+
+  emitProgress({ stage: 'importing', percent: 68, message: 'Importing DuckStation into the SKALD managed runtime...' });
+  const importResult = emulatorManager.importDuckStationRuntime(extractedExe);
+  if (!importResult?.ok) return importResult;
+
+  const settings = loadSettings();
+  const next = emulatorManager.normalizeSettings({
+    ...settings,
+    emulators: {
+      ...(settings.emulators || {}),
+      duckstation: {
+        ...((settings.emulators || {}).duckstation || {}),
+        mode: 'bundled',
+        customExecutablePath: String(settings?.emulators?.duckstation?.customExecutablePath || '').trim(),
+        biosPath: String(settings?.emulators?.duckstation?.biosPath || '').trim(),
+      },
+    },
+  });
+  saveSettings(next);
+
+  try { if (fs.existsSync(archivePath)) fs.unlinkSync(archivePath); } catch {}
+  try { if (fs.existsSync(extractRoot)) fs.rmSync(extractRoot, { recursive: true, force: true }); } catch {}
+
+  emitProgress({ stage: 'complete', percent: 100, message: `DuckStation ${release.version} is ready in SKALD.` });
+  return {
+    ok: true,
+    version: release.version,
+    archiveUrl: release.archiveUrl,
+    managedRuntimeDir,
+    executablePath: importResult.executablePath,
+    status: emulatorManager.getDuckStationRuntimeStatus(loadSettings()),
+  };
+}
+
+async function downloadManagedDolphinRuntime(onProgress = null, { channel = 'stable' } = {}) {
+  const emitProgress = (payload = {}) => {
+    if (typeof onProgress !== 'function') return;
+    try { onProgress(payload); } catch {}
+  };
+  const runtimeStatus = emulatorManager.getDolphinRuntimeStatus(loadSettings());
+  const managedRuntimeDir = runtimeStatus?.managedRuntimeDir || path.join(USER_DATA, 'emulators', 'dolphin');
+  const stagingRoot = path.join(USER_DATA, 'emulators', 'downloads');
+  const normalizedChannel = String(channel || '').trim().toLowerCase() === 'development' ? 'development' : 'stable';
+  const extractRoot = path.join(stagingRoot, `dolphin-${normalizedChannel}`);
+  const sevenZ = resolveSevenZipExecutable();
+
+  const channelLabel = normalizedChannel === 'development' ? 'Development' : 'Stable';
+  emitProgress({ stage: 'resolving', percent: 5, message: `Checking the official Dolphin ${channelLabel} release...` });
+  const release = await resolveDolphinStableWindowsDownload({ channel: normalizedChannel });
+  if (!release?.ok) return release;
+
+  const archivePath = path.join(stagingRoot, release.archiveFileName || 'dolphin-windows-x64.7z');
+  if (fs.existsSync(extractRoot)) {
+    try { fs.rmSync(extractRoot, { recursive: true, force: true }); } catch {}
+  }
+  ensureDir(stagingRoot);
+
+  emitProgress({ stage: 'downloading', percent: 8, message: `Downloading Dolphin ${channelLabel} ${release.version}...` });
+  const downloadResult = await downloadFileToPath(release.archiveUrl, archivePath, {
+    headers: {
+      Referer: release.sourcePage,
+      ...(release?.userAgent ? { 'User-Agent': release.userAgent } : {}),
+    },
+    timeoutMs: 120000,
+    onProgress: ({ percent, received, total }) => {
+      const scaled = percent == null
+        ? Math.max(10, Math.min(55, 10 + Math.round((Number(received || 0) / (1024 * 1024)) * 2.4)))
+        : Math.max(8, Math.min(55, 8 + Math.round(percent * 0.47)));
+      emitProgress({
+        stage: 'downloading',
+        percent: scaled,
+        received,
+        total,
+        message: total > 0
+          ? `Downloading Dolphin ${channelLabel} ${release.version}... ${Math.round((received / total) * 100)}%`
+          : `Downloading Dolphin ${channelLabel} ${release.version}...`,
+      });
+    },
+  });
+  if (!downloadResult?.ok) return downloadResult;
+
+  emitProgress({ stage: 'extracting', percent: 58, message: 'Extracting the Dolphin package...' });
+  const lowerArchive = String(archivePath || '').toLowerCase();
+  if (lowerArchive.endsWith('.zip')) {
+    try {
+      await extractZip(archivePath, { dir: extractRoot });
+    } catch (error) {
+      return { ok: false, error: error?.message || 'Could not extract the Dolphin archive.' };
+    }
+  } else {
+    if (!fs.existsSync(sevenZ)) {
+      return { ok: false, error: 'SKALD could not find its 7-Zip runtime. Bundle the 7-Zip tools or install 7-Zip on Windows.' };
+    }
+    const extractResult = await new Promise((resolve) => {
+      execFile(sevenZ, ['x', archivePath, `-o${extractRoot}`, '-y'], (err) => {
+        if (err) return resolve({ ok: false, error: err.message || 'Could not extract the Dolphin archive.' });
+        resolve({ ok: true });
+      });
+    });
+    if (!extractResult?.ok) return extractResult;
+  }
+
+  const extractedExe = findDolphinExecutableRecursive(extractRoot);
+  if (!extractedExe) {
+    return { ok: false, error: 'Dolphin downloaded, but SKALD could not find the emulator executable in the extracted package.' };
+  }
+
+  emitProgress({ stage: 'importing', percent: 68, message: 'Importing Dolphin into the SKALD managed runtime...' });
+  const importResult = emulatorManager.importDolphinRuntime(extractedExe, { channel: normalizedChannel });
+  if (!importResult?.ok) return importResult;
+
+  const settings = loadSettings();
+  const next = emulatorManager.normalizeSettings({
+    ...settings,
+    emulators: {
+      ...(settings.emulators || {}),
+      dolphin: {
+        ...((settings.emulators || {}).dolphin || {}),
+        mode: 'bundled',
+        buildChannel: normalizedChannel,
+        customExecutablePath: String(settings?.emulators?.dolphin?.customExecutablePath || '').trim(),
+      },
+    },
+  });
+  saveSettings(next);
+
+  try { if (fs.existsSync(archivePath)) fs.unlinkSync(archivePath); } catch {}
+  try { if (fs.existsSync(extractRoot)) fs.rmSync(extractRoot, { recursive: true, force: true }); } catch {}
+
+  emitProgress({ stage: 'complete', percent: 100, message: `Dolphin ${channelLabel} ${release.version} is ready in SKALD.` });
+  return {
+    ok: true,
+    version: release.version,
+    channel: normalizedChannel,
+    archiveUrl: release.archiveUrl,
+    managedRuntimeDir,
+    executablePath: importResult.executablePath,
+    status: emulatorManager.getDolphinRuntimeStatus(loadSettings()),
   };
 }
 
@@ -4224,6 +4729,87 @@ async function downloadManagedRPCS3Runtime(onProgress = null) {
   };
 }
 
+async function removeExistingPath(targetPath) {
+  const cleanPath = String(targetPath || '').trim();
+  if (!cleanPath || !fs.existsSync(cleanPath)) return { ok: true, skipped: true };
+  try {
+    const stat = fs.statSync(cleanPath);
+    if (stat.isDirectory()) await fs.promises.rm(cleanPath, { recursive: true, force: true });
+    else await fs.promises.rm(cleanPath, { force: true });
+    return { ok: true, removedPath: cleanPath };
+  } catch (error) {
+    return { ok: false, error: error?.message || `Could not remove ${cleanPath}` };
+  }
+}
+
+async function uninstallManagedEmulatorRuntime(emulatorId, { channel = null } = {}) {
+  const id = String(emulatorId || '').trim().toLowerCase();
+  if (id === 'rpcs3') return uninstallManagedRPCS3Runtime();
+  const settings = loadSettings();
+  const downloadsRoot = path.join(USER_DATA, 'emulators', 'downloads');
+  const statusGetters = {
+    retroarch: () => emulatorManager.getRetroArchRuntimeStatus(loadSettings()),
+    pcsx2: () => emulatorManager.getPCSX2RuntimeStatus(loadSettings()),
+    duckstation: () => emulatorManager.getDuckStationRuntimeStatus(loadSettings()),
+    dolphin: () => emulatorManager.getDolphinRuntimeStatus(loadSettings()),
+    vlc: () => emulatorManager.getVLCRuntimeStatus(loadSettings()),
+    xenia: () => emulatorManager.getXeniaRuntimeStatus(loadSettings()),
+  };
+  if (!statusGetters[id]) return { ok: false, error: `Unknown emulator runtime: ${id}` };
+
+  const status = statusGetters[id]();
+  const cleanupPaths = [];
+  if (id === 'dolphin') {
+    const normalizedChannel = String(channel || status?.buildChannel || 'stable').trim().toLowerCase() === 'development' ? 'development' : 'stable';
+    const build = status?.builds?.[normalizedChannel] || {};
+    cleanupPaths.push(build.managedRuntimeDir || (normalizedChannel === 'development' ? status?.developmentRuntimeDir : status?.stableRuntimeDir));
+    cleanupPaths.push(path.join(downloadsRoot, `dolphin-${normalizedChannel}`));
+  } else {
+    cleanupPaths.push(status?.managedRuntimeDir);
+    const stagingById = {
+      retroarch: 'retroarch-stable',
+      pcsx2: 'pcsx2-stable',
+      duckstation: 'duckstation-stable',
+      vlc: 'vlc-stable',
+      xenia: 'xenia-canary',
+    };
+    if (stagingById[id]) cleanupPaths.push(path.join(downloadsRoot, stagingById[id]));
+  }
+
+  const removed = [];
+  for (const targetPath of cleanupPaths) {
+    const result = await removeExistingPath(targetPath);
+    if (!result?.ok) return result;
+    if (result.removedPath) removed.push(result.removedPath);
+  }
+
+  const next = emulatorManager.normalizeSettings({
+    ...settings,
+    emulators: {
+      ...(settings.emulators || {}),
+      [id]: {
+        ...((settings.emulators || {})[id] || {}),
+        mode: 'bundled',
+      },
+    },
+  });
+  if (id === 'dolphin') {
+    const removedChannel = String(channel || status?.buildChannel || 'stable').trim().toLowerCase() === 'development' ? 'development' : 'stable';
+    const otherChannel = removedChannel === 'development' ? 'stable' : 'development';
+    const otherBuild = status?.builds?.[otherChannel] || {};
+    next.emulators.dolphin.buildChannel = otherBuild.available ? otherChannel : removedChannel;
+  }
+  saveSettings(next);
+
+  return {
+    ok: true,
+    emulatorId: id,
+    channel: id === 'dolphin' ? (String(channel || status?.buildChannel || 'stable').trim().toLowerCase() === 'development' ? 'development' : 'stable') : null,
+    removed,
+    status: statusGetters[id](),
+  };
+}
+
 function getRPCS3SetupStatus(settings = loadSettings()) {
   const normalized = emulatorManager.normalizeSettings(settings);
   const runtime = emulatorManager.getRPCS3RuntimeStatus(normalized);
@@ -4240,6 +4826,517 @@ function getRPCS3SetupStatus(settings = loadSettings()) {
     welcomeCompleted,
     runtime,
   };
+}
+
+const RPCS3_GUIDE_CONFIG_FIELDS = {
+  videoRenderer: {
+    label: 'Renderer',
+    section: 'Video',
+    key: 'Renderer',
+    values: ['Vulkan', 'OpenGL', 'Null'],
+    defaultValue: 'Vulkan',
+  },
+  resolutionScale: {
+    label: 'Resolution Scale',
+    section: 'Video',
+    key: 'Resolution Scale',
+    values: ['100', '150', '200', '300'],
+    defaultValue: '100',
+  },
+  frameLimit: {
+    label: 'Frame Limit',
+    section: 'Video',
+    key: 'Frame limit',
+    values: ['Auto', 'Off', '30', '60', '120'],
+    defaultValue: 'Auto',
+  },
+  vsyncMode: {
+    label: 'VSync',
+    section: 'Video',
+    key: 'VSync Mode',
+    values: ['Disabled', 'FIFO'],
+    defaultValue: 'Disabled',
+  },
+  startFullscreen: {
+    label: 'Start Fullscreen',
+    section: 'Miscellaneous',
+    key: 'Start games in fullscreen mode',
+    values: ['true', 'false'],
+    defaultValue: 'true',
+    type: 'boolean',
+  },
+  autoStartGames: {
+    label: 'Auto-start Games',
+    section: 'Miscellaneous',
+    key: 'Automatically start games after boot',
+    values: ['true', 'false'],
+    defaultValue: 'true',
+    type: 'boolean',
+  },
+  exitOnFinish: {
+    label: 'Exit When Finished',
+    section: 'Miscellaneous',
+    key: 'Exit RPCS3 when process finishes',
+    values: ['false', 'true'],
+    defaultValue: 'false',
+    type: 'boolean',
+  },
+  audioRenderer: {
+    label: 'Audio Renderer',
+    section: 'Audio',
+    key: 'Renderer',
+    values: ['Cubeb', 'Null'],
+    defaultValue: 'Cubeb',
+  },
+  audioFormat: {
+    label: 'Audio Format',
+    section: 'Audio',
+    key: 'Audio Format',
+    values: ['Stereo', 'Surround 5.1', 'Surround 7.1'],
+    defaultValue: 'Stereo',
+  },
+  masterVolume: {
+    label: 'Master Volume',
+    section: 'Audio',
+    key: 'Master Volume',
+    values: ['25', '50', '75', '100'],
+    defaultValue: '100',
+  },
+};
+
+function getRPCS3ConfigPath(settings = loadSettings()) {
+  const runtime = emulatorManager.getRPCS3RuntimeStatus(settings);
+  const configDir = String(runtime?.configDir || '').trim();
+  return configDir ? path.join(configDir, 'config.yml') : '';
+}
+
+function getRPCS3InputConfigRoot(settings = loadSettings()) {
+  const runtime = emulatorManager.getRPCS3RuntimeStatus(settings);
+  const configDir = String(runtime?.configDir || '').trim();
+  return configDir ? path.join(configDir, 'input_configs') : '';
+}
+
+function getRPCS3DefaultPadProfilePath(settings = loadSettings()) {
+  const inputRoot = getRPCS3InputConfigRoot(settings);
+  return inputRoot ? path.join(inputRoot, 'global', 'Default.yml') : '';
+}
+
+function getRPCS3ActivePadProfilesPath(settings = loadSettings()) {
+  const inputRoot = getRPCS3InputConfigRoot(settings);
+  return inputRoot ? path.join(inputRoot, 'active_profiles.yml') : '';
+}
+
+function buildRPCS3XInputDefaultProfileYaml() {
+  const padConfig = `Handler: XInput
+Device: "XInput Pad #1"
+Config:
+  Left Stick Left: LS X-
+  Left Stick Down: LS Y-
+  Left Stick Right: LS X+
+  Left Stick Up: LS Y+
+  Right Stick Left: RS X-
+  Right Stick Down: RS Y-
+  Right Stick Right: RS X+
+  Right Stick Up: RS Y+
+  Start: Start
+  Select: Back
+  PS Button: Guide
+  Square: X
+  Cross: A
+  Circle: B
+  Triangle: Y
+  Left: Left
+  Down: Down
+  Right: Right
+  Up: Up
+  R1: RB
+  R2: RT
+  R3: RS
+  L1: LB
+  L2: LT
+  L3: LS
+  IR Nose: ""
+  IR Tail: ""
+  IR Left: ""
+  IR Right: ""
+  Tilt Left: ""
+  Tilt Right: ""
+  Motion Sensor X:
+    Axis: ""
+    Mirrored: false
+    Shift: 0
+  Motion Sensor Y:
+    Axis: ""
+    Mirrored: false
+    Shift: 0
+  Motion Sensor Z:
+    Axis: ""
+    Mirrored: false
+    Shift: 0
+  Motion Sensor G:
+    Axis: ""
+    Mirrored: false
+    Shift: 0
+  Pressure Intensity Button: ""
+  Pressure Intensity Percent: 50
+  Pressure Intensity Toggle Mode: false
+  Pressure Intensity Deadzone: 0
+  Analog Limiter Button: ""
+  Analog Limiter Toggle Mode: false
+  Left Stick Multiplier: 100
+  Right Stick Multiplier: 100
+  Left Stick Deadzone: 7849
+  Right Stick Deadzone: 8689
+  Left Stick Anti-Deadzone: 4259
+  Right Stick Anti-Deadzone: 4259
+  Left Trigger Threshold: 30
+  Right Trigger Threshold: 30
+  Left Pad Squircling Factor: 8000
+  Right Pad Squircling Factor: 8000
+  Color Value R: 0
+  Color Value G: 0
+  Color Value B: 0
+  Blink LED when battery is below 20%: true
+  Use LED as a battery indicator: false
+  LED battery indicator brightness: 50
+  Player LED enabled: true
+  Enable Large Vibration Motor: true
+  Enable Small Vibration Motor: true
+  Switch Vibration Motors: false
+  Mouse Movement Mode: Relative
+  Mouse Deadzone X Axis: 60
+  Mouse Deadzone Y Axis: 60
+  Mouse Acceleration X Axis: 200
+  Mouse Acceleration Y Axis: 250
+  Left Stick Lerp Factor: 100
+  Right Stick Lerp Factor: 100
+  Analog Button Lerp Factor: 100
+  Trigger Lerp Factor: 100
+  Device Class Type: 0
+  Vendor ID: 1356
+  Product ID: 616
+Buddy Device: ""`;
+  const nullPad = `Handler: "Null"
+Device: "Null"
+Config: {}
+Buddy Device: ""`;
+  const indent = (text) => text.split('\n').map(line => `  ${line}`).join('\n');
+  const parts = [`Player 1 Input:\n${indent(padConfig)}`];
+  for (let i = 2; i <= 7; i += 1) {
+    parts.push(`Player ${i} Input:\n${indent(nullPad)}`);
+  }
+  return `${parts.join('\n')}\n`;
+}
+
+function parseRPCS3PadProfileSummary(content = '') {
+  const text = String(content || '');
+  const playerOne = text.match(/Player 1 Input:\s*([\s\S]*?)(?:\nPlayer 2 Input:|\n?$)/i)?.[1] || text;
+  const handler = playerOne.match(/^\s*Handler:\s*"?([^"\r\n]+)"?/mi)?.[1]?.trim() || '';
+  const device = playerOne.match(/^\s*Device:\s*"?([^"\r\n]+)"?/mi)?.[1]?.trim() || '';
+  const profile = text.includes('Player 1 Input:') ? 'Default' : (text.trim() ? 'Unknown' : 'Not configured');
+  return { profile, handler, device };
+}
+
+function getRPCS3ControllerConfig(settings = loadSettings()) {
+  const runtime = emulatorManager.getRPCS3RuntimeStatus(settings);
+  const profilePath = getRPCS3DefaultPadProfilePath(settings);
+  const activeProfilesPath = getRPCS3ActivePadProfilesPath(settings);
+  let content = '';
+  try {
+    if (profilePath && fs.existsSync(profilePath)) content = fs.readFileSync(profilePath, 'utf8');
+  } catch {}
+  const summary = parseRPCS3PadProfileSummary(content);
+  return {
+    ok: !!runtime?.ok,
+    configAvailable: !!profilePath && fs.existsSync(profilePath),
+    profilePath,
+    activeProfilesPath,
+    profile: summary.profile,
+    handler: summary.handler,
+    device: summary.device,
+    preset: summary.handler === 'XInput' && /^XInput Pad #1$/i.test(summary.device) ? 'xinput-default' : '',
+  };
+}
+
+function applyRPCS3ControllerPreset({ preset = 'xinput-default' } = {}) {
+  const selected = String(preset || 'xinput-default').trim();
+  if (selected !== 'xinput-default') return { ok: false, error: 'Unsupported RPCS3 controller preset.' };
+  const settings = loadSettings();
+  const runtime = emulatorManager.getRPCS3RuntimeStatus(settings);
+  if (!runtime?.ok) return { ok: false, error: 'RPCS3 must be installed before controller mappings can be changed.' };
+  const profilePath = getRPCS3DefaultPadProfilePath(settings);
+  const activeProfilesPath = getRPCS3ActivePadProfilesPath(settings);
+  if (!profilePath || !activeProfilesPath) return { ok: false, error: 'RPCS3 input config path is not available.' };
+  try {
+    ensureDir(path.dirname(profilePath));
+    ensureDir(path.dirname(activeProfilesPath));
+    if (fs.existsSync(profilePath)) {
+      const existing = fs.readFileSync(profilePath, 'utf8');
+      const backupPath = `${profilePath}.skald-backup`;
+      if (existing.trim() && !fs.existsSync(backupPath)) fs.writeFileSync(backupPath, existing, 'utf8');
+    }
+    fs.writeFileSync(profilePath, buildRPCS3XInputDefaultProfileYaml(), 'utf8');
+    fs.writeFileSync(activeProfilesPath, 'Active Profiles:\n  global: Default\n', 'utf8');
+    const configPath = getRPCS3ConfigPath(settings);
+    if (configPath) {
+      let configContent = '';
+      try { if (fs.existsSync(configPath)) configContent = fs.readFileSync(configPath, 'utf8'); } catch {}
+      configContent = upsertYamlSectionKey(configContent, 'Input/Output', 'Background input enabled', 'true');
+      configContent = upsertYamlSectionKey(configContent, 'Input/Output', 'Pad handler mode', 'Single-threaded');
+      ensureDir(path.dirname(configPath));
+      fs.writeFileSync(configPath, configContent, 'utf8');
+    }
+    return { ok: true, preset: selected, status: getRPCS3ControllerConfig(settings) };
+  } catch (error) {
+    return { ok: false, error: error?.message || 'Could not update RPCS3 controller mapping.' };
+  }
+}
+
+function decodeXmlEntities(value = '') {
+  return String(value || '')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&#(\d+);/g, (_, code) => {
+      const n = Number(code);
+      return Number.isFinite(n) ? String.fromCharCode(n) : _;
+    })
+    .replace(/&#x([0-9a-f]+);/gi, (_, code) => {
+      const n = Number.parseInt(code, 16);
+      return Number.isFinite(n) ? String.fromCharCode(n) : _;
+    });
+}
+
+function normalizeTrophySearchText(value = '') {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/\([^)]*\)/g, ' ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+    .replace(/\s+/g, ' ');
+}
+
+function parseRPCS3TrophyConf(confPath = '') {
+  if (!confPath || !fs.existsSync(confPath)) return null;
+  let xml = '';
+  try { xml = fs.readFileSync(confPath, 'utf8'); } catch { return null; }
+  const readTag = (tag) => decodeXmlEntities(xml.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'i'))?.[1] || '').trim();
+  const title = readTag('title-name');
+  const detail = readTag('title-detail');
+  const npcommid = readTag('npcommid') || path.basename(path.dirname(confPath));
+  const trophies = [];
+  const trophyRe = /<trophy\b([^>]*)>([\s\S]*?)<\/trophy>/gi;
+  let match;
+  while ((match = trophyRe.exec(xml))) {
+    const attrs = String(match[1] || '');
+    const body = String(match[2] || '');
+    const attr = (name) => attrs.match(new RegExp(`${name}="([^"]*)"`, 'i'))?.[1] || '';
+    const id = attr('id');
+    const type = attr('ttype') || '';
+    const hidden = /^yes$/i.test(attr('hidden'));
+    const name = decodeXmlEntities(body.match(/<name[^>]*>([\s\S]*?)<\/name>/i)?.[1] || '').trim();
+    const description = decodeXmlEntities(body.match(/<detail[^>]*>([\s\S]*?)<\/detail>/i)?.[1] || '').trim();
+    trophies.push({
+      id,
+      title: name || `Trophy ${id}`,
+      description,
+      type,
+      hidden,
+      points: type === 'P' ? 180 : (type === 'G' ? 90 : (type === 'S' ? 30 : 15)),
+    });
+  }
+  return { npcommid, title, detail, trophies };
+}
+
+function getRPCS3TrophyRoot(settings = loadSettings()) {
+  const runtime = emulatorManager.getRPCS3RuntimeStatus(settings);
+  const runtimeRoot = String(runtime?.runtimeRoot || runtime?.managedRuntimeDir || '').trim();
+  return runtimeRoot ? path.join(runtimeRoot, 'dev_hdd0', 'home', '00000001', 'trophy') : '';
+}
+
+function listRPCS3TrophySets(settings = loadSettings()) {
+  const trophyRoot = getRPCS3TrophyRoot(settings);
+  if (!trophyRoot || !fs.existsSync(trophyRoot)) return [];
+  let dirs = [];
+  try {
+    dirs = fs.readdirSync(trophyRoot, { withFileTypes: true }).filter(entry => entry.isDirectory());
+  } catch {
+    return [];
+  }
+  return dirs.map((entry) => {
+    const dir = path.join(trophyRoot, entry.name);
+    const conf = parseRPCS3TrophyConf(path.join(dir, 'TROPCONF.SFM'));
+    if (!conf) return null;
+    const achievements = conf.trophies.map(trophy => ({
+      ...trophy,
+      badgeUrl: path.join(dir, `TROP${String(trophy.id || '').padStart(3, '0')}.PNG`),
+      dateEarned: null,
+    }));
+    return {
+      id: conf.npcommid || entry.name,
+      title: conf.title || entry.name,
+      description: conf.detail || '',
+      iconPath: path.join(dir, 'ICON0.PNG'),
+      folderPath: dir,
+      numAchievements: achievements.length,
+      totalPoints: achievements.reduce((sum, trophy) => sum + Number(trophy.points || 0), 0),
+      achievements,
+    };
+  }).filter(Boolean);
+}
+
+function scoreRPCS3TrophyMatch(set, query = '') {
+  const target = normalizeTrophySearchText(query);
+  const title = normalizeTrophySearchText(set?.title || '');
+  if (!target || !title) return 0;
+  if (title === target) return 100;
+  if (target.includes(title) || title.includes(target)) return 86;
+  const targetWords = new Set(target.split(' ').filter(Boolean));
+  const titleWords = title.split(' ').filter(Boolean);
+  if (!targetWords.size || !titleWords.length) return 0;
+  const hits = titleWords.filter(word => targetWords.has(word)).length;
+  return Math.round((hits / Math.max(titleWords.length, targetWords.size)) * 80);
+}
+
+function getRPCS3TrophiesForGame({ identifier = '', title = '', system = '' } = {}) {
+  if (String(system || '').trim().toLowerCase() !== 'ps3') {
+    return { ok: false, error: 'RPCS3 trophies are only available for PlayStation 3 games.' };
+  }
+  const sets = listRPCS3TrophySets(loadSettings());
+  if (!sets.length) return { ok: false, error: 'No local RPCS3 trophy sets found yet.' };
+  const query = [title, identifier].filter(Boolean).join(' ');
+  const ranked = sets
+    .map(set => ({ set, score: Math.max(scoreRPCS3TrophyMatch(set, title), scoreRPCS3TrophyMatch(set, identifier), scoreRPCS3TrophyMatch(set, query)) }))
+    .sort((a, b) => b.score - a.score);
+  const best = ranked[0];
+  if (!best || best.score < 25) {
+    return {
+      ok: false,
+      error: 'No matching local RPCS3 trophy set found for this game yet.',
+      data: { sets: sets.map(set => ({ id: set.id, title: set.title })) },
+    };
+  }
+  return {
+    ok: true,
+    data: {
+      ...best.set,
+      matchScore: best.score,
+      source: 'rpcs3-local',
+      imageIcon: best.set.iconPath ? `file:///${best.set.iconPath.replace(/\\/g, '/')}` : null,
+      achievements: best.set.achievements.map(trophy => ({
+        ...trophy,
+        badgeUrl: trophy.badgeUrl ? `file:///${trophy.badgeUrl.replace(/\\/g, '/')}` : '',
+      })),
+    },
+  };
+}
+
+function parseRPCS3ConfigValue(content, sectionName, keyName) {
+  const lines = String(content || '').replace(/\r\n/g, '\n').split('\n');
+  let inSection = false;
+  const sectionPattern = new RegExp(`^${sectionName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}:\\s*$`);
+  const keyPattern = new RegExp(`^\\s{2}${keyName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}:\\s*(.*)$`);
+  for (const line of lines) {
+    if (/^\S[^:]*:\s*$/.test(line)) inSection = sectionPattern.test(line);
+    if (!inSection) continue;
+    const match = line.match(keyPattern);
+    if (match) return String(match[1] || '').trim().replace(/^"|"$/g, '');
+  }
+  return '';
+}
+
+function formatRPCS3ConfigValue(value) {
+  const raw = String(value ?? '').trim();
+  if (/^(true|false)$/i.test(raw)) return raw.toLowerCase();
+  if (/^-?\d+(\.\d+)?$/.test(raw)) return raw;
+  return raw;
+}
+
+function upsertYamlSectionKey(content, sectionName, keyName, value) {
+  const lines = String(content || '').replace(/\r\n/g, '\n').split('\n');
+  const formatted = formatRPCS3ConfigValue(value);
+  const sectionHeader = `${sectionName}:`;
+  let sectionStart = -1;
+  let sectionEnd = lines.length;
+  for (let i = 0; i < lines.length; i += 1) {
+    if (String(lines[i] || '').trim() === sectionHeader) {
+      sectionStart = i;
+      for (let j = i + 1; j < lines.length; j += 1) {
+        if (/^\S[^:]*:\s*$/.test(lines[j] || '')) {
+          sectionEnd = j;
+          break;
+        }
+      }
+      break;
+    }
+  }
+  if (sectionStart < 0) {
+    if (lines.length && String(lines[lines.length - 1] || '').trim() !== '') lines.push('');
+    lines.push(sectionHeader);
+    lines.push(`  ${keyName}: ${formatted}`);
+    return `${lines.join('\n').replace(/\n+$/,'')}\n`;
+  }
+  const keyPattern = new RegExp(`^\\s{2}${keyName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}:\\s*`);
+  for (let i = sectionStart + 1; i < sectionEnd; i += 1) {
+    if (keyPattern.test(lines[i] || '')) {
+      lines[i] = `  ${keyName}: ${formatted}`;
+      return `${lines.join('\n').replace(/\n+$/,'')}\n`;
+    }
+  }
+  lines.splice(sectionEnd, 0, `  ${keyName}: ${formatted}`);
+  return `${lines.join('\n').replace(/\n+$/,'')}\n`;
+}
+
+function getRPCS3GuideConfig(settings = loadSettings()) {
+  const runtime = emulatorManager.getRPCS3RuntimeStatus(settings);
+  const configPath = getRPCS3ConfigPath(settings);
+  let content = '';
+  try {
+    if (configPath && fs.existsSync(configPath)) content = fs.readFileSync(configPath, 'utf8');
+  } catch {}
+  const values = {};
+  for (const [id, field] of Object.entries(RPCS3_GUIDE_CONFIG_FIELDS)) {
+    const current = content ? parseRPCS3ConfigValue(content, field.section, field.key) : '';
+    values[id] = {
+      id,
+      label: field.label,
+      value: current || field.defaultValue,
+      values: field.values,
+      available: !!content,
+    };
+  }
+  return {
+    ok: !!runtime?.ok,
+    configAvailable: !!content,
+    configPath,
+    runtime,
+    values,
+  };
+}
+
+function updateRPCS3GuideConfigValue({ settingId, value } = {}) {
+  const id = String(settingId || '').trim();
+  const field = RPCS3_GUIDE_CONFIG_FIELDS[id];
+  if (!field) return { ok: false, error: 'Unknown RPCS3 setting.' };
+  const requested = String(value ?? '').trim();
+  if (!field.values.includes(requested)) return { ok: false, error: 'Unsupported RPCS3 setting value.' };
+  const settings = loadSettings();
+  const runtime = emulatorManager.getRPCS3RuntimeStatus(settings);
+  if (!runtime?.ok) return { ok: false, error: 'RPCS3 must be installed before settings can be changed.' };
+  const configPath = getRPCS3ConfigPath(settings);
+  if (!configPath) return { ok: false, error: 'RPCS3 config path is not available.' };
+  try {
+    ensureDir(path.dirname(configPath));
+    let content = '';
+    if (fs.existsSync(configPath)) content = fs.readFileSync(configPath, 'utf8');
+    content = upsertYamlSectionKey(content, field.section, field.key, requested);
+    fs.writeFileSync(configPath, content, 'utf8');
+    return { ok: true, configPath, settingId: id, value: requested, status: getRPCS3GuideConfig(settings) };
+  } catch (error) {
+    return { ok: false, error: error?.message || 'Could not update RPCS3 config.' };
+  }
 }
 
 function upsertIniKey(content, sectionName, key, value) {
@@ -5830,7 +6927,7 @@ async function marketplaceInstallJob(event, {
   if (!downloadResult?.ok) return downloadResult;
 
   const settings = loadSettings();
-  const directExts = ['.chd', '.cue', '.bin', '.img', '.sfc', '.smc', '.nes', '.gba', '.n64'];
+  const directExts = ['.chd', '.cue', '.bin', '.img', '.sfc', '.smc', '.nes', '.gba', '.n64', '.iso', '.gcm', '.gcz', '.rvz', '.wbfs', '.wia', '.wad'];
   const normalizedSystem = String(system || '').trim().toLowerCase();
   const lowerDownloadPath = String(downloadResult.filePath || '').toLowerCase();
   const isArchiveDownload = ['.zip', '.7z', '.rar'].some(ext => lowerDownloadPath.endsWith(ext));
@@ -7402,7 +8499,7 @@ function isLaunchableRPCS3InstalledTitle(dirPath = '') {
   } catch {
     return false;
   }
-  return fs.existsSync(path.join(base, 'USRDIR', 'EBOOT.BIN')) || fs.existsSync(path.join(base, 'PARAM.SFO'));
+  return fs.existsSync(path.join(base, 'USRDIR', 'EBOOT.BIN'));
 }
 
 function buildRPCS3InstalledTitleSnapshot(gameRoot = '') {
@@ -7684,7 +8781,7 @@ function resolvePreferredRPCS3LaunchPath(identifier, romPath) {
   if (mapped?.path && isLaunchableRPCS3InstalledTitle(mapped.path)) {
     return String(mapped.path).trim();
   }
-  if (mapped && (!mapped.path || !fs.existsSync(mapped.path))) {
+  if (mapped && (!mapped.path || !fs.existsSync(mapped.path) || !isLaunchableRPCS3InstalledTitle(mapped.path))) {
     delete current[key];
     writeRPCS3InstallMap(current);
   }
@@ -8080,7 +9177,7 @@ ipcMain.handle('scan-for-games', (_, { scanDir, knownIdentifiers, titleMap, syst
   const identifierSet  = new Set(knownIdentifiers);
   const titleLookup    = buildTitleLookup(titleMap);
   const found          = [];
-  const ROM_EXTS       = new Set(['.sfc', '.smc', '.snes', '.nes', '.gba', '.gbc', '.gb', '.md', '.gen', '.smd', '.n64', '.z64', '.v64', '.nds', '.pce', '.chd', '.cue', '.bin', '.img', '.zip', '.iso', '.cso', '.pbp', '.pkg', '.self', '.elf']);
+  const ROM_EXTS       = new Set(['.sfc', '.smc', '.snes', '.nes', '.gba', '.gbc', '.gb', '.md', '.gen', '.smd', '.n64', '.z64', '.v64', '.nds', '.pce', '.chd', '.cue', '.bin', '.img', '.zip', '.iso', '.gcm', '.gcz', '.rvz', '.wbfs', '.wia', '.wad', '.cso', '.pbp', '.pkg', '.self', '.elf']);
   const visitedDirs    = new Set();
   const MAX_SCAN_DEPTH = 5;
 
@@ -8868,7 +9965,15 @@ function getRomCachePath(system) {
   return path.join(ROM_CACHE_DIR, `${system}.json`);
 }
 
-function loadRomDiskCache(system) {
+function liveArchiveSourceSignature(config = {}) {
+  return JSON.stringify({
+    urls: Array.isArray(config.urls) ? config.urls : [],
+    extensions: Array.isArray(config.extensions) ? config.extensions : [],
+    referer: String(config.referer || ''),
+  });
+}
+
+function loadRomDiskCache(system, expectedSourceSignature = '') {
   try {
     const p = getRomCachePath(system);
     if (!fs.existsSync(p)) return null;
@@ -8878,13 +9983,28 @@ function loadRomDiskCache(system) {
       fs.unlinkSync(p);
       return null;
     }
-    return JSON.parse(fs.readFileSync(p, 'utf8'));
+    const parsed = JSON.parse(fs.readFileSync(p, 'utf8'));
+    if (parsed && !Array.isArray(parsed) && Array.isArray(parsed.roms)) {
+      if (expectedSourceSignature && parsed.sourceSignature !== expectedSourceSignature) {
+        try { fs.unlinkSync(p); } catch {}
+        return null;
+      }
+      return parsed.roms;
+    }
+    if (expectedSourceSignature) {
+      try { fs.unlinkSync(p); } catch {}
+      return null;
+    }
+    return parsed;
   } catch { return null; }
 }
 
-function saveRomDiskCache(system, roms) {
+function saveRomDiskCache(system, roms, sourceSignature = '') {
   try {
-    fs.writeFileSync(getRomCachePath(system), JSON.stringify(roms), 'utf8');
+    const payload = sourceSignature
+      ? { version: 2, sourceSignature, savedAt: new Date().toISOString(), roms }
+      : roms;
+    fs.writeFileSync(getRomCachePath(system), JSON.stringify(payload), 'utf8');
   } catch (e) {
     console.warn('[rom-cache] Failed to save:', e.message);
   }
@@ -8936,6 +10056,11 @@ const SYSTEM_CONFIGS = {
   },
   dc: {
     label: 'Sega Dreamcast',
+    archivePath: null,
+    downloadBase: null,
+  },
+  gamecube: {
+    label: 'GameCube',
     archivePath: null,
     downloadBase: null,
   },
@@ -9074,6 +10199,14 @@ const LIVE_ARCHIVE_SYSTEM_SOURCES = Object.freeze({
       'https://archive.org/download/dc-chd-zstd-redump/dc-chd-zstd/',
     ],
   },
+  gamecube: {
+    referer: 'https://archive.org/details/GamecubeCollectionByGhostware',
+    useMetadata: true,
+    extensions: ['.iso'],
+    urls: [
+      'https://archive.org/download/GamecubeCollectionByGhostware/',
+    ],
+  },
   xbox: {
     referer: 'https://archive.org/details/microsoft_xbox_numberssymbols',
     extensions: ['.zip'],
@@ -9166,7 +10299,7 @@ const MARKETPLACE_PROVIDERS = {
     id: 'archiveorg',
     name: 'Archive.org',
     status: 'active',
-    systems: ['snes', 'genesis', 'psx', 'ps2', 'ps3', 'psp', 'dc', 'xbox', 'x360'],
+    systems: ['snes', 'genesis', 'psx', 'ps2', 'ps3', 'psp', 'dc', 'gamecube', 'xbox', 'x360'],
   },
 };
 
@@ -9178,10 +10311,11 @@ async function loadArchiveOrgLiveRomList(system) {
   if (!config) return { ok: false, error: `No live Archive.org source configured for ${system}.`, provider: 'archiveorg' };
   const normalizedSystem = String(system || '').toLowerCase();
   const cacheKey = romListCacheKey('archiveorg', normalizedSystem);
-  let diskCached = loadRomDiskCache(normalizedSystem);
+  const sourceSignature = liveArchiveSourceSignature(config);
+  let diskCached = loadRomDiskCache(normalizedSystem, sourceSignature);
   if (normalizedSystem === 'ps3' && Array.isArray(diskCached) && diskCached.length) {
     diskCached = await filterPs3CatalogByDiscKeys(diskCached);
-    saveRomDiskCache(normalizedSystem, diskCached);
+    saveRomDiskCache(normalizedSystem, diskCached, sourceSignature);
   }
   if (normalizedSystem === 'x360' || normalizedSystem === 'xbox') {
     console.log(`[${normalizedSystem}-catalog] disk cache entries:`, Array.isArray(diskCached) ? diskCached.length : 0);
@@ -9190,6 +10324,27 @@ async function loadArchiveOrgLiveRomList(system) {
     romListCache[cacheKey] = diskCached;
   }
   try {
+    if (config.useMetadata) {
+      const metadataPages = await Promise.all((config.urls || []).map(async (url) => {
+        const itemId = archiveItemIdFromUrl(url);
+        if (!itemId) return [];
+        const metadataJson = await fetchArchiveText(`https://archive.org/metadata/${encodeURIComponent(itemId)}`, config.referer || archiveDownloadReferer(url));
+        return parseArchiveMetadataJson(metadataJson, {
+          extensions: config.extensions || ['.zip'],
+          system: normalizedSystem,
+          provider: 'archiveorg',
+          sourceUrl: url,
+        });
+      }));
+      const metadataRoms = metadataPages.flat().sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
+      console.log(`[${normalizedSystem}-catalog] metadata entries:`, metadataRoms.length);
+      console.log(`[${normalizedSystem}-catalog] first metadata entries:`, metadataRoms.slice(0, 8).map(r => r?.name).filter(Boolean));
+      if (metadataRoms.length) {
+        romListCache[cacheKey] = metadataRoms;
+        saveRomDiskCache(normalizedSystem, metadataRoms, sourceSignature);
+        return { ok: true, roms: metadataRoms, cached: false, source: 'archive.org-metadata', provider: 'archiveorg' };
+      }
+    }
     if (normalizedSystem === 'x360' || normalizedSystem === 'xbox' || normalizedSystem === 'ps3') {
       const manifestPages = await Promise.all((config.urls || []).map(async (url) => {
         const itemId = archiveItemIdFromUrl(url);
@@ -9211,7 +10366,7 @@ async function loadArchiveOrgLiveRomList(system) {
       console.log(`[${normalizedSystem}-catalog] first manifest entries:`, manifestRoms.slice(0, 8).map(r => r?.name).filter(Boolean));
       if (manifestRoms.length) {
         romListCache[cacheKey] = manifestRoms;
-        saveRomDiskCache(normalizedSystem, manifestRoms);
+        saveRomDiskCache(normalizedSystem, manifestRoms, sourceSignature);
         return { ok: true, roms: manifestRoms, cached: false, source: 'archive.org-manifest', provider: 'archiveorg' };
       }
     }
@@ -9243,7 +10398,7 @@ async function loadArchiveOrgLiveRomList(system) {
       console.log(`[${normalizedSystem}-catalog] first entries:`, filteredMerged.slice(0, 8).map(r => r?.name).filter(Boolean));
     }
     romListCache[cacheKey] = filteredMerged;
-    saveRomDiskCache(normalizedSystem, filteredMerged);
+    saveRomDiskCache(normalizedSystem, filteredMerged, sourceSignature);
     return { ok: true, roms: filteredMerged, cached: false, source: 'archive.org', provider: 'archiveorg' };
   } catch (e) {
     return { ok: false, error: e.message || `Failed to load ${normalizedSystem.toUpperCase()} catalog.`, provider: 'archiveorg' };
@@ -9456,6 +10611,33 @@ function parseArchiveFilesXml(xml, { extensions = ['.zip'], system = '', provide
   return roms;
 }
 
+function parseArchiveMetadataJson(jsonText, { extensions = ['.zip'], system = '', provider = 'archiveorg', sourceUrl = '' } = {}) {
+  const roms = [];
+  const allowed = new Set(extensions.map(ext => String(ext || '').toLowerCase()));
+  let parsed = null;
+  try {
+    parsed = JSON.parse(String(jsonText || ''));
+  } catch {
+    return roms;
+  }
+  const files = Array.isArray(parsed?.files) ? parsed.files : [];
+  for (const file of files) {
+    const rawName = String(file?.name || '').trim();
+    const lowerName = rawName.toLowerCase();
+    if (!rawName || rawName.endsWith('/') || ![...allowed].some(ext => lowerName.endsWith(ext))) continue;
+    let downloadUrl = '';
+    try {
+      downloadUrl = new URL(encodeURIComponent(rawName), sourceUrl || 'https://archive.org').toString();
+    } catch {}
+    const { cleanName, region, tags } = parseRomFilename(rawName);
+    const sizeBytes = Number(file?.size || 0) || 0;
+    const size = sizeBytes ? formatSizeMain(sizeBytes) : '';
+    const timestamp = file?.mtime ? new Date(Number(file.mtime) * 1000).toISOString().slice(0, 10) : '';
+    roms.push({ name: rawName, cleanName, region, tags, size, sizeBytes, timestamp, downloadUrl, system, provider });
+  }
+  return roms;
+}
+
 function normalizePs3DiscKeyStem(name = '') {
   const raw = String(name || '').trim();
   if (!raw) return '';
@@ -9515,7 +10697,7 @@ function parseRomFilename(filename) {
   const LANG    = 'En|Ja|De|Fr|Es|It|Nl|Pt|Sv|No|Da|Fi|Ru|Pl|Ko|Zh|Ar|He|Tr|Cs|Hu|Ro|Hr|Sr|Bg|Uk|El';
   const rBlk = `\\((?:(?:${REGIONS})(?:,\\s*(?:${REGIONS}))*|(?:${LANG})(?:,\\s*(?:${LANG}))*)\\)`;
   const tBlk = `\\((?:Beta|Proto|Sample|Demo|Rev\\s*\\d*|Hack|Alt|Unl|BIOS|Kiosk|Promo|Aftermarket|Pirate|Virtual Console|Switch Online|Classic Mini|v[\\d.]+)[^)]*\\)`;
-  let base = filename.replace(/\.(zip|chd|cue|bin|img|iso|cso|pbp)$/i, '');
+  let base = filename.replace(/\.(zip|chd|cue|bin|img|iso|gcm|gcz|rvz|wbfs|wia|wad|cso|pbp)$/i, '');
   const firstRegion = base.match(new RegExp(rBlk, 'i'));
   const region = firstRegion ? firstRegion[0].replace(/[()]/g, '').trim() : '';
   const tags = [];
@@ -9552,6 +10734,12 @@ function parseSizeString(str) {
 // ─── ROM launch via emulator manager ────────────────────────────────────────
 
   ipcMain.handle('launch-rom', async (event, { romPath, system, identifier = null, title = null }) => {
+  if (String(system || '').toLowerCase() === 'psx') {
+    return emulatorManager.launchDuckStationRom({ romPath, system, identifier, title });
+  }
+  if (['gamecube', 'wii'].includes(String(system || '').toLowerCase())) {
+    return emulatorManager.launchDolphinRom({ romPath, system, identifier, title });
+  }
   if (String(system || '').toLowerCase() === 'ps2') {
     return emulatorManager.launchPCSX2Rom({ romPath, system, identifier, title });
     }
@@ -10407,8 +11595,14 @@ ipcMain.handle('emulator-launch-standalone', async (_, { emulatorId, args } = {}
 });
 ipcMain.handle('emulator-runtime-status', () => emulatorManager.getRetroArchRuntimeStatus(loadSettings()));
 ipcMain.handle('pcsx2-runtime-status', () => emulatorManager.getPCSX2RuntimeStatus(loadSettings()));
+ipcMain.handle('duckstation-runtime-status', () => emulatorManager.getDuckStationRuntimeStatus(loadSettings()));
+ipcMain.handle('dolphin-runtime-status', () => emulatorManager.getDolphinRuntimeStatus(loadSettings()));
 ipcMain.handle('rpcs3-runtime-status', () => emulatorManager.getRPCS3RuntimeStatus(loadSettings()));
 ipcMain.handle('rpcs3-setup-status', () => getRPCS3SetupStatus(loadSettings()));
+ipcMain.handle('rpcs3-config-get', () => getRPCS3GuideConfig(loadSettings()));
+ipcMain.handle('rpcs3-config-set', async (_, opts = {}) => updateRPCS3GuideConfigValue(opts));
+ipcMain.handle('rpcs3-controller-config-get', () => getRPCS3ControllerConfig(loadSettings()));
+ipcMain.handle('rpcs3-controller-preset-apply', async (_, opts = {}) => applyRPCS3ControllerPreset(opts));
 ipcMain.handle('rpcs3-setup-update', async (_, { welcomeCompleted } = {}) => {
   const settings = loadSettings();
   const next = emulatorManager.normalizeSettings({
@@ -10499,13 +11693,21 @@ function publishEmulatorRuntimeProgress(progress = {}) {
 }
 ipcMain.handle('emulator-runtime-progress-get', () => latestEmulatorRuntimeProgress);
 ipcMain.handle('emulator-runtime-download', async (event) => downloadManagedRetroArchRuntime(createEmulatorRuntimeProgressSender(event.sender)));
+ipcMain.handle('emulator-runtime-uninstall', async () => uninstallManagedEmulatorRuntime('retroarch'));
 ipcMain.handle('pcsx2-runtime-download', async (event) => downloadManagedPCSX2Runtime(createEmulatorRuntimeProgressSender(event.sender)));
-  ipcMain.handle('rpcs3-runtime-download', async (event) => downloadManagedRPCS3Runtime(createEmulatorRuntimeProgressSender(event.sender)));
+ipcMain.handle('pcsx2-runtime-uninstall', async () => uninstallManagedEmulatorRuntime('pcsx2'));
+ipcMain.handle('duckstation-runtime-download', async (event) => downloadManagedDuckStationRuntime(createEmulatorRuntimeProgressSender(event.sender)));
+ipcMain.handle('duckstation-runtime-uninstall', async () => uninstallManagedEmulatorRuntime('duckstation'));
+ipcMain.handle('dolphin-runtime-download', async (event, opts = {}) => downloadManagedDolphinRuntime(createEmulatorRuntimeProgressSender(event.sender), opts));
+ipcMain.handle('dolphin-runtime-uninstall', async (_, opts = {}) => uninstallManagedEmulatorRuntime('dolphin', opts));
+    ipcMain.handle('rpcs3-runtime-download', async (event) => downloadManagedRPCS3Runtime(createEmulatorRuntimeProgressSender(event.sender)));
   ipcMain.handle('rpcs3-runtime-uninstall', async () => uninstallManagedRPCS3Runtime());
   ipcMain.handle('rpcs3-firmware-download', async (event) => downloadManagedRPCS3Firmware(createEmulatorRuntimeProgressSender(event.sender)));
   ipcMain.handle('rpcs3-firmware-install', async (event) => installManagedRPCS3Firmware(createEmulatorRuntimeProgressSender(event.sender)));
   ipcMain.handle('vlc-runtime-download', async (event) => downloadManagedVLCRuntime(createEmulatorRuntimeProgressSender(event.sender)));
+ipcMain.handle('vlc-runtime-uninstall', async () => uninstallManagedEmulatorRuntime('vlc'));
 ipcMain.handle('xenia-runtime-download', async (event) => downloadManagedXeniaRuntime(createEmulatorRuntimeProgressSender(event.sender)));
+ipcMain.handle('xenia-runtime-uninstall', async () => uninstallManagedEmulatorRuntime('xenia'));
 ipcMain.handle('emulator-core-download', async (event, { system, coreFileName } = {}) => downloadManagedRetroArchCore(system, coreFileName, createEmulatorRuntimeProgressSender(event.sender)));
 ipcMain.handle('emulator-runtime-import', async (_, { executablePath } = {}) => {
   const result = emulatorManager.importRetroArchRuntime(executablePath);
@@ -10583,6 +11785,47 @@ ipcMain.handle('vlc-runtime-import', async (_, { executablePath } = {}) => {
           ...((settings.emulators || {}).vlc || {}),
           mode: 'bundled',
           customExecutablePath: String(settings?.emulators?.vlc?.customExecutablePath || '').trim(),
+        },
+      },
+    });
+    saveSettings(next);
+  }
+  return result;
+});
+ipcMain.handle('duckstation-runtime-import', async (_, { executablePath } = {}) => {
+  const result = emulatorManager.importDuckStationRuntime(executablePath);
+  if (result?.ok) {
+    const settings = loadSettings();
+    const next = emulatorManager.normalizeSettings({
+      ...settings,
+      emulators: {
+        ...(settings.emulators || {}),
+        duckstation: {
+          ...((settings.emulators || {}).duckstation || {}),
+          mode: 'bundled',
+          customExecutablePath: String(settings?.emulators?.duckstation?.customExecutablePath || '').trim(),
+          biosPath: String(settings?.emulators?.duckstation?.biosPath || '').trim(),
+        },
+      },
+    });
+    saveSettings(next);
+  }
+  return result;
+});
+ipcMain.handle('dolphin-runtime-import', async (_, { executablePath, channel = 'stable' } = {}) => {
+  const normalizedChannel = String(channel || '').trim().toLowerCase() === 'development' ? 'development' : 'stable';
+  const result = emulatorManager.importDolphinRuntime(executablePath, { channel: normalizedChannel });
+  if (result?.ok) {
+    const settings = loadSettings();
+    const next = emulatorManager.normalizeSettings({
+      ...settings,
+      emulators: {
+        ...(settings.emulators || {}),
+        dolphin: {
+          ...((settings.emulators || {}).dolphin || {}),
+          mode: 'bundled',
+          buildChannel: normalizedChannel,
+          customExecutablePath: String(settings?.emulators?.dolphin?.customExecutablePath || '').trim(),
         },
       },
     });
@@ -10961,6 +12204,7 @@ ipcMain.handle('ra-recent-unlocks', async (_, { minutes = 10 } = {}) => {
 });
 
 ipcMain.handle('ra-game-search', async (_, { cleanName, system }) => fetchRaGameData(cleanName, system));
+ipcMain.handle('rpcs3-trophies-for-game', async (_, opts = {}) => getRPCS3TrophiesForGame(opts));
 ipcMain.handle('youtube-playlist-details', async (_, { playlistId } = {}) => fetchYouTubePlaylistDetails(playlistId));
 ipcMain.handle('archive-video-details', async (_, { identifier } = {}) => fetchArchiveVideoCollectionDetails(identifier));
 

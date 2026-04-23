@@ -141,7 +141,7 @@
     }
     .setup-vk-modal.on{display:flex}
     .setup-vk-panel{
-      position:relative;width:1584px;height:1080px;padding:96px 318px 92px 72px;
+      position:relative;width:1584px;height:1080px;padding:270px 318px 36px 72px;
       background:transparent;
       border-radius:0;box-shadow:none;border:none;overflow:hidden;transform:translateX(-1584px);transition:transform 250ms ease-out;
     }
@@ -154,21 +154,33 @@
     .setup-vk-panel>.setup-vk-tile,.setup-vk-panel>.setup-vk-edge{position:absolute;z-index:0}
     .setup-vk-title{font-size:34px;color:#222;margin-bottom:12px;text-shadow:0 1px 0 rgba(255,255,255,.55)}
     .setup-vk-target{min-height:76px;padding:14px 18px;background:rgba(255,255,255,.62);border:2px solid rgba(0,0,0,.18);font-size:31px;color:#111;margin-bottom:22px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;box-shadow:inset 0 2px 6px rgba(0,0,0,.12),0 1px 0 rgba(255,255,255,.55)}
+    .setup-vk-caret{display:inline-block;width:3px;height:35px;margin:0 2px -6px;background:#111;animation:setup-vk-caret-blink 1s steps(2,start) infinite}
+    @keyframes setup-vk-caret-blink{50%{opacity:0}}
     .setup-vk-layout{display:grid;grid-template-columns:172px 1fr 172px;gap:22px;align-items:stretch}
-    .setup-vk-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:12px;align-content:start}
+    .setup-vk-grid{position:relative;display:grid;grid-template-columns:repeat(10,1fr);gap:8px;align-content:start}
+    .setup-vk-grid::after{content:'';position:absolute;left:calc((100% - 72px) * .7 + 52px);top:0;width:2px;height:288px;background:linear-gradient(180deg,rgba(80,86,72,.08),rgba(80,86,72,.5),rgba(80,86,72,.08));box-shadow:1px 0 0 rgba(255,255,255,.45);pointer-events:none}
     .setup-vk-side{display:grid;grid-template-rows:repeat(3,112px) 1fr;gap:14px}
     .setup-vk-side.right{grid-template-rows:repeat(2,112px) 1fr}
     .setup-vk-side-card{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:112px;padding:12px 10px;border-radius:13px;background:linear-gradient(180deg,rgba(249,250,246,.86),rgba(210,213,204,.72));border:2px solid rgba(92,92,86,.34);box-shadow:inset 0 1px 0 rgba(255,255,255,.72),0 2px 5px rgba(0,0,0,.16);font-size:22px;color:#111}
     .setup-vk-side-card.dim{opacity:.45}
-    .setup-vk-side-card.done{min-height:238px;background:linear-gradient(180deg,rgba(224,255,197,.92),rgba(132,217,91,.86))}
-    .setup-vk-side-card img{width:66px;height:44px;object-fit:contain;filter:drop-shadow(0 1px 1px rgba(0,0,0,.22))}
+    .setup-vk-side-card.caps-on,.setup-vk-side-card.symbols-on,.setup-vk-side-card.accents-on{opacity:1;box-shadow:inset 0 1px 0 rgba(255,255,255,.72),0 0 0 4px rgba(132,203,70,.7),0 2px 5px rgba(0,0,0,.16)}
+    .setup-vk-side-card.done{min-height:112px;background:linear-gradient(180deg,rgba(249,250,246,.86),rgba(210,213,204,.72))}
+    .setup-vk-side-card.sel{filter:brightness(1.05);box-shadow:0 0 0 4px rgba(132,203,70,.92),0 0 16px rgba(132,203,70,.45),inset 0 1px 0 rgba(255,255,255,.72)}
+    .setup-vk-side-card img{width:66px;height:44px;object-fit:contain;filter:brightness(0) drop-shadow(0 1px 1px rgba(0,0,0,.22))}
     .setup-vk-side-card .setup-vk-stick-icon{width:58px;height:58px}
-    .setup-vk-key{height:66px;border:none;background:center/100% 100% no-repeat transparent;font-family:inherit;font-size:24px;color:#222;cursor:pointer;position:relative}
+    .setup-vk-key{height:66px;border:none;background:transparent;font-family:inherit;font-size:24px;color:#222;cursor:pointer;position:relative}
+    .setup-vk-key::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(253,253,250,.96),rgba(198,202,194,.9));border:2px solid rgba(78,78,72,.38);border-radius:10px;box-shadow:inset 0 1px 0 rgba(255,255,255,.8),inset 0 -5px 12px rgba(120,126,112,.24),0 2px 4px rgba(0,0,0,.18);pointer-events:none}
+    .setup-vk-key.text-key::before{background:linear-gradient(180deg,rgba(253,253,250,.96),rgba(198,202,194,.9));-webkit-mask:none;mask:none;border:2px solid rgba(78,78,72,.38);border-radius:10px;box-shadow:inset 0 1px 0 rgba(255,255,255,.8),inset 0 -5px 12px rgba(120,126,112,.24),0 2px 4px rgba(0,0,0,.18)}
     .setup-vk-key.sel{filter:brightness(1.05);box-shadow:0 0 0 4px rgba(132,203,70,.92),0 0 16px rgba(132,203,70,.45);border-radius:10px}
-    .setup-vk-key-label{position:absolute;inset:0;display:grid;place-items:center;font-size:25px;color:#111;text-shadow:0 1px 0 rgba(255,255,255,.55);pointer-events:none}
+    .setup-vk-key-label{position:absolute;inset:0;z-index:1;display:grid;place-items:center;font-size:25px;line-height:1;color:#111;text-shadow:0 1px 0 rgba(255,255,255,.55);pointer-events:none;transform:translateY(-3px)}
+    .setup-vk-key-label.with-hint{display:flex;align-items:center;justify-content:flex-start;gap:12px;box-sizing:border-box;padding-left:22px;transform:translateY(-3px)}
+    .setup-vk-key-hint-icon{width:31px;height:31px;object-fit:contain;flex:0 0 auto}
+    .setup-vk-key-spacer{height:66px}
     .setup-vk-key.wide-2{grid-column:span 2}
     .setup-vk-key.wide-3{grid-column:span 3}
-    .setup-vk-hints{display:flex;gap:28px;margin-top:20px;font-size:21px;color:rgba(0,0,0,.68)}
+    .setup-vk-key.wide-5{grid-column:span 5}
+    .setup-vk-grid.symbols-on::after,.setup-vk-grid.accents-on::after{display:none}
+    .setup-vk-hints{display:flex;justify-content:flex-end;gap:28px;margin-top:20px;font-size:21px;color:rgba(0,0,0,.68)}
     .setup-vk-hints span{display:flex;align-items:center;gap:7px}
     .setup-vk-hints img{width:24px;height:24px;object-fit:contain}
   </style>
@@ -234,21 +246,18 @@
         <div class="setup-vk-layout">
           <div class="setup-vk-side left">
             <div class="setup-vk-side-card"><img src="file:///C:/Projects/SKALD/assets/icons/Controls/xbox_lb.webp" alt="">Cursor</div>
-            <div class="setup-vk-side-card dim"><img src="file:///C:/Projects/SKALD/assets/icons/Controls/xbox_lt.webp" alt="">Symbols</div>
-            <div class="setup-vk-side-card dim"><img class="setup-vk-stick-icon" src="file:///C:/Projects/SKALD/assets/icons/Controls/xbox_stick_l.webp" alt="">Caps</div>
+            <div id="setup-vk-symbols-card" class="setup-vk-side-card dim"><img src="file:///C:/Projects/SKALD/assets/icons/Controls/xbox_lt.webp" alt="">Symbols</div>
+            <div id="setup-vk-caps-card" class="setup-vk-side-card dim"><img class="setup-vk-stick-icon" src="file:///C:/Projects/SKALD/assets/icons/Controls/xbox_stick_side_l.webp" alt="">Caps</div>
           </div>
           <div id="setup-vk-grid" class="setup-vk-grid"></div>
           <div class="setup-vk-side right">
             <div class="setup-vk-side-card"><img src="file:///C:/Projects/SKALD/assets/icons/Controls/xbox_rb.webp" alt="">Cursor</div>
-            <div class="setup-vk-side-card dim"><img src="file:///C:/Projects/SKALD/assets/icons/Controls/xbox_rt.webp" alt="">Accents</div>
-            <div class="setup-vk-side-card done"><img src="file:///C:/Projects/SKALD/assets/icons/Controls/button-a.webp" alt="">Done</div>
+            <div id="setup-vk-accents-card" class="setup-vk-side-card dim"><img src="file:///C:/Projects/SKALD/assets/icons/Controls/xbox_rt.webp" alt="">Accents</div>
+            <div id="setup-vk-done-card" class="setup-vk-side-card done"><img src="file:///C:/Projects/SKALD/assets/icons/Controls/xbox_button_menu.webp" alt="">Done</div>
           </div>
         </div>
         <div class="setup-vk-hints">
-          <span><img src="file:///C:/Projects/SKALD/assets/icons/Controls/button-a.webp" alt="">Type</span>
-          <span><img src="file:///C:/Projects/SKALD/assets/icons/Controls/button-x.webp" alt="">Backspace</span>
-          <span><img src="file:///C:/Projects/SKALD/assets/icons/Controls/button-y.webp" alt="">Space</span>
-          <span><img src="file:///C:/Projects/SKALD/assets/icons/Controls/button-b.webp" alt="">Cancel</span>
+          <span><img src="file:///C:/Projects/SKALD/assets/icons/Controls/button-b.webp" alt="">Back</span>
         </div>
       </div>
     </div>
@@ -263,16 +272,32 @@
     const SETUP_RIGHT_EDGE=1873;
     const SETUP_CONTENT_OFFSET=170;
     const folderBrowserState={open:false,title:'Select Folder',currentPath:'',parentPath:null,entries:[],selectedIdx:0,resolve:null,error:''};
-    const setupVkState={open:false,value:'',sel:0,onSubmit:null,title:'Keyboard'};
+    const setupVkState={open:false,value:'',sel:0,onSubmit:null,title:'Keyboard',caps:false,symbols:false,accents:false,doneSel:false,cursor:0};
     const SETUP_VK_KEYS=[
+      'a','b','c','d','e','f','g','1','2','3',
+      'h','i','j','k','l','m','n','4','5','6',
+      'o','p','q','r','s','t','u','7','8','9',
+      'v','w','x','y','z','-','@','_','0','.',
+      {label:'Space',value:' ',cls:'wide-5 text-key',hint:'y'},
+      {label:'Backspace',action:'backspace',cls:'wide-5 text-key',hint:'x'}
+    ];
+    const SETUP_VK_SYMBOL_KEYS=[
       '1','2','3','4','5','6','7','8','9','0',
-      'q','w','e','r','t','y','u','i','o','p',
-      'a','s','d','f','g','h','j','k','l','@',
-      'z','x','c','v','b','n','m','.','-','_',
-      {label:'Space',value:' ',cls:'wide-3'},
-      {label:'Back',action:'backspace',cls:'wide-2'},
-      {label:'Clear',action:'clear',cls:'wide-2'},
-      {label:'Done',action:'done',cls:'wide-3'}
+      ',',';',':',"'",'"','!','?','¡','¿','%',
+      '[',']','{','}','`','$','£','«','»','#',
+      '<','>','(',')','€','¥','¢','~','^','\\',
+      '|','=','*','/','+','-','@','_','&','.',
+      {label:'Space',value:' ',cls:'wide-5 text-key',hint:'y'},
+      {label:'Backspace',action:'backspace',cls:'wide-5 text-key',hint:'x'}
+    ];
+    const SETUP_VK_ACCENT_KEYS=[
+      '1','2','3','4','5','6','7','8','9','0',
+      'À','Á','Â','Ã','Ä','Å','Ñ','È','É','Ê',
+      'Ë','Ì','Í','Î','Ï','Ç','Ð','Ù','Ú','Û',
+      'Ü','Ò','Ó','Ô','Ö','Õ','Ø','Œ','Æ','Ç',
+      'Ù','Ý','·','•','_','Ü','µ','§','_','Ð',
+      {label:'Space',value:' ',cls:'wide-5 text-key',hint:'y'},
+      {label:'Backspace',action:'backspace',cls:'wide-5 text-key',hint:'x'}
     ];
     function esc(value){
       return String(value ?? '').replace(/[&<>"']/g,(ch)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -606,6 +631,20 @@
       const target=document.getElementById('setup-vk-target');
       const grid=document.getElementById('setup-vk-grid');
       if(!modal || !grid) return;
+      const capsCard=document.getElementById('setup-vk-caps-card');
+      if(capsCard) capsCard.classList.toggle('caps-on',setupVkState.caps);
+      if(capsCard) capsCard.onclick=toggleSetupKeyboardCaps;
+      const symbolsCard=document.getElementById('setup-vk-symbols-card');
+      if(symbolsCard) symbolsCard.classList.toggle('symbols-on',setupVkState.symbols);
+      if(symbolsCard) symbolsCard.onclick=toggleSetupKeyboardSymbols;
+      grid.classList.toggle('symbols-on',setupVkState.symbols);
+      const accentsCard=document.getElementById('setup-vk-accents-card');
+      if(accentsCard) accentsCard.classList.toggle('accents-on',setupVkState.accents);
+      if(accentsCard) accentsCard.onclick=toggleSetupKeyboardAccents;
+      grid.classList.toggle('accents-on',setupVkState.accents);
+      const doneCard=document.getElementById('setup-vk-done-card');
+      if(doneCard) doneCard.classList.toggle('sel',setupVkState.doneSel);
+      if(doneCard) doneCard.onclick=()=>closeSetupKeyboard(true);
       const keyAsset=(obj)=>{
         const raw=String(obj.asset || obj.value || obj.label || '').toLowerCase();
         const map={
@@ -630,18 +669,28 @@
           '=':'keyboard_equals.webp',
           '+':'keyboard_plus.webp',
         };
-        const file=map[raw] || (/^[a-z0-9]$/.test(raw) ? `keyboard_${raw}.webp` : 'keyboard_space.webp');
+        const baseFile=map[raw] || (/^[a-z0-9]$/.test(raw) ? `keyboard_${raw}.webp` : 'keyboard_space.webp');
+        const file=baseFile.replace(/\.webp$/,'_outline.webp');
         return `file:///C:/Projects/SKALD/assets/icons/Controls/Keyboard/${file}`;
       };
       if(title) title.textContent=setupVkState.title || 'Keyboard';
-      if(target) target.textContent=setupVkState.value || '';
-      grid.innerHTML=SETUP_VK_KEYS.map((key,idx)=>{
+      renderSetupKeyboardTarget();
+      const keys=activeSetupKeyboardKeys();
+      grid.innerHTML=keys.map((key,idx)=>{
         const obj=typeof key==='string' ? {label:key,value:key,cls:''} : key;
+        if(obj.disabled) return '<div class="setup-vk-key-spacer" aria-hidden="true"></div>';
         const action=obj.action || obj.value || '';
-        const needsLabel=['_','@'].includes(String(obj.value||obj.label||'')) || ['done','clear'].includes(String(obj.action||''));
-        return `<button class="setup-vk-key ${obj.cls||''} ${idx===setupVkState.sel?'sel':''}" data-vk-idx="${idx}" aria-label="${esc(obj.label||obj.value||action)}" style="background-image:url('${keyAsset({...obj,asset:obj.action||obj.value||obj.label})}')">${needsLabel?`<span class="setup-vk-key-label">${esc(obj.label||obj.value||'')}</span>`:''}</button>`;
+        const rawLabel=obj.label || obj.value || '';
+        const labelText=/^[a-z]$/.test(String(rawLabel)) && setupVkState.caps ? String(rawLabel).toUpperCase() : rawLabel;
+        const hintIcon=obj.hint==='y' ? 'file:///C:/Projects/SKALD/assets/icons/Controls/button-y.webp' : obj.hint==='x' ? 'file:///C:/Projects/SKALD/assets/icons/Controls/button-x.webp' : '';
+        const needsLabel=true;
+        const labelMarkup=obj.hint
+          ? `<span class="setup-vk-key-label with-hint"><img class="setup-vk-key-hint-icon" src="${hintIcon}" alt="${esc(String(obj.hint).toUpperCase())}">${esc(labelText)}</span>`
+          : (needsLabel ? `<span class="setup-vk-key-label">${esc(labelText)}</span>` : '');
+        return `<button class="setup-vk-key ${obj.cls||''} ${!setupVkState.doneSel&&idx===setupVkState.sel?'sel':''}" data-vk-idx="${idx}" aria-label="${esc(labelText||action)}">${labelMarkup}</button>`;
       }).join('');
       grid.querySelectorAll('.setup-vk-key').forEach(btn=>btn.addEventListener('click',()=>{
+        setupVkState.doneSel=false;
         setupVkState.sel=Number(btn.dataset.vkIdx || 0);
         activateSetupKeyboardKey();
       }));
@@ -650,6 +699,11 @@
       setupVkState.open=true;
       setupVkState.value=value;
       setupVkState.sel=0;
+      setupVkState.caps=false;
+      setupVkState.symbols=false;
+      setupVkState.accents=false;
+      setupVkState.doneSel=false;
+      setupVkState.cursor=String(value || '').length;
       setupVkState.onSubmit=typeof onSubmit==='function' ? onSubmit : null;
       setupVkState.title=title;
       document.getElementById('setup-vk-modal')?.classList.add('on');
@@ -663,21 +717,94 @@
       document.getElementById('setup-vk-modal')?.classList.remove('on');
       if(submit && onSubmit) onSubmit(value);
     }
+    function renderSetupKeyboardTarget(){
+      const target=document.getElementById('setup-vk-target');
+      if(!target) return;
+      const value=setupVkState.value || '';
+      setupVkState.cursor=Math.max(0,Math.min(value.length,setupVkState.cursor));
+      const before=value.slice(0,setupVkState.cursor);
+      const after=value.slice(setupVkState.cursor);
+      target.innerHTML=`${esc(before)}<span class="setup-vk-caret" aria-hidden="true"></span>${esc(after)}`;
+    }
+    function moveSetupKeyboardCursor(delta){
+      const value=setupVkState.value || '';
+      setupVkState.cursor=Math.max(0,Math.min(value.length,setupVkState.cursor+delta));
+      renderSetupKeyboardTarget();
+    }
     function moveSetupKeyboard(delta){
-      setupVkState.sel=Math.max(0,Math.min(SETUP_VK_KEYS.length-1,setupVkState.sel+delta));
+      const keys=activeSetupKeyboardKeys();
+      if(setupVkState.doneSel){
+        if(delta<0){
+          setupVkState.doneSel=false;
+          setupVkState.sel=9;
+          renderSetupKeyboard();
+        }
+        return;
+      }
+      if(delta>0 && (setupVkState.sel%10)===9){
+        setupVkState.doneSel=true;
+        renderSetupKeyboard();
+        return;
+      }
+      const max=keys.length-1;
+      let next=Math.max(0,Math.min(max,setupVkState.sel+delta));
+      const step=delta>=0 ? 1 : -1;
+      let guard=0;
+      while(keys[next]?.disabled && guard<keys.length){
+        next=Math.max(0,Math.min(max,next+step));
+        if((next===0 && step<0) || (next===max && step>0)) break;
+        guard+=1;
+      }
+      setupVkState.sel=keys[next]?.disabled ? setupVkState.sel : next;
       renderSetupKeyboard();
     }
     function applySetupKeyboardAction(action){
-      if(action==='backspace') setupVkState.value=setupVkState.value.slice(0,-1);
-      else if(action==='clear') setupVkState.value='';
+      const value=setupVkState.value || '';
+      setupVkState.cursor=Math.max(0,Math.min(value.length,setupVkState.cursor));
+      if(action==='backspace'){
+        if(setupVkState.cursor>0){
+          setupVkState.value=value.slice(0,setupVkState.cursor-1)+value.slice(setupVkState.cursor);
+          setupVkState.cursor-=1;
+        }
+      }
+      else if(action==='clear'){ setupVkState.value=''; setupVkState.cursor=0; }
       else if(action==='done'){closeSetupKeyboard(true);return;}
-      else setupVkState.value+=action;
+      else{
+        setupVkState.value=value.slice(0,setupVkState.cursor)+action+value.slice(setupVkState.cursor);
+        setupVkState.cursor+=String(action).length;
+      }
       renderSetupKeyboard();
     }
+    function toggleSetupKeyboardCaps(){
+      setupVkState.caps=!setupVkState.caps;
+      renderSetupKeyboard();
+    }
+    function toggleSetupKeyboardSymbols(){
+      setupVkState.symbols=!setupVkState.symbols;
+      if(setupVkState.symbols) setupVkState.accents=false;
+      setupVkState.sel=Math.min(setupVkState.sel,activeSetupKeyboardKeys().length-1);
+      setupVkState.doneSel=false;
+      renderSetupKeyboard();
+    }
+    function toggleSetupKeyboardAccents(){
+      setupVkState.accents=!setupVkState.accents;
+      if(setupVkState.accents) setupVkState.symbols=false;
+      setupVkState.sel=Math.min(setupVkState.sel,activeSetupKeyboardKeys().length-1);
+      setupVkState.doneSel=false;
+      renderSetupKeyboard();
+    }
+    function activeSetupKeyboardKeys(){
+      if(setupVkState.accents) return SETUP_VK_ACCENT_KEYS;
+      return setupVkState.symbols ? SETUP_VK_SYMBOL_KEYS : SETUP_VK_KEYS;
+    }
     function activateSetupKeyboardKey(){
-      const key=SETUP_VK_KEYS[setupVkState.sel];
+      if(setupVkState.doneSel){ closeSetupKeyboard(true); return; }
+      const key=activeSetupKeyboardKeys()[setupVkState.sel];
+      if(!key || key.disabled) return;
       const obj=typeof key==='string' ? {value:key} : key;
-      applySetupKeyboardAction(obj.action || obj.value || '');
+      const value=obj.value || '';
+      const action=obj.action || (/^[a-z]$/.test(String(value)) && setupVkState.caps ? String(value).toUpperCase() : value);
+      applySetupKeyboardAction(action);
     }
     async function createFolderBrowserFolderNamed(rawName){
       if(!folderBrowserState.open) return false;
@@ -751,6 +878,11 @@
         else if(event.key==='ArrowRight') moveSetupKeyboard(1);
         else if(event.key==='ArrowUp') moveSetupKeyboard(-10);
         else if(event.key==='ArrowDown') moveSetupKeyboard(10);
+        else if(event.key==='PageUp') moveSetupKeyboardCursor(-1);
+        else if(event.key==='PageDown') moveSetupKeyboardCursor(1);
+        else if(event.key==='CapsLock') toggleSetupKeyboardCaps();
+        else if(event.key==='Tab') toggleSetupKeyboardSymbols();
+        else if(event.key==='AltGraph') toggleSetupKeyboardAccents();
         else if(event.key==='Enter' || event.key===' ') activateSetupKeyboardKey();
         else if(event.key==='Backspace') applySetupKeyboardAction('backspace');
         else if(event.key==='Escape' || event.key.toLowerCase()==='b') closeSetupKeyboard(false);
@@ -778,7 +910,7 @@
       else if(event.key==='Escape' || event.key==='Backspace'){back();}
       else if(event.key.toLowerCase()==='y'){await complete(true);}
     });
-    const PAD={A:0,B:1,X:2,Y:3,LB:4,RB:5,DU:12,DD:13,DL:14,DR:15};
+    const PAD={A:0,B:1,X:2,Y:3,LB:4,RB:5,START:9,LS:10,DU:12,DD:13,DL:14,DR:15};
     let prev={};
     function pollGamepad(){
       const gp=navigator.getGamepads?.().find(Boolean);
@@ -790,8 +922,14 @@
           if(just(PAD.DU)) moveSetupKeyboard(-10);
           if(just(PAD.DD)) moveSetupKeyboard(10);
           if(just(PAD.A)) activateSetupKeyboardKey();
+          if(just(PAD.LB)) moveSetupKeyboardCursor(-1);
+          if(just(PAD.RB)) moveSetupKeyboardCursor(1);
+          if(just(PAD.LT)) toggleSetupKeyboardSymbols();
+          if(just(PAD.RT)) toggleSetupKeyboardAccents();
           if(just(PAD.X)) applySetupKeyboardAction('backspace');
           if(just(PAD.Y)) applySetupKeyboardAction(' ');
+          if(just(PAD.LS)) toggleSetupKeyboardCaps();
+          if(just(PAD.START)) closeSetupKeyboard(true);
           if(just(PAD.B)) closeSetupKeyboard(false);
         }else if(folderBrowserState.open){
           if(just(PAD.DU)) moveFolderBrowserSelection(-1);
