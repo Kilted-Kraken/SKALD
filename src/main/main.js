@@ -58,6 +58,9 @@ const RPCS3_COMPATIBILITY_CACHE_TTL_MS = 5 * 60 * 1000;
 const RPCS3_FIRMWARE_URL = 'http://dus01.ps3.update.playstation.net/update/ps3/image/us/2026_0318_a2b60b6ac1d2e49e230144345616927c/PS3UPDAT.PUP';
 const PS3_DISC_KEY_ARCHIVE_BASE = 'https://archive.org/download/sony-playstation-3-disc-keys-dat-cuesheets/Sony%20-%20PlayStation%203%20-%20Disc%20Keys%20%283388%29%20%282021-06-05%2001-59-33%29.zip';
 const PS3_DISC_KEY_CATALOG_URL = 'https://ia800701.us.archive.org/view_archive.php?archive=/32/items/sony-playstation-3-disc-keys-dat-cuesheets/Sony%20-%20PlayStation%203%20-%20Disc%20Keys%20%283388%29%20%282021-06-05%2001-59-33%29.zip';
+const WIIU_DISC_KEY_ARCHIVE_BASE = 'https://archive.org/download/nintendo-wii-u-disc-keys-483-2021-06-08-02-04-20';
+const WIIU_DISC_KEY_CATALOG_URL = 'https://archive.org/download/nintendo-wii-u-disc-keys-483-2021-06-08-02-04-20';
+const CEMU_KEYS_ARCHIVE_URL = 'https://archive.org/download/cemu-keys/Cemu%20keys.rar';
 const BUNDLED_7ZIP_DIR  = app.isPackaged
   ? path.join(process.resourcesPath, 'tools', '7zip')
   : path.join(APP_ROOT_DIR, 'assets', 'tools', '7zip');
@@ -69,11 +72,13 @@ const activeRPCS3InstallSnapshots = new Map();
 const activeRPCS3AutoRelaunches = new Map();
 const activeRPCS3PkgInstallWatchers = new Map();
 const activeRPCS3WelcomeWatchers = new Map();
+const activeCemuGettingStartedWatchers = new Map();
 let skaldLaunchShieldTimer = null;
 let skaldLaunchShieldState = null;
 const activeRPCS3FirmwareWatchers = new Map();
 const DOWNLOAD_INACTIVITY_TIMEOUT_MS = 90000;
 let ps3DiscKeyIndexCache = null;
+let wiiuDiscKeyIndexCache = null;
 let rpcs3CompatibilityDbCache = null;
 let latestUpdaterState = {
   status: app.isPackaged ? 'idle' : 'dev',
@@ -1283,6 +1288,24 @@ const emulatorManager = createEmulatorManager({
       });
       return;
     }
+    if (emulatorId === 'cemu') {
+      const sessionId = String(session?.id || '');
+      const hasLaunchPath = !!String(session?.romPath || session?.sourcePath || '').trim();
+      if (hasLaunchPath) {
+        publishEmulatorRuntimeProgress({
+          stage: 'game-launching',
+          percent: 42,
+          message: 'Preparing Wii U game…',
+        });
+        setTimeout(() => {
+          releaseSkaldLaunchShield();
+          focusEmulatorSessionRepeatedly(sessionId, { attempts: 8, intervalMs: 650 });
+        }, 1800);
+        setTimeout(() => publishEmulatorRuntimeProgress({ stage: 'complete', percent: 100, message: 'Game launched.' }), 3200);
+      }
+      startCemuGettingStartedWatcher(session);
+      return;
+    }
     if (emulatorId === 'rpcs3') {
       const gameRoot = getManagedRPCS3GameRoot();
       const discRoot = getManagedRPCS3DiscRoot();
@@ -1382,6 +1405,9 @@ const emulatorManager = createEmulatorManager({
         maybeAutoRelaunchRPCS3InstalledTitle(session, remembered);
       }
     }
+    if (emulatorId === 'cemu') {
+      clearCemuGettingStartedWatcher(String(session?.id || ''));
+    }
   },
 });
 
@@ -1390,13 +1416,26 @@ function normalizeStoatProfiles(settings) {
   if (!Array.isArray(settings.stoatProfiles)) settings.stoatProfiles = [];
   settings.stoatProfiles = settings.stoatProfiles
     .filter(profile => profile && typeof profile === 'object' && profile.id && profile.session)
-    .map(profile => ({
-      id: String(profile.id),
-      username: String(profile.username || ''),
-      displayName: String(profile.displayName || profile.display_name || profile.username || ''),
-      avatar: String(profile.avatar || ''),
-      session: profile.session,
-    }));
+    .map(profile => {
+      const snapshot = profile.gamercardSnapshot && typeof profile.gamercardSnapshot === 'object'
+        ? {
+            name: String(profile.gamercardSnapshot.name || ''),
+            avatar: String(profile.gamercardSnapshot.avatar || ''),
+            games: String(profile.gamercardSnapshot.games ?? '0'),
+            gamerscore: String(profile.gamercardSnapshot.gamerscore ?? '0'),
+            achievements: String(profile.gamercardSnapshot.achievements ?? '0'),
+            updatedAt: String(profile.gamercardSnapshot.updatedAt || ''),
+          }
+        : null;
+      return {
+        id: String(profile.id),
+        username: String(profile.username || ''),
+        displayName: String(profile.displayName || profile.display_name || profile.username || ''),
+        avatar: String(profile.avatar || ''),
+        session: profile.session,
+        ...(snapshot ? { gamercardSnapshot: snapshot } : {}),
+      };
+    });
   return settings.stoatProfiles;
 }
 function upsertStoatProfile(settings, user, session) {
@@ -3614,6 +3653,63 @@ async function resolveDolphinStableWindowsDownload({ channel = 'stable' } = {}) 
   };
 }
 
+async function resolveCemuStableWindowsDownload() {
+  const releasesUrl = 'https://api.github.com/repos/cemu-project/Cemu/releases?per_page=10';
+  const releases = await fetchJson(releasesUrl, { timeoutMs: 30000 });
+  if (!Array.isArray(releases) || !releases.length) {
+    return { ok: false, error: 'Could not read the current Cemu releases from GitHub.' };
+  }
+  const findWindowsAsset = (entry) => {
+    const assets = Array.isArray(entry?.assets) ? entry.assets : [];
+    const isPackage = (asset) => {
+      const name = String(asset?.name || '').toLowerCase();
+      return !!name
+        && (name.endsWith('.zip') || name.endsWith('.7z'))
+        && name.includes('cemu')
+        && !name.includes('debug')
+        && !name.includes('symbols')
+        && !name.includes('source')
+        && !name.includes('src')
+        && !name.includes('installer')
+        && !name.includes('setup')
+        && !name.includes('arm64')
+        && !name.includes('aarch64')
+        && !name.includes('linux')
+        && !name.includes('ubuntu')
+        && !name.includes('debian')
+        && !name.includes('appimage')
+        && !name.includes('flatpak')
+        && !name.includes('mac')
+        && !name.includes('android');
+    };
+    return assets.find(asset => {
+      const name = String(asset?.name || '').toLowerCase();
+      return isPackage(asset) && (name.includes('windows-x64') || name.includes('win-x64') || name.includes('win64') || /(^|[-_])x64([-_.]|$)/i.test(name));
+    }) || assets.find(asset => {
+      const name = String(asset?.name || '').toLowerCase();
+      return isPackage(asset) && name.includes('windows');
+    }) || assets.find(asset => isPackage(asset)) || null;
+  };
+  const stableRelease = releases.find(entry => !entry?.draft && !entry?.prerelease && findWindowsAsset(entry)) || null;
+  const fallbackRelease = releases.find(entry => !entry?.draft && findWindowsAsset(entry)) || null;
+  const release = stableRelease || fallbackRelease;
+  if (!release) {
+    return { ok: false, error: 'Could not find a Cemu release with downloadable Windows assets.' };
+  }
+  const asset = findWindowsAsset(release);
+  if (!asset?.browser_download_url) {
+    return { ok: false, error: 'Could not find a Windows Cemu package in the current release assets.' };
+  }
+  return {
+    ok: true,
+    version: String(release.tag_name || release.name || '').trim(),
+    archiveUrl: asset.browser_download_url,
+    archiveFileName: asset.name,
+    sourcePage: String(release.html_url || 'https://github.com/cemu-project/Cemu/releases'),
+    prerelease: !!release.prerelease,
+  };
+}
+
 async function resolveRPCS3StableWindowsDownload() {
   const sourcePage = 'https://rpcs3.net/download';
   const latestWindowsUrl = 'https://rpcs3.net/latest-windows';
@@ -3849,6 +3945,33 @@ function findDolphinExecutableRecursive(dirPath) {
       }
       const lower = String(entry.name || '').toLowerCase();
       if (lower.startsWith('dolphin') && lower.endsWith('.exe') && !lower.includes('updater') && !lower.includes('uninstall')) {
+        return fullPath;
+      }
+    }
+  }
+  return '';
+}
+
+function findCemuExecutableRecursive(dirPath) {
+  if (!dirPath || !fs.existsSync(dirPath)) return '';
+  const exactNames = ['Cemu.exe', 'cemu.exe'];
+  for (const name of exactNames) {
+    const found = findFileRecursive(dirPath, name);
+    if (found) return found;
+  }
+  const queue = [dirPath];
+  while (queue.length) {
+    const current = queue.shift();
+    let entries = [];
+    try { entries = fs.readdirSync(current, { withFileTypes: true }); } catch { continue; }
+    for (const entry of entries) {
+      const fullPath = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        queue.push(fullPath);
+        continue;
+      }
+      const lower = String(entry.name || '').toLowerCase();
+      if ((lower === 'cemu.exe' || (lower.startsWith('cemu') && lower.endsWith('.exe'))) && !lower.includes('installer') && !lower.includes('setup')) {
         return fullPath;
       }
     }
@@ -4339,6 +4462,106 @@ async function downloadManagedDolphinRuntime(onProgress = null, { channel = 'sta
   };
 }
 
+async function downloadManagedCemuRuntime(onProgress = null) {
+  const emitProgress = (payload = {}) => {
+    if (typeof onProgress !== 'function') return;
+    try { onProgress(payload); } catch {}
+  };
+  const runtimeStatus = emulatorManager.getCemuRuntimeStatus(loadSettings());
+  const managedRuntimeDir = runtimeStatus?.managedRuntimeDir || path.join(USER_DATA, 'emulators', 'cemu');
+  const stagingRoot = path.join(USER_DATA, 'emulators', 'downloads');
+  const extractRoot = path.join(stagingRoot, 'cemu-stable');
+  const sevenZ = resolveSevenZipExecutable();
+
+  emitProgress({ stage: 'resolving', percent: 5, message: 'Checking the official Cemu release...' });
+  const release = await resolveCemuStableWindowsDownload();
+  if (!release?.ok) return release;
+
+  const archivePath = path.join(stagingRoot, release.archiveFileName || 'cemu-windows-x64.zip');
+  if (fs.existsSync(extractRoot)) {
+    try { fs.rmSync(extractRoot, { recursive: true, force: true }); } catch {}
+  }
+  ensureDir(stagingRoot);
+
+  emitProgress({ stage: 'downloading', percent: 8, message: `Downloading Cemu ${release.version}...` });
+  const downloadResult = await downloadFileToPath(release.archiveUrl, archivePath, {
+    headers: { Referer: release.sourcePage },
+    timeoutMs: 120000,
+    onProgress: ({ percent, received, total }) => {
+      const scaled = percent == null
+        ? Math.max(10, Math.min(55, 10 + Math.round((Number(received || 0) / (1024 * 1024)) * 2.4)))
+        : Math.max(8, Math.min(55, 8 + Math.round(percent * 0.47)));
+      emitProgress({
+        stage: 'downloading',
+        percent: scaled,
+        received,
+        total,
+        message: total > 0
+          ? `Downloading Cemu ${release.version}... ${Math.round((received / total) * 100)}%`
+          : `Downloading Cemu ${release.version}...`,
+      });
+    },
+  });
+  if (!downloadResult?.ok) return downloadResult;
+
+  emitProgress({ stage: 'extracting', percent: 58, message: 'Extracting the Cemu package...' });
+  const lowerArchive = String(archivePath || '').toLowerCase();
+  if (lowerArchive.endsWith('.zip')) {
+    try {
+      await extractZip(archivePath, { dir: extractRoot });
+    } catch (error) {
+      return { ok: false, error: error?.message || 'Could not extract the Cemu archive.' };
+    }
+  } else {
+    if (!fs.existsSync(sevenZ)) {
+      return { ok: false, error: 'SKALD could not find its 7-Zip runtime. Bundle the 7-Zip tools or install 7-Zip on Windows.' };
+    }
+    const extractResult = await new Promise((resolve) => {
+      execFile(sevenZ, ['x', archivePath, `-o${extractRoot}`, '-y'], (err) => {
+        if (err) return resolve({ ok: false, error: err.message || 'Could not extract the Cemu archive.' });
+        resolve({ ok: true });
+      });
+    });
+    if (!extractResult?.ok) return extractResult;
+  }
+
+  const extractedExe = findCemuExecutableRecursive(extractRoot);
+  if (!extractedExe) {
+    return { ok: false, error: 'Cemu downloaded, but SKALD could not find the emulator executable in the extracted package.' };
+  }
+
+  emitProgress({ stage: 'importing', percent: 68, message: 'Importing Cemu into the SKALD managed runtime...' });
+  const importResult = emulatorManager.importCemuRuntime(extractedExe);
+  if (!importResult?.ok) return importResult;
+
+  const settings = loadSettings();
+  const next = emulatorManager.normalizeSettings({
+    ...settings,
+    emulators: {
+      ...(settings.emulators || {}),
+      cemu: {
+        ...((settings.emulators || {}).cemu || {}),
+        mode: 'bundled',
+        customExecutablePath: String(settings?.emulators?.cemu?.customExecutablePath || '').trim(),
+      },
+    },
+  });
+  saveSettings(next);
+
+  try { if (fs.existsSync(archivePath)) fs.unlinkSync(archivePath); } catch {}
+  try { if (fs.existsSync(extractRoot)) fs.rmSync(extractRoot, { recursive: true, force: true }); } catch {}
+
+  emitProgress({ stage: 'complete', percent: 100, message: `Cemu ${release.version} is ready in SKALD.` });
+  return {
+    ok: true,
+    version: release.version,
+    archiveUrl: release.archiveUrl,
+    managedRuntimeDir,
+    executablePath: importResult.executablePath,
+    status: emulatorManager.getCemuRuntimeStatus(loadSettings()),
+  };
+}
+
 async function downloadManagedRPCS3Runtime(onProgress = null) {
   const emitProgress = (payload = {}) => {
     if (typeof onProgress !== 'function') return;
@@ -4752,6 +4975,7 @@ async function uninstallManagedEmulatorRuntime(emulatorId, { channel = null } = 
     pcsx2: () => emulatorManager.getPCSX2RuntimeStatus(loadSettings()),
     duckstation: () => emulatorManager.getDuckStationRuntimeStatus(loadSettings()),
     dolphin: () => emulatorManager.getDolphinRuntimeStatus(loadSettings()),
+    cemu: () => emulatorManager.getCemuRuntimeStatus(loadSettings()),
     vlc: () => emulatorManager.getVLCRuntimeStatus(loadSettings()),
     xenia: () => emulatorManager.getXeniaRuntimeStatus(loadSettings()),
   };
@@ -4770,6 +4994,7 @@ async function uninstallManagedEmulatorRuntime(emulatorId, { channel = null } = 
       retroarch: 'retroarch-stable',
       pcsx2: 'pcsx2-stable',
       duckstation: 'duckstation-stable',
+      cemu: 'cemu-stable',
       vlc: 'vlc-stable',
       xenia: 'xenia-canary',
     };
@@ -5090,6 +5315,41 @@ function applyRPCS3ControllerPreset({ preset = 'xinput-default' } = {}) {
   } catch (error) {
     return { ok: false, error: error?.message || 'Could not update RPCS3 controller mapping.' };
   }
+}
+
+function getCemuControllerConfig(settings = loadSettings()) {
+  const runtime = emulatorManager.getCemuRuntimeStatus(settings);
+  return {
+    ok: !!runtime?.ok,
+    configAvailable: runtime?.controllerProfileAvailable === true,
+    profilePath: String(runtime?.controllerProfilePath || '').trim(),
+    api: String(runtime?.controllerApi || '').trim(),
+    emulate: String(runtime?.controllerEmulate || '').trim(),
+    device: String(runtime?.controllerDevice || '').trim(),
+    preset: String(runtime?.controllerPreset || '').trim(),
+  };
+}
+
+function applyCemuControllerPreset({ preset = 'xinput-default' } = {}) {
+  const selected = String(preset || 'xinput-default').trim();
+  if (selected !== 'xinput-default') return { ok: false, error: 'Unsupported Cemu controller preset.' };
+  const settings = loadSettings();
+  const runtime = emulatorManager.getCemuRuntimeStatus(settings);
+  if (!runtime?.ok) return { ok: false, error: 'Cemu must be installed before controller mappings can be changed.' };
+  const next = emulatorManager.normalizeSettings({
+    ...settings,
+    emulators: {
+      ...(settings.emulators || {}),
+      cemu: {
+        ...((settings.emulators || {}).cemu || {}),
+        controllerPreset: selected,
+      },
+    },
+  });
+  saveSettings(next);
+  const syncResult = emulatorManager.syncCemuPortableConfig(next);
+  if (!syncResult?.ok) return syncResult;
+  return { ok: true, preset: selected, status: getCemuControllerConfig(next) };
 }
 
 function decodeXmlEntities(value = '') {
@@ -6927,7 +7187,7 @@ async function marketplaceInstallJob(event, {
   if (!downloadResult?.ok) return downloadResult;
 
   const settings = loadSettings();
-  const directExts = ['.chd', '.cue', '.bin', '.img', '.sfc', '.smc', '.nes', '.gba', '.n64', '.iso', '.gcm', '.gcz', '.rvz', '.wbfs', '.wia', '.wad'];
+  const directExts = ['.chd', '.cue', '.bin', '.img', '.sfc', '.smc', '.nes', '.gba', '.n64', '.iso', '.gcm', '.gcz', '.rvz', '.wbfs', '.wia', '.wad', '.wux'];
   const normalizedSystem = String(system || '').trim().toLowerCase();
   const lowerDownloadPath = String(downloadResult.filePath || '').toLowerCase();
   const isArchiveDownload = ['.zip', '.7z', '.rar'].some(ext => lowerDownloadPath.endsWith(ext));
@@ -6969,6 +7229,14 @@ async function marketplaceInstallJob(event, {
 
   if (normalizedSystem === 'ps3') {
     const discKeyResult = await ensurePs3DiscKey(event, {
+      identifier,
+      installDir,
+      originalDownloadPath: downloadResult.filePath,
+    });
+    if (!discKeyResult?.ok) return discKeyResult;
+  }
+  if (normalizedSystem === 'wiiu') {
+    const discKeyResult = await ensureWiiUDiscKey(event, {
       identifier,
       installDir,
       originalDownloadPath: downloadResult.filePath,
@@ -7047,6 +7315,7 @@ function systemInstallFolderName(system = '') {
     n64: 'Nintendo 64',
     gamecube: 'GameCube',
     wii: 'Wii',
+    wiiu: 'Wii U',
     switch: 'Nintendo Switch',
     pc: 'PC',
   };
@@ -7267,12 +7536,224 @@ function clearRPCS3WelcomeWatcher(sessionId = '') {
   activeRPCS3WelcomeWatchers.delete(key);
 }
 
+function clearCemuGettingStartedWatcher(sessionId = '') {
+  const key = String(sessionId || '').trim();
+  if (!key) return;
+  const watcher = activeCemuGettingStartedWatchers.get(key);
+  if (watcher?.timer) clearTimeout(watcher.timer);
+  activeCemuGettingStartedWatchers.delete(key);
+}
+
 function clearRPCS3FirmwareWatcher(sessionId = '') {
   const key = String(sessionId || '').trim();
   if (!key) return;
   const watcher = activeRPCS3FirmwareWatchers.get(key);
   if (watcher?.timer) clearTimeout(watcher.timer);
   activeRPCS3FirmwareWatchers.delete(key);
+}
+
+function getManagedCemuGameRoot() {
+  const settings = loadSettings();
+  return resolveSystemStorageRoot(String(settings.installPath || DEFAULT_GAMES_DIR).trim() || DEFAULT_GAMES_DIR, 'wiiu');
+}
+
+async function invokeCemuGettingStartedAdvanceForPid(pid, gamePath = '') {
+  const numericPid = Number(pid);
+  const targetGamePath = String(gamePath || '').trim();
+  if (!Number.isFinite(numericPid) || numericPid <= 0) {
+    return { ok: false, state: 'invalid-pid', error: 'Cemu session pid is invalid.' };
+  }
+  if (!targetGamePath) {
+    return { ok: false, state: 'invalid-game-path', error: 'Cemu game path is not available.' };
+  }
+  const escapedGamePath = targetGamePath.replace(/'/g, "''");
+  const command = `
+Add-Type -AssemblyName UIAutomationClient
+Add-Type -AssemblyName UIAutomationTypes
+$null = Add-Type -AssemblyName System.Windows.Forms -ErrorAction SilentlyContinue
+$targetPid = ${numericPid}
+$targetGamePath = '${escapedGamePath}'
+$root = [System.Windows.Automation.AutomationElement]::RootElement
+
+function Find-GettingStartedDialog([System.Windows.Automation.AutomationElement]$scopeRoot, [bool]$requirePid) {
+  $walker = [System.Windows.Automation.TreeWalker]::RawViewWalker
+  $node = $walker.GetFirstChild($scopeRoot)
+  while ($node -ne $null) {
+    try {
+      $name = [string]$node.Current.Name
+      $controlType = $node.Current.ControlType
+      $nodePid = [int]$node.Current.ProcessId
+      $pidOk = (-not $requirePid) -or ($nodePid -eq $targetPid)
+      if ($pidOk -and $controlType -eq [System.Windows.Automation.ControlType]::Window -and (($name -eq 'Getting started') -or ($name -like '*Getting started*'))) {
+        return $node
+      }
+      $desc = Find-GettingStartedDialog $node $requirePid
+      if ($desc -ne $null) { return $desc }
+    } catch {}
+    $node = $walker.GetNextSibling($node)
+  }
+  return $null
+}
+
+function Find-FirstControl([System.Windows.Automation.AutomationElement]$scopeRoot, [System.Windows.Automation.ControlType]$controlTypeNeedle, [string]$nameNeedle = '') {
+  $walker = [System.Windows.Automation.TreeWalker]::RawViewWalker
+  $node = $walker.GetFirstChild($scopeRoot)
+  while ($node -ne $null) {
+    try {
+      $name = [string]$node.Current.Name
+      $controlType = $node.Current.ControlType
+      if ($controlType -eq $controlTypeNeedle) {
+        if (-not $nameNeedle -or $name -eq $nameNeedle -or $name -like $nameNeedle) {
+          return $node
+        }
+      }
+      $desc = Find-FirstControl $node $controlTypeNeedle $nameNeedle
+      if ($desc -ne $null) { return $desc }
+    } catch {}
+    $node = $walker.GetNextSibling($node)
+  }
+  return $null
+}
+
+$dialog = Find-GettingStartedDialog $root $true
+if ($null -eq $dialog) {
+  $dialog = Find-GettingStartedDialog $root $false
+}
+if ($null -eq $dialog) {
+  Write-Output 'not-found'
+  exit 0
+}
+
+$edit = Find-FirstControl $dialog ([System.Windows.Automation.ControlType]::Edit) ''
+if ($null -eq $edit) {
+  Write-Output 'edit-not-found'
+  exit 0
+}
+
+$setValue = $false
+try {
+  $valuePattern = $edit.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern)
+  if ($null -ne $valuePattern) {
+    $valuePattern.SetValue($targetGamePath)
+    $setValue = $true
+  }
+} catch {}
+if (-not $setValue) {
+  try {
+    $edit.SetFocus()
+    Start-Sleep -Milliseconds 100
+    [System.Windows.Forms.Clipboard]::SetText($targetGamePath)
+    Start-Sleep -Milliseconds 100
+    [System.Windows.Forms.SendKeys]::SendWait('^a')
+    Start-Sleep -Milliseconds 80
+    [System.Windows.Forms.SendKeys]::SendWait('^v')
+    $setValue = $true
+  } catch {}
+}
+if (-not $setValue) {
+  Write-Output 'edit-set-failed'
+  exit 0
+}
+
+Start-Sleep -Milliseconds 180
+$nextButton = Find-FirstControl $dialog ([System.Windows.Automation.ControlType]::Button) 'Next'
+if ($null -eq $nextButton) {
+  Write-Output 'next-not-found'
+  exit 0
+}
+if (-not $nextButton.Current.IsEnabled) {
+  Write-Output 'next-disabled'
+  exit 0
+}
+
+try {
+  $invoke = $nextButton.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)
+  if ($null -ne $invoke) {
+    $invoke.Invoke()
+    Write-Output 'clicked'
+    exit 0
+  }
+} catch {}
+
+try {
+  $legacy = $nextButton.GetCurrentPattern([System.Windows.Automation.LegacyIAccessiblePattern]::Pattern)
+  if ($null -ne $legacy) {
+    $legacy.DoDefaultAction()
+    Write-Output 'clicked-legacy'
+    exit 0
+  }
+} catch {}
+
+try {
+  $dialog.SetFocus()
+  Start-Sleep -Milliseconds 120
+  [System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
+  Write-Output 'clicked-enter'
+  exit 0
+} catch {}
+
+Write-Output 'invoke-not-supported'
+`.trim();
+  try {
+    const { stdout } = await runPowerShellHidden(command, { timeoutMs: 12000 });
+    const state = String(stdout || '').trim().toLowerCase() || 'unknown';
+    if (state === 'clicked' || state === 'clicked-legacy' || state === 'clicked-enter') {
+      return { ok: true, state };
+    }
+    return { ok: false, state };
+  } catch (error) {
+    return {
+      ok: false,
+      state: 'error',
+      error: error?.message || 'Could not inspect the Cemu getting started dialog.',
+      stderr: String(error?.stderr || '').trim(),
+    };
+  }
+}
+
+function startCemuGettingStartedWatcher(session) {
+  const sessionId = String(session?.id || '').trim();
+  if (!sessionId || String(session?.emulatorId || '').trim().toLowerCase() !== 'cemu' || !session?.pid) return;
+  clearCemuGettingStartedWatcher(sessionId);
+  const gamePath = getManagedCemuGameRoot();
+  if (!gamePath || !fs.existsSync(gamePath)) return;
+  const watcher = {
+    startedAt: Date.now(),
+    attempts: 0,
+    timer: null,
+  };
+  activeCemuGettingStartedWatchers.set(sessionId, watcher);
+
+  const tick = async () => {
+    const current = activeCemuGettingStartedWatchers.get(sessionId);
+    if (!current) return;
+    current.attempts = Number(current.attempts || 0) + 1;
+
+    const result = await invokeCemuGettingStartedAdvanceForPid(session.pid, gamePath);
+    if (result?.ok) {
+      clearCemuGettingStartedWatcher(sessionId);
+      return;
+    }
+
+    const state = String(result?.state || '').trim().toLowerCase();
+    if (!['not-found', 'next-disabled', 'next-not-found', 'edit-not-found', 'edit-set-failed'].includes(state)) {
+      clearCemuGettingStartedWatcher(sessionId);
+      return;
+    }
+
+    if ((Date.now() - Number(current.startedAt || 0)) >= 60000) {
+      clearCemuGettingStartedWatcher(sessionId);
+      return;
+    }
+
+    const attemptDelayMs = current.attempts <= 15 ? 150 : (current.attempts <= 30 ? 300 : 750);
+    current.timer = setTimeout(() => {
+      tick().catch(() => clearCemuGettingStartedWatcher(sessionId));
+    }, attemptDelayMs);
+    activeCemuGettingStartedWatchers.set(sessionId, current);
+  };
+
+  tick().catch(() => clearCemuGettingStartedWatcher(sessionId));
 }
 
   function getStoredRPCS3FirmwarePath() {
@@ -9177,7 +9658,7 @@ ipcMain.handle('scan-for-games', (_, { scanDir, knownIdentifiers, titleMap, syst
   const identifierSet  = new Set(knownIdentifiers);
   const titleLookup    = buildTitleLookup(titleMap);
   const found          = [];
-  const ROM_EXTS       = new Set(['.sfc', '.smc', '.snes', '.nes', '.gba', '.gbc', '.gb', '.md', '.gen', '.smd', '.n64', '.z64', '.v64', '.nds', '.pce', '.chd', '.cue', '.bin', '.img', '.zip', '.iso', '.gcm', '.gcz', '.rvz', '.wbfs', '.wia', '.wad', '.cso', '.pbp', '.pkg', '.self', '.elf']);
+  const ROM_EXTS       = new Set(['.sfc', '.smc', '.snes', '.nes', '.gba', '.gbc', '.gb', '.md', '.gen', '.smd', '.n64', '.z64', '.v64', '.nds', '.pce', '.chd', '.cue', '.bin', '.img', '.zip', '.iso', '.gcm', '.gcz', '.rvz', '.wbfs', '.wia', '.wad', '.wux', '.cso', '.pbp', '.pkg', '.self', '.elf']);
   const visitedDirs    = new Set();
   const MAX_SCAN_DEPTH = 5;
 
@@ -10064,6 +10545,11 @@ const SYSTEM_CONFIGS = {
     archivePath: null,
     downloadBase: null,
   },
+  wiiu: {
+    label: 'Wii U',
+    archivePath: null,
+    downloadBase: null,
+  },
   xbox: {
     label: 'Xbox',
     archivePath: null,
@@ -10207,6 +10693,17 @@ const LIVE_ARCHIVE_SYSTEM_SOURCES = Object.freeze({
       'https://archive.org/download/GamecubeCollectionByGhostware/',
     ],
   },
+  wiiu: {
+    referer: 'https://archive.org/details/wiiu_disc_wux_1',
+    useMetadata: true,
+    extensions: ['.wux'],
+    urls: [
+      'https://archive.org/download/wiiu_disc_wux_1/',
+      'https://archive.org/download/wiiu_disc_wux_2/',
+      'https://archive.org/download/wiiu_disc_wux_3/',
+      'https://archive.org/download/wiiu_disc_wux_4/',
+    ],
+  },
   xbox: {
     referer: 'https://archive.org/details/microsoft_xbox_numberssymbols',
     extensions: ['.zip'],
@@ -10299,7 +10796,7 @@ const MARKETPLACE_PROVIDERS = {
     id: 'archiveorg',
     name: 'Archive.org',
     status: 'active',
-    systems: ['snes', 'genesis', 'psx', 'ps2', 'ps3', 'psp', 'dc', 'gamecube', 'xbox', 'x360'],
+    systems: ['snes', 'genesis', 'psx', 'ps2', 'ps3', 'psp', 'dc', 'gamecube', 'wiiu', 'xbox', 'x360'],
   },
 };
 
@@ -10315,6 +10812,10 @@ async function loadArchiveOrgLiveRomList(system) {
   let diskCached = loadRomDiskCache(normalizedSystem, sourceSignature);
   if (normalizedSystem === 'ps3' && Array.isArray(diskCached) && diskCached.length) {
     diskCached = await filterPs3CatalogByDiscKeys(diskCached);
+    saveRomDiskCache(normalizedSystem, diskCached, sourceSignature);
+  }
+  if (normalizedSystem === 'wiiu' && Array.isArray(diskCached) && diskCached.length) {
+    diskCached = await filterWiiUCatalogByDiscKeys(diskCached);
     saveRomDiskCache(normalizedSystem, diskCached, sourceSignature);
   }
   if (normalizedSystem === 'x360' || normalizedSystem === 'xbox') {
@@ -10336,7 +10837,11 @@ async function loadArchiveOrgLiveRomList(system) {
           sourceUrl: url,
         });
       }));
-      const metadataRoms = metadataPages.flat().sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
+      let metadataRoms = metadataPages.flat();
+      if (normalizedSystem === 'wiiu') {
+        metadataRoms = await filterWiiUCatalogByDiscKeys(metadataRoms);
+      }
+      metadataRoms.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
       console.log(`[${normalizedSystem}-catalog] metadata entries:`, metadataRoms.length);
       console.log(`[${normalizedSystem}-catalog] first metadata entries:`, metadataRoms.slice(0, 8).map(r => r?.name).filter(Boolean));
       if (metadataRoms.length) {
@@ -10345,7 +10850,7 @@ async function loadArchiveOrgLiveRomList(system) {
         return { ok: true, roms: metadataRoms, cached: false, source: 'archive.org-metadata', provider: 'archiveorg' };
       }
     }
-    if (normalizedSystem === 'x360' || normalizedSystem === 'xbox' || normalizedSystem === 'ps3') {
+    if (normalizedSystem === 'x360' || normalizedSystem === 'xbox' || normalizedSystem === 'ps3' || normalizedSystem === 'wiiu') {
       const manifestPages = await Promise.all((config.urls || []).map(async (url) => {
         const itemId = archiveItemIdFromUrl(url);
         const manifestUrl = itemId ? `${url}${itemId}_files.xml` : '';
@@ -10361,6 +10866,9 @@ async function loadArchiveOrgLiveRomList(system) {
       let manifestRoms = manifestPages.flat();
       if (normalizedSystem === 'ps3') {
         manifestRoms = await filterPs3CatalogByDiscKeys(manifestRoms);
+      }
+      if (normalizedSystem === 'wiiu') {
+        manifestRoms = await filterWiiUCatalogByDiscKeys(manifestRoms);
       }
       console.log(`[${normalizedSystem}-catalog] manifest entries:`, manifestRoms.length);
       console.log(`[${normalizedSystem}-catalog] first manifest entries:`, manifestRoms.slice(0, 8).map(r => r?.name).filter(Boolean));
@@ -10386,7 +10894,9 @@ async function loadArchiveOrgLiveRomList(system) {
     }));
     const filteredMerged = normalizedSystem === 'ps3'
       ? await filterPs3CatalogByDiscKeys(merged)
-      : merged;
+      : (normalizedSystem === 'wiiu'
+        ? await filterWiiUCatalogByDiscKeys(merged)
+        : merged);
     filteredMerged.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
     if (!filteredMerged.length && Array.isArray(diskCached) && diskCached.length) {
       console.warn(`[live-rom-cache] using cached ${normalizedSystem} catalog because fresh parse returned 0 entries`);
@@ -10685,6 +11195,53 @@ async function filterPs3CatalogByDiscKeys(roms = []) {
   return filtered;
 }
 
+function normalizeWiiUDiscKeyStem(name = '') {
+  const raw = String(name || '').trim();
+  if (!raw) return '';
+  return path.basename(raw, path.extname(raw)).trim().toLowerCase();
+}
+
+async function loadWiiUDiscKeyIndex() {
+  const now = Date.now();
+  if (wiiuDiscKeyIndexCache && (now - Number(wiiuDiscKeyIndexCache.loadedAt || 0) < 6 * 60 * 60 * 1000)) {
+    return wiiuDiscKeyIndexCache.names;
+  }
+  try {
+    const html = await fetchArchiveText(WIIU_DISC_KEY_CATALOG_URL, 'https://archive.org/details/nintendo-wii-u-disc-keys-483-2021-06-08-02-04-20');
+    const names = new Set();
+    for (const match of String(html || '').matchAll(/<a[^>]+>([^<]+\.key)<\/a>/gi)) {
+      const rawName = decodeHtmlEntities(String(match[1] || '').trim());
+      const normalized = normalizeWiiUDiscKeyStem(rawName);
+      if (normalized) names.add(normalized);
+    }
+    if (!names.size) {
+      console.warn('[wiiu-catalog] disc key regex parser found 0 entries');
+      return null;
+    }
+    wiiuDiscKeyIndexCache = {
+      loadedAt: now,
+      names,
+    };
+    return names;
+  } catch (error) {
+    console.warn('[wiiu-catalog] could not load disc key index:', error?.message || error);
+    return null;
+  }
+}
+
+async function filterWiiUCatalogByDiscKeys(roms = []) {
+  const keyNames = await loadWiiUDiscKeyIndex();
+  if (!(keyNames instanceof Set) || !keyNames.size) return roms;
+  const filtered = roms.filter((rom) => {
+    const rawName = String(rom?.name || '').trim();
+    const ext = path.extname(rawName).toLowerCase();
+    if (ext !== '.wux') return true;
+    return keyNames.has(normalizeWiiUDiscKeyStem(rawName));
+  });
+  console.log('[wiiu-catalog] filtered by disc keys:', roms.length, '->', filtered.length);
+  return filtered;
+}
+
 function formatSizeMain(bytes) {
   if (!bytes) return '';
   if (bytes >= 1_073_741_824) return (bytes / 1_073_741_824).toFixed(2) + ' GB';
@@ -10697,7 +11254,7 @@ function parseRomFilename(filename) {
   const LANG    = 'En|Ja|De|Fr|Es|It|Nl|Pt|Sv|No|Da|Fi|Ru|Pl|Ko|Zh|Ar|He|Tr|Cs|Hu|Ro|Hr|Sr|Bg|Uk|El';
   const rBlk = `\\((?:(?:${REGIONS})(?:,\\s*(?:${REGIONS}))*|(?:${LANG})(?:,\\s*(?:${LANG}))*)\\)`;
   const tBlk = `\\((?:Beta|Proto|Sample|Demo|Rev\\s*\\d*|Hack|Alt|Unl|BIOS|Kiosk|Promo|Aftermarket|Pirate|Virtual Console|Switch Online|Classic Mini|v[\\d.]+)[^)]*\\)`;
-  let base = filename.replace(/\.(zip|chd|cue|bin|img|iso|gcm|gcz|rvz|wbfs|wia|wad|cso|pbp)$/i, '');
+  let base = filename.replace(/\.(zip|chd|cue|bin|img|iso|gcm|gcz|rvz|wbfs|wia|wad|wux|cso|pbp)$/i, '');
   const firstRegion = base.match(new RegExp(rBlk, 'i'));
   const region = firstRegion ? firstRegion[0].replace(/[()]/g, '').trim() : '';
   const tags = [];
@@ -10739,6 +11296,17 @@ function parseSizeString(str) {
   }
   if (['gamecube', 'wii'].includes(String(system || '').toLowerCase())) {
     return emulatorManager.launchDolphinRom({ romPath, system, identifier, title });
+  }
+  if (String(system || '').toLowerCase() === 'wiiu') {
+    const discKeyResult = await ensureWiiUDiscKey(event, {
+      identifier,
+      installDir: romPath,
+      originalDownloadPath: romPath,
+    });
+    if (!discKeyResult?.ok) return discKeyResult;
+    const cemuSync = emulatorManager.syncCemuPortableConfig(loadSettings());
+    if (!cemuSync?.ok) return cemuSync;
+    return emulatorManager.launchCemuRom({ romPath, system, identifier, title });
   }
   if (String(system || '').toLowerCase() === 'ps2') {
     return emulatorManager.launchPCSX2Rom({ romPath, system, identifier, title });
@@ -11026,6 +11594,186 @@ async function ensurePs3DiscKey(event, { identifier, installDir, originalDownloa
   return { ok: true, filePath: targetKeyPath };
 }
 
+function resolveWiiUWuxPath(installDir, originalDownloadPath = '') {
+  const installPath = String(installDir || '').trim();
+  if (installPath && fs.existsSync(installPath)) {
+    try {
+      const stat = fs.statSync(installPath);
+      if (stat.isFile() && path.extname(installPath).toLowerCase() === '.wux') return installPath;
+      if (stat.isDirectory()) {
+        const preferredBase = path.basename(String(originalDownloadPath || ''), path.extname(String(originalDownloadPath || ''))).toLowerCase();
+        return findFirstFileRecursive(installPath, (fullPath, name) => {
+          if (path.extname(name).toLowerCase() !== '.wux') return false;
+          if (!preferredBase) return true;
+          return path.basename(name, path.extname(name)).toLowerCase() === preferredBase;
+        });
+      }
+    } catch {}
+  }
+  const originalPath = String(originalDownloadPath || '').trim();
+  if (originalPath && fs.existsSync(originalPath) && path.extname(originalPath).toLowerCase() === '.wux') return originalPath;
+  return '';
+}
+
+function buildWiiUDiscKeyDownloadUrl(wuxPath) {
+  const wuxBaseName = path.basename(String(wuxPath || '').trim(), path.extname(String(wuxPath || '').trim()));
+  if (!wuxBaseName) return '';
+  return `${WIIU_DISC_KEY_ARCHIVE_BASE}/${encodeURIComponent(wuxBaseName)}.key`;
+}
+
+function getCemuKeysRuntimePaths() {
+  const runtimeStatus = emulatorManager.getCemuRuntimeStatus(loadSettings());
+  const runtimeRoot = String(runtimeStatus?.runtimeRoot || '').trim();
+  const portableDir = String(runtimeStatus?.portableDirPath || '').trim();
+  const keysPath = portableDir ? path.join(portableDir, 'keys.txt') : (runtimeRoot ? path.join(runtimeRoot, 'portable', 'keys.txt') : '');
+  return {
+    runtimeStatus,
+    runtimeRoot,
+    portableDir,
+    keysPath,
+  };
+}
+
+async function ensureCemuKeysBootstrap(event, { identifier } = {}) {
+  const { runtimeStatus, runtimeRoot, portableDir, keysPath } = getCemuKeysRuntimePaths();
+  if (!runtimeStatus?.ok || !runtimeRoot || !keysPath) {
+    return { ok: true, skipped: true, reason: 'cemu runtime unavailable' };
+  }
+  if (fs.existsSync(keysPath)) {
+    return { ok: true, skipped: true, existing: true, filePath: keysPath };
+  }
+  const stagingRoot = path.join(USER_DATA, 'emulators', 'downloads');
+  const archivePath = path.join(stagingRoot, 'cemu-keys.rar');
+  const extractRoot = path.join(stagingRoot, 'cemu-keys');
+  const sevenZ = resolveSevenZipExecutable();
+  if (!fs.existsSync(sevenZ)) {
+    return { ok: false, error: 'SKALD could not find its 7-Zip runtime needed to prepare Cemu keys.' };
+  }
+  ensureDir(stagingRoot);
+  try {
+    if (event?.sender && !event.sender.isDestroyed()) {
+      event.sender.send('download-progress', { identifier, percent: 15, stage: 'installing' });
+    }
+  } catch {}
+  const downloadResult = await downloadFileAuthenticated(event, {
+    identifier,
+    downloadUrl: CEMU_KEYS_ARCHIVE_URL,
+    destFile: archivePath,
+    progressStage: 'installing',
+  });
+  if (!downloadResult?.ok || !fs.existsSync(archivePath)) {
+    return { ok: false, error: `Downloaded the Wii U game, but could not fetch the base Cemu keys package.\n${downloadResult?.error || 'Unknown Cemu keys error.'}` };
+  }
+  try { if (fs.existsSync(extractRoot)) fs.rmSync(extractRoot, { recursive: true, force: true }); } catch {}
+  const extractResult = await new Promise((resolve) => {
+    execFile(sevenZ, ['x', archivePath, `-o${extractRoot}`, '-y'], (err) => {
+      if (err) return resolve({ ok: false, error: err.message || 'Could not extract the Cemu keys archive.' });
+      resolve({ ok: true });
+    });
+  });
+  if (!extractResult?.ok) return extractResult;
+  const extractedKeys = findFirstFileRecursive(extractRoot, (fullPath, name) => String(name || '').toLowerCase() === 'keys.txt', 0, 8);
+  if (!extractedKeys || !fs.existsSync(extractedKeys)) {
+    return { ok: false, error: 'Downloaded the Cemu keys archive, but SKALD could not find keys.txt inside it.' };
+  }
+  try {
+    ensureDir(portableDir || path.dirname(keysPath));
+    fs.copyFileSync(extractedKeys, keysPath);
+    try { if (fs.existsSync(archivePath)) fs.unlinkSync(archivePath); } catch {}
+    try { if (fs.existsSync(extractRoot)) fs.rmSync(extractRoot, { recursive: true, force: true }); } catch {}
+    return { ok: true, filePath: keysPath, bootstrapped: true };
+  } catch (error) {
+    return { ok: false, error: `Downloaded Cemu keys.txt, but could not place it into the managed Cemu runtime.\n${error?.message || error}` };
+  }
+}
+
+async function ensureWiiUDiscKey(event, { identifier, installDir, originalDownloadPath = '' }) {
+  const wuxPath = resolveWiiUWuxPath(installDir, originalDownloadPath);
+  if (!wuxPath) {
+    return { ok: true, skipped: true, reason: 'No WUX file found for Wii U disc key download.' };
+  }
+
+  const bootstrapResult = await ensureCemuKeysBootstrap(event, { identifier });
+  if (!bootstrapResult?.ok) return bootstrapResult;
+
+  const targetDir = path.dirname(wuxPath);
+  const targetKeyPath = path.join(targetDir, `${path.basename(wuxPath, path.extname(wuxPath))}.key`);
+  const downloadUrl = buildWiiUDiscKeyDownloadUrl(wuxPath);
+  if (!downloadUrl) {
+    return { ok: false, error: 'Could not determine the matching Wii U disc key URL.' };
+  }
+  if (!fs.existsSync(targetKeyPath)) {
+    try {
+      if (event?.sender && !event.sender.isDestroyed()) {
+        event.sender.send('download-progress', { identifier, percent: 35, stage: 'installing' });
+      }
+    } catch {}
+    const downloadResult = await performDownloadJob(event, {
+      identifier,
+      downloadUrl,
+      fileName: path.basename(targetKeyPath),
+      progressStage: 'installing',
+      system: 'wiiu',
+    });
+    if (!downloadResult?.ok) {
+      return {
+        ok: false,
+        error: `Downloaded the Wii U game, but could not fetch the matching disc key.\n${downloadResult?.error || 'Unknown disc key error.'}`,
+      };
+    }
+    const downloadedKeyPath = String(downloadResult.filePath || '').trim();
+    if (downloadedKeyPath && path.resolve(downloadedKeyPath) !== path.resolve(targetKeyPath)) {
+      try {
+        ensureDir(targetDir);
+        if (fs.existsSync(targetKeyPath)) fs.unlinkSync(targetKeyPath);
+        fs.renameSync(downloadedKeyPath, targetKeyPath);
+      } catch (error) {
+        return { ok: false, error: `Downloaded the Wii U disc key, but could not place it next to the WUX file.\n${error?.message || error}` };
+      }
+    }
+  }
+
+  const keyBuffer = fs.existsSync(targetKeyPath) ? fs.readFileSync(targetKeyPath) : Buffer.alloc(0);
+  if (!keyBuffer.length) {
+    return { ok: false, error: 'The matching Wii U disc key was downloaded, but it was empty.' };
+  }
+  const keyContents = String(keyBuffer.toString('utf8') || '').trim();
+  const normalizedRawKey = keyBuffer.toString('hex').replace(/[^0-9a-f]/gi, '').toLowerCase();
+  const isRawHexKey = /^[0-9a-f]{32}$/i.test(normalizedRawKey);
+  const mergeableKeyLine = keyContents.includes('=')
+    ? keyContents
+    : (isRawHexKey ? normalizedRawKey : '');
+  if (!mergeableKeyLine) {
+    return { ok: false, error: 'The matching Wii U disc key was downloaded, but SKALD could not recognize its format for Cemu keys.txt.' };
+  }
+
+  const { runtimeStatus, keysPath } = getCemuKeysRuntimePaths();
+  if (!runtimeStatus?.ok || !keysPath) {
+    return { ok: true, filePath: targetKeyPath, skipped: true, reason: 'cemu runtime unavailable after key download' };
+  }
+
+  const normalizedStem = normalizeWiiUDiscKeyStem(path.basename(targetKeyPath));
+  let keysText = fs.existsSync(keysPath) ? String(fs.readFileSync(keysPath, 'utf8') || '') : '';
+  const marker = `# SKALD-WIIU-KEY ${normalizedStem}`;
+  const hasKeyAlready = isRawHexKey
+    ? new RegExp(`^\\s*${normalizedRawKey}\\s*(?:#.*)?$`, 'im').test(keysText)
+    : keysText.includes(mergeableKeyLine);
+  if (!hasKeyAlready && !keysText.includes(marker)) {
+    if (keysText && !keysText.endsWith('\n')) keysText += '\n';
+    keysText += `${marker}\n`;
+    keysText += `# ${path.basename(targetKeyPath)}\n`;
+    keysText += `${mergeableKeyLine}\n`;
+    fs.writeFileSync(keysPath, keysText, 'utf8');
+  }
+
+  try {
+    if (event?.sender && !event.sender.isDestroyed()) {
+      event.sender.send('download-progress', { identifier, percent: 95, stage: 'installing' });
+    }
+  } catch {}
+  return { ok: true, filePath: targetKeyPath, keysPath, mergedIntoKeysTxt: true };
+}
+
 function getHltbToken() {
   return getHltbAuth().then(auth => auth?.token || null);
 }
@@ -11039,7 +11787,7 @@ ipcMain.handle('hltb-search', async (_, { cleanName, force = false } = {}) => fe
 const RA_CACHE_DIR = path.join(app.getPath('userData'), 'racache');
 if (!fs.existsSync(RA_CACHE_DIR)) fs.mkdirSync(RA_CACHE_DIR, { recursive: true });
 
-const RA_CONSOLE_MAP = { snes: 3, nes: 7, gba: 5, gbc: 6, gb: 4, genesis: 1, n64: 2, psx: 12 };
+const RA_CONSOLE_MAP = { snes: 3, nes: 7, gba: 5, gbc: 6, gb: 4, genesis: 1, n64: 2, psx: 12, gamecube: 16, ps2: 21 };
 
 async function fetchHltbMetadata(cleanName, { force = false } = {}) {
   const variants = hltbTitleVariants(cleanName);
@@ -11597,6 +12345,9 @@ ipcMain.handle('emulator-runtime-status', () => emulatorManager.getRetroArchRunt
 ipcMain.handle('pcsx2-runtime-status', () => emulatorManager.getPCSX2RuntimeStatus(loadSettings()));
 ipcMain.handle('duckstation-runtime-status', () => emulatorManager.getDuckStationRuntimeStatus(loadSettings()));
 ipcMain.handle('dolphin-runtime-status', () => emulatorManager.getDolphinRuntimeStatus(loadSettings()));
+ipcMain.handle('cemu-runtime-status', () => emulatorManager.getCemuRuntimeStatus(loadSettings()));
+ipcMain.handle('cemu-controller-config-get', () => getCemuControllerConfig(loadSettings()));
+ipcMain.handle('cemu-controller-preset-apply', async (_, opts = {}) => applyCemuControllerPreset(opts));
 ipcMain.handle('rpcs3-runtime-status', () => emulatorManager.getRPCS3RuntimeStatus(loadSettings()));
 ipcMain.handle('rpcs3-setup-status', () => getRPCS3SetupStatus(loadSettings()));
 ipcMain.handle('rpcs3-config-get', () => getRPCS3GuideConfig(loadSettings()));
@@ -11645,6 +12396,7 @@ ipcMain.handle('xenia-content-trace-get', () => {
   }
 });
 ipcMain.handle('pcsx2-runtime-sync', () => emulatorManager.syncPCSX2PortableConfig(loadSettings()));
+ipcMain.handle('cemu-runtime-sync', () => emulatorManager.syncCemuPortableConfig(loadSettings()));
 ipcMain.handle('libretro-core-status', () => emulatorManager.getLibretroCoreStatus(loadSettings()));
 function createEmulatorRuntimeProgressSender(webContents) {
   let lastSentAt = 0;
@@ -11700,6 +12452,8 @@ ipcMain.handle('duckstation-runtime-download', async (event) => downloadManagedD
 ipcMain.handle('duckstation-runtime-uninstall', async () => uninstallManagedEmulatorRuntime('duckstation'));
 ipcMain.handle('dolphin-runtime-download', async (event, opts = {}) => downloadManagedDolphinRuntime(createEmulatorRuntimeProgressSender(event.sender), opts));
 ipcMain.handle('dolphin-runtime-uninstall', async (_, opts = {}) => uninstallManagedEmulatorRuntime('dolphin', opts));
+ipcMain.handle('cemu-runtime-download', async (event) => downloadManagedCemuRuntime(createEmulatorRuntimeProgressSender(event.sender)));
+ipcMain.handle('cemu-runtime-uninstall', async () => uninstallManagedEmulatorRuntime('cemu'));
     ipcMain.handle('rpcs3-runtime-download', async (event) => downloadManagedRPCS3Runtime(createEmulatorRuntimeProgressSender(event.sender)));
   ipcMain.handle('rpcs3-runtime-uninstall', async () => uninstallManagedRPCS3Runtime());
   ipcMain.handle('rpcs3-firmware-download', async (event) => downloadManagedRPCS3Firmware(createEmulatorRuntimeProgressSender(event.sender)));
@@ -11826,6 +12580,25 @@ ipcMain.handle('dolphin-runtime-import', async (_, { executablePath, channel = '
           mode: 'bundled',
           buildChannel: normalizedChannel,
           customExecutablePath: String(settings?.emulators?.dolphin?.customExecutablePath || '').trim(),
+        },
+      },
+    });
+    saveSettings(next);
+  }
+  return result;
+});
+ipcMain.handle('cemu-runtime-import', async (_, { executablePath } = {}) => {
+  const result = emulatorManager.importCemuRuntime(executablePath);
+  if (result?.ok) {
+    const settings = loadSettings();
+    const next = emulatorManager.normalizeSettings({
+      ...settings,
+      emulators: {
+        ...(settings.emulators || {}),
+        cemu: {
+          ...((settings.emulators || {}).cemu || {}),
+          mode: 'bundled',
+          customExecutablePath: String(settings?.emulators?.cemu?.customExecutablePath || '').trim(),
         },
       },
     });
@@ -12399,6 +13172,26 @@ ipcMain.handle('stoat-status', () => stoat.getStatus());
 ipcMain.handle('stoat-list-profiles', () => {
   const settings = loadSettings();
   return normalizeStoatProfiles(settings);
+});
+ipcMain.handle('stoat-update-profile-snapshot', (_, { profileId, snapshot } = {}) => {
+  const settings = loadSettings();
+  const profiles = normalizeStoatProfiles(settings);
+  const profile = profiles.find(entry => String(entry.id) === String(profileId || ''));
+  if (!profile) return { ok: false, error: 'Profile not found' };
+  const nextSnapshot = snapshot && typeof snapshot === 'object'
+    ? {
+        name: String(snapshot.name || ''),
+        avatar: String(snapshot.avatar || ''),
+        games: String(snapshot.games ?? '0'),
+        gamerscore: String(snapshot.gamerscore ?? '0'),
+        achievements: String(snapshot.achievements ?? '0'),
+        updatedAt: String(snapshot.updatedAt || new Date().toISOString()),
+      }
+    : null;
+  if (!nextSnapshot) return { ok: false, error: 'Snapshot is required' };
+  profile.gamercardSnapshot = nextSnapshot;
+  saveSettings(settings);
+  return { ok: true, profile };
 });
 ipcMain.handle('stoat-switch-profile', async (_, { profileId }) => {
   const settings = loadSettings();
