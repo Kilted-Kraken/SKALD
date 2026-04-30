@@ -1,6 +1,6 @@
 {
   "name": "skald-launcher",
-  "version": "0.1.1-beta.3",
+  "version": "0.1.1-beta.4",
   "description": "SKALD ROM Launcher — archive.org powered retro gaming library",
   "author": "Kilted-Kraken",
   "main": "src/main/main.js",
