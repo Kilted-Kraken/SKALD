@@ -1,0 +1,60 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v10.0/win-x64",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v10.0": {},
+    ".NETCoreApp,Version=v10.0/win-x64": {
+      "Skald.VlcHost/1.0.0": {
+        "dependencies": {
+          "LibVLCSharp.WinForms": "3.9.6"
+        },
+        "runtime": {
+          "Skald.VlcHost.dll": {}
+        }
+      },
+      "LibVLCSharp/3.9.6": {
+        "runtime": {
+          "lib/net10.0/LibVLCSharp.dll": {
+            "assemblyVersion": "3.9.6.0",
+            "fileVersion": "3.9.6.0"
+          }
+        }
+      },
+      "LibVLCSharp.WinForms/3.9.6": {
+        "dependencies": {
+          "LibVLCSharp": "3.9.6"
+        },
+        "runtime": {
+          "lib/net6.0-windows7.0/LibVLCSharp.WinForms.dll": {
+            "assemblyVersion": "3.9.6.0",
+            "fileVersion": "3.9.6.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Skald.VlcHost/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "LibVLCSharp/3.9.6": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-MVkeFzsA5nGi/G94CluNif9BQPVkVPv0cikm63YBc8U+AQY8DJTsPp/6YZMM9J5IUBMHLWzQBbT/Iwhp6sc6oA==",
+      "path": "libvlcsharp/3.9.6",
+      "hashPath": "libvlcsharp.3.9.6.nupkg.sha512"
+    },
+    "LibVLCSharp.WinForms/3.9.6": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-k6yqQRVzRSY6Tt2tPkq31x46aEpjPDTwhy2n/v251nbqQxMQZqdWHlbnnEXfHYI77pIDVpyRXIcUknoZFlXCXQ==",
+      "path": "libvlcsharp.winforms/3.9.6",
+      "hashPath": "libvlcsharp.winforms.3.9.6.nupkg.sha512"
+    }
+  }
+}

@@ -1469,6 +1469,7 @@ async function onLaunch() {
     romPath: lib.install_dir,  // main process expects the dir; it finds the ROM inside
     system:  currentSystem,
     identifier: getRomId(selectedRom),
+    title: selectedRom?.title || getRomId(selectedRom),
   });
 
   if (!result.ok) {

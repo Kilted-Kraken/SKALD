@@ -7,7 +7,7 @@ Thumbs.db
 dist/
 release-notes.md
 .tmp-rgsx-inspect/
+.tmp-gamerpic-*/
 .tmp_claude_chat.txt
 DEBUG SCREENSHOTS/
-reports/minerva-download-test/
 
