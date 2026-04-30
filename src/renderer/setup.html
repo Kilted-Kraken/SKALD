@@ -108,6 +108,32 @@
     .orb{min-width:32px;height:32px;padding:0 7px;border-radius:999px;display:inline-grid;place-items:center;font-weight:700;color:#17230f;text-shadow:none;box-shadow:inset 0 2px 4px rgba(255,255,255,.55),0 2px 4px rgba(0,0,0,.22)}
     .orb.a{background:#7be45c}.orb.b{background:#df4b43}.orb.y{background:#e8d54d}.orb.x{background:#4da8e8}
     .skip-warning{font-size:17px;color:rgba(28,54,20,.76);margin-top:18px}
+    .setup-profile-modal{
+      position:absolute;inset:0;z-index:84;display:none;align-items:center;justify-content:center;
+      background:rgba(0,0,0,.58);
+    }
+    .setup-profile-modal.on{display:flex}
+    .setup-profile-panel{
+      width:900px;min-height:470px;padding:30px 36px 26px;color:#111;
+      background:linear-gradient(180deg,rgba(244,247,239,.98),rgba(204,209,196,.96));
+      border:2px solid rgba(55,62,49,.55);border-radius:16px;
+      box-shadow:inset 0 2px 0 rgba(255,255,255,.72),0 28px 70px rgba(0,0,0,.42);
+    }
+    .setup-profile-title{font-size:36px;line-height:1;margin-bottom:12px;color:#111}
+    .setup-profile-copy{font-size:21px;line-height:1.3;color:rgba(0,0,0,.68);margin-bottom:20px}
+    .setup-profile-list{border-top:2px solid rgba(80,80,74,.18);border-bottom:2px solid rgba(80,80,74,.18);min-height:236px}
+    .setup-profile-item{
+      min-height:70px;display:flex;align-items:center;gap:16px;padding:10px 18px;
+      border-bottom:1px solid rgba(80,80,74,.16);font-size:25px;color:#111;
+    }
+    .setup-profile-item.sel{background:linear-gradient(180deg,rgba(255,255,255,.86),rgba(224,230,216,.7));box-shadow:inset 0 0 0 2px rgba(102,122,88,.28)}
+    .setup-profile-item-icon{width:42px;height:42px;flex:0 0 auto;background:center/contain no-repeat}
+    .setup-profile-item-text{display:flex;flex-direction:column;line-height:1.08;min-width:0}
+    .setup-profile-item-meta{font-size:16px;line-height:1.25;margin-top:6px;color:rgba(0,0,0,.56);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .setup-profile-error{min-height:22px;margin-top:14px;font-size:17px;color:#8a1f16}
+    .setup-profile-footer{display:flex;justify-content:flex-end;gap:24px;margin-top:12px;font-size:22px;color:rgba(0,0,0,.72)}
+    .setup-profile-hint{display:inline-flex;align-items:center;gap:8px}
+    .setup-profile-hint img{width:30px;height:30px;object-fit:contain}
     .folder-browser-modal{
       position:absolute;inset:0;z-index:80;display:none;align-items:center;justify-content:center;
       background:rgba(0,0,0,.62);
@@ -220,6 +246,30 @@
         </div>
       </div>
     </section>
+    <div id="setup-profile-modal" class="setup-profile-modal">
+      <div class="setup-profile-panel">
+        <div id="setup-profile-title" class="setup-profile-title">Setup New Profile</div>
+        <div id="setup-profile-copy" class="setup-profile-copy"></div>
+        <div id="setup-profile-list" class="setup-profile-list"></div>
+        <div id="setup-profile-error" class="setup-profile-error"></div>
+        <div class="setup-profile-footer">
+          <span class="setup-profile-hint"><img src="file:///C:/Projects/SKALD/assets/icons/Controls/button-b.webp" alt=""> Back</span>
+          <span class="setup-profile-hint"><img src="file:///C:/Projects/SKALD/assets/icons/Controls/button-a.webp" alt=""> Select</span>
+        </div>
+      </div>
+    </div>
+    <div id="setup-service-modal" class="setup-profile-modal">
+      <div class="setup-profile-panel">
+        <div id="setup-service-title" class="setup-profile-title">Online Service</div>
+        <div id="setup-service-copy" class="setup-profile-copy"></div>
+        <div id="setup-service-list" class="setup-profile-list"></div>
+        <div id="setup-service-error" class="setup-profile-error"></div>
+        <div class="setup-profile-footer">
+          <span class="setup-profile-hint"><img src="file:///C:/Projects/SKALD/assets/icons/Controls/button-b.webp" alt=""> Back</span>
+          <span class="setup-profile-hint"><img src="file:///C:/Projects/SKALD/assets/icons/Controls/button-a.webp" alt=""> Select</span>
+        </div>
+      </div>
+    </div>
     <div id="folder-browser-modal" class="folder-browser-modal">
       <div class="folder-browser-panel">
         <div class="folder-browser-title">Select Folder</div>
@@ -272,6 +322,8 @@
     const SETUP_RIGHT_EDGE=1873;
     const SETUP_CONTENT_OFFSET=170;
     const folderBrowserState={open:false,title:'Select Folder',currentPath:'',parentPath:null,entries:[],selectedIdx:0,resolve:null,error:''};
+    const profileModalState={open:false,mode:'choices',sel:0,email:'',password:'',gamertag:'',busy:false,error:''};
+    const serviceModalState={open:false,provider:'archiveorg',sel:0,login:'',secret:'',busy:false,error:''};
     const setupVkState={open:false,value:'',sel:0,onSubmit:null,title:'Keyboard',caps:false,symbols:false,accents:false,doneSel:false,cursor:0};
     const SETUP_VK_KEYS=[
       'a','b','c','d','e','f','g','1','2','3',
@@ -313,26 +365,40 @@
       stage.style.top=`${offY}px`;
     }
     window.addEventListener('resize',scaleSetupStage);
+    function setupProfileName(){
+      return state.stoat?.connected
+        ? (state.stoat?.user?.username || state.stoat?.user?.displayName || 'SKALD LIVE profile')
+        : (state.settings?.localProfile?.gamertag || state.settings?.localProfile?.displayName || '');
+    }
+    function setupProfileStatus(){
+      if(state.stoat?.connected) return `Profile Ready: signed in to SKALD LIVE as ${setupProfileName()}.`;
+      const localName=setupProfileName();
+      if(localName) return `Profile Ready: ${localName} is set up as an offline local profile.`;
+      return 'No profile has been set up yet. Start here with SKALD LIVE or an offline local gamertag.';
+    }
     const steps=[
       {
         id:'welcome',
         title:'Welcome to SKALD',
         icon:asset('assets/icons/Systems/SKALD_LIVE.webp'),
-        body:'Welcome to SKALD. Let us get your profile, storage, online services, and emulator basics ready before the main Blades open.',
+        body:'Welcome to SKALD. Your profile comes first because it anchors your gamer card, settings, saves, services, and future SKALD LIVE features.',
+        status:setupProfileStatus,
         actions:[
-          {label:'Start Setup',meta:'Walk through the recommended SKALD first-run setup.',action:'next',icon:bladeAsset('button-a.webp')},
+          {label:'Setup New Profile',meta:'Use SKALD LIVE with Stoat, create a Stoat account, or continue offline.',action:'setup-profile',icon:asset('assets/icons/Systems/SKALD_LIVE.webp')},
           {label:'Skip Initial Setup',meta:'Open SKALD now and configure everything later from System settings.',action:'skip',icon:bladeAsset('icon-power.webp')}
         ]
       },
       {
-        id:'profile',
-        title:'Gamer Profile',
-        icon:asset('assets/icons/Media/Stoat.webp'),
-        body:'Every SKALD user needs a profile. SKALD LIVE powers your gamer card, Stoat chat, synced profile identity, and future social features.',
-        status:()=>state.stoat?.connected ? `Signed in as ${state.stoat?.user?.username || 'SKALD profile'}.` : 'No SKALD LIVE profile is signed in yet. You can continue offline and sign in later from the SKALD LIVE blade.',
+        id:'services',
+        title:'Online Services',
+        icon:bladeAsset('icon-network.webp'),
+        body:'Connect the optional third-party accounts SKALD uses for marketplace access, achievements, and artwork. These are saved to the active SKALD profile, including offline local profiles.',
+        status:()=>`Archive.org: ${state.archive?.loggedIn ? `Signed in${state.archive?.username ? ` as ${state.archive.username}` : ''}` : 'Not signed in'}\nRetroAchievements: ${state.ra?.secret ? `Configured${state.ra?.login ? ` for ${state.ra.login}` : ''}` : 'Not configured'}\nSteamGridDB: ${state.sgdb?.secret ? 'Configured' : 'Not configured'}`,
         actions:[
-          {label:'Use Current Profile',meta:'Continue with the current SKALD LIVE/local profile status.',action:'next',icon:asset('assets/icons/Systems/SKALD_LIVE.webp')},
-          {label:'Continue Offline',meta:'Use SKALD without signing in for now.',action:'next',icon:bladeAsset('icon-profile.webp')}
+          {label:'Archive.org Account',meta:'Optional, used for authenticated Archive.org marketplace downloads.',action:'service-archiveorg',icon:bladeAsset('icon-network.webp')},
+          {label:'RetroAchievements Account',meta:'Optional, used for achievements, profile points, and unlock data.',action:'service-retroachievements',icon:asset('assets/icons/Systems/RA-logo.webp')},
+          {label:'SteamGridDB Account',meta:'Optional, used for game artwork, logos, covers, and icons.',action:'service-steamgriddb',icon:bladeAsset('icon-pictures.webp')},
+          {label:'Continue',meta:'Move to storage setup.',action:'next',icon:bladeAsset('button-a.webp')}
         ]
       },
       {
@@ -345,17 +411,6 @@
           {label:'Set Install Folder',meta:'Choose where games should live after install/extract.',action:'install-folder',icon:bladeAsset('icon-folder.webp')},
           {label:'Set Download Folder',meta:'Choose where incoming archives/downloads should land.',action:'download-folder',icon:bladeAsset('icon-update.webp')},
           {label:'Keep Current Storage',meta:'Continue with the paths shown on the right.',action:'next',icon:bladeAsset('button-a.webp')}
-        ]
-      },
-      {
-        id:'services',
-        title:'Online Services',
-        icon:bladeAsset('icon-network.webp'),
-        body:'SKALD can use Archive.org for marketplace sources, RetroAchievements for achievement data, and SteamGridDB for artwork and logos.',
-        status:()=>`Archive.org: ${state.archive?.loggedIn ? 'Signed in' : 'Not signed in'}\nRetroAchievements: ${state.ra?.secret ? 'Configured' : 'Not configured'}\nSteamGridDB: ${state.sgdb?.secret ? 'Configured' : 'Not configured'}`,
-        actions:[
-          {label:'Review Later in System',meta:'Manage connected services from System > 3rd Party Accounts.',action:'next',icon:bladeAsset('icon-profile.webp')},
-          {label:'Continue',meta:'Move to emulator setup.',action:'next',icon:bladeAsset('button-a.webp')}
         ]
       },
       {
@@ -519,6 +574,335 @@
         state.runtime=runtime;
       }catch{}
       render();
+    }
+    function profileModalCopy(){
+      if(profileModalState.mode==='login') return 'Sign in with an existing Stoat account to connect this profile to SKALD LIVE.';
+      if(profileModalState.mode==='create') return 'Create a Stoat account in the browser, then come back here and sign in with it.';
+      if(profileModalState.mode==='offline') return 'Choose a local gamertag. You can connect to SKALD LIVE later without blocking setup today.';
+      return 'How would you like to set up this SKALD profile? Stoat is optional, so offline setup stays fully supported.';
+    }
+    function profileModalItems(){
+      if(profileModalState.mode==='login'){
+        return [
+          {label:'Email',meta:profileModalState.email || 'Enter Stoat email address',action:'email',icon:asset('assets/icons/Systems/SKALD_LIVE.webp')},
+          {label:'Password',meta:profileModalState.password ? '*'.repeat(Math.min(16,profileModalState.password.length)) : 'Enter Stoat password',action:'password',icon:bladeAsset('icon-profile.webp')},
+          {label:profileModalState.busy ? 'Signing In...' : 'Sign In to SKALD LIVE',meta:'Connect this setup profile to your Stoat account.',action:'login',icon:bladeAsset('button-a.webp')},
+          {label:'Back',meta:'Return to profile setup choices.',action:'choices',icon:bladeAsset('button-b.webp')},
+        ];
+      }
+      if(profileModalState.mode==='create'){
+        return [
+          {label:'Open Stoat Signup',meta:'Open stoat.chat so you can create a SKALD LIVE account.',action:'open-signup',icon:asset('assets/icons/Media/Stoat.webp')},
+          {label:'I Created My Account - Sign In',meta:'Return here after signup and log into the new account.',action:'to-login',icon:asset('assets/icons/Systems/SKALD_LIVE.webp')},
+          {label:'Back',meta:'Return to profile setup choices.',action:'choices',icon:bladeAsset('button-b.webp')},
+        ];
+      }
+      if(profileModalState.mode==='offline'){
+        return [
+          {label:'Gamer Tag',meta:profileModalState.gamertag || 'Enter a local gamertag',action:'gamertag',icon:bladeAsset('icon-profile.webp')},
+          {label:'Continue Without SKALD LIVE',meta:'Save this as a local offline profile for now.',action:'save-local',icon:bladeAsset('button-a.webp')},
+          {label:'Back',meta:'Return to profile setup choices.',action:'choices',icon:bladeAsset('button-b.webp')},
+        ];
+      }
+      return [
+        {label:'Use Existing Stoat Account',meta:'Log in and connect this profile to SKALD LIVE.',action:'to-login',icon:asset('assets/icons/Systems/SKALD_LIVE.webp')},
+        {label:'Setup New Stoat Account',meta:'Create a Stoat account first, then sign in.',action:'to-create',icon:asset('assets/icons/Media/Stoat.webp')},
+        {label:'Do Not Connect to SKALD LIVE',meta:'Use a local gamertag and continue offline.',action:'to-offline',icon:bladeAsset('icon-profile.webp')},
+      ];
+    }
+    function renderProfileModal(){
+      const modal=document.getElementById('setup-profile-modal');
+      if(!modal) return;
+      modal.classList.toggle('on',profileModalState.open);
+      const title=document.getElementById('setup-profile-title');
+      const copy=document.getElementById('setup-profile-copy');
+      const list=document.getElementById('setup-profile-list');
+      const error=document.getElementById('setup-profile-error');
+      if(title) title.textContent=profileModalState.mode==='choices' ? 'Setup New Profile' : profileModalState.mode==='login' ? 'Sign In to SKALD LIVE' : profileModalState.mode==='create' ? 'Setup New Stoat Account' : 'Offline Local Profile';
+      if(copy) copy.textContent=profileModalCopy();
+      if(error) error.textContent=profileModalState.error || '';
+      if(!list) return;
+      const items=profileModalItems();
+      profileModalState.sel=Math.max(0,Math.min(profileModalState.sel,items.length-1));
+      list.innerHTML=items.map((item,idx)=>`
+        <div class="setup-profile-item ${idx===profileModalState.sel?'sel':''}" data-profile-idx="${idx}">
+          <div class="setup-profile-item-icon" style="background-image:url('${item.icon || bladeAsset('button-a.webp')}')"></div>
+          <div class="setup-profile-item-text">
+            <div>${esc(item.label)}</div>
+            <div class="setup-profile-item-meta">${esc(item.meta || '')}</div>
+          </div>
+        </div>
+      `).join('');
+      list.querySelectorAll('.setup-profile-item').forEach(item=>item.addEventListener('click',()=>{
+        profileModalState.sel=Number(item.dataset.profileIdx || 0);
+        void activateProfileModal();
+      }));
+    }
+    function openProfileModal(mode='choices'){
+      profileModalState.open=true;
+      profileModalState.mode=mode;
+      profileModalState.sel=0;
+      profileModalState.error='';
+      profileModalState.gamertag=profileModalState.gamertag || setupProfileName() || '';
+      renderProfileModal();
+    }
+    function closeProfileModal(){
+      profileModalState.open=false;
+      profileModalState.error='';
+      renderProfileModal();
+    }
+    function setProfileModalMode(mode){
+      profileModalState.mode=mode;
+      profileModalState.sel=0;
+      profileModalState.error='';
+      renderProfileModal();
+    }
+    function moveProfileModalSelection(delta){
+      const items=profileModalItems();
+      if(!items.length) return;
+      profileModalState.sel=(profileModalState.sel+delta+items.length)%items.length;
+      renderProfileModal();
+    }
+    async function saveLocalSetupProfile(){
+      const gamertag=String(profileModalState.gamertag || '').trim();
+      if(!gamertag){
+        profileModalState.error='Enter a gamertag before continuing offline.';
+        renderProfileModal();
+        return;
+      }
+      const settings=await window.electronAPI?.getSettings?.() || {};
+      const existingLocal=settings.localProfile || {};
+      settings.localProfile={...existingLocal,id:existingLocal.id || `local:${Date.now().toString(36)}-${Math.random().toString(36).slice(2,8)}`,gamertag,displayName:gamertag,updatedAt:new Date().toISOString()};
+      settings.profileMode='local';
+      await window.electronAPI?.saveSettings?.(settings);
+      state.settings=settings;
+      closeProfileModal();
+      if(current().id==='welcome') moveStep(1);
+      else render();
+    }
+    async function loginStoatFromSetup(){
+      if(profileModalState.busy) return;
+      const email=String(profileModalState.email || '').trim();
+      const password=String(profileModalState.password || '');
+      if(!email || !password){
+        profileModalState.error='Enter both email and password before signing in.';
+        renderProfileModal();
+        return;
+      }
+      profileModalState.busy=true;
+      profileModalState.error='';
+      renderProfileModal();
+      try{
+        const result=await window.electronAPI?.stoatLogin?.({email,password});
+        if(!result?.ok) throw new Error(result?.error || 'Could not sign in to Stoat.');
+        const settings=await window.electronAPI?.getSettings?.() || {};
+        settings.profileMode='stoat';
+        await window.electronAPI?.saveSettings?.(settings);
+        profileModalState.busy=false;
+        closeProfileModal();
+        await refreshStatus();
+        if(current().id==='welcome') moveStep(1);
+      }catch(error){
+        profileModalState.busy=false;
+        profileModalState.error=error?.message || 'Could not sign in to Stoat.';
+        renderProfileModal();
+      }
+    }
+    async function activateProfileModal(){
+      const item=profileModalItems()[profileModalState.sel];
+      const action=item?.action;
+      if(action==='to-login'){setProfileModalMode('login');return;}
+      if(action==='to-create'){setProfileModalMode('create');return;}
+      if(action==='to-offline'){setProfileModalMode('offline');return;}
+      if(action==='choices'){setProfileModalMode('choices');return;}
+      if(action==='email'){
+        openSetupKeyboard({title:'Stoat Email',value:profileModalState.email,onSubmit:(value)=>{profileModalState.email=value;renderProfileModal();}});
+        return;
+      }
+      if(action==='password'){
+        openSetupKeyboard({title:'Stoat Password',value:profileModalState.password,onSubmit:(value)=>{profileModalState.password=value;renderProfileModal();}});
+        return;
+      }
+      if(action==='gamertag'){
+        openSetupKeyboard({title:'Gamer Tag',value:profileModalState.gamertag,onSubmit:(value)=>{profileModalState.gamertag=value;renderProfileModal();}});
+        return;
+      }
+      if(action==='login'){await loginStoatFromSetup();return;}
+      if(action==='save-local'){await saveLocalSetupProfile();return;}
+      if(action==='open-signup'){
+        await window.electronAPI?.openExternal?.('https://stoat.chat');
+        profileModalState.error='Stoat signup opened in your browser. Come back here when the account is ready.';
+        renderProfileModal();
+        return;
+      }
+    }
+    async function backProfileModal(){
+      if(!profileModalState.open) return false;
+      if(profileModalState.mode==='choices') closeProfileModal();
+      else setProfileModalMode('choices');
+      return true;
+    }
+    const SERVICE_PROVIDERS={
+      archiveorg:{
+        id:'archiveorg',
+        title:'Archive.org Account',
+        loginLabel:'Email',
+        secretLabel:'Password',
+        copy:'Optional. Sign in if your Archive.org account is needed for restricted or authenticated marketplace downloads.',
+        icon:bladeAsset('icon-network.webp'),
+      },
+      retroachievements:{
+        id:'retroachievements',
+        title:'RetroAchievements Account',
+        loginLabel:'Username',
+        secretLabel:'API Key',
+        copy:'Optional. Connect this for achievement lists, profile points, progress, and future unlock syncing.',
+        icon:asset('assets/icons/Systems/RA-logo.webp'),
+      },
+      steamgriddb:{
+        id:'steamgriddb',
+        title:'SteamGridDB Account',
+        loginLabel:'Account Email',
+        secretLabel:'API Key',
+        copy:'Optional. Connect this for richer game artwork, covers, icons, and logos.',
+        icon:bladeAsset('icon-pictures.webp'),
+      },
+    };
+    function currentServiceProvider(){
+      return SERVICE_PROVIDERS[serviceModalState.provider] || SERVICE_PROVIDERS.archiveorg;
+    }
+    function serviceSecretMeta(){
+      const provider=currentServiceProvider();
+      return serviceModalState.secret ? '*'.repeat(Math.min(16,serviceModalState.secret.length)) : `Enter ${provider.secretLabel}`;
+    }
+    function serviceModalItems(){
+      const provider=currentServiceProvider();
+      return [
+        {label:provider.loginLabel,meta:serviceModalState.login || `Enter ${provider.loginLabel}`,action:'login',icon:provider.icon},
+        {label:provider.secretLabel,meta:serviceSecretMeta(),action:'secret',icon:bladeAsset('icon-profile.webp')},
+        {label:serviceModalState.busy ? 'Saving...' : `Save ${provider.title}`,meta:'Save this account to the active SKALD profile.',action:'save',icon:bladeAsset('button-a.webp')},
+        {label:'Clear Saved Account',meta:'Remove this service from the active SKALD profile.',action:'clear',icon:asset('assets/icons/Controls/Keyboard/keyboard_delete.webp')},
+        {label:'Back',meta:'Return to Online Services.',action:'back',icon:bladeAsset('button-b.webp')},
+      ];
+    }
+    function renderServiceModal(){
+      const modal=document.getElementById('setup-service-modal');
+      if(!modal) return;
+      modal.classList.toggle('on',serviceModalState.open);
+      const provider=currentServiceProvider();
+      const title=document.getElementById('setup-service-title');
+      const copy=document.getElementById('setup-service-copy');
+      const list=document.getElementById('setup-service-list');
+      const error=document.getElementById('setup-service-error');
+      if(title) title.textContent=provider.title;
+      if(copy) copy.textContent=provider.copy;
+      if(error) error.textContent=serviceModalState.error || '';
+      if(!list) return;
+      const items=serviceModalItems();
+      serviceModalState.sel=Math.max(0,Math.min(serviceModalState.sel,items.length-1));
+      list.innerHTML=items.map((item,idx)=>`
+        <div class="setup-profile-item ${idx===serviceModalState.sel?'sel':''}" data-service-idx="${idx}">
+          <div class="setup-profile-item-icon" style="background-image:url('${item.icon || bladeAsset('button-a.webp')}')"></div>
+          <div class="setup-profile-item-text">
+            <div>${esc(item.label)}</div>
+            <div class="setup-profile-item-meta">${esc(item.meta || '')}</div>
+          </div>
+        </div>
+      `).join('');
+      list.querySelectorAll('.setup-profile-item').forEach(item=>item.addEventListener('click',()=>{
+        serviceModalState.sel=Number(item.dataset.serviceIdx || 0);
+        void activateServiceModal();
+      }));
+    }
+    async function openServiceModal(providerId){
+      const provider=SERVICE_PROVIDERS[providerId] || SERVICE_PROVIDERS.archiveorg;
+      serviceModalState.open=true;
+      serviceModalState.provider=provider.id;
+      serviceModalState.sel=0;
+      serviceModalState.error='';
+      serviceModalState.busy=false;
+      const account=await window.electronAPI?.getThirdPartyAccount?.({provider:provider.id}).catch(()=>null);
+      serviceModalState.login=account?.login || '';
+      serviceModalState.secret=account?.secret || '';
+      renderServiceModal();
+    }
+    function closeServiceModal(){
+      serviceModalState.open=false;
+      serviceModalState.error='';
+      renderServiceModal();
+    }
+    function moveServiceModalSelection(delta){
+      const items=serviceModalItems();
+      if(!items.length) return;
+      serviceModalState.sel=(serviceModalState.sel+delta+items.length)%items.length;
+      renderServiceModal();
+    }
+    async function saveServiceAccount(){
+      if(serviceModalState.busy) return;
+      const provider=currentServiceProvider();
+      const login=String(serviceModalState.login || '').trim();
+      const secret=String(serviceModalState.secret || '').trim();
+      if(!login || !secret){
+        serviceModalState.error=`Enter both ${provider.loginLabel} and ${provider.secretLabel}.`;
+        renderServiceModal();
+        return;
+      }
+      serviceModalState.busy=true;
+      serviceModalState.error='';
+      renderServiceModal();
+      try{
+        let result=null;
+        if(provider.id==='archiveorg'){
+          result=await window.electronAPI?.archiveSaveCredentials?.({email:login,password:secret});
+          const loginResult=await window.electronAPI?.archiveLogin?.({email:login,password:secret});
+          if(!loginResult?.ok) throw new Error(loginResult?.error || 'Saved credentials, but Archive.org sign-in failed.');
+        }else{
+          result=await window.electronAPI?.saveThirdPartyAccount?.({provider:provider.id,login,secret,saveToProfile:true});
+        }
+        if(!result?.ok) throw new Error(result?.error || `Could not save ${provider.title}.`);
+        serviceModalState.busy=false;
+        closeServiceModal();
+        await refreshStatus();
+      }catch(error){
+        serviceModalState.busy=false;
+        serviceModalState.error=error?.message || `Could not save ${provider.title}.`;
+        renderServiceModal();
+      }
+    }
+    async function clearServiceAccount(){
+      const provider=currentServiceProvider();
+      const result=await window.electronAPI?.clearThirdPartyAccount?.({provider:provider.id});
+      if(!result?.ok){
+        serviceModalState.error=result?.error || `Could not clear ${provider.title}.`;
+        renderServiceModal();
+        return;
+      }
+      if(provider.id==='archiveorg') await window.electronAPI?.archiveLogout?.().catch(()=>null);
+      serviceModalState.login='';
+      serviceModalState.secret='';
+      closeServiceModal();
+      await refreshStatus();
+    }
+    async function activateServiceModal(){
+      const provider=currentServiceProvider();
+      const item=serviceModalItems()[serviceModalState.sel];
+      const action=item?.action;
+      if(action==='back'){closeServiceModal();return;}
+      if(action==='login'){
+        openSetupKeyboard({title:provider.loginLabel,value:serviceModalState.login,onSubmit:(value)=>{serviceModalState.login=value;renderServiceModal();}});
+        return;
+      }
+      if(action==='secret'){
+        openSetupKeyboard({title:provider.secretLabel,value:serviceModalState.secret,onSubmit:(value)=>{serviceModalState.secret=value;renderServiceModal();}});
+        return;
+      }
+      if(action==='save'){await saveServiceAccount();return;}
+      if(action==='clear'){await clearServiceAccount();return;}
+    }
+    async function backServiceModal(){
+      if(!serviceModalState.open) return false;
+      closeServiceModal();
+      return true;
     }
     function renderFolderBrowser(){
       const modal=document.getElementById('folder-browser-modal');
@@ -863,6 +1247,10 @@
       const action=current().actions[state.sel]?.action;
       if(action==='next'){moveStep(1);return;}
       if(action==='back'){back();return;}
+      if(action==='setup-profile'){openProfileModal('choices');return;}
+      if(action==='service-archiveorg'){await openServiceModal('archiveorg');return;}
+      if(action==='service-retroachievements'){await openServiceModal('retroachievements');return;}
+      if(action==='service-steamgriddb'){await openServiceModal('steamgriddb');return;}
       if(action==='skip'){await complete(true);return;}
       if(action==='finish'){await complete(false);return;}
       if(action==='install-folder'){await chooseStorage('install');return;}
@@ -902,6 +1290,24 @@
         event.preventDefault();
         return;
       }
+      if(profileModalState.open){
+        if(event.key==='ArrowUp') moveProfileModalSelection(-1);
+        else if(event.key==='ArrowDown') moveProfileModalSelection(1);
+        else if(event.key==='Enter' || event.key===' ') await activateProfileModal();
+        else if(event.key==='Escape' || event.key==='Backspace' || event.key.toLowerCase()==='b') await backProfileModal();
+        else return;
+        event.preventDefault();
+        return;
+      }
+      if(serviceModalState.open){
+        if(event.key==='ArrowUp') moveServiceModalSelection(-1);
+        else if(event.key==='ArrowDown') moveServiceModalSelection(1);
+        else if(event.key==='Enter' || event.key===' ') await activateServiceModal();
+        else if(event.key==='Escape' || event.key==='Backspace' || event.key.toLowerCase()==='b') await backServiceModal();
+        else return;
+        event.preventDefault();
+        return;
+      }
       if(event.key==='ArrowUp'){state.sel=Math.max(0,state.sel-1);render();}
       else if(event.key==='ArrowDown'){state.sel=Math.min((current().actions||[]).length-1,state.sel+1);render();}
       else if(event.key==='ArrowLeft' || event.key==='PageUp' || event.key.toLowerCase()==='q'){moveStep(-1);}
@@ -910,7 +1316,7 @@
       else if(event.key==='Escape' || event.key==='Backspace'){back();}
       else if(event.key.toLowerCase()==='y'){await complete(true);}
     });
-    const PAD={A:0,B:1,X:2,Y:3,LB:4,RB:5,START:9,LS:10,DU:12,DD:13,DL:14,DR:15};
+    const PAD={A:0,B:1,X:2,Y:3,LB:4,RB:5,LT:6,RT:7,START:9,LS:10,DU:12,DD:13,DL:14,DR:15};
     let prev={};
     function pollGamepad(){
       const gp=navigator.getGamepads?.().find(Boolean);
@@ -938,6 +1344,16 @@
           if(just(PAD.X)) createFolderBrowserFolder();
           if(just(PAD.Y)) chooseCurrentFolderBrowserPath();
           if(just(PAD.B)) folderBrowserBack();
+        }else if(profileModalState.open){
+          if(just(PAD.DU)) moveProfileModalSelection(-1);
+          if(just(PAD.DD)) moveProfileModalSelection(1);
+          if(just(PAD.A)) activateProfileModal();
+          if(just(PAD.B)) backProfileModal();
+        }else if(serviceModalState.open){
+          if(just(PAD.DU)) moveServiceModalSelection(-1);
+          if(just(PAD.DD)) moveServiceModalSelection(1);
+          if(just(PAD.A)) activateServiceModal();
+          if(just(PAD.B)) backServiceModal();
         }else{
           if(just(PAD.DU)){state.sel=Math.max(0,state.sel-1);render();}
           if(just(PAD.DD)){state.sel=Math.min((current().actions||[]).length-1,state.sel+1);render();}

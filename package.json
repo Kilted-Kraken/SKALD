@@ -1,6 +1,6 @@
 {
   "name": "skald-launcher",
-  "version": "0.1.1-beta.2",
+  "version": "0.1.1-beta.3",
   "description": "SKALD ROM Launcher — archive.org powered retro gaming library",
   "author": "Kilted-Kraken",
   "main": "src/main/main.js",
@@ -16,7 +16,8 @@
     "fetch:pack:screenscraper": "node scripts/fetch-screenscraper-pack-batch.js",
     "validate:pack:batch": "node scripts/validate-marketplace-pack-batch.js",
     "validate:pack": "node scripts/validate-marketplace-pack.js",
-    "merge:pack": "node scripts/merge-marketplace-pack-batch.js"
+    "merge:pack": "node scripts/merge-marketplace-pack-batch.js",
+    "organize:gamerpics": "node scripts/organize-gamerpics-for-archive.js"
   },
   "devDependencies": {
     "electron": "40.8.5",

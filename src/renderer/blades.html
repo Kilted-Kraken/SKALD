@@ -58,6 +58,28 @@ body.guide-shell-only #boot-animation-overlay{display:none !important;}
 #stage.custom-theme-active .sitem,
 #stage.custom-theme-active .subnav-item,
 #stage.custom-theme-active .games-tab{text-shadow:0 1px 0 rgba(255,255,255,.32);}
+#stage.mc360-color-preset .mitem,
+#stage.mc360-color-preset .sitem,
+#stage.mc360-color-preset .subnav-item,
+#stage.mc360-color-preset .games-tab,
+#stage.mc360-color-preset .home-desc,
+#stage.mc360-color-preset .sys-desc,
+#stage.mc360-color-preset .info-block,
+#stage.mc360-color-preset .mkt-source-detail,
+#stage.mc360-color-preset .games-detail-panel,
+#stage.mc360-color-preset .mkt-scan-side,
+#stage.mc360-color-preset .subpanel-title,
+#stage.mc360-color-preset #panel-title-layer,
+#stage.mc360-color-preset .guide-profile-list-title,
+#stage.mc360-color-preset .guide-profile-detail-title{color:var(--mc360-text,#111);text-shadow:var(--mc360-shadow,0 1px 0 rgba(255,255,255,.45));}
+#stage.mc360-color-preset .mitem.sel,
+#stage.mc360-color-preset .sitem.sel,
+#stage.mc360-color-preset .subnav-item.sel,
+#stage.mc360-color-preset .games-tab.sel{color:var(--mc360-selected,#111);}
+#stage.mc360-color-preset .mkt-rom-meta,
+#stage.mc360-color-preset .mkt-action-meta,
+#stage.mc360-color-preset .guide-profile-list-subtitle,
+#stage.mc360-color-preset .guide-profile-detail-body{color:var(--mc360-muted,rgba(0,0,0,.64));}
 #bg-anim{position:absolute;left:0;top:0;width:1920px;height:1080px;z-index:0;object-fit:cover;}
 .bg-col{position:absolute;left:0;top:0;width:1920px;height:1080px;z-index:1;opacity:0;transition:opacity 200ms;background-size:cover;background-position:center;background-repeat:no-repeat;}
 .bg-col.on{opacity:1;}
@@ -110,6 +132,7 @@ body.guide-shell-only #boot-animation-overlay{display:none !important;}
 .gamercard-gamescore-icon{width:25px;height:25px;display:inline-block;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-gamescore.webp') no-repeat center/contain;flex:0 0 25px;}
 #gc-rep{position:absolute;left:255px;top:20px;width:120px;height:30px;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/gamercard_rep_12.webp') no-repeat;background-size:auto 100%;}
 #content{position:absolute;top:400px;width:1220px;height:650px;z-index:30;overflow:hidden;transition:left 180ms ease-out;}
+#content:has(#p-mkt.on:not(.sub-open)){overflow:visible;}
 .panel{display:none;flex-direction:column;width:100%;height:100%;position:relative;}.panel.on{display:flex;}
 .menu{list-style:none;}
 .mitem{display:flex;align-items:center;gap:18px;padding:0 18px 0 24px;font-size:22px;color:rgba(0,0,0,.78);cursor:pointer;position:relative;transition:all 100ms;max-width:560px;height:64px;margin-bottom:0;background:none;border-bottom:4px solid rgba(72,50,94,.28);}
@@ -874,6 +897,7 @@ body.guide-shell-only #boot-animation-overlay{display:none !important;}
 #sub-emulators .emu-item.r6{top:250px;}
 #sub-emulators .emu-item.r7{top:303px;}
 #sub-emulators .emu-item.r8{top:357px;}
+#sub-emulators .emu-item.r9{top:411px;}
 #sub-emulators .emu-item .mkt-action-meta{
   display:none;
 }
@@ -1803,7 +1827,7 @@ body.guide-shell-only #boot-animation-overlay{display:none !important;}
 .games-delete-modal-hints{position:absolute;right:20px;bottom:14px;display:flex;align-items:center;gap:16px;font-size:15px;color:rgba(0,0,0,.56);}
 .games-delete-modal-hint{display:flex;align-items:center;gap:8px;}
 .games-delete-modal-hint img{width:24px;height:24px;object-fit:contain;}
-.archive-variant-modal{position:absolute;left:50%;top:50%;z-index:49;display:none;width:min(720px,calc(100% - 110px));max-height:min(720px,calc(100% - 120px));padding:22px 22px 58px;border-radius:16px;background:linear-gradient(180deg,rgba(241,241,234,.98),rgba(204,204,197,.98));box-shadow:0 18px 48px rgba(0,0,0,.36),inset 0 2px 0 rgba(255,255,255,.58);border:3px solid rgba(118,118,118,.35);transform:translate(-50%,-50%);box-sizing:border-box;}
+.archive-variant-modal{position:absolute;left:50%;top:50%;z-index:70;display:none;width:min(720px,calc(100% - 110px));max-height:min(720px,calc(100% - 120px));padding:22px 22px 58px;border-radius:16px;background:linear-gradient(180deg,rgba(241,241,234,.98),rgba(204,204,197,.98));box-shadow:0 18px 48px rgba(0,0,0,.36),inset 0 2px 0 rgba(255,255,255,.58);border:3px solid rgba(118,118,118,.35);transform:translate(-50%,-50%);box-sizing:border-box;}
 .archive-variant-modal.on{display:flex;flex-direction:column;}
 .archive-variant-modal-title{font-size:28px;line-height:1.05;color:#111;margin-bottom:10px;}
 .archive-variant-modal-copy{font-size:18px;line-height:1.45;color:rgba(0,0,0,.72);white-space:pre-line;margin-bottom:16px;}
@@ -1811,6 +1835,7 @@ body.guide-shell-only #boot-animation-overlay{display:none !important;}
 .archive-variant-list::-webkit-scrollbar{display:none;}
 .archive-variant-row{display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.54),rgba(219,219,211,.54));border:2px solid rgba(118,118,118,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.35);}
 .archive-variant-row.sel{border-color:rgba(87,141,54,.72);box-shadow:0 0 0 2px rgba(87,141,54,.18), inset 0 1px 0 rgba(255,255,255,.45);}
+.archive-variant-thumb{width:54px;height:54px;flex:0 0 54px;border-radius:10px;background-position:center;background-repeat:no-repeat;background-size:cover;box-shadow:inset 0 1px 0 rgba(255,255,255,.38),0 2px 7px rgba(0,0,0,.18);border:1px solid rgba(0,0,0,.16);}
 .archive-variant-row-main{flex:1;min-width:0;}
 .archive-variant-row-title{font-size:22px;line-height:1.1;color:#111;}
 .archive-variant-row-meta{font-size:16px;line-height:1.35;color:rgba(0,0,0,.62);margin-top:4px;white-space:pre-line;}
@@ -2243,6 +2268,8 @@ body.guide-shell-only #boot-animation-overlay{display:none !important;}
   #p-mkt .blade-home.mkt-home{display:grid;grid-template-columns:430px 1fr;column-gap:28px;width:100%;height:100%;padding:0 0 0 0;}
   #p-mkt .mkt-home .mitem::before,#p-mkt .mkt-home .mitem::after{display:none !important;}
   .mkt-home-left{display:flex;align-items:flex-start;}
+  #p-mkt .mkt-home-left{transform:translate(28px,-44px);}
+  #p-mkt .mkt-home-right{transform:translateX(28px);}
   .mkt-home-list{list-style:none;width:100%;display:flex;flex-direction:column;gap:12px;padding:0;margin:0;}
   .mkt-home-row,.mkt-home-hero,.mkt-home-utility{position:relative;display:flex;align-items:center;cursor:pointer;overflow:hidden;border-radius:10px;border:2px solid rgba(96,58,31,.28);background:linear-gradient(180deg,rgba(255,245,238,.78),rgba(232,194,163,.55));box-shadow:inset 0 1px 0 rgba(255,255,255,.42);}
   .mkt-home-row{min-height:78px;padding:0 22px;}
@@ -2338,6 +2365,7 @@ body:has(#vk-overlay.on) #blade-layer{visibility:hidden;}
 #guide2[data-mode="account"] #g2-pcsx2-body{display:none;}
 #guide2[data-mode="account"] #g2-vlc-body{display:none;}
 #guide2[data-mode="account"] #g2-xenia-body{display:none;}
+#guide2[data-mode="account"] #g2-xemu-body{display:none;}
 #guide2[data-mode="account"] #g2-rpcs3-body{display:none;}
 #guide2[data-mode="retroarch"] #g2-account-desc,
 #guide2[data-mode="retroarch"] #g2-account-status,
@@ -2347,6 +2375,7 @@ body:has(#vk-overlay.on) #blade-layer{visibility:hidden;}
 #guide2[data-mode="retroarch"] #g2-pcsx2-body{display:none;}
 #guide2[data-mode="retroarch"] #g2-vlc-body{display:none;}
 #guide2[data-mode="retroarch"] #g2-xenia-body{display:none;}
+#guide2[data-mode="retroarch"] #g2-xemu-body{display:none;}
 #guide2[data-mode="retroarch"] #g2-rpcs3-body{display:none;}
 #guide2[data-mode="retroarch"] #g2-account-body,
 #guide2[data-mode="pcsx2"] #g2-account-body,
@@ -2363,7 +2392,8 @@ body:has(#vk-overlay.on) #blade-layer{visibility:hidden;}
 #guide2[data-mode="pcsx2"] #g2-account-list,
 #guide2[data-mode="pcsx2"] #g2-retroarch-body,
 #guide2[data-mode="pcsx2"] #g2-vlc-body,
-#guide2[data-mode="pcsx2"] #g2-xenia-body{display:none;}
+#guide2[data-mode="pcsx2"] #g2-xenia-body,
+#guide2[data-mode="pcsx2"] #g2-xemu-body{display:none;}
 #guide2[data-mode="pcsx2"] #g2-rpcs3-body{display:none;}
 #guide2[data-mode="pcsx2"] #g2-pcsx2-body{display:block;}
 #g2-retroarch-body{display:none;}
@@ -2374,7 +2404,8 @@ body:has(#vk-overlay.on) #blade-layer{visibility:hidden;}
 #guide2[data-mode="vlc"] #g2a-secret-input,
 #guide2[data-mode="vlc"] #g2-account-list,
 #guide2[data-mode="vlc"] #g2-retroarch-body,
-#guide2[data-mode="vlc"] #g2-pcsx2-body{display:none;}
+#guide2[data-mode="vlc"] #g2-pcsx2-body,
+#guide2[data-mode="vlc"] #g2-xemu-body{display:none;}
 #guide2[data-mode="vlc"] #g2-vlc-body{display:block;}
 #g2-vlc-body{display:none;}
 #guide2[data-mode="rpcs3"] #g2-account-desc,
@@ -2385,7 +2416,8 @@ body:has(#vk-overlay.on) #blade-layer{visibility:hidden;}
 #guide2[data-mode="rpcs3"] #g2-retroarch-body,
 #guide2[data-mode="rpcs3"] #g2-pcsx2-body,
 #guide2[data-mode="rpcs3"] #g2-vlc-body,
-#guide2[data-mode="rpcs3"] #g2-xenia-body{display:none;}
+#guide2[data-mode="rpcs3"] #g2-xenia-body,
+#guide2[data-mode="rpcs3"] #g2-xemu-body{display:none;}
 #guide2[data-mode="rpcs3"] #g2-rpcs3-body{display:block;}
 #g2-rpcs3-body{display:none;}
 #guide2[data-mode="xenia"] #g2-account-desc,
@@ -2395,7 +2427,8 @@ body:has(#vk-overlay.on) #blade-layer{visibility:hidden;}
 #guide2[data-mode="xenia"] #g2-account-list,
   #guide2[data-mode="xenia"] #g2-retroarch-body,
   #guide2[data-mode="xenia"] #g2-pcsx2-body,
-  #guide2[data-mode="xenia"] #g2-vlc-body{display:none;}
+  #guide2[data-mode="xenia"] #g2-vlc-body,
+  #guide2[data-mode="xenia"] #g2-xemu-body{display:none;}
   #guide2[data-mode="xenia"] #g2-xenia-body{display:block;}
   #g2-xenia-body{display:none;}
   #guide2[data-mode="duckstation"] #g2-account-desc,
@@ -2407,6 +2440,7 @@ body:has(#vk-overlay.on) #blade-layer{visibility:hidden;}
   #guide2[data-mode="duckstation"] #g2-pcsx2-body,
   #guide2[data-mode="duckstation"] #g2-vlc-body,
   #guide2[data-mode="duckstation"] #g2-xenia-body,
+  #guide2[data-mode="duckstation"] #g2-xemu-body,
   #guide2[data-mode="duckstation"] #g2-dolphin-body,
   #guide2[data-mode="duckstation"] #g2-rpcs3-body{display:none;}
   #guide2[data-mode="duckstation"] #g2-account-body{top:32px;padding:8px 26px 0;}
@@ -2421,6 +2455,7 @@ body:has(#vk-overlay.on) #blade-layer{visibility:hidden;}
   #guide2[data-mode="dolphin"] #g2-pcsx2-body,
   #guide2[data-mode="dolphin"] #g2-vlc-body,
   #guide2[data-mode="dolphin"] #g2-xenia-body,
+  #guide2[data-mode="dolphin"] #g2-xemu-body,
   #guide2[data-mode="dolphin"] #g2-duckstation-body,
   #guide2[data-mode="dolphin"] #g2-rpcs3-body{display:none;}
 #guide2[data-mode="dolphin"] #g2-account-body{top:32px;padding:8px 26px 0;}
@@ -2435,12 +2470,29 @@ body:has(#vk-overlay.on) #blade-layer{visibility:hidden;}
 #guide2[data-mode="cemu"] #g2-pcsx2-body,
 #guide2[data-mode="cemu"] #g2-vlc-body,
 #guide2[data-mode="cemu"] #g2-xenia-body,
+#guide2[data-mode="cemu"] #g2-xemu-body,
 #guide2[data-mode="cemu"] #g2-duckstation-body,
 #guide2[data-mode="cemu"] #g2-dolphin-body,
 #guide2[data-mode="cemu"] #g2-rpcs3-body{display:none;}
 #guide2[data-mode="cemu"] #g2-account-body{top:32px;padding:8px 26px 0;}
 #guide2[data-mode="cemu"] #g2-cemu-body{display:block;}
 #g2-cemu-body{display:none;}
+#guide2[data-mode="xemu"] #g2-account-desc,
+#guide2[data-mode="xemu"] #g2-account-status,
+#guide2[data-mode="xemu"] #g2a-login-input,
+#guide2[data-mode="xemu"] #g2a-secret-input,
+#guide2[data-mode="xemu"] #g2-account-list,
+#guide2[data-mode="xemu"] #g2-retroarch-body,
+#guide2[data-mode="xemu"] #g2-pcsx2-body,
+#guide2[data-mode="xemu"] #g2-vlc-body,
+#guide2[data-mode="xemu"] #g2-xenia-body,
+#guide2[data-mode="xemu"] #g2-duckstation-body,
+#guide2[data-mode="xemu"] #g2-dolphin-body,
+#guide2[data-mode="xemu"] #g2-cemu-body,
+#guide2[data-mode="xemu"] #g2-rpcs3-body{display:none;}
+#guide2[data-mode="xemu"] #g2-account-body{top:32px;padding:8px 26px 0;}
+#guide2[data-mode="xemu"] #g2-xemu-body{display:block;}
+#g2-xemu-body{display:none;}
   #g2-retroarch-desc{
   font-size:16px;
   line-height:1.34;
@@ -2603,6 +2655,26 @@ body:has(#vk-overlay.on) #blade-layer{visibility:hidden;}
 #g2-cemu-list .g2r-label{font-size:17px;line-height:1.1;color:rgba(28,28,28,.84);}
 #g2-cemu-list .g2r-value{white-space:pre-line;line-height:1.1;font-size:17px;}
 #g2-cemu-list .g2r-item{min-height:58px;}
+#g2-xemu-desc{
+  margin:2px 0 10px;
+  font-size:18px;
+  line-height:1.18;
+  color:rgba(28,28,28,.88);
+  max-width:700px;
+  white-space:pre-line;
+}
+#g2-xemu-status{
+  margin:0 0 12px;
+  font-size:16px;
+  line-height:1.22;
+  color:rgba(28,28,28,.72);
+  white-space:pre-line;
+  max-width:700px;
+}
+#g2-xemu-list{display:flex;flex-direction:column;gap:0;max-width:700px;}
+#g2-xemu-list .g2r-label{font-size:17px;line-height:1.1;color:rgba(28,28,28,.84);}
+#g2-xemu-list .g2r-value{white-space:pre-line;line-height:1.1;font-size:17px;}
+#g2-xemu-list .g2r-item{min-height:58px;}
   #g2-xenia-desc{
   font-size:16px;
   line-height:1.34;
@@ -2689,7 +2761,8 @@ body:has(#vk-overlay.on) #blade-layer{visibility:hidden;}
     inset 0 -2px 4px rgba(102,102,96,.12),
     0 1px 2px rgba(0,0,0,.08);
 }
-#guide2[data-mode="xenia"] .emu-progress-wrap{
+#guide2[data-mode="xenia"] .emu-progress-wrap,
+#guide2[data-mode="xemu"] .emu-progress-wrap{
   margin:0 0 14px;
   max-width:620px;
   padding:14px 16px 16px;
@@ -2774,6 +2847,8 @@ body:has(#vk-overlay.on) #blade-layer{visibility:hidden;}
   color:rgba(28,28,28,.9);
   text-shadow:0 1px 0 rgba(255,255,255,.72);
 }
+.guide-music-btn img{width:24px;height:24px;object-fit:contain;display:block;opacity:.76;filter:drop-shadow(0 1px 0 rgba(255,255,255,.55));}
+.guide-music-btn.sel img,.guide-music-btn.is-active img{opacity:.96;}
 .guide-select-music{height:42px;display:flex;align-items:center;padding:0 12px;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/guide-selectmediabutton-nofocus.webp') no-repeat center/100% 100%;font-size:20px;color:rgba(50,50,50,.44);}
 .guide-skald-logo{width:250px;height:94px;margin:22px auto 0;background:url('file:///C:/Projects/SKALD/assets/icons/Systems/SKALD-LOGO.webp') no-repeat center/contain;filter:drop-shadow(0 1px 2px rgba(0,0,0,.28));opacity:.94;}
 .guide-footer-legend{position:absolute;left:0;right:0;bottom:2px;height:42px;display:flex;align-items:center;justify-content:space-between;font-size:18px;color:rgba(255,255,255,.93);text-shadow:0 1px 2px rgba(0,0,0,.7);}
@@ -2802,6 +2877,16 @@ body:has(#vk-overlay.on) #blade-layer{visibility:hidden;}
 .guide-chat-detail-body{font-size:18px;line-height:1.36;color:rgba(0,0,0,.74);white-space:pre-line;}
 .guide-chat-empty{padding:18px 12px;font-size:19px;line-height:1.34;color:rgba(0,0,0,.58);text-align:center;}
 .guide-profile-open .guide-footer-group:first-child{visibility:hidden;}
+.guide-sound-page{flex-direction:column;min-height:0;padding:26px 0 54px;}
+.guide-sound-panel{width:430px;margin:18px auto 0;display:flex;flex-direction:column;gap:10px;}
+.guide-sound-intro{font-size:20px;line-height:1.28;color:rgba(0,0,0,.62);text-shadow:0 1px 0 rgba(255,255,255,.62);margin:0 2px 8px;}
+.guide-sound-row{min-height:76px;padding:10px 14px;box-sizing:border-box;border-radius:11px;background:linear-gradient(180deg,rgba(246,247,243,.9),rgba(208,211,204,.82));border:2px solid rgba(86,86,82,.26);box-shadow:inset 0 1px 0 rgba(255,255,255,.75),0 1px 2px rgba(0,0,0,.1);cursor:pointer;color:#1c1c1c;text-shadow:0 1px 0 rgba(255,255,255,.7);}
+.guide-sound-row.sel{background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(221,224,216,.94));border-color:rgba(95,120,63,.42);box-shadow:0 3px 10px rgba(0,0,0,.14),inset 0 1px 0 rgba(255,255,255,.88);}
+.guide-sound-row-top{display:flex;align-items:center;justify-content:space-between;gap:16px;}
+.guide-sound-label{font-size:23px;line-height:1.04;}
+.guide-sound-value{font-size:21px;color:rgba(0,0,0,.58);}
+.guide-sound-meter{height:12px;margin-top:12px;border-radius:99px;background:rgba(65,65,60,.22);box-shadow:inset 0 1px 2px rgba(0,0,0,.24),0 1px 0 rgba(255,255,255,.55);overflow:hidden;}
+.guide-sound-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,rgba(92,120,53,.92),rgba(151,178,92,.94));box-shadow:inset 0 1px 0 rgba(255,255,255,.45);}
 .guide-profile-page{flex-direction:column;min-height:0;padding:18px 0 54px;}
 .guide-profile-placeholder{width:660px;margin-top:34px;display:flex;flex-direction:column;gap:12px;}
 .guide-profile-placeholder-title{font-size:34px;line-height:1.05;color:#151515;text-shadow:0 1px 0 rgba(255,255,255,.72);}
@@ -4168,16 +4253,16 @@ SKALD LIVE uses Stoat for accounts. If you already have a Stoat account, sign in
             <div class="emu-menu-shadow"></div>
             <div class="emu-menu-frame"></div>
             <ul class="menu home-menu" id="emu-settings-list">
-              <li class="sitem home-row r1 subnav-item emu-item sel" data-home-title="RetroArch" data-home-desc="Open the integrated RetroArch manager to handle the SKALD runtime, download/import flow, custom override, and the current libretro core mappings for supported systems." data-emu-guide="retroarch" data-emu-title="RetroArch" data-emu-desc="Open the integrated RetroArch manager to handle the SKALD runtime, download/import flow, custom override, and the current libretro core mappings for supported systems." data-emu-status="Integrated backend for the first SKALD-native emulator path.\nOpen this entry to manage the runtime and system cores.">
-                <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/Retroarch.webp')"></div>
-                <div class="mkt-account-copy">
-                  <div class="mkt-scan-label">RetroArch</div>
-                </div>
-              </li>
-                <li class="sitem home-row r2 subnav-item emu-item" data-home-title="PCSX2" data-home-desc="Open the integrated PCSX2 manager to prepare a SKALD-managed runtime, set a BIOS folder, and define a temporary custom override while the native PS2 path grows." data-emu-guide="pcsx2" data-emu-title="PCSX2" data-emu-desc="Open the integrated PCSX2 manager to prepare a SKALD-managed runtime, set a BIOS folder, and define a temporary custom override while the native PS2 path grows." data-emu-status="PS2-native path is starting here.\nOpen this entry to manage the runtime and BIOS setup.">
-                  <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/PCSX2.webp')"></div>
+              <li class="sitem home-row r1 subnav-item emu-item sel" data-home-title="Cemu" data-home-desc="Open the integrated Cemu manager to install or import the SKALD-managed Wii U runtime. Wii U games launch through official Cemu instead of RetroArch." data-emu-guide="cemu" data-emu-title="Cemu" data-emu-desc="Open the integrated Cemu manager to install or import the SKALD-managed Wii U runtime. Wii U games launch through official Cemu instead of RetroArch." data-emu-status="Wii U native path starts here.\nOpen this entry to manage Cemu.">
+                  <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/CEMU.webp')"></div>
                   <div class="mkt-account-copy">
-                    <div class="mkt-scan-label">PCSX2</div>
+                    <div class="mkt-scan-label">Cemu</div>
+                  </div>
+                </li>
+                <li class="sitem home-row r2 subnav-item emu-item" data-home-title="Dolphin" data-home-desc="Open the integrated Dolphin manager to install or import the SKALD-managed GameCube and Wii runtime. GameCube games launch through official Dolphin instead of RetroArch." data-emu-guide="dolphin" data-emu-title="Dolphin" data-emu-desc="Open the integrated Dolphin manager to install or import the SKALD-managed GameCube and Wii runtime. GameCube games launch through official Dolphin instead of RetroArch." data-emu-status="GameCube and Wii native path starts here.\nOpen this entry to manage Dolphin.">
+                  <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/Dolphin.webp')"></div>
+                  <div class="mkt-account-copy">
+                    <div class="mkt-scan-label">Dolphin</div>
                   </div>
                 </li>
                 <li class="sitem home-row r3 subnav-item emu-item" data-home-title="DuckStation" data-home-desc="Open the integrated DuckStation manager to install or import the SKALD-managed PS1 runtime. PlayStation games launch through DuckStation instead of RetroArch." data-emu-guide="duckstation" data-emu-title="DuckStation" data-emu-desc="Open the integrated DuckStation manager to install or import the SKALD-managed PS1 runtime. PlayStation games launch through DuckStation instead of RetroArch." data-emu-status="PS1-native path is starting here.\nOpen this entry to manage DuckStation.">
@@ -4186,43 +4271,49 @@ SKALD LIVE uses Stoat for accounts. If you already have a Stoat account, sign in
                     <div class="mkt-scan-label">DuckStation</div>
                   </div>
                 </li>
-                <li class="sitem home-row r4 subnav-item emu-item" data-home-title="Dolphin" data-home-desc="Open the integrated Dolphin manager to install or import the SKALD-managed GameCube and Wii runtime. GameCube games launch through official Dolphin instead of RetroArch." data-emu-guide="dolphin" data-emu-title="Dolphin" data-emu-desc="Open the integrated Dolphin manager to install or import the SKALD-managed GameCube and Wii runtime. GameCube games launch through official Dolphin instead of RetroArch." data-emu-status="GameCube and Wii native path starts here.\nOpen this entry to manage Dolphin.">
-                  <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/Dolphin.webp')"></div>
+                <li class="sitem home-row r4 subnav-item emu-item" data-home-title="PCSX2" data-home-desc="Open the integrated PCSX2 manager to prepare a SKALD-managed runtime, set a BIOS folder, and define a temporary custom override while the native PS2 path grows." data-emu-guide="pcsx2" data-emu-title="PCSX2" data-emu-desc="Open the integrated PCSX2 manager to prepare a SKALD-managed runtime, set a BIOS folder, and define a temporary custom override while the native PS2 path grows." data-emu-status="PS2-native path is starting here.\nOpen this entry to manage the runtime and BIOS setup.">
+                  <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/PCSX2.webp')"></div>
                   <div class="mkt-account-copy">
-                    <div class="mkt-scan-label">Dolphin</div>
+                    <div class="mkt-scan-label">PCSX2</div>
                   </div>
                 </li>
-                <li class="sitem home-row r5 subnav-item emu-item" data-home-title="Cemu" data-home-desc="Open the integrated Cemu manager to install or import the SKALD-managed Wii U runtime. Wii U games launch through official Cemu instead of RetroArch." data-emu-guide="cemu" data-emu-title="Cemu" data-emu-desc="Open the integrated Cemu manager to install or import the SKALD-managed Wii U runtime. Wii U games launch through official Cemu instead of RetroArch." data-emu-status="Wii U native path starts here.\nOpen this entry to manage Cemu.">
-                  <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/CEMU.webp')"></div>
-                  <div class="mkt-account-copy">
-                    <div class="mkt-scan-label">Cemu</div>
-                  </div>
-                </li>
-              <li class="sitem home-row r6 subnav-item emu-item" data-home-title="VLC" data-home-desc="Open the integrated VLC manager to install a SKALD-managed media runtime, set a custom override when needed, and power Archive.org video playback through a native backend instead of web embeds." data-emu-guide="vlc" data-emu-title="VLC" data-emu-desc="Open the integrated VLC manager to install a SKALD-managed media runtime, set a custom override when needed, and power Archive.org video playback through a native backend instead of web embeds." data-emu-status="Integrated media backend.\nOpen this entry to manage the runtime that will handle SKALD video playback.">
-                <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/VLC.webp')"></div>
+              <li class="sitem home-row r5 subnav-item emu-item" data-home-title="RetroArch" data-home-desc="Open the integrated RetroArch manager to handle the SKALD runtime, download/import flow, custom override, and the current libretro core mappings for supported systems." data-emu-guide="retroarch" data-emu-title="RetroArch" data-emu-desc="Open the integrated RetroArch manager to handle the SKALD runtime, download/import flow, custom override, and the current libretro core mappings for supported systems." data-emu-status="Integrated backend for the first SKALD-native emulator path.\nOpen this entry to manage the runtime and system cores.">
+                <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/Retroarch.webp')"></div>
                 <div class="mkt-account-copy">
-                  <div class="mkt-scan-label">VLC</div>
+                  <div class="mkt-scan-label">RetroArch</div>
                 </div>
               </li>
-            <li class="sitem home-row r7 subnav-item emu-item" data-home-title="Xenia Canary" data-home-desc="Open the integrated Xenia Canary manager to prepare a SKALD-managed Xbox 360 runtime, import an existing install, and define a temporary custom override while the native Xbox 360 path grows." data-emu-guide="xenia" data-emu-title="Xenia Canary" data-emu-desc="Open the integrated Xenia Canary manager to prepare a SKALD-managed Xbox 360 runtime, import an existing install, and define a temporary custom override while the native Xbox 360 path grows." data-emu-status="Xbox 360-native path starts here.\nOpen this entry to manage the Xenia Canary runtime and launch backend.">
-                <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/Xenia_Canary.webp')"></div>
-                <div class="mkt-account-copy">
-              <div class="mkt-scan-label">Xenia Canary</div>
-                </div>
-              </li>
-              <li class="sitem home-row r8 subnav-item emu-item" data-home-title="RPCS3" data-home-desc="Open the integrated RPCS3 manager to prepare a SKALD-managed PlayStation 3 runtime, import an existing install, and define a temporary custom override while the native PS3 path grows." data-emu-guide="rpcs3" data-emu-title="RPCS3" data-emu-desc="Open the integrated RPCS3 manager to prepare a SKALD-managed PlayStation 3 runtime, import an existing install, and define a temporary custom override while the native PS3 path grows." data-emu-status="PlayStation 3-native path starts here.\nOpen this entry to manage the RPCS3 runtime and launch backend.">
+              <li class="sitem home-row r6 subnav-item emu-item" data-home-title="RPCS3" data-home-desc="Open the integrated RPCS3 manager to prepare a SKALD-managed PlayStation 3 runtime, import an existing install, and define a temporary custom override while the native PS3 path grows." data-emu-guide="rpcs3" data-emu-title="RPCS3" data-emu-desc="Open the integrated RPCS3 manager to prepare a SKALD-managed PlayStation 3 runtime, import an existing install, and define a temporary custom override while the native PS3 path grows." data-emu-status="PlayStation 3-native path starts here.\nOpen this entry to manage the RPCS3 runtime and launch backend.">
                   <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/RPCS3.webp')"></div>
                   <div class="mkt-account-copy">
                   <div class="mkt-scan-label">RPCS3</div>
                   </div>
                 </li>
+              <li class="sitem home-row r7 subnav-item emu-item" data-home-title="VLC" data-home-desc="Open the integrated VLC manager to install a SKALD-managed media runtime, set a custom override when needed, and power Archive.org video playback through a native backend instead of web embeds." data-emu-guide="vlc" data-emu-title="VLC" data-emu-desc="Open the integrated VLC manager to install a SKALD-managed media runtime, set a custom override when needed, and power Archive.org video playback through a native backend instead of web embeds." data-emu-status="Integrated media backend.\nOpen this entry to manage the runtime that will handle SKALD video playback.">
+                <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/VLC.webp')"></div>
+                <div class="mkt-account-copy">
+                  <div class="mkt-scan-label">VLC</div>
+                </div>
+              </li>
+                <li class="sitem home-row r8 subnav-item emu-item" data-home-title="XEMU" data-home-desc="Open the integrated XEMU manager to install or import the SKALD-managed Original Xbox runtime. Original Xbox games launch through XEMU as a native backend." data-emu-guide="xemu" data-emu-title="XEMU" data-emu-desc="Open the integrated XEMU manager to install or import the SKALD-managed Original Xbox runtime. Original Xbox games launch through XEMU as a native backend." data-emu-status="Original Xbox native path starts here.\nOpen this entry to manage XEMU.">
+                  <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/Xemu.webp')"></div>
+                  <div class="mkt-account-copy">
+                    <div class="mkt-scan-label">XEMU</div>
+                  </div>
+                </li>
+            <li class="sitem home-row r9 subnav-item emu-item" data-home-title="Xenia Canary" data-home-desc="Open the integrated Xenia Canary manager to prepare a SKALD-managed Xbox 360 runtime, import an existing install, and define a temporary custom override while the native Xbox 360 path grows." data-emu-guide="xenia" data-emu-title="Xenia Canary" data-emu-desc="Open the integrated Xenia Canary manager to prepare a SKALD-managed Xbox 360 runtime, import an existing install, and define a temporary custom override while the native Xbox 360 path grows." data-emu-status="Xbox 360-native path starts here.\nOpen this entry to manage the Xenia Canary runtime and launch backend.">
+                <div class="micon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/Xenia_Canary.webp')"></div>
+                <div class="mkt-account-copy">
+              <div class="mkt-scan-label">Xenia Canary</div>
+                </div>
+              </li>
             </ul>
           </div>
           <div class="home-desc emu-home-desc">
-            <div id="emu-title" class="home-desc-title">RetroArch</div>
-            <div id="emu-meta" class="home-desc-body">Open the integrated RetroArch manager to handle the SKALD runtime, import or download the managed install, and review the current core mappings for supported systems.</div>
-            <div id="emu-catalog-status" class="mkt-scan-status">Integrated backend for the first SKALD-native emulator path.
-Open this entry to manage the runtime and system cores.</div>
+            <div id="emu-title" class="home-desc-title">Cemu</div>
+            <div id="emu-meta" class="home-desc-body">Open the integrated Cemu manager to install or import the SKALD-managed Wii U runtime. Wii U games launch through official Cemu instead of RetroArch.</div>
+            <div id="emu-catalog-status" class="mkt-scan-status">Wii U native path starts here.
+Open this entry to manage Cemu.</div>
           </div>
         </div>
       </div>
@@ -4354,6 +4445,7 @@ const BLADE_STYLE_ASSET_BASES=Object.freeze({
   glass:'file:///C:/Projects/RG-THEMES/X360 BLADES/blades glass',
 });
 const SND='file:///C:/Projects/RG-THEMES/X360 BLADES/XBMC360/XBMC360/01.Main Files/skin/MC360 2.1/sounds';
+const MC360_COLOR_PRESET_BASE='file:///C:/Projects/RG-THEMES/X360 BLADES/XBMC360/XBMC360/01.Main Files/skin/MC360 2.1/colors';
 const FR='file:///C:/Projects/RG-THEMES/X360 BLADES/blades/bkgd_frames';
 const FALLBACK_AVATAR=`${A}/gamercard_defaultgamerpic.webp`;
 const BLADE_STYLE_DEFS=Object.freeze({
@@ -4401,6 +4493,23 @@ const BLADES=[
 {id:'media',label:'MEDIA',panel:'p-media',bg:'bc-media',hazeL:`${A}/haze-blue-left.webp`,hazeR:`${A}/haze-blue-right.webp`},
   {id:'sys',label:'SYSTEM',panel:'p-sys',bg:'bc-sys',hazeL:`${A}/haze-purple-left.webp`,hazeR:`${A}/haze-purple-right.webp`},
 ];
+const MC360_COLOR_PRESETS=Object.freeze([
+  {id:'mc360-colors-default',title:'Default MC360 Colors',file:'',reset:true},
+  {id:'all-blue-white-shadows',title:'All Blue - White Shadows',file:'All Blue-White Shadows.xml'},
+  {id:'all-brown-black-shadow',title:'All Brown - Black Shadow',file:'All Brown-Black Shadow.xml'},
+  {id:'all-gold-black-shadow',title:'All Gold - Black Shadow',file:'All Gold-Black Shadow.xml'},
+  {id:'all-green-white-shadow',title:'All Green - White Shadow',file:'All Green-White Shadow.xml'},
+  {id:'all-orange-black-shadow',title:'All Orange - Black Shadow',file:'All Orange-Black Shadow.xml'},
+  {id:'all-pink-white-shadow',title:'All Pink - White Shadow',file:'All Pink-White Shadow.xml'},
+  {id:'all-purple-white-shadows',title:'All Purple - White Shadows',file:'All Purple-White Shadows.xml'},
+  {id:'all-red-white-shadow',title:'All Red - White Shadow',file:'All Red-White Shadow.xml'},
+  {id:'all-seagreen-black-shadow',title:'All SeaGreen - Black Shadow',file:'All SeaGreen-Black Shadow.xml'},
+  {id:'all-silver-black-shadow',title:'All Silver - Black Shadow',file:'All Silver-Black Shadow.xml'},
+  {id:'all-white',title:'All White',file:'All White.xml'},
+  {id:'christmas',title:'Christmas',file:'Christmas.xml'},
+  {id:'default-no-shadows',title:'Default - No Shadows',file:'Default-No Shadows.xml'},
+  {id:'white-no-shadows',title:'White - No Shadows',file:'White-No Shadows.xml'},
+]);
 const SKALD_DEFAULT_BACKGROUNDS=Object.freeze({
   mkt:`${A}/background-red-alpha.webp`,
   live:`${A}/background-orange-alpha.webp`,
@@ -4416,7 +4525,7 @@ const SKALD_THEME_BACKGROUND_SLOTS=Object.freeze({
   mkt:'image4',
 });
 const SYS_ROW_ASSET_COUNT=6;
-const SYS_ROW_TOPS=[0,48,97,147,198,250,303,357];
+const SYS_ROW_TOPS=[0,48,97,147,198,250,303,357,411];
 const SYS_LAST_VISIBLE_ROW_TOP=250;
   const THIRD_PARTY_GUIDE_META={
     archiveorg:{
@@ -4526,6 +4635,7 @@ let raUnlockMonitor={timer:null,identifier:'',system:'',title:'',gameId:null,sta
 const sfx={},menuSel=[0,0,0,0,0],subOpen=[false,false,false,false,false];
 let appliedSkaldTheme=null;
 let appliedBladeStyle='default';
+let appliedMc360ColorPreset=null;
 let appliedGamerPic=null;
 let profileGamerPicItems=[];
 let savedStoatProfiles=[];
@@ -4539,6 +4649,7 @@ let guideChatLoading=false;
 let guideChatError='';
 let guideAccountProvider='archiveorg';
 let guideAccountState={provider:null,stoatUserId:null,saveToProfile:true,login:'',secret:'',providerMeta:null,status:''};
+let guideSoundVolumes={music:80,game:80,stoat:80};
 const marketplaceState={
   provider:'archiveorg',
   system:'snes',
@@ -4555,7 +4666,22 @@ const marketplaceState={
   cosmeticFolderError:'',
   cosmeticParentItems:null,
   cosmeticParentTitle:'',
+  cosmeticVariantModalOpen:false,
+  cosmeticVariantParent:null,
+  cosmeticVariantRows:[],
+  cosmeticVariantIdx:0,
   cosmeticDownloadId:'',
+  gamerpicSourceItems:null,
+  gamerpicSourceTitle:'',
+  gamerpicCatalogSource:'',
+  gamerpicCatalogLoaded:false,
+  gamerpicCatalogLoading:false,
+  gamerpicCatalogError:'',
+  gamerpicPackLoadingId:'',
+  gamerpicVariantModalOpen:false,
+  gamerpicVariantParent:null,
+  gamerpicVariantRows:[],
+  gamerpicVariantIdx:0,
   archivePane:'list',
   archiveMode:'discover',
     archiveHideInstalled:false,
@@ -4857,7 +4983,17 @@ function applyBladeStyleVisuals(style=appliedBladeStyle){
 }
 
 async function loadSfx(n){try{if(!audioCtx)audioCtx=new AudioContext();const r=await fetch(`${SND}/${n}`);sfx[n]=await audioCtx.decodeAudioData(await r.arrayBuffer());}catch{}}
-function playSfx(n){if(!audioCtx||!sfx[n])return;const s=audioCtx.createBufferSource();s.buffer=sfx[n];s.connect(audioCtx.destination);s.start(0);}
+function playSfx(n){
+  if(!audioCtx||!sfx[n])return;
+  const s=audioCtx.createBufferSource();
+  const gain=audioCtx.createGain();
+  const isStoatSound=n==='notification.wav';
+  gain.gain.value=Math.max(0,Math.min(1,(isStoatSound?guideSoundVolumes.stoat:100)/100));
+  s.buffer=sfx[n];
+  s.connect(gain);
+  gain.connect(audioCtx.destination);
+  s.start(0);
+}
 function loadAllSfx(){return Promise.all(['bladeslide_1.wav','bladeslide_2.wav','bladeslide_3.wav','bladeslide_4.wav','cursor.wav','select.wav','back.wav','guide_open.wav','guide_close.wav','notification.wav','tier2_enter.wav','tier2_exit.wav'].map(loadSfx));}
 const bgImg=document.getElementById('bg-anim');
 let bgFrameTimer=null;
@@ -4970,7 +5106,7 @@ function buildBlades(){
   document.getElementById('hz-r').style.left=(cl+1064)+'px';
 }
 
-function navBlade(idx){if(idx<0||idx>=BLADES.length||idx===activeIdx)return;playSfx(`bladeslide_${Math.min(Math.abs(idx-activeIdx),4)}.wav`);activeIdx=idx;buildBlades();applyBg();applyPanel();}
+function navBlade(idx){if(idx<0||idx>=BLADES.length||idx===activeIdx)return;playSfx('bladeslide_1.wav');activeIdx=idx;buildBlades();applyBg();applyPanel();}
 function cssImageUrl(url){
   return `url("${String(url||'').replace(/"/g,'%22')}")`;
 }
@@ -5016,6 +5152,81 @@ function applySkaldThemeBackgrounds(theme=appliedSkaldTheme){
     const url=SKALD_DEFAULT_BACKGROUNDS[blade.id] || '';
     el.style.backgroundImage=url ? cssImageUrl(url) : '';
   });
+}
+function mc360ColorPresetById(id){
+  return MC360_COLOR_PRESETS.find(item=>item.id===id) || null;
+}
+function mc360ArgbToCss(value,fallback=''){
+  const hex=String(value||'').trim().replace(/^#/,'');
+  if(!/^[0-9a-f]{8}$/i.test(hex)) return fallback;
+  const a=parseInt(hex.slice(0,2),16)/255;
+  const r=parseInt(hex.slice(2,4),16);
+  const g=parseInt(hex.slice(4,6),16);
+  const b=parseInt(hex.slice(6,8),16);
+  return `rgba(${r},${g},${b},${Number(a.toFixed(3))})`;
+}
+function parseMc360ColorPresetXml(xmlText){
+  const colors={};
+  String(xmlText||'').replace(/<color\s+name=["']([^"']+)["']\s*>\s*([^<]+)\s*<\/color>/gi,(_,name,value)=>{
+    colors[String(name||'').trim()]=String(value||'').trim();
+    return '';
+  });
+  return colors;
+}
+function mc360ShadowCss(colors){
+  const shadow=mc360ArgbToCss(colors['shadow-white'] || colors['shadow-grey'] || colors['shadow-black'],'rgba(255,255,255,.45)');
+  return `0 1px 0 ${shadow}`;
+}
+function applyMc360ColorPreset(preset=appliedMc360ColorPreset){
+  appliedMc360ColorPreset=preset && !preset.reset ? preset : null;
+  const stageEl=document.getElementById('stage');
+  stageEl?.classList.toggle('mc360-color-preset', !!appliedMc360ColorPreset);
+  if(!stageEl || !appliedMc360ColorPreset){
+    document.documentElement.style.removeProperty('--mc360-text');
+    document.documentElement.style.removeProperty('--mc360-muted');
+    document.documentElement.style.removeProperty('--mc360-selected');
+    document.documentElement.style.removeProperty('--mc360-shadow');
+    return;
+  }
+  const colors=appliedMc360ColorPreset.colors || {};
+  const text=mc360ArgbToCss(colors.TextcolorWhite || colors.TextcolorBlack || colors.TextcolorGrey,'#111');
+  const muted=mc360ArgbToCss(colors.TextcolorGrey || colors.TextcolorDarkGrey || colors.TextcolorWhite,'rgba(0,0,0,.64)');
+  const selected=mc360ArgbToCss(colors.listselectedcolor || colors.TextcolorWhite,text);
+  document.documentElement.style.setProperty('--mc360-text',text);
+  document.documentElement.style.setProperty('--mc360-muted',muted);
+  document.documentElement.style.setProperty('--mc360-selected',selected);
+  document.documentElement.style.setProperty('--mc360-shadow',mc360ShadowCss(colors));
+}
+async function loadMc360ColorPresetById(id){
+  const def=mc360ColorPresetById(id);
+  if(!def || def.reset) return null;
+  const response=await fetch(`${MC360_COLOR_PRESET_BASE}/${encodeURIComponent(def.file)}`);
+  if(!response.ok) throw new Error(`Could not load ${def.file}`);
+  const colors=parseMc360ColorPresetXml(await response.text());
+  return {...def,colors};
+}
+async function loadAppliedMc360ColorPreset(){
+  try{
+    const settings=await window.electronAPI?.getSettings?.();
+    appliedMc360ColorPreset=await loadMc360ColorPresetById(settings?.mc360ColorPreset || '');
+  }catch{
+    appliedMc360ColorPreset=null;
+  }
+  applyMc360ColorPreset();
+}
+async function saveAppliedMc360ColorPreset(presetId){
+  try{
+    const preset=await loadMc360ColorPresetById(presetId);
+    appliedMc360ColorPreset=preset;
+    applyMc360ColorPreset();
+    const settings=await window.electronAPI?.getSettings?.() || {};
+    if(preset) settings.mc360ColorPreset=preset.id;
+    else delete settings.mc360ColorPreset;
+    await window.electronAPI?.saveSettings?.(settings);
+    return true;
+  }catch{
+    return false;
+  }
 }
 function applyBg(){
   applyBladeStyleVisuals();
@@ -5841,6 +6052,8 @@ function profileGuideTitle(mode=profileGuideMode){
   if(mode==='profile-add') return 'Add Profile';
   if(mode==='profile-themes') return 'Themes';
   if(mode==='profile-blades') return 'Blades';
+  if(mode==='profile-blade-styles') return 'Blade Style';
+  if(mode==='profile-color-schemes') return 'Color Schemes';
   if(mode==='profile-gamerpic') return 'Change Gamer Picture';
   return 'Gamer Profile';
 }
@@ -5863,6 +6076,102 @@ function ensureProfileGuidePage(){
     await guideSelect();
   });
   return page;
+}
+function normalizeGuideSoundVolume(value,fallback=80){
+  const next=Number(value);
+  if(!Number.isFinite(next)) return fallback;
+  return Math.max(0,Math.min(100,Math.round(next)));
+}
+function applyGuideSoundVolumes(){
+  try{ musicPlayer.volume=normalizeGuideSoundVolume(guideSoundVolumes.music)/100; }catch{}
+}
+async function loadGuideSoundSettings(){
+  const settings=await window.electronAPI?.getSettings?.() || {};
+  const saved=settings?.audioVolumes || settings?.guideSoundVolumes || {};
+  guideSoundVolumes={
+    music:normalizeGuideSoundVolume(saved.music,80),
+    game:normalizeGuideSoundVolume(saved.game,80),
+    stoat:normalizeGuideSoundVolume(saved.stoat,80),
+  };
+  applyGuideSoundVolumes();
+}
+async function saveGuideSoundSettings(){
+  const settings=await window.electronAPI?.getSettings?.() || {};
+  await window.electronAPI?.saveSettings?.({
+    ...settings,
+    audioVolumes:{...guideSoundVolumes},
+  });
+}
+function guideSoundItemsData(){
+  return [
+    { key:'music', title:'Music Volume', note:'SKALD music player' },
+    { key:'game', title:'Game Volume', note:'Managed game sessions' },
+    { key:'stoat', title:'SKALD LIVE Volume', note:'Stoat notifications' },
+  ];
+}
+function ensureGuideSoundPage(){
+  let page=document.getElementById('guide-sound-page');
+  if(page) return page;
+  const main=document.getElementById('g-main');
+  const footer=main?.querySelector('.guide-footer-legend');
+  if(!main || !footer) return null;
+  page=document.createElement('div');
+  page.id='guide-sound-page';
+  page.className='guide-page guide-sound-page';
+  main.insertBefore(page, footer);
+  page.addEventListener('click',event=>{
+    const item=event.target.closest('.gbtn');
+    if(!item || !page.contains(item)) return;
+    const items=getGuideItems();
+    const idx=items.indexOf(item);
+    if(idx>=0){ guideSelIdx=idx; applyGSel(); }
+    guideSelect();
+  });
+  return page;
+}
+function renderGuideSoundPage(){
+  const page=ensureGuideSoundPage();
+  if(!page) return;
+  const rows=guideSoundItemsData().map((item,idx)=>{
+    const value=normalizeGuideSoundVolume(guideSoundVolumes[item.key],80);
+    return `
+      <div class="guide-sound-row gbtn ${idx===guideSelIdx?'sel':''}" data-sound-key="${item.key}">
+        <div class="guide-sound-row-top">
+          <div>
+            <div class="guide-sound-label">${esc(item.title)}</div>
+            <div class="guide-menu-note">${esc(item.note)}</div>
+          </div>
+          <div class="guide-sound-value">${value}%</div>
+        </div>
+        <div class="guide-sound-meter"><div class="guide-sound-fill" style="width:${value}%"></div></div>
+      </div>
+    `;
+  }).join('');
+  page.innerHTML=`
+    <div class="guide-sound-panel">
+      <div class="guide-sound-intro">Use left and right to adjust volume in 5% steps.</div>
+      ${rows}
+    </div>
+  `;
+}
+function openGuideSoundPage(){
+  guidePage='sound';
+  guideSelIdx=0;
+  renderGuideSoundPage();
+  syncGuideHeader();
+  applyGSel();
+  updateControlLegend();
+}
+async function adjustGuideSoundVolume(delta){
+  const items=guideSoundItemsData();
+  const item=items[guideSelIdx] || items[0];
+  if(!item) return;
+  const current=normalizeGuideSoundVolume(guideSoundVolumes[item.key],80);
+  guideSoundVolumes={...guideSoundVolumes,[item.key]:normalizeGuideSoundVolume(current+delta,current)};
+  applyGuideSoundVolumes();
+  renderGuideSoundPage();
+  applyGSel();
+  await saveGuideSoundSettings();
 }
 function currentGuideProfileName(){
   return document.getElementById('g-tag')?.textContent?.trim()
@@ -5977,6 +6286,28 @@ function profileGuideThemeRows(){
     };
   });
 }
+function profileGuideBladeHubRows(){
+  return [
+    {
+      id:'profile-blade-styles',
+      kind:'blade-hub',
+      title:'Blade Style',
+      subtitle:'Default, Carbon, Glass',
+      tail:'OPEN',
+      icon:'file:///C:/Projects/SKALD/assets/icons/Media/Blades.webp',
+      body:'Choose which physical blade shell SKALD uses. This changes the blade art and whitewash/trim treatment.',
+    },
+    {
+      id:'profile-color-schemes',
+      kind:'blade-hub',
+      title:'Color Schemes',
+      subtitle:'MC360 XML presets',
+      tail:'OPEN',
+      icon:'file:///C:/Projects/SKALD/assets/icons/Media/Themes.webp',
+      body:'Apply reversible MC360 color scheme presets for text, shadows, and selected menu color treatment.',
+    },
+  ];
+}
 function profileGuideBladeRows(){
   return ['default','carbon','glass'].map(style=>{
     const def=bladeStyleDef(style);
@@ -5993,10 +6324,29 @@ function profileGuideBladeRows(){
     };
   });
 }
+function profileGuideColorSchemeRows(){
+  return MC360_COLOR_PRESETS.map(item=>{
+    const active=item.reset ? !appliedMc360ColorPreset : appliedMc360ColorPreset?.id===item.id;
+    return {
+      id:item.id,
+      kind:'color-preset',
+      title:item.title,
+      subtitle:'',
+      tail:active ? 'ACTIVE' : 'USE',
+      active,
+      icon:'file:///C:/Projects/SKALD/assets/icons/Media/Themes.webp',
+      body:item.reset
+        ? 'Clears the MC360 color scheme layer and returns text colors to the current SKALD theme.'
+        : `Applies the color tokens from ${item.file} as a reversible text and shadow preset.`,
+    };
+  });
+}
 function profileGuideRowsForMode(){
   if(profileGuideMode==='profile-manager') return profileGuideManagerRows();
   if(profileGuideMode==='profile-themes') return profileGuideThemeRows();
-  if(profileGuideMode==='profile-blades') return profileGuideBladeRows();
+  if(profileGuideMode==='profile-blades') return profileGuideBladeHubRows();
+  if(profileGuideMode==='profile-blade-styles') return profileGuideBladeRows();
+  if(profileGuideMode==='profile-color-schemes') return profileGuideColorSchemeRows();
   return [];
 }
 function selectedProfileGuideRow(){
@@ -6011,7 +6361,7 @@ function renderProfileGuideList(page){
   const detail=selected?.kind==='profile'
     ? `<div class="guide-profile-card-wrap">${renderGuideGamercard(selected.snapshot)}</div>`
     : `<div class="guide-profile-detail-card"><div class="guide-profile-detail-icon" style="background-image:${cssInlineImageUrl(selected?.icon || `${A}/icon-profile.webp`)}"></div><div class="guide-profile-detail-title">${esc(selected?.title || profileGuideTitle())}</div><div class="guide-profile-detail-body">${esc(selected?.body || '')}</div></div>`;
-  const layoutClass=profileGuideMode==='profile-themes' ? 'guide-profile-list-layout themes-list-expanded' : 'guide-profile-list-layout';
+  const layoutClass=(profileGuideMode==='profile-themes' || profileGuideMode==='profile-color-schemes') ? 'guide-profile-list-layout themes-list-expanded' : 'guide-profile-list-layout';
   page.innerHTML=`<div class="${layoutClass}"><div class="guide-profile-list">${list}</div>${detail}</div>`;
   requestAnimationFrame(scrollSelectedProfileGuideListIntoView);
 }
@@ -6060,13 +6410,13 @@ function renderProfileGuidePage(){
   const page=ensureProfileGuidePage();
   if(!page) return;
   if(profileGuideMode==='hub') renderProfileGuideHub(page);
-  else if(profileGuideMode==='profile-manager' || profileGuideMode==='profile-themes' || profileGuideMode==='profile-blades') renderProfileGuideList(page);
+  else if(profileGuideMode==='profile-manager' || profileGuideMode==='profile-themes' || profileGuideMode==='profile-blades' || profileGuideMode==='profile-blade-styles' || profileGuideMode==='profile-color-schemes') renderProfileGuideList(page);
   else if(profileGuideMode==='profile-gamerpic') renderProfileGuideGamerPic(page);
   else renderProfileGuidePlaceholder(page);
 }
 function syncProfileGuideSelection(){
   if(!guideOpen || guidePage!=='profile') return;
-  if(profileGuideMode==='profile-manager' || profileGuideMode==='profile-themes' || profileGuideMode==='profile-blades' || profileGuideMode==='profile-gamerpic') renderProfileGuidePage();
+  if(profileGuideMode==='profile-manager' || profileGuideMode==='profile-themes' || profileGuideMode==='profile-blades' || profileGuideMode==='profile-blade-styles' || profileGuideMode==='profile-color-schemes' || profileGuideMode==='profile-gamerpic') renderProfileGuidePage();
 }
 function openProfileGuide(mode){
   profileGuideMode=mode || 'profile-manager';
@@ -6119,7 +6469,19 @@ async function activateSelectedProfileGuideItem(btn){
       return;
     }
     if(profileGuideMode==='profile-blades'){
+      if(kind==='blade-hub'){
+        openProfileGuide(rowId);
+        return;
+      }
+    }
+    if(profileGuideMode==='profile-blade-styles'){
       await activateSelectedBladeStyle(rowId);
+      renderProfileGuidePage();
+      return;
+    }
+    if(profileGuideMode==='profile-color-schemes'){
+      const ok=await saveAppliedMc360ColorPreset(rowId);
+      toast(ok ? `Applied ${mc360ColorPresetById(rowId)?.title || 'MC360 color scheme'}` : 'Could not apply MC360 color scheme');
       renderProfileGuidePage();
       return;
     }
@@ -6564,7 +6926,7 @@ function renderGameLaunchBusyOverlay(){
   }
 }
 function renderEmulatorRuntimeProgress(){
-const runtimeMode=(guide2Open && (guide2Mode==='pcsx2' || guide2Mode==='duckstation' || guide2Mode==='dolphin' || guide2Mode==='cemu' || guide2Mode==='vlc' || guide2Mode==='xenia' || guide2Mode==='rpcs3')) ? guide2Mode : 'retroarch';
+const runtimeMode=(guide2Open && (guide2Mode==='pcsx2' || guide2Mode==='duckstation' || guide2Mode==='dolphin' || guide2Mode==='cemu' || guide2Mode==='xemu' || guide2Mode==='vlc' || guide2Mode==='xenia' || guide2Mode==='rpcs3')) ? guide2Mode : 'retroarch';
   const progressSuffix=runtimeMode==='retroarch' ? '' : `-${runtimeMode}`;
   const wrapId=runtimeMode==='retroarch' ? 'emu-progress-wrap' : `emu-progress-wrap${progressSuffix}`;
   const fillId=runtimeMode==='retroarch' ? 'emu-progress-fill' : `emu-progress-fill${progressSuffix}`;
@@ -6994,6 +7356,48 @@ async function refreshCemuSettingsPanel(){
   }catch{
     const status=document.getElementById('g2-cemu-status');
     if(status) status.textContent='Could not read Cemu settings.';
+    renderEmulatorRuntimeProgress();
+  }
+}
+async function refreshXemuSettingsPanel(){
+  try{
+    ensureXemuGuideBody();
+    const runtime=await window.electronAPI?.getXemuRuntimeStatus?.() || {};
+    const runtimeDisplay=document.getElementById('emu-xemu-runtime-display');
+    const importDisplay=document.getElementById('emu-xemu-import-display');
+    const overrideDisplay=document.getElementById('emu-xemu-override-display');
+    if(runtimeDisplay){
+      if(runtime?.bundledAvailable) runtimeDisplay.textContent=`Managed Runtime\n${runtime.bundledExecutablePath||runtime.executablePath||'Ready'}`;
+      else if(runtime?.managedRuntimeDir) runtimeDisplay.textContent=`Managed Runtime Missing\n${runtime.managedRuntimeDir}`;
+      else runtimeDisplay.textContent='Managed runtime not available';
+    }
+    if(importDisplay){
+      importDisplay.textContent=runtime?.managedRuntimeDir
+        ? `Target Folder\n${runtime.managedRuntimeDir}`
+        : 'Pick xemu.exe from an existing install';
+    }
+    if(overrideDisplay){
+      if(runtime?.usingCustom) overrideDisplay.textContent=`Active Override\n${runtime.executablePath||'Ready'}`;
+      else if(runtime?.customExecutablePath && runtime?.customAvailable) overrideDisplay.textContent=`Stored Override\n${runtime.customExecutablePath}`;
+      else if(runtime?.customExecutablePath) overrideDisplay.textContent=`Override Missing\n${runtime.customExecutablePath}`;
+      else overrideDisplay.textContent='Using SKALD managed runtime when available';
+    }
+    const status=document.getElementById('g2-xemu-status');
+    if(status){
+      const runtimeStatus=runtime?.ok
+        ? (runtime.usingBundled
+            ? `Runtime: SKALD managed XEMU\n${runtime.executablePath}`
+            : `Runtime: custom override\n${runtime.executablePath}`)
+        : 'Runtime: SKALD managed XEMU not found yet. Install it into SKALD or import an existing local XEMU install.';
+      const portableLine=runtime?.portableConfigAvailable
+        ? `\nConfig: ready\n${runtime.configPath || ''}`
+        : (runtime?.configPath ? `\nConfig will be created in:\n${runtime.configPath}` : '');
+      status.textContent=`${runtimeStatus}${portableLine}\nOriginal Xbox launches use XEMU when this runtime is ready.`;
+    }
+    renderEmulatorRuntimeProgress();
+  }catch{
+    const status=document.getElementById('g2-xemu-status');
+    if(status) status.textContent='Could not read XEMU settings.';
     renderEmulatorRuntimeProgress();
   }
 }
@@ -7474,6 +7878,20 @@ function getMusicCurrentTrack(){
 function getMusicTrackIndex(trackId){
   return mediaState.tracks.findIndex(track=>track.id===trackId);
 }
+function guideMusicControlIcon(action){
+  const base='file:///C:/Projects/RG-THEMES/X360 BLADES/blades';
+  if(action==='previous') return `${base}/mediacontrol-skipback.webp`;
+  if(action==='playpause') return `${base}/${mediaState.isPlaying?'mediacontrol-pause.webp':'mediacontrol-play.webp'}`;
+  if(action==='stop') return `${base}/mediacontrol-stop.webp`;
+  if(action==='next') return `${base}/mediacontrol-skipforward.webp`;
+  if(action==='sound-options') return `${base}/buddyitem-chat.webp`;
+  return '';
+}
+function setGuideMusicControlIcon(btn,action){
+  const icon=guideMusicControlIcon(action);
+  if(icon) btn.innerHTML=`<img src="${icon}" alt="">`;
+  else btn.textContent='';
+}
 function ensureGuideMusicCard(){
   const card=document.querySelector('#guide-home-page .guide-music-card');
   if(!card) return;
@@ -7486,12 +7904,13 @@ function ensureGuideMusicCard(){
     `);
   }
   const controls=[...card.querySelectorAll('.guide-music-btn')];
-  const actions=['previous','playpause','stop','next','open-music'];
+  const actions=['previous','playpause','stop','next','sound-options'];
   controls.forEach((btn,idx)=>{
     btn.classList.add('gbtn');
     btn.dataset.musicAction=actions[idx] || '';
     btn.dataset.gact='music-control';
     btn.title=actions[idx] || 'Music Control';
+    setGuideMusicControlIcon(btn,actions[idx] || '');
   });
   const selectRow=card.querySelector('.guide-select-music');
   if(selectRow){
@@ -7546,6 +7965,7 @@ function syncGuideMusicCard(){
   }
   controls.forEach(btn=>{
     btn.classList.toggle('is-active', mediaState.isPlaying && btn.dataset.musicAction==='playpause');
+    if(btn.dataset.musicAction==='playpause') setGuideMusicControlIcon(btn,'playpause');
   });
 }
 function openMediaMusicPanel(){
@@ -7965,6 +8385,7 @@ async function handleMusicAction(action, trackId=''){
   if(action==='previous') return playAdjacentMusicTrack(-1);
   if(action==='next') return playAdjacentMusicTrack(1);
   if(action==='stop'){ stopMusicPlayback(); return true; }
+  if(action==='sound-options'){ openGuideSoundPage(); return true; }
   if(action==='toggle-visual'){ toast('Visualization options are coming later.'); return true; }
   if(action==='save-playlist'){ toast('Playlist editing is coming later.'); return true; }
   if(action==='source-placeholder'){ toast('That music source is reserved for a later pass.'); return true; }
@@ -8385,8 +8806,8 @@ function menuDown(){
   applyMenuSel();
   playSfx('cursor.wav');
 }
-function subUp(){if(getActiveSubpanel()?.id==='sub-library')homeFocusPane='menu';if(isMarketplaceBrowseOpen()){if(marketplaceBrowseMoveVertical(-1))playSfx('cursor.wav');return;}if(isMarketplaceCosmeticsOpen()){if(marketplaceCosmeticsMoveVertical(-1))playSfx('cursor.wav');return;}if(isGamesInstalledOpen()){if(gamesInstalledMoveVertical(-1))playSfx('cursor.wav');return;}if(isArchiveGamesOpen()){if(archiveGamesMoveVertical(-1))playSfx('cursor.wav');return;}if(isNetworkSettingsOpen()){if(networkMoveVertical(-1))playSfx('cursor.wav');return;}if(getActiveProfileFlowItems()){if(moveProfileFlow(-1))playSfx('cursor.wav');return;}if(moveSystemSubmenu(-1)){playSfx('cursor.wav');return;}const items=getSubItems();if(!items.length)return;subSelIdx=(subSelIdx-1+items.length)%items.length;applySubSel();playSfx('cursor.wav');}
-function subDown(){if(getActiveSubpanel()?.id==='sub-library')homeFocusPane='menu';if(isMarketplaceBrowseOpen()){if(marketplaceBrowseMoveVertical(1))playSfx('cursor.wav');return;}if(isMarketplaceCosmeticsOpen()){if(marketplaceCosmeticsMoveVertical(1))playSfx('cursor.wav');return;}if(isGamesInstalledOpen()){if(gamesInstalledMoveVertical(1))playSfx('cursor.wav');return;}if(isArchiveGamesOpen()){if(archiveGamesMoveVertical(1))playSfx('cursor.wav');return;}if(isNetworkSettingsOpen()){if(networkMoveVertical(1))playSfx('cursor.wav');return;}if(getActiveProfileFlowItems()){if(moveProfileFlow(1))playSfx('cursor.wav');return;}if(moveSystemSubmenu(1)){playSfx('cursor.wav');return;}const items=getSubItems();if(!items.length)return;subSelIdx=(subSelIdx+1)%items.length;applySubSel();playSfx('cursor.wav');}
+function subUp(){if(getActiveSubpanel()?.id==='sub-library')homeFocusPane='menu';if(marketplaceState.cosmeticVariantModalOpen){marketplaceThemeVariantMove(-1);return;}if(marketplaceState.gamerpicVariantModalOpen){marketplaceGamerpicVariantMove(-1);return;}if(isMarketplaceBrowseOpen()){if(marketplaceBrowseMoveVertical(-1))playSfx('cursor.wav');return;}if(isMarketplaceCosmeticsOpen()){if(marketplaceCosmeticsMoveVertical(-1))playSfx('cursor.wav');return;}if(isGamesInstalledOpen()){if(gamesInstalledMoveVertical(-1))playSfx('cursor.wav');return;}if(isArchiveGamesOpen()){if(archiveGamesMoveVertical(-1))playSfx('cursor.wav');return;}if(isNetworkSettingsOpen()){if(networkMoveVertical(-1))playSfx('cursor.wav');return;}if(getActiveProfileFlowItems()){if(moveProfileFlow(-1))playSfx('cursor.wav');return;}if(moveSystemSubmenu(-1)){playSfx('cursor.wav');return;}const items=getSubItems();if(!items.length)return;subSelIdx=(subSelIdx-1+items.length)%items.length;applySubSel();playSfx('cursor.wav');}
+function subDown(){if(getActiveSubpanel()?.id==='sub-library')homeFocusPane='menu';if(marketplaceState.cosmeticVariantModalOpen){marketplaceThemeVariantMove(1);return;}if(marketplaceState.gamerpicVariantModalOpen){marketplaceGamerpicVariantMove(1);return;}if(isMarketplaceBrowseOpen()){if(marketplaceBrowseMoveVertical(1))playSfx('cursor.wav');return;}if(isMarketplaceCosmeticsOpen()){if(marketplaceCosmeticsMoveVertical(1))playSfx('cursor.wav');return;}if(isGamesInstalledOpen()){if(gamesInstalledMoveVertical(1))playSfx('cursor.wav');return;}if(isArchiveGamesOpen()){if(archiveGamesMoveVertical(1))playSfx('cursor.wav');return;}if(isNetworkSettingsOpen()){if(networkMoveVertical(1))playSfx('cursor.wav');return;}if(getActiveProfileFlowItems()){if(moveProfileFlow(1))playSfx('cursor.wav');return;}if(moveSystemSubmenu(1)){playSfx('cursor.wav');return;}const items=getSubItems();if(!items.length)return;subSelIdx=(subSelIdx+1)%items.length;applySubSel();playSfx('cursor.wav');}
 function subLeft(){if(getActiveSubpanel()?.id==='sub-library'){moveHomeHorizontal(-1);return;}if(isMarketplaceBrowseOpen()){if(marketplaceBrowseMoveHorizontal(-1))playSfx('cursor.wav');return;}if(isMarketplaceCosmeticsOpen()){if(marketplaceCosmeticsMoveHorizontal(-1))playSfx('cursor.wav');return;}if(isGamesInstalledOpen()){if(gamesInstalledMoveHorizontal(-1))playSfx('cursor.wav');return;}if(isArchiveGamesOpen()){if(archiveGamesMoveHorizontal(-1))playSfx('cursor.wav');return;}if(isNetworkSettingsOpen()){if(networkMoveHorizontal(-1))playSfx('cursor.wav');return;}}
 function subRight(){if(getActiveSubpanel()?.id==='sub-library'){moveHomeHorizontal(1);return;}if(isMarketplaceBrowseOpen()){if(marketplaceBrowseMoveHorizontal(1))playSfx('cursor.wav');return;}if(isMarketplaceCosmeticsOpen()){if(marketplaceCosmeticsMoveHorizontal(1))playSfx('cursor.wav');return;}if(isGamesInstalledOpen()){if(gamesInstalledMoveHorizontal(1))playSfx('cursor.wav');return;}if(isArchiveGamesOpen()){if(archiveGamesMoveHorizontal(1))playSfx('cursor.wav');return;}if(isNetworkSettingsOpen()){if(networkMoveHorizontal(1))playSfx('cursor.wav');return;}}
 function handleMarketplaceMediaNav(delta){
@@ -8397,6 +8818,8 @@ function handleMarketplaceMediaNav(delta){
   return false;
 }
   async function subSelect(){
+  if(marketplaceState.cosmeticVariantModalOpen){await downloadSelectedMarketplaceThemeVariant();return;}
+  if(marketplaceState.gamerpicVariantModalOpen){await downloadSelectedMarketplaceGamerpicVariant();return;}
   if(isMarketplaceBrowseOpen()){marketplaceBrowseSelect();return;}
   if(isMarketplaceCosmeticsOpen()){await marketplaceCosmeticsSelect();return;}
   if(isGamesInstalledOpen()){gamesInstalledSelect();return;}
@@ -8485,8 +8908,18 @@ function menuSelect(){
   const item=getMenuItems()[menuSel[activeIdx]];
   if(!item)return;
   const sub=item.dataset.sub,act=item.dataset.action;
+  if(BLADES[activeIdx]?.id==='mkt' && item.classList.contains('mkt-home-hero')){
+    playSfx('tier2_enter.wav');
+    void openMarketplaceFeaturedListing();
+    return;
+  }
   if(act){handleAction(act);return;}
   if(sub){
+    if(BLADES[activeIdx]?.id==='mkt'&&sub==='featured'){
+      playSfx('tier2_enter.wav');
+      void openMarketplaceFeaturedListing();
+      return;
+    }
     if(BLADES[activeIdx]?.id==='mkt'&&sub==='discover-sources'){
       playSfx('tier2_enter.wav');
       marketplaceState.provider='archiveorg';
@@ -8569,6 +9002,8 @@ function menuBack(){
   if(vkOpen){closeKeyboard(true);return;}
   if(closeGameSearchModal()) return;
   if(closeGamesDeleteModal()) return;
+  if(closeMarketplaceThemeVariantModal()){ playSfx('tier2_exit.wav'); return; }
+  if(closeMarketplaceGamerpicVariantModal()){ playSfx('tier2_exit.wav'); return; }
   if(closeArchiveVariantModal()){ playSfx('tier2_exit.wav'); return; }
   if(subOpen[activeIdx]){
     const sub=getActiveSubpanel();
@@ -8662,6 +9097,9 @@ if(BLADES[activeIdx]?.id==='mkt' && sub?.id==='sub-market-media' && marketVideos
   return;
 }
     if(BLADES[activeIdx]?.id==='mkt' && sub?.id==='sub-market-themes' && closeMarketplaceThemeChildFolder()){
+      return;
+    }
+    if(BLADES[activeIdx]?.id==='mkt' && sub?.id==='sub-market-themes' && closeMarketplaceGamerpicSource()){
       return;
     }
     if(BLADES[activeIdx]?.id==='games' && sub?.id==='sub-library-games'){
@@ -8763,7 +9201,7 @@ let rpcs3ControllerStatusCache=null;
 let debugPanels=false;
 function getGuideItems(){
   if(guide2Open){
-if(guide2Mode==='retroarch' || guide2Mode==='pcsx2' || guide2Mode==='duckstation' || guide2Mode==='dolphin' || guide2Mode==='cemu' || guide2Mode==='vlc' || guide2Mode==='xenia' || guide2Mode==='rpcs3') return [...document.querySelectorAll('#guide2 .g2r-item')].filter(el=>el.offsetParent!==null);
+if(guide2Mode==='retroarch' || guide2Mode==='pcsx2' || guide2Mode==='duckstation' || guide2Mode==='dolphin' || guide2Mode==='cemu' || guide2Mode==='xemu' || guide2Mode==='vlc' || guide2Mode==='xenia' || guide2Mode==='rpcs3') return [...document.querySelectorAll('#guide2 .g2r-item')].filter(el=>el.offsetParent!==null);
     return [...document.querySelectorAll('#guide2 .g2a-item')].filter(el=>el.offsetParent!==null);
   }
   return[...document.querySelectorAll('#guide .gbtn')].filter(el=>el.offsetParent!==null);
@@ -8807,10 +9245,12 @@ function getGuideChatItemsData(){
 }
 function syncGuideHeader(){
   ensureProfileGuidePage();
+  ensureGuideSoundPage();
   const title=document.getElementById('guide-top-title');
   if(title){
     if(guidePage==='chat') title.textContent='Chat and IM';
     else if(guidePage==='profile') title.textContent=profileGuideTitle();
+    else if(guidePage==='sound') title.textContent='Sound Options';
     else{
       const session=emulatorPrimarySession();
       title.textContent=session ? `Now Playing: ${session.title||session.identifier||marketplaceSystemLabel(session.system||'')}` : '';
@@ -8819,6 +9259,7 @@ function syncGuideHeader(){
   document.getElementById('guide-home-page')?.classList.toggle('on',guidePage==='home');
   document.getElementById('guide-chat-page')?.classList.toggle('on',guidePage==='chat');
   document.getElementById('guide-profile-page')?.classList.toggle('on',guidePage==='profile');
+  document.getElementById('guide-sound-page')?.classList.toggle('on',guidePage==='sound');
   guideEl?.classList.toggle('guide-chat-open',guidePage==='chat');
   guideEl?.classList.toggle('guide-profile-open',guidePage==='profile');
 }
@@ -8955,6 +9396,14 @@ function guideBack(){
     openProfileGuideHub();
     return;
   }
+  if(guidePage==='sound'){
+    guidePage='home';
+    guideSelIdx=0;
+    syncGuideHeader();
+    applyGSel();
+    updateControlLegend();
+    return;
+  }
   closeGuide();
 }
 function updateGuideClock(){
@@ -9027,6 +9476,7 @@ function ensureEmulatorUninstallRows(){
     ['g2-dolphin-list','[data-dolphin-action="uninstall-runtime"][data-dolphin-channel="stable"]','[data-dolphin-key="dolphinPath"]',`<div class="g2r-item" data-dolphin-action="uninstall-runtime" data-dolphin-channel="stable" data-dolphin-title="Uninstall Dolphin Stable" data-dolphin-desc="Remove only the SKALD-managed Dolphin Stable runtime. Development builds remain installed separately." data-dolphin-picker="none"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-delete.webp')"></div><div class="g2r-copy"><div class="g2r-label">Uninstall Dolphin Stable</div><div class="g2r-value dim">Remove managed Stable build</div></div></div>`],
     ['g2-dolphin-list','[data-dolphin-action="uninstall-runtime"][data-dolphin-channel="development"]','[data-dolphin-key="dolphinPath"]',`<div class="g2r-item" data-dolphin-action="uninstall-runtime" data-dolphin-channel="development" data-dolphin-title="Uninstall Dolphin Development" data-dolphin-desc="Remove only the SKALD-managed Dolphin Development runtime. Stable builds remain installed separately." data-dolphin-picker="none"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-delete.webp')"></div><div class="g2r-copy"><div class="g2r-label">Uninstall Dolphin Development</div><div class="g2r-value dim">Remove managed Development build</div></div></div>`],
     ['g2-cemu-list','[data-cemu-action="uninstall-runtime"]','[data-cemu-key="cemuPath"]',`<div class="g2r-item" data-cemu-action="uninstall-runtime" data-cemu-title="Uninstall Cemu" data-cemu-desc="Remove the SKALD-managed Cemu runtime folder. Custom override settings remain saved." data-cemu-picker="none"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-delete.webp')"></div><div class="g2r-copy"><div class="g2r-label">Uninstall Cemu</div><div class="g2r-value dim">Remove managed Cemu install</div></div></div>`],
+    ['g2-xemu-list','[data-xemu-action="uninstall-runtime"]','[data-xemu-key="xemuPath"]',`<div class="g2r-item" data-xemu-action="uninstall-runtime" data-xemu-title="Uninstall XEMU" data-xemu-desc="Remove the SKALD-managed XEMU runtime folder. Custom override settings remain saved." data-xemu-picker="none"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-delete.webp')"></div><div class="g2r-copy"><div class="g2r-label">Uninstall XEMU</div><div class="g2r-value dim">Remove managed XEMU install</div></div></div>`],
     ['g2-xenia-list','[data-xenia-action="uninstall-runtime"]','[data-xenia-key="xeniaPath"]',`<div class="g2r-item" data-xenia-action="uninstall-runtime" data-xenia-title="Uninstall Xenia Canary" data-xenia-desc="Remove the SKALD-managed Xenia Canary runtime folder. SKALD profile sync data remains saved." data-xenia-picker="none"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-delete.webp')"></div><div class="g2r-copy"><div class="g2r-label">Uninstall Xenia Canary</div><div class="g2r-value dim">Remove managed Xenia install</div></div></div>`],
   ];
   rows.forEach(([listId,existsSelector,beforeSelector,markup])=>{
@@ -9114,6 +9564,26 @@ function getGuideCemuRefs(){
   return{
     desc:document.getElementById('g2-cemu-desc'),
     status:document.getElementById('g2-cemu-status'),
+    title:document.getElementById('g2-account-title'),
+    headIcon:document.getElementById('g2-account-head-icon'),
+  };
+}
+function ensureXemuGuideBody(){
+  if(document.getElementById('g2-xemu-body')) return;
+  const shell=document.getElementById('g2-account-shell');
+  const foot=document.getElementById('g2-account-foot');
+  if(!shell || !foot) return;
+  const body=document.createElement('div');
+  body.id='g2-xemu-body';
+  body.innerHTML=`<div id="g2-xemu-desc"></div><div id="g2-xemu-status"></div><div id="emu-progress-wrap-xemu" class="emu-progress-wrap"><div class="emu-progress-top"><div id="emu-progress-label-xemu" class="mkt-action-meta emu-progress-label">Preparing XEMU...</div><div id="emu-progress-percent-xemu" class="emu-progress-percent">0%</div></div><div class="emu-progress-shell"><div id="emu-progress-fill-xemu" class="emu-progress-fill"></div></div></div><div id="g2-xemu-list"><div class="g2r-item sel" data-xemu-action="download-runtime" data-xemu-title="Install XEMU" data-xemu-desc="Download the current official Windows XEMU package from GitHub releases and install it into SKALD's managed runtime folder." data-xemu-picker="none"><div class="gicon" style="background-image:url('file:///C:/Projects/SKALD/assets/icons/Systems/Xemu.webp')"></div><div class="g2r-copy"><div class="g2r-label">Install XEMU</div><div class="g2r-value dim" id="emu-xemu-runtime-display">Managed runtime not available</div></div></div><div class="g2r-item" data-xemu-action="import-runtime" data-xemu-title="Import Existing Runtime" data-xemu-desc="Copy a full XEMU install into SKALD's managed runtime folder from an existing local install." data-xemu-picker="exe"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-downloads.webp')"></div><div class="g2r-copy"><div class="g2r-label">Import Existing Runtime</div><div class="g2r-value dim" id="emu-xemu-import-display">Pick xemu.exe from an existing install</div></div></div><div class="g2r-item" data-xemu-action="launch-emulator" data-xemu-title="Launch Emulator" data-xemu-desc="Launch XEMU directly from SKALD using the active managed runtime or custom override." data-xemu-picker="none"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-a.webp')"></div><div class="g2r-copy"><div class="g2r-label">Launch Emulator</div><div class="g2r-value dim">Open XEMU directly</div></div></div><div class="g2r-item" data-xemu-key="xemuPath" data-xemu-title="Custom Runtime Override" data-xemu-desc="SKALD will prefer its managed XEMU runtime. Choose a custom XEMU executable only if you need a temporary override during setup or troubleshooting." data-xemu-picker="exe"><div class="gicon" style="background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-settings.webp')"></div><div class="g2r-copy"><div class="g2r-label">Custom Runtime Override</div><div class="g2r-value dim" id="emu-xemu-override-display">Using SKALD managed runtime when available</div></div></div></div>`;
+  shell.insertBefore(body, foot);
+  ensureEmulatorUninstallRows();
+}
+function getGuideXemuRefs(){
+  ensureXemuGuideBody();
+  return{
+    desc:document.getElementById('g2-xemu-desc'),
+    status:document.getElementById('g2-xemu-status'),
     title:document.getElementById('g2-account-title'),
     headIcon:document.getElementById('g2-account-head-icon'),
   };
@@ -9418,6 +9888,13 @@ function syncGuideCemuDisplays(){
   const item=items[Math.max(0,Math.min(guideSelIdx,items.length-1))];
   if(refs.desc) refs.desc.textContent=item?.dataset.cemuDesc || 'Manage the integrated SKALD Cemu runtime for native Wii U playback.';
 }
+function syncGuideXemuDisplays(){
+  const refs=getGuideXemuRefs();
+  const items=[...document.querySelectorAll('#guide2 #g2-xemu-list .g2r-item')].filter(el=>el.offsetParent!==null);
+  if(!items.length) return;
+  const item=items[Math.max(0,Math.min(guideSelIdx,items.length-1))];
+  if(refs.desc) refs.desc.textContent=item?.dataset.xemuDesc || 'Manage the integrated SKALD XEMU runtime for native Original Xbox playback.';
+}
 function syncGuideXeniaDisplays(){
   const refs=getGuideXeniaRefs();
   const items=[...document.querySelectorAll('#guide2 #g2-xenia-list .g2r-item')].filter(el=>el.offsetParent!==null);
@@ -9621,6 +10098,16 @@ async function openCemuGuide(){
   syncGuideCemuDisplays();
   applyGSel();
 }
+async function openXemuGuide(){
+  ensureXemuGuideBody();
+  openGuide2('xemu');
+  const refs=getGuideXemuRefs();
+  if(refs.title) refs.title.textContent='XEMU';
+  if(refs.headIcon) refs.headIcon.src='file:///C:/Projects/SKALD/assets/icons/Systems/Xemu.webp';
+  await refreshXemuSettingsPanel();
+  syncGuideXemuDisplays();
+  applyGSel();
+}
 async function openXeniaGuide(){
   ensureXeniaGuideBody();
   openGuide2('xenia');
@@ -9649,6 +10136,7 @@ function applyGSel(){
 if(guide2Open && guide2Mode==='duckstation') syncGuideDuckStationDisplays();
 if(guide2Open && guide2Mode==='dolphin') syncGuideDolphinDisplays();
 if(guide2Open && guide2Mode==='cemu') syncGuideCemuDisplays();
+if(guide2Open && guide2Mode==='xemu') syncGuideXemuDisplays();
     if(guide2Open && guide2Mode==='vlc') syncGuideVLCDisplays();
   if(guide2Open && guide2Mode==='xenia') syncGuideXeniaDisplays();
   if(guide2Open && guide2Mode==='rpcs3') syncGuideRPCS3Displays();
@@ -9691,8 +10179,8 @@ function guideMoveDirectional(dx,dy){
   applyGSel();
   playSfx('cursor.wav');
 }
-function guideLeft(){if(!guide2Open && guidePage==='chat'){setGuideChatTab('private');playSfx('cursor.wav');return;}guideMoveDirectional(-1,0);}
-function guideRight(){if(!guide2Open && guidePage==='chat'){setGuideChatTab('messenger');playSfx('cursor.wav');return;}guideMoveDirectional(1,0);}
+function guideLeft(){if(!guide2Open && guidePage==='chat'){setGuideChatTab('private');playSfx('cursor.wav');return;}if(!guide2Open && guidePage==='sound'){void adjustGuideSoundVolume(-5);playSfx('cursor.wav');return;}guideMoveDirectional(-1,0);}
+function guideRight(){if(!guide2Open && guidePage==='chat'){setGuideChatTab('messenger');playSfx('cursor.wav');return;}if(!guide2Open && guidePage==='sound'){void adjustGuideSoundVolume(5);playSfx('cursor.wav');return;}guideMoveDirectional(1,0);}
 async function saveGuideAccount(){
   const refs=getGuideAccountRefs();
   const login=refs.loginInput?.value.trim()||'';
@@ -10172,6 +10660,58 @@ async function handleCemuGuideItem(btn){
     toast(`${btn.dataset.cemuTitle||'Cemu setting'} saved`);
   }
 }
+async function handleXemuGuideItem(btn){
+  ensureXemuGuideBody();
+  const key=btn.dataset.xemuKey;
+  const action=btn.dataset.xemuAction;
+  const status=document.getElementById('g2-xemu-status');
+  if(action==='download-runtime'){
+    emulatorRuntimeProgressState={active:true,percent:2,stage:'starting',message:'Starting XEMU download...'};
+    renderEmulatorRuntimeProgress();
+    if(status) status.textContent='Downloading XEMU from the current official GitHub release and preparing the SKALD managed runtime...';
+    const result=await window.electronAPI?.downloadXemuRuntime?.();
+    if(result?.ok) completeEmulatorRuntimeProgress(`XEMU ${result.version||''} is ready in SKALD.`.trim());
+    else{
+      emulatorRuntimeProgressState={active:false,percent:0,stage:'',message:''};
+      renderEmulatorRuntimeProgress();
+    }
+    await refreshXemuSettingsPanel();
+    if(result?.ok) toast(`XEMU ${result.version||''} installed for SKALD`.trim());
+    else toast(result?.error || 'Could not download XEMU');
+    return;
+  }
+  if(action==='uninstall-runtime'){
+    if(status) status.textContent='Removing the SKALD-managed XEMU runtime...';
+    const result=await window.electronAPI?.uninstallXemuRuntime?.();
+    await refreshXemuSettingsPanel();
+    if(result?.ok) toast('XEMU uninstalled from SKALD');
+    else toast(result?.error || 'Could not uninstall XEMU');
+    return;
+  }
+  if(action==='launch-emulator'){
+    const result=await window.electronAPI?.launchStandaloneEmulator?.({emulatorId:'xemu'});
+    if(result?.ok) toast('Launching XEMU');
+    else toast(result?.error || 'Could not launch XEMU');
+    return;
+  }
+  const filters=[{name:'Executables',extensions:['exe']},{name:'All Files',extensions:['*']}];
+  const picked=await window.electronAPI?.chooseFile?.({filters});
+  if(!picked) return;
+  if(action==='import-runtime'){
+    const result=await window.electronAPI?.importXemuRuntime?.({executablePath:picked});
+    await refreshXemuSettingsPanel();
+    if(result?.ok) toast('XEMU imported into SKALD');
+    else toast(result?.error || 'Could not import XEMU');
+    return;
+  }
+  const settings=await window.electronAPI?.getSettings?.() || {};
+  const next={...settings, emulators:{...(settings.emulators||{}), xemu:{...((settings.emulators||{}).xemu||{}), customExecutablePath:picked, executablePath:picked, mode:'custom'}}};
+  if(key==='xemuPath'){
+    await window.electronAPI?.saveSettings?.(next);
+    await refreshXemuSettingsPanel();
+    toast(`${btn.dataset.xemuTitle||'XEMU setting'} saved`);
+  }
+}
 async function handleXeniaGuideItem(btn){
   ensureXeniaGuideBody();
   const key=btn.dataset.xeniaKey;
@@ -10508,6 +11048,10 @@ if(guide2Mode==='cemu'){
 await handleCemuGuideItem(btn);
 return;
 }
+if(guide2Mode==='xemu'){
+await handleXemuGuideItem(btn);
+return;
+}
       if(guide2Mode==='vlc'){
         await handleVLCGuideItem(btn);
         return;
@@ -10538,6 +11082,10 @@ return;
     if(item.type==='signin'){ toast('Sign in to SKALD LIVE from the SKALD LIVE blade to use Messenger.'); return; }
     if(item.type==='new'){ toast('New conversation creation will be wired into this Guide page next.'); return; }
     toast(`${item.title} is not wired yet.`);
+    return;
+  }
+  if(guidePage==='sound'){
+    await adjustGuideSoundVolume(5);
     return;
   }
   const a=btn.dataset.gact;
@@ -11097,6 +11645,11 @@ document.querySelectorAll('#sub-emulators .emu-item').forEach(item=>item.addEven
       await refreshCemuSettingsPanel();
       return;
     }
+    if(guideMode==='xemu'){
+      await openXemuGuide();
+      await refreshXemuSettingsPanel();
+      return;
+    }
     if(guideMode==='vlc'){
     await openVLCGuide();
     await refreshVLCSettingsPanel();
@@ -11122,6 +11675,7 @@ document.querySelectorAll('#guide2 .g2r-item').forEach((item,i)=>item.addEventLi
     else if(guide2Mode==='duckstation') await handleDuckStationGuideItem(item);
     else if(guide2Mode==='dolphin') await handleDolphinGuideItem(item);
     else if(guide2Mode==='cemu') await handleCemuGuideItem(item);
+    else if(guide2Mode==='xemu') await handleXemuGuideItem(item);
     else if(guide2Mode==='vlc') await handleVLCGuideItem(item);
     else if(guide2Mode==='xenia') await handleXeniaGuideItem(item);
     else if(guide2Mode==='rpcs3') await handleRPCS3GuideItem(item);
@@ -11153,6 +11707,15 @@ document.querySelectorAll('#guide2 .g2r-item').forEach((item,i)=>item.addEventLi
     const idx=items.indexOf(cemuItem);
     if(idx>=0){guideSelIdx=idx;applyGSel();}
     await handleCemuGuideItem(cemuItem);
+    return;
+  }
+  const xemuItem=e.target.closest('#g2-xemu-list .g2r-item');
+  if(xemuItem && xemuItem.offsetParent){
+    playSfx('select.wav');
+    const items=getGuideItems();
+    const idx=items.indexOf(xemuItem);
+    if(idx>=0){guideSelIdx=idx;applyGSel();}
+    await handleXemuGuideItem(xemuItem);
     return;
   }
   const item=e.target.closest('#g2-vlc-list .g2r-item');
@@ -12281,6 +12844,17 @@ function controlLegendForContext(){
         ],
       };
     }
+    if(guidePage==='sound'){
+      return {
+        title:'Control Legend',
+        entries:[
+          { icons:['dpadVertical','leftStickVertical'], label:'Choose Volume' },
+          { icons:['dpadHorizontal','leftStickHorizontal'], label:'Adjust' },
+          { icons:['a'], label:'Raise 5%' },
+          { icons:['b'], label:'Back' },
+        ],
+      };
+    }
     return {
       title:'Control Legend',
       entries:[
@@ -12448,15 +13022,35 @@ function controlLegendForContext(){
     };
   }
   if(isMarketplaceCosmeticsOpen()){
+    if(marketplaceState.cosmeticVariantModalOpen){
+      return {
+        title:'Control Legend',
+        entries:[
+          { icons:['dpadVertical','leftStickVertical'], label:'Choose Theme' },
+          { icons:['a'], label:'Download' },
+          { icons:['b'], label:'Back' },
+        ],
+      };
+    }
+    if(marketplaceState.gamerpicVariantModalOpen){
+      return {
+        title:'Control Legend',
+        entries:[
+          { icons:['dpadVertical','leftStickVertical'], label:'Choose Gamer Pic' },
+          { icons:['a'], label:'Download' },
+          { icons:['b'], label:'Back' },
+        ],
+      };
+    }
     const selected=marketplaceSelectedCosmetic();
     const detail=selected?.id ? marketplaceThemeFolderCache.get(selected.id) : null;
-    const deleteLabel=marketplaceCosmeticDeletePending(selected) ? 'Confirm Delete' : (selected?.theme && !selected.theme.reset ? 'Delete Theme' : '');
+    const deleteLabel=marketplaceCosmeticDeletePending(selected) ? 'Confirm Uninstall' : (selected?.theme && !selected.theme.reset ? 'Uninstall Theme' : '');
     const actionLabel=marketplaceState.cosmeticDownloadId
       ? 'Downloading'
       : selected?.theme
         ? (selected.theme.reset?'Reset Theme':'Apply Theme')
         : detail?.directories?.length && !detail?.files?.length
-          ? 'Open Folder'
+          ? 'Choose Theme'
           : selected?.folderUrl
             ? 'Install Theme'
             : 'Select';
@@ -14337,7 +14931,7 @@ const MARKETPLACE_THEME_BASE_ITEMS=[
       type:'Theme',
       meta:'Built in',
       status:'Restores SKALD\'s default colored Blade backgrounds.',
-      notes:'Press A to reset the launcher back to the original Xbox 360 Blades-style backgrounds. This built-in theme cannot be deleted.',
+      notes:'Press A to reset the launcher back to the original Xbox 360 Blades-style backgrounds. This built-in theme cannot be uninstalled.',
       thumbnail:'file:///C:/Projects/SKALD/assets/icons/Media/Themes.webp',
       theme:{id:'skald-default',title:'XBOX 360 DEFAULT THEME',reset:true}
     },
@@ -14353,14 +14947,34 @@ const MARKETPLACE_THEME_BASE_ITEMS=[
       customSourceUrl:'https://archive.org/download/Xbox_360_Themes_Archivev.1/Xbox%20360%20Themes/Custom%20Themes/'
     },
 ];
+const MARKETPLACE_GAMERPIC_BASE_ITEMS=[
+    {
+      id:'gamerpic-source-xbox360',
+      title:'Xbox 360 Gamerpics',
+      type:'Gamer Picture Source',
+      meta:'Archive.org source configured',
+      status:'Browse Xbox 360 gamer pictures uploaded to Archive.org and organized by title.',
+      notes:'Press A to browse Xbox 360 gamerpic packs. Selected PNGs will be saved locally and applied to your SKALD profile.',
+      thumbnail:'file:///C:/Projects/SKALD/assets/icons/Systems/Xbox_360.webp',
+      gamerpicSourceType:'xbox360',
+    },
+    {
+      id:'gamerpic-source-ps3',
+      title:'PS3 Avatars',
+      type:'Gamer Picture Source',
+      meta:'Archive.org source configured',
+      status:'Browse clean PlayStation 3 avatar PNGs uploaded to Archive.org.',
+      notes:'Press A to browse PS3 avatar packs. Selected PNGs will be saved locally and applied to your SKALD profile.',
+      thumbnail:'file:///C:/Projects/SKALD/assets/icons/Systems/PlayStation_3.webp',
+      gamerpicSourceType:'ps3-avatar',
+    },
+];
 const MARKETPLACE_COSMETIC_ITEMS={
   themes:[...MARKETPLACE_THEME_BASE_ITEMS],
-  gamerpics:[
-    {id:'gamerpic-source-placeholder',title:'Archive.org Gamer Pictures',type:'Gamer Picture Pack',meta:'Source pending',status:'We will point this row to the Archive.org gamer picture source once you choose the collection.',notes:'Gamer picture downloads will be saved to the profile/art area after we define the install/apply flow.'},
-    {id:'gamerpic-classic-placeholder',title:'Classic Gamer Pictures',type:'Gamer Picture',meta:'Planned category',status:'Placeholder category for profile art and avatar-style images.',notes:'This is UI-only for now. No download URL has been attached yet.'},
-  ],
+  gamerpics:[...MARKETPLACE_GAMERPIC_BASE_ITEMS],
 };
 let marketplaceDownloadedThemeItems=[];
+let marketplaceThemeArchiveItems=[];
 function marketplaceThemeTitleKey(value){
   return String(value||'')
     .toLowerCase()
@@ -14392,6 +15006,7 @@ function marketplaceCosmeticCategory(){
 }
 function marketplaceCosmeticItems(category=marketplaceState.cosmeticCategory){
   if(category==='themes' && marketplaceState.cosmeticParentItems) return marketplaceState.cosmeticParentItems;
+  if(category==='gamerpics' && marketplaceState.gamerpicSourceItems) return marketplaceState.gamerpicSourceItems;
   return MARKETPLACE_COSMETIC_ITEMS[category] || [];
 }
 function marketplaceSelectedCosmetic(){
@@ -14409,6 +15024,8 @@ function marketplaceCosmeticInstallState(item){
   if(marketplaceCosmeticIsApplied(item)) return {label:'ACTIVE',className:'active'};
   if(item?.theme && !item.theme.reset) return {label:'INSTALLED',className:'installed'};
   if(item?.theme?.reset) return {label:'INSTALLED',className:'installed'};
+  if(item?.gamerpicSourceType || item?.source==='ps3-avatar-title' || item?.source==='xbox360-gamerpic-title') return {label:'OPEN',className:'download'};
+  if(item?.source==='ps3-avatar' || item?.source==='xbox360-gamerpic') return {label:'DOWNLOAD',className:'download'};
   if(item?.folderUrl || item?.sourceUrl) return {label:'DOWNLOAD',className:'download'};
   return {label:'',className:''};
 }
@@ -14417,7 +15034,7 @@ function marketplaceThemeFolderSummary(detail){
   const dirs=detail.directories?.length || 0;
   const files=detail.files?.length || 0;
   const images=detail.images?.length || 0;
-  if(dirs && !files) return `${dirs.toLocaleString()} theme folder${dirs===1?'':'s'} inside. Select a child theme next once nested browsing is wired.`;
+  if(dirs && !files) return `${dirs.toLocaleString()} theme${dirs===1?'':'s'} available. Press A to choose which one to download.`;
   return [
     `${files.toLocaleString()} file${files===1?'':'s'}`,
     `${images.toLocaleString()} image${images===1?'':'s'}`,
@@ -14431,7 +15048,7 @@ function marketplaceThemeFolderHasApplyMapping(detail){
 function marketplaceThemeFolderReadiness(detail){
   if(!detail?.ok) return {ready:false,label:'Not inspected',reason:'Select this row to inspect its Archive.org folder.'};
   if(detail.directories?.length && !detail.files?.length){
-    return {ready:false,label:'Open folder',reason:'This is a parent folder. Press A to browse the child theme folders.'};
+    return {ready:false,label:'Choose theme',reason:'This title has multiple themes. Press A to choose one.'};
   }
   if(!detail.files?.length){
     return {ready:false,label:'Empty folder',reason:'No downloadable files were found in this folder.'};
@@ -14462,7 +15079,7 @@ function marketplaceThemeChildItem(parent, child){
   const title=child?.name || 'Theme';
   return {
     id:`theme-child:${parent?.id || 'parent'}:${child?.url || title}`,
-    title,
+    title:parent?.title ? `${parent.title} - ${title}` : title,
     type:parent?.isCustom ? 'Custom Theme' : 'Theme',
     meta:parent?.title ? parent.title : 'Theme folder',
     status:`Theme folder inside ${parent?.title || 'the selected Archive.org title folder'}.`,
@@ -14490,23 +15107,19 @@ function marketplaceDownloadedThemeItem(theme){
 }
 function rebuildMarketplaceThemeItems(archiveItems=null){
   const archiveSource=MARKETPLACE_THEME_BASE_ITEMS[1];
-  const downloadedTitleKeys=new Set(marketplaceDownloadedThemeItems.map(item=>marketplaceThemeTitleKey(item.title)).filter(Boolean));
-  const activeThemeItem=appliedSkaldTheme?.id
-    ? marketplaceDownloadedThemeItems.find(item=>item.theme?.id===appliedSkaldTheme.id)
-    : null;
-  const downloadedItems=activeThemeItem
-    ? [activeThemeItem,...marketplaceDownloadedThemeItems.filter(item=>item.id!==activeThemeItem.id)]
-    : marketplaceDownloadedThemeItems;
-  const currentArchiveItems=Array.isArray(archiveItems)
-    ? archiveItems
+  if(Array.isArray(archiveItems)){
+    marketplaceThemeArchiveItems=archiveItems;
+  }
+  const currentArchiveItems=marketplaceThemeArchiveItems.length
+    ? marketplaceThemeArchiveItems
     : MARKETPLACE_COSMETIC_ITEMS.themes.filter(item=>item.id.startsWith('theme-archive:'));
-  const filteredArchiveItems=currentArchiveItems
-    .map(withDownloadedThemeState)
-    .filter(item=>!downloadedTitleKeys.has(marketplaceThemeTitleKey(item.title)));
+  const archiveTitleKeys=new Set(currentArchiveItems.map(item=>marketplaceThemeTitleKey(item.title)).filter(Boolean));
+  const decoratedArchiveItems=currentArchiveItems.map(withDownloadedThemeState);
+  const orphanDownloadedItems=marketplaceDownloadedThemeItems.filter(item=>!archiveTitleKeys.has(marketplaceThemeTitleKey(item.title)));
   MARKETPLACE_COSMETIC_ITEMS.themes=[
     MARKETPLACE_THEME_BASE_ITEMS[0],
-    ...downloadedItems,
-    ...filteredArchiveItems,
+    ...decoratedArchiveItems,
+    ...orphanDownloadedItems,
     archiveSource,
   ];
 }
@@ -14552,6 +15165,194 @@ async function loadMarketplaceThemesCatalog(force=false){
     if(isMarketplaceCosmeticsOpen() && marketplaceState.cosmeticCategory==='themes') renderMarketplaceCosmeticsList();
   }
 }
+function marketplacePs3AvatarCatalogItem(raw){
+  return {
+    id:raw?.id || `ps3-avatar-title:${raw?.repoPath || raw?.title}`,
+    title:raw?.title || 'PS3 Avatar Pack',
+    type:'PS3 Avatar Pack',
+    meta:raw?.meta || 'Archive.org avatar source',
+    status:raw?.status || 'PlayStation 3 avatar pack.',
+    notes:raw?.notes || 'Press A to choose an avatar from this PS3 pack.',
+    thumbnail:raw?.thumbnail || 'file:///C:/Projects/SKALD/assets/icons/Systems/PlayStation_3.webp',
+    source:raw?.source || 'ps3-avatar-title',
+    repoPath:raw?.repoPath || '',
+    avatars:Array.isArray(raw?.avatars) ? raw.avatars : [],
+    sourceId:raw?.sourceId || '',
+    letter:raw?.letter || '',
+    titleId:raw?.titleId || '',
+  };
+}
+function marketplaceXbox360GamerpicCatalogItem(raw){
+  return {
+    id:raw?.id || `xbox360-gamerpic-title:${raw?.folderUrl || raw?.title}`,
+    title:raw?.title || 'Xbox 360 Gamerpic Pack',
+    type:'Xbox 360 Gamerpic Pack',
+    meta:raw?.meta || 'Archive.org gamerpic source',
+    status:raw?.status || 'Xbox 360 gamer pictures organized by title.',
+    notes:raw?.notes || 'Press A to choose a gamer picture from this Xbox 360 title.',
+    thumbnail:raw?.thumbnail || 'file:///C:/Projects/SKALD/assets/icons/Systems/Xbox_360.webp',
+    source:'xbox360-gamerpic-title',
+    folderUrl:raw?.folderUrl || '',
+  };
+}
+async function loadMarketplaceXbox360GamerpicCatalog(force=false){
+  if(marketplaceState.gamerpicCatalogLoading) return;
+  if(marketplaceState.gamerpicCatalogLoaded && marketplaceState.gamerpicCatalogSource==='xbox360' && !force && marketplaceState.gamerpicSourceItems) return;
+  if(!window.electronAPI?.fetchMarketplaceXbox360GamerpicCatalog) return;
+  marketplaceState.gamerpicCatalogLoading=true;
+  marketplaceState.gamerpicCatalogSource='xbox360';
+  marketplaceState.gamerpicCatalogError='';
+  renderMarketplaceCosmeticsList();
+  try{
+    const result=await window.electronAPI.fetchMarketplaceXbox360GamerpicCatalog({force});
+    if(result?.ok){
+      marketplaceState.gamerpicSourceItems=(result.items||[]).map(marketplaceXbox360GamerpicCatalogItem);
+      marketplaceState.gamerpicSourceTitle='Xbox 360 Gamerpics';
+      marketplaceState.gamerpicCatalogLoaded=true;
+      marketplaceState.gamerpicCatalogSource='xbox360';
+      marketplaceState.selectedCosmeticId=marketplaceState.gamerpicSourceItems[0]?.id || null;
+    }else{
+      marketplaceState.gamerpicCatalogError=result?.error || 'Could not load Xbox 360 gamerpic catalog.';
+    }
+  }catch(err){
+    marketplaceState.gamerpicCatalogError=err?.message || String(err) || 'Could not load Xbox 360 gamerpic catalog.';
+  }finally{
+    marketplaceState.gamerpicCatalogLoading=false;
+    if(isMarketplaceCosmeticsOpen() && marketplaceState.cosmeticCategory==='gamerpics') renderMarketplaceCosmeticsList();
+  }
+}
+async function loadMarketplacePs3AvatarCatalog(force=false){
+  if(marketplaceState.gamerpicCatalogLoading) return;
+  if(marketplaceState.gamerpicCatalogLoaded && marketplaceState.gamerpicCatalogSource==='ps3-avatar' && !force && marketplaceState.gamerpicSourceItems) return;
+  if(!window.electronAPI?.fetchMarketplacePs3AvatarCatalog) return;
+  marketplaceState.gamerpicCatalogLoading=true;
+  marketplaceState.gamerpicCatalogSource='ps3-avatar';
+  marketplaceState.gamerpicCatalogError='';
+  renderMarketplaceCosmeticsList();
+  try{
+    const result=await window.electronAPI.fetchMarketplacePs3AvatarCatalog({force});
+    if(result?.ok){
+      marketplaceState.gamerpicSourceItems=(result.items||[]).map(marketplacePs3AvatarCatalogItem);
+      marketplaceState.gamerpicSourceTitle='PS3 Avatars';
+      marketplaceState.gamerpicCatalogLoaded=true;
+      marketplaceState.gamerpicCatalogSource='ps3-avatar';
+      marketplaceState.selectedCosmeticId=marketplaceState.gamerpicSourceItems[0]?.id || null;
+    }else{
+      marketplaceState.gamerpicCatalogError=result?.error || 'Could not load PS3 avatar catalog.';
+    }
+  }catch(err){
+    marketplaceState.gamerpicCatalogError=err?.message || String(err) || 'Could not load PS3 avatar catalog.';
+  }finally{
+    marketplaceState.gamerpicCatalogLoading=false;
+    if(isMarketplaceCosmeticsOpen() && marketplaceState.cosmeticCategory==='gamerpics') renderMarketplaceCosmeticsList();
+  }
+}
+function closeMarketplaceGamerpicSource(){
+  if(!marketplaceState.gamerpicSourceItems) return false;
+  marketplaceState.gamerpicSourceItems=null;
+  marketplaceState.gamerpicSourceTitle='';
+  marketplaceState.gamerpicCatalogSource='';
+  marketplaceState.selectedCosmeticId=MARKETPLACE_COSMETIC_ITEMS.gamerpics[0]?.id || null;
+  marketplaceState.cosmeticPane='list';
+  renderMarketplaceCosmeticsList();
+  playSfx('tier2_exit.wav');
+  return true;
+}
+function closeMarketplaceGamerpicVariantModal(){
+  if(!marketplaceState.gamerpicVariantModalOpen) return false;
+  marketplaceState.gamerpicVariantModalOpen=false;
+  marketplaceState.gamerpicVariantParent=null;
+  marketplaceState.gamerpicVariantRows=[];
+  marketplaceState.gamerpicVariantIdx=0;
+  document.getElementById('archive-variant-modal')?.classList.remove('on');
+  updateControlLegend();
+  return true;
+}
+function openMarketplaceGamerpicVariantModal(parent,rows){
+  const items=Array.isArray(rows) ? rows : [];
+  if(!items.length) return false;
+  marketplaceState.gamerpicVariantParent=parent;
+  marketplaceState.gamerpicVariantRows=items;
+  marketplaceState.gamerpicVariantIdx=0;
+  marketplaceState.gamerpicVariantModalOpen=true;
+  renderMarketplaceGamerpicVariantModal();
+  playSfx('tier2_enter.wav');
+  return true;
+}
+function renderMarketplaceGamerpicVariantModal(){
+  const modal=ensureArchiveVariantModal();
+  if(!marketplaceState.gamerpicVariantModalOpen){
+    modal.classList.remove('on');
+    return;
+  }
+  const rows=marketplaceState.gamerpicVariantRows||[];
+  const parent=marketplaceState.gamerpicVariantParent;
+  marketplaceState.gamerpicVariantIdx=Math.max(0,Math.min(marketplaceState.gamerpicVariantIdx||0,Math.max(0,rows.length-1)));
+  modal.querySelector('.archive-variant-modal-title').textContent='Select Gamer Pic';
+  modal.querySelector('.archive-variant-modal-copy').textContent=`Choose which ${parent?.title || 'gamer picture'} to download and apply.`;
+  const list=modal.querySelector('#archive-variant-list');
+  if(list){
+    list.innerHTML=rows.map((row,idx)=>`
+      <div class="archive-variant-row${idx===marketplaceState.gamerpicVariantIdx?' sel':''}" data-gamerpic-variant-idx="${idx}">
+        ${row.thumbnail?`<div class="archive-variant-thumb" style="background-image:${cssInlineImageUrl(row.thumbnail)}"></div>`:''}
+        <div class="archive-variant-row-main">
+          <div class="archive-variant-row-title">${esc(row.title)}</div>
+          <div class="archive-variant-row-meta">${esc([row.meta,row.size?`${Math.round(row.size/1024)} KB`:''].filter(Boolean).join(' · '))}</div>
+        </div>
+      </div>
+    `).join('');
+    list.querySelectorAll('.archive-variant-row').forEach(row=>row.addEventListener('click',()=>{
+      const idx=Number(row.dataset.gamerpicVariantIdx||0);
+      if(Number.isFinite(idx)) marketplaceState.gamerpicVariantIdx=Math.max(0,Math.min(idx,Math.max(0,rows.length-1)));
+      renderMarketplaceGamerpicVariantModal();
+    }));
+    const selected=list.querySelector('.archive-variant-row.sel');
+    if(selected) scrollSelectionIntoView(selected);
+  }
+  modal.classList.add('on');
+  updateControlLegend();
+}
+function marketplaceGamerpicVariantMove(delta){
+  if(!marketplaceState.gamerpicVariantModalOpen) return false;
+  const rows=marketplaceState.gamerpicVariantRows||[];
+  if(!rows.length) return false;
+  marketplaceState.gamerpicVariantIdx=(Math.max(0,Math.min(marketplaceState.gamerpicVariantIdx||0,rows.length-1))+delta+rows.length)%rows.length;
+  renderMarketplaceGamerpicVariantModal();
+  playSfx('cursor.wav');
+  return true;
+}
+async function downloadSelectedMarketplaceGamerpicVariant(){
+  if(!marketplaceState.gamerpicVariantModalOpen) return false;
+  const rows=marketplaceState.gamerpicVariantRows||[];
+  const avatar=rows[Math.max(0,Math.min(marketplaceState.gamerpicVariantIdx||0,Math.max(0,rows.length-1)))];
+  const parent=marketplaceState.gamerpicVariantParent;
+  if(!avatar) return false;
+  closeMarketplaceGamerpicVariantModal();
+  marketplaceState.cosmeticDownloadId=parent?.id || avatar.id;
+  renderMarketplaceCosmeticsDetail();
+  try{
+    let result=null;
+    if(avatar?.source==='xbox360-gamerpic'){
+      result=await window.electronAPI?.downloadMarketplaceXbox360Gamerpic?.({gamerpic:avatar,title:parent?.title || 'Xbox 360 Gamerpics'});
+    }else if(avatar?.source==='ps3-avatar'){
+      result=await window.electronAPI?.downloadMarketplacePs3AvatarImage?.({avatar,title:parent?.title || 'PS3 Avatars'});
+    }
+    if(!result?.ok){
+      toast(result?.error || 'Could not download this gamer picture.');
+      return true;
+    }
+    await loadProfileGamerPics();
+    const pic=result.gamerpic;
+    const ok=await saveAppliedGamerPic(pic);
+    toast(ok ? `Applied ${pic?.title || avatar.title}` : 'Downloaded avatar, but could not save gamer pic setting');
+  }catch(err){
+    toast(err?.message || 'Could not download this gamer picture.');
+  }finally{
+    marketplaceState.cosmeticDownloadId='';
+    renderMarketplaceCosmeticsDetail();
+  }
+  return true;
+}
 async function loadMarketplaceThemeFolderDetail(item){
   if(!item?.folderUrl || !window.electronAPI?.inspectMarketplaceThemeFolder) return;
   if(marketplaceThemeFolderCache.has(item.id)){
@@ -14566,15 +15367,6 @@ async function loadMarketplaceThemeFolderDetail(item){
     marketplaceThemeFolderCache.set(item.id,detail);
     if(detail?.thumbnail?.url) item.thumbnail=detail.thumbnail.url;
     else if(detail?.images?.[0]?.url) item.thumbnail=detail.images[0].url;
-    if(
-      item.id===marketplaceState.selectedCosmeticId &&
-      isMarketplaceCosmeticsOpen() &&
-      (marketplaceState.cosmeticPane||'list')==='detail' &&
-      detail?.directories?.length &&
-      !detail?.files?.length
-    ){
-      openMarketplaceThemeChildFolder(item,detail);
-    }
   }catch(err){
     marketplaceState.cosmeticFolderError=err?.message || String(err) || 'Could not inspect this theme folder.';
   }finally{
@@ -14590,6 +15382,96 @@ function openMarketplaceThemeChildFolder(parent,detail){
   marketplaceState.cosmeticPane='list';
   renderMarketplaceCosmeticsList();
   playSfx('tier2_enter.wav');
+  return true;
+}
+function closeMarketplaceThemeVariantModal(){
+  if(!marketplaceState.cosmeticVariantModalOpen) return false;
+  marketplaceState.cosmeticVariantModalOpen=false;
+  marketplaceState.cosmeticVariantParent=null;
+  marketplaceState.cosmeticVariantRows=[];
+  marketplaceState.cosmeticVariantIdx=0;
+  document.getElementById('archive-variant-modal')?.classList.remove('on');
+  updateControlLegend();
+  return true;
+}
+function openMarketplaceThemeVariantModal(parent,detail){
+  const rows=(detail?.directories||[]).map(child=>withDownloadedThemeState(marketplaceThemeChildItem(parent,child)));
+  if(!rows.length) return false;
+  marketplaceState.cosmeticVariantParent=parent;
+  marketplaceState.cosmeticVariantRows=rows;
+  marketplaceState.cosmeticVariantIdx=0;
+  marketplaceState.cosmeticVariantModalOpen=true;
+  renderMarketplaceThemeVariantModal();
+  playSfx('tier2_enter.wav');
+  return true;
+}
+function renderMarketplaceThemeVariantModal(){
+  const modal=ensureArchiveVariantModal();
+  if(!marketplaceState.cosmeticVariantModalOpen){
+    modal.classList.remove('on');
+    return;
+  }
+  const rows=marketplaceState.cosmeticVariantRows||[];
+  const parent=marketplaceState.cosmeticVariantParent;
+  marketplaceState.cosmeticVariantIdx=Math.max(0,Math.min(marketplaceState.cosmeticVariantIdx||0,Math.max(0,rows.length-1)));
+  modal.querySelector('.archive-variant-modal-title').textContent='Select Theme';
+  modal.querySelector('.archive-variant-modal-copy').textContent=`Choose which ${parent?.title || 'theme'} variant to download.`;
+  const list=modal.querySelector('#archive-variant-list');
+  if(list){
+    list.innerHTML=rows.map((row,idx)=>{
+      const state=marketplaceCosmeticInstallState(row);
+      return `
+        <div class="archive-variant-row${idx===marketplaceState.cosmeticVariantIdx?' sel':''}" data-theme-variant-idx="${idx}">
+          <div class="archive-variant-row-main">
+            <div class="archive-variant-row-title">${esc(row.title)}</div>
+            <div class="archive-variant-row-meta">${esc([row.meta,state.label].filter(Boolean).join(' · '))}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+    list.querySelectorAll('.archive-variant-row').forEach(row=>row.addEventListener('click',()=>{
+      const idx=Number(row.dataset.themeVariantIdx||0);
+      if(Number.isFinite(idx)) marketplaceState.cosmeticVariantIdx=Math.max(0,Math.min(idx,Math.max(0,rows.length-1)));
+      renderMarketplaceThemeVariantModal();
+    }));
+  }
+  modal.classList.add('on');
+  updateControlLegend();
+}
+function marketplaceThemeVariantMove(delta){
+  if(!marketplaceState.cosmeticVariantModalOpen) return false;
+  const rows=marketplaceState.cosmeticVariantRows||[];
+  if(!rows.length) return false;
+  marketplaceState.cosmeticVariantIdx=(Math.max(0,Math.min(marketplaceState.cosmeticVariantIdx||0,rows.length-1))+delta+rows.length)%rows.length;
+  renderMarketplaceThemeVariantModal();
+  playSfx('cursor.wav');
+  return true;
+}
+async function downloadSelectedMarketplaceThemeVariant(){
+  if(!marketplaceState.cosmeticVariantModalOpen) return false;
+  const rows=marketplaceState.cosmeticVariantRows||[];
+  const item=rows[Math.max(0,Math.min(marketplaceState.cosmeticVariantIdx||0,Math.max(0,rows.length-1)))];
+  if(!item) return false;
+  const parent=marketplaceState.cosmeticVariantParent;
+  closeMarketplaceThemeVariantModal();
+  marketplaceState.selectedCosmeticId=parent?.id || item.id;
+  marketplaceState.cosmeticDownloadId=parent?.id || item.id;
+  renderMarketplaceCosmeticsDetail();
+  try{
+    const result=await window.electronAPI?.downloadMarketplaceThemeFolder?.({item,folderUrl:item.folderUrl,title:item.title});
+    if(!result?.ok){
+      toast(result?.error || 'Could not download this theme.');
+      return true;
+    }
+    const ok=await saveAppliedSkaldTheme(result.theme);
+    await loadMarketplaceDownloadedThemes();
+    toast(ok ? `Applied ${item.title}` : 'Downloaded theme, but could not save theme setting');
+  }catch(err){
+    toast(err?.message || 'Could not download this theme.');
+  }finally{
+    marketplaceState.cosmeticDownloadId='';
+    renderMarketplaceCosmeticsList();
+  }
   return true;
 }
 function closeMarketplaceThemeChildFolder(){
@@ -14618,6 +15500,11 @@ function updateMarketplaceCosmeticsTitle(){
   if(!title) return;
   if(marketplaceState.cosmeticCategory==='themes' && marketplaceState.cosmeticParentTitle){
     title.textContent=marketplaceState.cosmeticParentTitle;
+    updatePanelTitleLayer();
+    return;
+  }
+  if(marketplaceState.cosmeticCategory==='gamerpics' && marketplaceState.gamerpicSourceTitle){
+    title.textContent=marketplaceState.gamerpicSourceTitle;
     updatePanelTitleLayer();
     return;
   }
@@ -14654,7 +15541,8 @@ function renderMarketplaceCosmeticsList(){
   if(!list) return;
   if(count){
     if(marketplaceState.cosmeticCategory==='themes' && marketplaceState.cosmeticCatalogLoading) count.textContent='Loading Archive.org themes...';
-    else count.textContent=items.length ? `${items.length.toLocaleString()} item${items.length===1?'':'s'}${marketplaceState.cosmeticParentTitle?' · B for parent':''}` : '';
+    else if(marketplaceState.cosmeticCategory==='gamerpics' && marketplaceState.gamerpicCatalogLoading) count.textContent=marketplaceState.gamerpicCatalogSource==='ps3-avatar' ? 'Loading PS3 avatars...' : 'Loading Xbox 360 gamerpics...';
+    else count.textContent=items.length ? `${items.length.toLocaleString()} item${items.length===1?'':'s'}${marketplaceState.cosmeticParentTitle||marketplaceState.gamerpicSourceTitle?' · B for parent':''}` : '';
   }
   if(!items.length){
     list.innerHTML=`<div class="mkt-empty">${esc(marketplaceState.cosmeticCatalogError || 'No items have been configured for this category yet.')}</div>`;
@@ -14674,7 +15562,7 @@ function renderMarketplaceCosmeticsList(){
         <div class="micon" style="background-image:${cssInlineImageUrl(item.thumbnail||cat.logo)}"></div>
         <div class="mkt-source-row-copy">
           <div class="mkt-source-row-title">${esc(item.title)}</div>
-          <div class="mkt-source-row-publisher">${esc([item.type,item.meta,marketplaceCosmeticIsApplied(item)?'Applied':'',marketplaceCosmeticDeletePending(item)?'Delete armed':''].filter(Boolean).join(' · '))}</div>
+          <div class="mkt-source-row-publisher">${esc([item.type,item.meta,marketplaceCosmeticIsApplied(item)?'Applied':'',marketplaceCosmeticDeletePending(item)?'Uninstall armed':''].filter(Boolean).join(' · '))}</div>
         </div>
         <div class="mkt-source-row-state ${esc(state.className)}">${esc(state.label)}</div>
       </div>
@@ -14723,9 +15611,34 @@ function renderMarketplaceCosmeticsDetail(){
   if(typeValue) typeValue.textContent=cat.id==='gamerpics'?'Gamer Pic':'Theme';
   if(typeCaption) typeCaption.textContent=item.theme ? (marketplaceCosmeticIsApplied(item) ? 'Active theme' : 'Local theme') : 'Source pending';
   if(info) info.textContent=item.notes;
+  if(marketplaceState.cosmeticCategory==='gamerpics'){
+    if(item.gamerpicSourceType){
+      if(indicators) indicators.textContent=item.gamerpicSourceType==='ps3-avatar' ? 'Open PS3 Avatars' : 'Xbox 360 source';
+      if(typeCaption) typeCaption.textContent='Gamer pic source';
+      if(info) info.textContent=item.gamerpicSourceType==='ps3-avatar'
+        ? 'Press A to load PS3 avatar packs from the SKALD Archive.org source. Selected PNGs will be saved locally and applied to your SKALD profile.'
+        : 'Press A to load Xbox 360 gamerpic packs from the SKALD Archive.org source. Selected PNGs will be saved locally and applied to your SKALD profile.';
+    }else if(item.source==='xbox360-gamerpic-title'){
+      if(indicators) indicators.textContent=marketplaceState.gamerpicPackLoadingId===item.id ? 'Loading gamerpic pack...' : 'Gamerpic pack';
+      if(typeCaption) typeCaption.textContent='Xbox 360 gamerpic pack';
+      if(info) info.textContent='Press A to choose a gamer picture from this Xbox 360 title.';
+    }else if(item.source==='xbox360-gamerpic'){
+      if(indicators) indicators.textContent=marketplaceState.cosmeticDownloadId===item.id ? 'Downloading gamerpic...' : 'Ready to download';
+      if(typeCaption) typeCaption.textContent='Xbox 360 gamerpic';
+      if(info) info.textContent='Press A to download and apply this Xbox 360 gamerpic as your SKALD gamer pic.';
+    }else if(item.source==='ps3-avatar-title'){
+      if(indicators) indicators.textContent=marketplaceState.gamerpicPackLoadingId===item.id ? 'Loading avatar pack...' : 'Avatar pack';
+      if(typeCaption) typeCaption.textContent='PS3 avatar pack';
+      if(info) info.textContent='Press A to choose an avatar from this pack. SKALD will download the clean PNG and apply it as your gamer pic.';
+    }else if(item.source==='ps3-avatar'){
+      if(indicators) indicators.textContent=marketplaceState.cosmeticDownloadId===item.id ? 'Downloading avatar...' : 'Ready to download';
+      if(typeCaption) typeCaption.textContent='PS3 avatar';
+      if(info) info.textContent='Press A to download and apply this PS3 avatar as your gamer pic.';
+    }
+  }
   if(item.theme && !item.theme.reset && marketplaceCosmeticDeletePending(item)){
-    if(indicators) indicators.textContent='Delete armed';
-    if(info) info.textContent=`Press X again within 5 seconds to delete ${item.title} from the local theme cache.`;
+    if(indicators) indicators.textContent='Uninstall armed';
+    if(info) info.textContent=`Press X again within 5 seconds to uninstall ${item.title} from the local theme cache.`;
   }
   if(item.folderUrl){
     const detail=marketplaceThemeFolderCache.get(item.id);
@@ -14752,7 +15665,7 @@ function renderMarketplaceCosmeticsDetail(){
           readiness.reason,
           marketplaceThemeFolderSummary(detail),
           mappingLines.length ? `Detected mapping:\n${mappingLines.join('\n')}` : 'No four-image background mapping detected yet.',
-          detail.directories?.length ? 'This folder contains nested theme folders. Press A to open them.' : '',
+          detail.directories?.length ? `This title has ${detail.directories.length} themes. Press A to choose one.` : '',
           !detail.directories?.length && marketplaceThemeFolderHasApplyMapping(detail) ? 'Press A to download and apply this theme.' : '',
         ].filter(Boolean).join('\n\n');
       }
@@ -14789,6 +15702,9 @@ function marketplaceCosmeticsCycleCategory(delta){
   marketplaceState.selectedCosmeticId=null;
   marketplaceState.cosmeticParentItems=null;
   marketplaceState.cosmeticParentTitle='';
+  marketplaceState.gamerpicSourceItems=null;
+  marketplaceState.gamerpicSourceTitle='';
+  marketplaceState.gamerpicCatalogSource='';
   marketplaceState.cosmeticPane='list';
   renderMarketplaceCosmeticsList();
   if(next.id==='themes') loadMarketplaceThemesCatalog();
@@ -14800,6 +15716,76 @@ async function marketplaceCosmeticsSelect(){
   if((marketplaceState.cosmeticPane||'list')==='list' || (marketplaceState.cosmeticPane||'list')==='detail'){
     const item=marketplaceSelectedCosmetic();
     if(marketplaceState.cosmeticDownloadId) return true;
+    if(marketplaceState.cosmeticCategory==='gamerpics'){
+      if(item?.gamerpicSourceType==='xbox360'){
+        await loadMarketplaceXbox360GamerpicCatalog();
+        return true;
+      }
+      if(item?.gamerpicSourceType==='ps3-avatar'){
+        await loadMarketplacePs3AvatarCatalog();
+        return true;
+      }
+      if(item?.source==='ps3-avatar-title'){
+        if(!window.electronAPI?.listMarketplacePs3AvatarArchivePack){
+          toast('PS3 avatar pack API is not available.');
+          return true;
+        }
+        marketplaceState.gamerpicPackLoadingId=item.id;
+        renderMarketplaceCosmeticsDetail();
+        try{
+          const result=await window.electronAPI.listMarketplacePs3AvatarArchivePack({avatars:item.avatars || []});
+          if(!result?.ok){
+            toast(result?.error || 'Could not load this PS3 avatar pack.');
+            return true;
+          }
+          const rows=(result.avatars||[]).map(avatar=>({
+            ...avatar,
+            thumbnail:avatar.thumbnail || item.thumbnail,
+            parentTitle:item.title,
+          }));
+          if(!openMarketplaceGamerpicVariantModal(item,rows)){
+            toast('No PS3 avatar PNG files were found in this pack.');
+          }
+        }catch(err){
+          toast(err?.message || 'Could not load this PS3 avatar pack.');
+        }finally{
+          marketplaceState.gamerpicPackLoadingId='';
+          renderMarketplaceCosmeticsDetail();
+        }
+        return true;
+      }
+      if(item?.source==='xbox360-gamerpic-title'){
+        if(!window.electronAPI?.listMarketplaceXbox360GamerpicPack){
+          toast('Xbox 360 gamerpic pack API is not available.');
+          return true;
+        }
+        marketplaceState.gamerpicPackLoadingId=item.id;
+        renderMarketplaceCosmeticsDetail();
+        try{
+          const result=await window.electronAPI.listMarketplaceXbox360GamerpicPack({folderUrl:item.folderUrl,title:item.title});
+          if(!result?.ok){
+            toast(result?.error || 'Could not load this Xbox 360 gamerpic pack.');
+            return true;
+          }
+          const rows=(result.gamerpics||[]).map(pic=>({
+            ...pic,
+            thumbnail:pic.thumbnail || item.thumbnail,
+            parentTitle:item.title,
+          }));
+          if(!openMarketplaceGamerpicVariantModal(item,rows)){
+            toast('No Xbox 360 gamerpic files were found in this pack.');
+          }
+        }catch(err){
+          toast(err?.message || 'Could not load this Xbox 360 gamerpic pack.');
+        }finally{
+          marketplaceState.gamerpicPackLoadingId='';
+          renderMarketplaceCosmeticsDetail();
+        }
+        return true;
+      }
+      toast('Select a gamer picture source first.');
+      return true;
+    }
     if(item?.theme){
       const ok=await saveAppliedSkaldTheme(item.theme);
       rebuildMarketplaceThemeItems();
@@ -14811,13 +15797,13 @@ async function marketplaceCosmeticsSelect(){
     if(item?.sourceUrl){
       const detail=marketplaceThemeFolderCache.get(item.id);
       if(detail?.directories?.length && !detail?.files?.length){
-        return openMarketplaceThemeChildFolder(item,detail);
+        return openMarketplaceThemeVariantModal(item,detail);
       }
       if(!detail){
         await loadMarketplaceThemeFolderDetail(item);
         const loadedDetail=marketplaceThemeFolderCache.get(item.id);
         if(loadedDetail?.directories?.length && !loadedDetail?.files?.length){
-          return openMarketplaceThemeChildFolder(item,loadedDetail);
+          return openMarketplaceThemeVariantModal(item,loadedDetail);
         }
         if(!loadedDetail){
           toast('Inspected theme folder. Press A again to continue.');
@@ -14868,7 +15854,7 @@ async function marketplaceCosmeticsDeleteSelected(){
   const theme=item.theme;
   if(!hasDeleteConfirmation('marketplace-theme',theme.id)){
     armDeleteConfirmation('marketplace-theme',theme.id);
-    toast(`Press X again to delete ${item.title}`);
+    toast(`Press X again to uninstall ${item.title}`);
     return true;
   }
   clearDeleteConfirmation(true);
@@ -14877,18 +15863,21 @@ async function marketplaceCosmeticsDeleteSelected(){
   }
   const result=await window.electronAPI?.deleteMarketplaceTheme?.({themeId:theme.id,installDir:theme.installDir});
   if(!result?.ok){
-    toast(result?.error || 'Could not delete theme.');
+    toast(result?.error || 'Could not uninstall theme.');
     renderMarketplaceCosmeticsDetail();
     updateControlLegend();
     return true;
   }
   marketplaceDownloadedThemeItems=marketplaceDownloadedThemeItems.filter(candidate=>candidate.theme?.id!==theme.id);
   await loadMarketplaceDownloadedThemes();
+  if(marketplaceState.cosmeticCategory==='themes'){
+    await loadMarketplaceThemesCatalog(true);
+  }
   if(!marketplaceCosmeticItems().some(candidate=>candidate.id===marketplaceState.selectedCosmeticId)){
     marketplaceState.selectedCosmeticId=marketplaceCosmeticItems()[0]?.id || null;
   }
   renderMarketplaceCosmeticsList();
-  toast(`Deleted ${item.title}`);
+  toast(`Uninstalled ${item.title}`);
   return true;
 }
 function isMarketplaceVideosOpen(){
@@ -15808,6 +16797,15 @@ function mktFeatureKey(item){return item?`${item.system}::${mktRomId(item)}`:'';
 function mktAllCatalogGames(){
   return Object.entries(mktCatalogBucket(marketplaceState.provider)||{}).flatMap(([system,roms])=>(roms||[]).map(rom=>({...rom,system})));
 }
+function mktAllFeaturedCatalogGames(){
+  return MARKETPLACE_GAME_SYSTEMS.filter(Boolean).flatMap(system=>
+    (mktArchiveBaseCatalogForSystem(marketplaceState.provider,system,'discover') || []).map(rom=>({
+      ...rom,
+      system:rom.system || system,
+      provider:rom.provider || marketplaceState.provider,
+    }))
+  );
+}
 function mktReadyEntries(){
   return Object.entries(marketplaceState.library||{})
     .filter(([,entry])=>entry?.install_dir)
@@ -15907,12 +16905,62 @@ function shuffleArray(list){
   }
   return copy;
 }
+function marketplaceFeaturedHero(){
+  return marketplaceState.featuredGames.find(item=>mktFeatureKey(item)===marketplaceState.featuredHeroKey)
+    || marketplaceState.featuredGames[0]
+    || null;
+}
+function marketplaceFeatureByKey(key){
+  return marketplaceState.featuredGames.find(item=>mktFeatureKey(item)===key) || null;
+}
+function marketplaceFeaturedTargetId(item){
+  if(!item) return '';
+  return mktRomId(item);
+}
+function marketplaceArchiveSelectionMatches(candidate,targetId,targetItem){
+  if(!candidate) return false;
+  if(targetId && mktRomId(candidate)===targetId) return true;
+  if(!targetItem) return false;
+  const targetName=String(targetItem.name || '').trim();
+  if(targetName && (candidate.variants || []).some(variant=>String(variant?.name || '').trim()===targetName)) return true;
+  return marketplaceArchiveGroupKey(candidate)===marketplaceArchiveGroupKey(targetItem);
+}
+async function openMarketplaceFeaturedListing(item=marketplaceFeaturedHero()){
+  if(!item){
+    toast('No featured game is available yet.');
+    return false;
+  }
+  const targetId=marketplaceFeaturedTargetId(item);
+  if(!targetId){
+    toast('Could not open this featured game.');
+    return false;
+  }
+  await openMarketplaceSourceGamesLibrary(item.system || marketplaceState.system || 'snes', item.provider || marketplaceState.provider || 'archiveorg', marketplaceIsDemoRom(item)?'demos':'discover', {
+    selectedRomId:targetId,
+    selectedRom:item,
+    clearFilters:true,
+  });
+  return true;
+}
 function renderMarketplaceFeatured(){
-  const hero=marketplaceState.featuredGames.find(item=>mktFeatureKey(item)===marketplaceState.featuredHeroKey)||marketplaceState.featuredGames[0]||null;
+  const hero=marketplaceFeaturedHero();
+  const heroCard=document.querySelector('#p-mkt .mkt-home-hero');
   const heroArt=document.getElementById('mkt-home-hero-art');
   const heroTitle=document.getElementById('mkt-home-hero-title');
   const heroMeta=document.getElementById('mkt-home-hero-meta');
   const list=document.getElementById('mkt-featured-list');
+  if(heroCard){
+    heroCard.dataset.featureKey=hero?mktFeatureKey(hero):'';
+    if(!heroCard.dataset.featureOpenBound){
+      heroCard.dataset.featureOpenBound='1';
+      heroCard.addEventListener('click',async event=>{
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        playSfx('tier2_enter.wav');
+        await openMarketplaceFeaturedListing();
+      },true);
+    }
+  }
   if(heroArt){
     const art=marketplaceState.featuredHeroArt;
     heroArt.style.backgroundImage=art
@@ -15929,11 +16977,21 @@ function renderMarketplaceFeatured(){
     return;
   }
   list.innerHTML=marketplaceState.featuredGames.map(item=>`
-    <div class="mkt-featured-card">
+    <div class="mkt-featured-card" data-feature-key="${esc(mktFeatureKey(item))}">
       <div class="mkt-featured-title">${esc(mktRomTitle(item))}</div>
       <div class="mkt-featured-meta">${esc([marketplaceSystemLabel(item.system),item.region||'',formatMktSize(item)].filter(Boolean).join(' · '))}</div>
     </div>
   `).join('');
+  list.querySelectorAll('.mkt-featured-card').forEach(card=>{
+    card.addEventListener('click',async event=>{
+      event.preventDefault();
+      event.stopPropagation();
+      const item=marketplaceFeatureByKey(card.dataset.featureKey || '');
+      if(!item) return;
+      playSfx('select.wav');
+      await openMarketplaceFeaturedListing(item);
+    });
+  });
 }
 function renderMarketplaceScanResults(){
   const status=document.getElementById('mkt-scan-status');
@@ -16079,7 +17137,7 @@ async function marketplaceScanAllSystems(){
 async function loadMarketplaceFeatured(){
   const systems=MARKETPLACE_GAME_SYSTEMS.filter(Boolean);
   await ensureMarketplaceCatalogSystems(systems);
-  const featured=shuffleArray(mktAllCatalogGames()).slice(0,6);
+  const featured=shuffleArray(mktAllFeaturedCatalogGames()).slice(0,6);
   marketplaceState.featuredGames=featured;
   marketplaceState.featuredHeroKey=featured[0]?mktFeatureKey(featured[0]):'';
   marketplaceState.featuredHeroArt='';
@@ -17511,6 +18569,14 @@ function renderArchiveGamesList(){
     roms=mktArchiveCatalogForSystem(marketplaceState.provider,marketplaceState.system)||[];
     if(!roms.length) roms=baseRoms;
   }
+  const pendingSelection=marketplaceState.pendingArchiveSelection;
+  if(pendingSelection){
+    const match=roms.find(candidate=>marketplaceArchiveSelectionMatches(candidate,pendingSelection.targetRomId,pendingSelection.targetRom));
+    if(match){
+      marketplaceState.selectedRomId=mktRomId(match);
+    }
+    marketplaceState.pendingArchiveSelection=null;
+  }
   resetMarketplaceArchiveRenderState(roms);
   const error=mktErrorBucket(marketplaceState.provider)[marketplaceState.system];
   if(!roms.length){
@@ -17599,8 +18665,11 @@ function renderArchiveGamesList(){
 }
 function ensureArchiveVariantModal(){
   let modal=document.getElementById('archive-variant-modal');
-  if(modal) return modal;
-  const panel=document.getElementById('sub-archive-games');
+  const stage=document.getElementById('stage');
+  if(modal){
+    if(stage && modal.parentElement!==stage) stage.appendChild(modal);
+    return modal;
+  }
   modal=document.createElement('div');
   modal.id='archive-variant-modal';
   modal.className='archive-variant-modal';
@@ -17613,7 +18682,7 @@ function ensureArchiveVariantModal(){
       <div class="archive-variant-modal-hint"><img src="${CONTROL_ICONS.b}" alt=""/>Back</div>
     </div>
   `;
-  panel?.appendChild(modal);
+  stage?.appendChild(modal);
   modal.addEventListener('click',(event)=>{
     const row=event.target.closest('.archive-variant-row');
     if(!row) return;
@@ -17635,6 +18704,14 @@ function closeArchiveVariantModal(){
 function renderArchiveVariantModal(){
   const modal=ensureArchiveVariantModal();
   if(!modal) return;
+  if(marketplaceState.cosmeticVariantModalOpen){
+    renderMarketplaceThemeVariantModal();
+    return;
+  }
+  if(marketplaceState.gamerpicVariantModalOpen){
+    renderMarketplaceGamerpicVariantModal();
+    return;
+  }
   if(!marketplaceState.archiveVariantModalOpen){
     modal.classList.remove('on');
     return;
@@ -17770,7 +18847,9 @@ function refreshActiveMarketplaceDetail(){
   if(getActiveSubpanel()?.id==='sub-archive-games') renderArchiveGamesDetail();
   else renderMarketplaceDetail();
 }
-async function openMarketplaceSourceGamesLibrary(system, provider=marketplaceState.provider, mode=marketplaceState.archiveMode){
+async function openMarketplaceSourceGamesLibrary(system, provider=marketplaceState.provider, mode=marketplaceState.archiveMode, options={}){
+  const targetRomId=String(options?.selectedRomId || '').trim();
+  const targetRom=options?.selectedRom || null;
   marketplaceState.provider=provider||marketplaceState.provider;
   marketplaceState.system=system||marketplaceState.system;
   marketplaceState.archiveMode=mode==='demos'?'demos':'discover';
@@ -17785,11 +18864,12 @@ async function openMarketplaceSourceGamesLibrary(system, provider=marketplaceSta
     marketplaceVisibleLoadTimer=null;
   }
   marketplacePreviewQueue.length=0;
-  if(marketplaceState.lastArchiveSystem!==marketplaceState.system || marketplaceState.lastArchiveMode!==marketplaceState.archiveMode){
+  if(options?.clearFilters || marketplaceState.lastArchiveSystem!==marketplaceState.system || marketplaceState.lastArchiveMode!==marketplaceState.archiveMode){
     marketplaceState.archiveRegion=[];
     marketplaceState.archiveRating=[];
     marketplaceState.archiveGenre=[];
     marketplaceState.archiveDownloads=[];
+    if(options?.clearFilters) marketplaceState.archiveHideInstalled=false;
   }
   marketplaceState.lastArchiveSystem=marketplaceState.system;
   marketplaceState.lastArchiveMode=marketplaceState.archiveMode;
@@ -17799,6 +18879,7 @@ async function openMarketplaceSourceGamesLibrary(system, provider=marketplaceSta
   marketplaceState.archiveConfirmCancel=false;
   closeArchiveVariantModal();
   marketplaceState.selectedRomId=null;
+  marketplaceState.pendingArchiveSelection=(targetRomId || targetRom) ? {targetRomId,targetRom} : null;
   const panel=document.getElementById('p-mkt');
   const gamesPanel=document.getElementById('sub-archive-games');
   subOpen[activeIdx]=true;
@@ -17830,6 +18911,11 @@ async function openMarketplaceSourceGamesLibrary(system, provider=marketplaceSta
     const roms=await ensureMarketplaceCatalogSystem(marketplaceState.provider, marketplaceState.system);
     await updateMarketplacePackagedStats(marketplaceState.provider, marketplaceState.system);
     renderArchiveSystemCounts(marketplaceState.provider);
+    if(targetRomId || targetRom){
+      const candidates=mktArchiveCatalogForSystem(marketplaceState.provider, marketplaceState.system, mktArchiveMode());
+      const match=candidates.find(candidate=>marketplaceArchiveSelectionMatches(candidate,targetRomId,targetRom));
+      if(match) marketplaceState.selectedRomId=mktRomId(match);
+    }
     renderArchiveGamesList();
     await primeMarketplacePackagedMetadata(marketplaceState.provider, marketplaceState.system);
     const selected=mktSelectedRom();
@@ -18490,6 +19576,7 @@ window.electronAPI?.onEmulatorRuntimeProgress?.((progress)=>{
           else if(guide2Open && guide2Mode==='duckstation') refreshDuckStationSettingsPanel();
           else if(guide2Open && guide2Mode==='dolphin') refreshDolphinSettingsPanel();
           else if(guide2Open && guide2Mode==='cemu') refreshCemuSettingsPanel();
+          else if(guide2Open && guide2Mode==='xemu') refreshXemuSettingsPanel();
           else if(guide2Open && guide2Mode==='vlc') refreshVLCSettingsPanel();
         else if(guide2Open && guide2Mode==='xenia') refreshXeniaSettingsPanel();
         else if(guide2Open && guide2Mode==='rpcs3') refreshRPCS3SettingsPanel();
@@ -19254,7 +20341,9 @@ async function init(){
   scaleStage();
   await loadAppliedBladeStyle();
   await loadAppliedSkaldTheme();
+  await loadAppliedMc360ColorPreset();
   await loadAppliedGamerPic();
+  await loadGuideSoundSettings();
   await loadSavedStoatProfiles();
   if(!guideOverlayMode){
     await loadHomePromoAds();

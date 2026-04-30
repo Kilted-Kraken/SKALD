@@ -78,21 +78,26 @@ function createEmulatorManager({
     ] },
   ];
 
-  const ROM_EXTS = ['.sfc', '.smc', '.snes', '.nes', '.gba', '.gbc', '.gb', '.md', '.gen', '.smd', '.n64', '.z64', '.v64', '.nds', '.pce', '.chd', '.cue', '.bin', '.img', '.iso', '.gcm', '.gcz', '.rvz', '.wbfs', '.wia', '.wad', '.m3u', '.pbp', '.xex', '.zip'];
+  const ROM_EXTS = ['.sfc', '.smc', '.snes', '.nes', '.gba', '.gbc', '.gb', '.md', '.gen', '.smd', '.n64', '.z64', '.v64', '.nds', '.pce', '.chd', '.cue', '.bin', '.img', '.iso', '.gcm', '.gcz', '.rvz', '.wbfs', '.wia', '.wad', '.wux', '.m3u', '.pbp', '.xex', '.zip'];
   const RETROARCH_RUNTIME_DIR = userDataDir ? path.join(userDataDir, 'emulators', 'retroarch') : null;
   const PCSX2_RUNTIME_DIR = userDataDir ? path.join(userDataDir, 'emulators', 'pcsx2') : null;
   const DUCKSTATION_RUNTIME_DIR = userDataDir ? path.join(userDataDir, 'emulators', 'duckstation') : null;
   const DOLPHIN_RUNTIME_DIR = userDataDir ? path.join(userDataDir, 'emulators', 'dolphin') : null;
   const DOLPHIN_STABLE_RUNTIME_DIR = userDataDir ? path.join(userDataDir, 'emulators', 'dolphin-stable') : null;
   const DOLPHIN_DEVELOPMENT_RUNTIME_DIR = userDataDir ? path.join(userDataDir, 'emulators', 'dolphin-development') : null;
+  const CEMU_RUNTIME_DIR = userDataDir ? path.join(userDataDir, 'emulators', 'cemu') : null;
   const RPCS3_RUNTIME_DIR = userDataDir ? path.join(userDataDir, 'emulators', 'rpcs3') : null;
   const VLC_RUNTIME_DIR = userDataDir ? path.join(userDataDir, 'emulators', 'vlc') : null;
+  const XEMU_RUNTIME_DIR = userDataDir ? path.join(userDataDir, 'emulators', 'xemu') : null;
+  const DEFAULT_GAMES_DIR = userDataDir ? path.join(userDataDir, 'games') : '';
 const XENIA_RUNTIME_DIR = userDataDir ? path.join(userDataDir, 'emulators', 'xenia') : null;
 const XENIA_EXTRACT_CACHE_DIR = userDataDir ? path.join(userDataDir, 'emulators', 'xenia-extracted') : null;
 const XENIA_PROFILE_METADATA_DIR = userDataDir ? path.join(userDataDir, 'emulators', 'xenia-profiles') : null;
   const XENIA_EXECUTABLE_NAMES = ['xenia_canary.exe', 'xenia.exe'];
   const DUCKSTATION_EXECUTABLE_NAMES = ['duckstation-qt-x64-releaseltcg.exe', 'duckstation-qt-x64-release.exe', 'duckstation-qt-x64.exe', 'duckstation-qt.exe', 'duckstation.exe'];
   const DOLPHIN_EXECUTABLE_NAMES = ['Dolphin.exe', 'dolphin.exe', 'DolphinQt2.exe', 'DolphinQt.exe'];
+  const CEMU_EXECUTABLE_NAMES = ['Cemu.exe', 'cemu.exe'];
+  const XEMU_EXECUTABLE_NAMES = ['xemu.exe'];
 const XENIA_PROFILE_TITLE_ID = 'FFFE07D1';
 const XENIA_PROFILE_CONTENT_TYPE = '00010000';
 const XENIA_ACCOUNT_RETAIL_KEY = Buffer.from([0xE1, 0xBC, 0x15, 0x9C, 0x73, 0xB1, 0xEA, 0xE9, 0xAB, 0x31, 0x70, 0xF3, 0xAD, 0x47, 0xEB, 0xF3]);
@@ -510,6 +515,40 @@ try {
       return uniqueCandidateList(candidates);
     }
 
+    function getBundledCemuExecutableCandidates() {
+      const candidates = [];
+      if (process.platform !== 'win32') return candidates;
+      const resourcePath = process.resourcesPath || '';
+      for (const executableName of CEMU_EXECUTABLE_NAMES) {
+        if (resourcePath) {
+          candidates.push({ source: 'bundled', path: path.join(resourcePath, 'cemu', executableName) });
+          candidates.push({ source: 'bundled', path: path.join(resourcePath, 'tools', 'cemu', executableName) });
+          candidates.push({ source: 'bundled', path: path.join(resourcePath, 'bin', 'cemu', executableName) });
+        }
+        if (userDataDir) {
+          candidates.push({ source: 'managed', path: path.join(userDataDir, 'emulators', 'cemu', executableName) });
+        }
+      }
+      return uniqueCandidateList(candidates);
+    }
+
+    function getBundledXemuExecutableCandidates() {
+      const candidates = [];
+      if (process.platform !== 'win32') return candidates;
+      const resourcePath = process.resourcesPath || '';
+      for (const executableName of XEMU_EXECUTABLE_NAMES) {
+        if (resourcePath) {
+          candidates.push({ source: 'bundled', path: path.join(resourcePath, 'xemu', executableName) });
+          candidates.push({ source: 'bundled', path: path.join(resourcePath, 'tools', 'xemu', executableName) });
+          candidates.push({ source: 'bundled', path: path.join(resourcePath, 'bin', 'xemu', executableName) });
+        }
+        if (userDataDir) {
+          candidates.push({ source: 'managed', path: path.join(userDataDir, 'emulators', 'xemu', executableName) });
+        }
+      }
+      return uniqueCandidateList(candidates);
+    }
+
       function getBundledRPCS3ExecutableCandidates() {
       const candidates = [];
       if (process.platform === 'win32') {
@@ -757,6 +796,44 @@ try {
       return candidates.find(candidate => fs.existsSync(candidate)) || candidates[0];
     }
 
+  function getCemuManagedExecutablePath() {
+    if (process.platform !== 'win32' || !CEMU_RUNTIME_DIR) return '';
+    const candidates = CEMU_EXECUTABLE_NAMES.map(name => path.join(CEMU_RUNTIME_DIR, name));
+    const exact = candidates.find(candidate => fs.existsSync(candidate));
+    if (exact) return exact;
+    if (fs.existsSync(CEMU_RUNTIME_DIR)) {
+      try {
+        const fuzzy = fs.readdirSync(CEMU_RUNTIME_DIR, { withFileTypes: true })
+          .filter(entry => entry.isFile())
+          .map(entry => entry.name)
+          .find(name => {
+            const lower = String(name || '').toLowerCase();
+            return lower === 'cemu.exe'
+              || (lower.startsWith('cemu') && lower.endsWith('.exe') && !lower.includes('installer') && !lower.includes('setup'));
+          });
+        if (fuzzy) return path.join(CEMU_RUNTIME_DIR, fuzzy);
+      } catch {}
+    }
+    return candidates[0] || '';
+  }
+
+  function getXemuManagedExecutablePath() {
+    if (process.platform !== 'win32' || !XEMU_RUNTIME_DIR) return '';
+    const candidates = XEMU_EXECUTABLE_NAMES.map(name => path.join(XEMU_RUNTIME_DIR, name));
+    const exact = candidates.find(candidate => fs.existsSync(candidate));
+    if (exact) return exact;
+    if (fs.existsSync(XEMU_RUNTIME_DIR)) {
+      try {
+        const fuzzy = fs.readdirSync(XEMU_RUNTIME_DIR, { withFileTypes: true })
+          .filter(entry => entry.isFile())
+          .map(entry => entry.name)
+          .find(name => String(name || '').toLowerCase() === 'xemu.exe');
+        if (fuzzy) return path.join(XEMU_RUNTIME_DIR, fuzzy);
+      } catch {}
+    }
+    return candidates[0] || '';
+  }
+
   function getVLCManagedExecutablePath() {
     if (process.platform !== 'win32' || !VLC_RUNTIME_DIR) return '';
     const candidates = [
@@ -789,6 +866,204 @@ try {
       if (fs.existsSync(candidatePath)) return candidatePath;
     }
     return '';
+  }
+
+  function sanitizeFolderName(name) {
+    return String(name || '').replace(/[.\s]+$/, '').replace(/[<>:"/\\|?*]/g, '_') || '_';
+  }
+
+  function systemInstallFolderName(system = '') {
+    const normalized = String(system || '').trim().toLowerCase();
+    if (!normalized) return '';
+    const folderMap = {
+      snes: 'Super Nintendo',
+      genesis: 'Sega Genesis',
+      psx: 'PlayStation',
+      ps2: 'PlayStation 2',
+      ps3: 'PlayStation 3',
+      psp: 'PlayStation Portable',
+      dc: 'Dreamcast',
+      xbox: 'Xbox',
+      x360: 'Xbox 360',
+      nes: 'Nintendo Entertainment System',
+      gba: 'Game Boy Advance',
+      n64: 'Nintendo 64',
+      gamecube: 'GameCube',
+      wii: 'Wii',
+      wiiu: 'Wii U',
+      switch: 'Nintendo Switch',
+      pc: 'PC',
+    };
+    return sanitizeFolderName(folderMap[normalized] || normalized.toUpperCase());
+  }
+
+  function resolveSystemStorageRoot(baseDir, system = '') {
+    const root = String(baseDir || '').trim() || DEFAULT_GAMES_DIR;
+    const systemFolder = systemInstallFolderName(system);
+    return systemFolder ? path.join(root, systemFolder) : root;
+  }
+
+  function escapeXmlText(value) {
+    return String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
+  }
+
+  function unescapeXmlText(value) {
+    return String(value || '')
+      .replace(/&apos;/g, '\'')
+      .replace(/&quot;/g, '"')
+      .replace(/&gt;/g, '>')
+      .replace(/&lt;/g, '<')
+      .replace(/&amp;/g, '&');
+  }
+
+  function ensureSimpleXmlRoot(content = '') {
+    const trimmed = String(content || '').trim();
+    if (trimmed && /<content[\s>]/i.test(trimmed)) return trimmed;
+    return '<?xml version="1.0" encoding="UTF-8"?>\n<content>\n</content>\n';
+  }
+
+  function upsertSimpleXmlTag(content, tagName, value) {
+    const xml = ensureSimpleXmlRoot(content);
+    const tag = String(tagName || '').trim();
+    if (!tag) return xml;
+    const encodedValue = escapeXmlText(value);
+    const pattern = new RegExp(`<${tag}>[\\s\\S]*?<\\/${tag}>`, 'i');
+    if (pattern.test(xml)) return xml.replace(pattern, `<${tag}>${encodedValue}</${tag}>`);
+    return xml.replace(/<\/content>\s*$/i, `  <${tag}>${encodedValue}</${tag}>\n</content>`);
+  }
+
+  function upsertCemuGamePaths(content, entries = []) {
+    const xml = ensureSimpleXmlRoot(content);
+    const normalizedEntries = Array.from(new Set((Array.isArray(entries) ? entries : [])
+      .map(entry => String(entry || '').trim())
+      .filter(Boolean)));
+    const block = normalizedEntries.length
+      ? `  <GamePaths>\n${normalizedEntries.map(entry => `    <Entry>${escapeXmlText(entry)}</Entry>`).join('\n')}\n  </GamePaths>`
+      : '  <GamePaths/>';
+    if (/<GamePaths[\s>]/i.test(xml)) {
+      return xml.replace(/<GamePaths[\s\S]*?<\/GamePaths>|<GamePaths\s*\/>/i, block);
+    }
+    return xml.replace(/<\/content>\s*$/i, `${block}\n</content>`);
+  }
+
+  function upsertCemuAudioConfig(content, options = {}) {
+    const xml = ensureSimpleXmlRoot(content);
+    const audioApi = Number.isFinite(Number(options.audioApi)) ? String(Number(options.audioApi)) : '2';
+    const delay = Number.isFinite(Number(options.delay)) ? String(Number(options.delay)) : '2';
+    const tvChannels = Number.isFinite(Number(options.tvChannels)) ? String(Number(options.tvChannels)) : '1';
+    const padChannels = Number.isFinite(Number(options.padChannels)) ? String(Number(options.padChannels)) : '1';
+    const inputChannels = Number.isFinite(Number(options.inputChannels)) ? String(Number(options.inputChannels)) : '0';
+    const tvVolume = Number.isFinite(Number(options.tvVolume)) ? String(Number(options.tvVolume)) : '100';
+    const padVolume = Number.isFinite(Number(options.padVolume)) ? String(Number(options.padVolume)) : '100';
+    const inputVolume = Number.isFinite(Number(options.inputVolume)) ? String(Number(options.inputVolume)) : '20';
+    const tvDevice = escapeXmlText(options.tvDevice || 'default');
+    const padDevice = escapeXmlText(options.padDevice || 'default');
+    const inputDevice = escapeXmlText(options.inputDevice || '');
+    const block = [
+      '  <Audio>',
+      `    <api>${audioApi}</api>`,
+      `    <delay>${delay}</delay>`,
+      `    <TVChannels>${tvChannels}</TVChannels>`,
+      `    <PadChannels>${padChannels}</PadChannels>`,
+      `    <InputChannels>${inputChannels}</InputChannels>`,
+      `    <TVVolume>${tvVolume}</TVVolume>`,
+      `    <PadVolume>${padVolume}</PadVolume>`,
+      `    <InputVolume>${inputVolume}</InputVolume>`,
+      `    <TVDevice>${tvDevice}</TVDevice>`,
+      `    <PadDevice>${padDevice}</PadDevice>`,
+      `    <InputDevice>${inputDevice}</InputDevice>`,
+      '  </Audio>',
+    ].join('\n');
+    if (/<Audio[\s>]/i.test(xml)) {
+      return xml.replace(/<Audio[\s\S]*?<\/Audio>/i, block);
+    }
+    return xml.replace(/<\/content>\s*$/i, `${block}\n</content>`);
+  }
+
+  function readCemuGamePathsFromXml(content = '') {
+    const xml = String(content || '');
+    const match = xml.match(/<GamePaths[\s\S]*?>([\s\S]*?)<\/GamePaths>/i);
+    if (!match) return [];
+    const entries = [];
+    const entryPattern = /<Entry>([\s\S]*?)<\/Entry>/gi;
+    let current = null;
+    while ((current = entryPattern.exec(match[1])) !== null) {
+      const value = unescapeXmlText(current[1]).trim();
+      if (value) entries.push(value);
+    }
+    return Array.from(new Set(entries));
+  }
+
+  function readSimpleXmlTag(content = '', tagName = '') {
+    const tag = String(tagName || '').trim();
+    if (!tag) return '';
+    const match = String(content || '').match(new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`, 'i'));
+    return match ? unescapeXmlText(match[1]).trim() : '';
+  }
+
+  function normalizeCemuGamePathForXml(dirPath = '') {
+    const resolved = path.resolve(String(dirPath || '').trim());
+    return resolved.replace(/\\/g, '/');
+  }
+
+  function buildCemuXInputDefaultProfileText() {
+    return [
+      '# SKALD managed Cemu controller profile',
+      '# First pass: Xbox/XInput mapped as Wii U GamePad',
+      '[General]',
+      'emulate = Wii U GamePad',
+      'api = XInput',
+      'controller = 0',
+      '',
+      '[Controller]',
+      'rumble = 0',
+      'leftRange = 1',
+      'rightRange = 1',
+      'leftDeadzone = 0.2',
+      'rightDeadzone = 0.2',
+      'buttonThreshold = 0.5',
+      '1 = button_1',
+      '2 = button_2',
+      '3 = button_4',
+      '4 = button_8',
+      '5 = button_10',
+      '6 = button_20',
+      '7 = button_10',
+      '8 = button_20',
+      '9 = button_40',
+      '10 = button_80',
+      '11 = button_4000000',
+      '12 = button_8000000',
+      '13 = button_10000000',
+      '14 = button_20000000',
+      '15 = button_100',
+      '16 = button_200',
+      '17 = button_80000000',
+      '18 = button_2000000000',
+      '19 = button_1000000000',
+      '20 = button_40000000',
+      '21 = button_400000000',
+      '22 = button_10000000000',
+      '23 = button_8000000000',
+      '24 = button_200000000',
+      '',
+    ].join('\n');
+  }
+
+  function parseCemuControllerProfileSummary(content = '') {
+    const text = String(content || '');
+    const emulate = text.match(/^\s*emulate\s*=\s*(.+)$/mi)?.[1]?.trim() || '';
+    const api = text.match(/^\s*api\s*=\s*(.+)$/mi)?.[1]?.trim() || '';
+    const controller = text.match(/^\s*controller\s*=\s*(.+)$/mi)?.[1]?.trim() || '';
+    const preset = /SKALD managed Cemu controller profile/i.test(text) && /^xinput$/i.test(api) && /^wii u gamepad$/i.test(emulate)
+      ? 'xinput-default'
+      : '';
+    return { emulate, api, controller, preset };
   }
 
   function normalizeSettings(settings = loadSettings()) {
@@ -827,6 +1102,22 @@ try {
       dolphin.customExecutablePath = String(dolphin.customExecutablePath || dolphin.executablePath || '').trim();
       dolphin.executablePath = dolphin.customExecutablePath;
       next.emulators.dolphin = dolphin;
+      const cemu = next.emulators.cemu && typeof next.emulators.cemu === 'object'
+        ? { ...next.emulators.cemu }
+        : {};
+      cemu.mode = cemu.mode === 'custom' ? 'custom' : 'bundled';
+      cemu.customExecutablePath = String(cemu.customExecutablePath || cemu.executablePath || '').trim();
+      cemu.executablePath = cemu.customExecutablePath;
+      cemu.graphicsPacksAutoDownload = cemu.graphicsPacksAutoDownload === true;
+      cemu.controllerPreset = cemu.controllerPreset === 'xinput-default' ? 'xinput-default' : '';
+      next.emulators.cemu = cemu;
+      const xemu = next.emulators.xemu && typeof next.emulators.xemu === 'object'
+        ? { ...next.emulators.xemu }
+        : {};
+      xemu.mode = xemu.mode === 'custom' ? 'custom' : 'bundled';
+      xemu.customExecutablePath = String(xemu.customExecutablePath || xemu.executablePath || '').trim();
+      xemu.executablePath = xemu.customExecutablePath;
+      next.emulators.xemu = xemu;
       const rpcs3 = next.emulators.rpcs3 && typeof next.emulators.rpcs3 === 'object'
         ? { ...next.emulators.rpcs3 }
         : {};
@@ -1057,6 +1348,120 @@ try {
       runtimeRoot,
       portableFilePath: runtimeRoot ? path.join(runtimeRoot, 'portable.txt') : '',
       portableAvailable: !!(runtimeRoot && fs.existsSync(path.join(runtimeRoot, 'portable.txt'))),
+      usingBundled: effective?.mode === 'bundled',
+      usingCustom: effective?.mode === 'custom',
+      ok: !!effective?.path && fs.existsSync(effective.path),
+    };
+  }
+
+  function getCemuRuntimeStatus(settings = loadSettings()) {
+    const normalized = normalizeSettings(settings);
+    const cemu = normalized.emulators?.cemu || {};
+    const bundledCandidate = getBundledCemuExecutableCandidates().find(candidate => fs.existsSync(candidate.path)) || null;
+    const customExecutablePath = String(cemu.customExecutablePath || '').trim();
+    const customAvailable = !!customExecutablePath && fs.existsSync(customExecutablePath);
+    const preferredMode = cemu.mode === 'custom' ? 'custom' : 'bundled';
+    let effective = null;
+
+    if (preferredMode === 'bundled' && bundledCandidate) {
+      effective = { source: bundledCandidate.source, path: bundledCandidate.path, mode: 'bundled' };
+    } else if (customAvailable) {
+      effective = { source: 'custom', path: customExecutablePath, mode: 'custom' };
+    } else if (bundledCandidate) {
+      effective = { source: bundledCandidate.source, path: bundledCandidate.path, mode: 'bundled' };
+    } else if (customExecutablePath) {
+      effective = { source: 'custom-missing', path: customExecutablePath, mode: 'custom' };
+    }
+
+    const runtimeRoot = effective?.path ? path.dirname(effective.path) : (CEMU_RUNTIME_DIR || '');
+    const portableDirPath = runtimeRoot ? path.join(runtimeRoot, 'portable') : '';
+    const settingsPath = portableDirPath ? path.join(portableDirPath, 'settings.xml') : '';
+    const controllerProfilePath = portableDirPath ? path.join(portableDirPath, 'controllerProfiles', 'controller0.txt') : '';
+    let configuredGamePaths = [];
+    let graphicsPacksAutoDownload = cemu.graphicsPacksAutoDownload === true;
+    let controllerConfig = { emulate: '', api: '', controller: '', preset: '' };
+    if (settingsPath && fs.existsSync(settingsPath)) {
+      try {
+        const xml = fs.readFileSync(settingsPath, 'utf8');
+        configuredGamePaths = readCemuGamePathsFromXml(xml);
+        const gpDownload = readSimpleXmlTag(xml, 'gp_download').toLowerCase();
+        if (gpDownload === 'true' || gpDownload === 'false') {
+          graphicsPacksAutoDownload = gpDownload === 'true';
+        }
+      } catch {}
+    }
+    if (controllerProfilePath && fs.existsSync(controllerProfilePath)) {
+      try {
+        controllerConfig = parseCemuControllerProfileSummary(fs.readFileSync(controllerProfilePath, 'utf8'));
+      } catch {}
+    }
+    const preferredGamePath = normalizeCemuGamePathForXml(resolveSystemStorageRoot(
+      String(normalized.installPath || DEFAULT_GAMES_DIR).trim() || DEFAULT_GAMES_DIR,
+      'wiiu',
+    ));
+    return {
+      managedRuntimeDir: CEMU_RUNTIME_DIR || '',
+      preferredMode,
+      bundledAvailable: !!bundledCandidate,
+      bundledExecutablePath: bundledCandidate?.path || '',
+      customAvailable,
+      customExecutablePath,
+      effectiveMode: effective?.mode || null,
+      effectiveSource: effective?.source || null,
+      executablePath: effective?.path || '',
+      runtimeRoot,
+      portableDirPath,
+      settingsPath,
+      controllerProfilePath,
+      controllerProfileAvailable: !!(controllerProfilePath && fs.existsSync(controllerProfilePath)),
+      controllerApi: controllerConfig.api,
+      controllerEmulate: controllerConfig.emulate,
+      controllerDevice: controllerConfig.controller,
+      controllerPreset: controllerConfig.preset || cemu.controllerPreset || '',
+      portableAvailable: !!(portableDirPath && fs.existsSync(portableDirPath)),
+      configuredGamePaths,
+      preferredGamePath,
+      graphicsPacksAutoDownload,
+      usingBundled: effective?.mode === 'bundled',
+      usingCustom: effective?.mode === 'custom',
+      ok: !!effective?.path && fs.existsSync(effective.path),
+    };
+  }
+
+  function getXemuRuntimeStatus(settings = loadSettings()) {
+    const normalized = normalizeSettings(settings);
+    const xemu = normalized.emulators?.xemu || {};
+    const bundledCandidate = getBundledXemuExecutableCandidates().find(candidate => fs.existsSync(candidate.path)) || null;
+    const customExecutablePath = String(xemu.customExecutablePath || '').trim();
+    const customAvailable = !!customExecutablePath && fs.existsSync(customExecutablePath);
+    const preferredMode = xemu.mode === 'custom' ? 'custom' : 'bundled';
+    let effective = null;
+
+    if (preferredMode === 'bundled' && bundledCandidate) {
+      effective = { source: bundledCandidate.source, path: bundledCandidate.path, mode: 'bundled' };
+    } else if (customAvailable) {
+      effective = { source: 'custom', path: customExecutablePath, mode: 'custom' };
+    } else if (bundledCandidate) {
+      effective = { source: bundledCandidate.source, path: bundledCandidate.path, mode: 'bundled' };
+    } else if (customExecutablePath) {
+      effective = { source: 'custom-missing', path: customExecutablePath, mode: 'custom' };
+    }
+
+    const runtimeRoot = effective?.path ? path.dirname(effective.path) : (XEMU_RUNTIME_DIR || '');
+    const configPath = runtimeRoot ? path.join(runtimeRoot, 'xemu.toml') : '';
+    return {
+      managedRuntimeDir: XEMU_RUNTIME_DIR || '',
+      preferredMode,
+      bundledAvailable: !!bundledCandidate,
+      bundledExecutablePath: bundledCandidate?.path || '',
+      customAvailable,
+      customExecutablePath,
+      effectiveMode: effective?.mode || null,
+      effectiveSource: effective?.source || null,
+      executablePath: effective?.path || '',
+      runtimeRoot,
+      configPath,
+      portableConfigAvailable: !!(configPath && fs.existsSync(configPath)),
       usingBundled: effective?.mode === 'bundled',
       usingCustom: effective?.mode === 'custom',
       ok: !!effective?.path && fs.existsSync(effective.path),
@@ -1456,6 +1861,103 @@ try {
       };
     } catch (error) {
       return { ok: false, error: error?.message || 'Could not import the Dolphin runtime into SKALD.' };
+    }
+  }
+
+  function importCemuRuntime(sourceExecutablePath) {
+    const sourcePath = String(sourceExecutablePath || '').trim();
+    if (!sourcePath) return { ok: false, error: 'No Cemu executable was selected.' };
+    if (process.platform !== 'win32') {
+      return { ok: false, error: 'SKALD runtime import is currently implemented for Windows only.' };
+    }
+    if (!CEMU_RUNTIME_DIR) {
+      return { ok: false, error: 'SKALD user-data runtime folder is not available.' };
+    }
+    if (!fs.existsSync(sourcePath)) {
+      return { ok: false, error: `Cemu executable not found: ${sourcePath}` };
+    }
+    const sourceExeName = path.basename(sourcePath).toLowerCase();
+    const isCemuExecutable = CEMU_EXECUTABLE_NAMES.map(name => name.toLowerCase()).includes(sourceExeName)
+      || (sourceExeName.startsWith('cemu') && sourceExeName.endsWith('.exe') && !sourceExeName.includes('installer') && !sourceExeName.includes('setup'));
+    if (!isCemuExecutable) {
+      return { ok: false, error: 'Pick the Cemu executable itself so SKALD can import the full runtime folder.' };
+    }
+    try {
+      const sourceDir = path.dirname(sourcePath);
+      const targetParent = path.dirname(CEMU_RUNTIME_DIR);
+      ensureDir(targetParent);
+      const backupDir = `${CEMU_RUNTIME_DIR}-backup`;
+      if (fs.existsSync(backupDir)) fs.rmSync(backupDir, { recursive: true, force: true });
+      if (fs.existsSync(CEMU_RUNTIME_DIR)) fs.renameSync(CEMU_RUNTIME_DIR, backupDir);
+      try {
+        fs.cpSync(sourceDir, CEMU_RUNTIME_DIR, { recursive: true, force: true });
+      } catch (copyError) {
+        if (fs.existsSync(CEMU_RUNTIME_DIR)) fs.rmSync(CEMU_RUNTIME_DIR, { recursive: true, force: true });
+        if (fs.existsSync(backupDir)) fs.renameSync(backupDir, CEMU_RUNTIME_DIR);
+        throw copyError;
+      }
+      if (fs.existsSync(backupDir)) fs.rmSync(backupDir, { recursive: true, force: true });
+      const runtimeExe = getCemuManagedExecutablePath();
+      if (!runtimeExe || !fs.existsSync(runtimeExe)) {
+        return { ok: false, error: 'Cemu import finished, but SKALD could not find the emulator executable in the managed runtime.' };
+      }
+      const syncResult = syncCemuPortableConfig(loadSettings());
+      return {
+        ok: true,
+        runtimeDir: CEMU_RUNTIME_DIR,
+        executablePath: runtimeExe,
+        portableConfig: syncResult,
+        status: getCemuRuntimeStatus(),
+      };
+    } catch (error) {
+      return { ok: false, error: error?.message || 'Could not import the Cemu runtime into SKALD.' };
+    }
+  }
+
+  function importXemuRuntime(sourceExecutablePath) {
+    const sourcePath = String(sourceExecutablePath || '').trim();
+    if (!sourcePath) return { ok: false, error: 'No XEMU executable was selected.' };
+    if (process.platform !== 'win32') {
+      return { ok: false, error: 'SKALD runtime import is currently implemented for Windows only.' };
+    }
+    if (!XEMU_RUNTIME_DIR) {
+      return { ok: false, error: 'SKALD user-data runtime folder is not available.' };
+    }
+    if (!fs.existsSync(sourcePath)) {
+      return { ok: false, error: `XEMU executable not found: ${sourcePath}` };
+    }
+    if (path.basename(sourcePath).toLowerCase() !== 'xemu.exe') {
+      return { ok: false, error: 'Pick xemu.exe itself so SKALD can import the full runtime folder.' };
+    }
+    try {
+      const sourceDir = path.dirname(sourcePath);
+      const targetParent = path.dirname(XEMU_RUNTIME_DIR);
+      ensureDir(targetParent);
+      const backupDir = `${XEMU_RUNTIME_DIR}-backup`;
+      if (fs.existsSync(backupDir)) fs.rmSync(backupDir, { recursive: true, force: true });
+      if (fs.existsSync(XEMU_RUNTIME_DIR)) fs.renameSync(XEMU_RUNTIME_DIR, backupDir);
+      try {
+        fs.cpSync(sourceDir, XEMU_RUNTIME_DIR, { recursive: true, force: true });
+      } catch (copyError) {
+        if (fs.existsSync(XEMU_RUNTIME_DIR)) fs.rmSync(XEMU_RUNTIME_DIR, { recursive: true, force: true });
+        if (fs.existsSync(backupDir)) fs.renameSync(backupDir, XEMU_RUNTIME_DIR);
+        throw copyError;
+      }
+      if (fs.existsSync(backupDir)) fs.rmSync(backupDir, { recursive: true, force: true });
+      const runtimeExe = getXemuManagedExecutablePath();
+      if (!runtimeExe || !fs.existsSync(runtimeExe)) {
+        return { ok: false, error: 'XEMU import finished, but SKALD could not find xemu.exe in the managed runtime.' };
+      }
+      const syncResult = syncXemuPortableConfig(loadSettings());
+      return {
+        ok: true,
+        runtimeDir: XEMU_RUNTIME_DIR,
+        executablePath: runtimeExe,
+        portableConfig: syncResult,
+        status: getXemuRuntimeStatus(),
+      };
+    } catch (error) {
+      return { ok: false, error: error?.message || 'Could not import the XEMU runtime into SKALD.' };
     }
   }
 
@@ -2153,7 +2655,7 @@ try {
     }
   }
 
-  function syncDolphinPortableConfig(settings = loadSettings()) {
+function syncDolphinPortableConfig(settings = loadSettings()) {
     const runtime = getDolphinRuntimeStatus(settings);
     if (!runtime?.ok || !runtime.executablePath) {
       return { ok: true, skipped: true, reason: 'runtime unavailable' };
@@ -2378,6 +2880,130 @@ try {
     };
   }
 
+  function syncCemuPortableConfig(settings = loadSettings()) {
+    const runtime = getCemuRuntimeStatus(settings);
+    if (!runtime?.ok || !runtime.executablePath) {
+      return { ok: true, skipped: true, reason: 'runtime unavailable' };
+    }
+    const runtimeRoot = path.dirname(runtime.executablePath);
+    const portableDir = path.join(runtimeRoot, 'portable');
+    const settingsPath = path.join(portableDir, 'settings.xml');
+    const controllerProfilesDir = path.join(portableDir, 'controllerProfiles');
+    const controllerProfilePath = path.join(controllerProfilesDir, 'controller0.txt');
+    const normalized = normalizeSettings(settings);
+    const preferredGamePath = normalizeCemuGamePathForXml(resolveSystemStorageRoot(
+      String(normalized.installPath || DEFAULT_GAMES_DIR).trim() || DEFAULT_GAMES_DIR,
+      'wiiu',
+    ));
+    const graphicsPacksAutoDownload = normalized?.emulators?.cemu?.graphicsPacksAutoDownload === true;
+    const configuredControllerPreset = String(normalized?.emulators?.cemu?.controllerPreset || '').trim();
+    try {
+      ensureDir(portableDir);
+      ensureDir(path.join(portableDir, 'mlc01'));
+      ensureDir(controllerProfilesDir);
+      ensureDir(preferredGamePath.replace(/\//g, path.sep));
+      const controllerPreset = configuredControllerPreset || (fs.existsSync(controllerProfilePath) ? '' : 'xinput-default');
+      let xmlContent = '';
+      if (fs.existsSync(settingsPath)) {
+        try { xmlContent = fs.readFileSync(settingsPath, 'utf8'); } catch {}
+      }
+      xmlContent = ensureSimpleXmlRoot(xmlContent);
+      xmlContent = upsertSimpleXmlTag(xmlContent, 'mlc_path', '');
+      xmlContent = upsertSimpleXmlTag(xmlContent, 'gp_download', graphicsPacksAutoDownload ? 'true' : 'false');
+      xmlContent = upsertCemuGamePaths(xmlContent, [preferredGamePath]);
+      xmlContent = upsertCemuAudioConfig(xmlContent, {
+        audioApi: process.platform === 'win32' ? 2 : 3,
+        delay: 2,
+        tvChannels: 1,
+        padChannels: 1,
+        inputChannels: 0,
+        tvVolume: 100,
+        padVolume: 100,
+        inputVolume: 20,
+        tvDevice: 'default',
+        padDevice: 'default',
+      });
+      fs.writeFileSync(settingsPath, xmlContent.endsWith('\n') ? xmlContent : `${xmlContent}\n`, 'utf8');
+      if (controllerPreset === 'xinput-default') {
+        fs.writeFileSync(controllerProfilePath, buildCemuXInputDefaultProfileText(), 'utf8');
+      }
+      return {
+        ok: true,
+        runtimeRoot,
+        portableDir,
+        settingsPath,
+        gamePaths: [preferredGamePath],
+        graphicsPacksAutoDownload,
+        controllerProfilePath,
+        controllerPreset,
+      };
+    } catch (error) {
+      return { ok: false, error: error?.message || 'Could not prepare the Cemu portable folder.' };
+    }
+  }
+
+  function resolveCemuLaunch(settings) {
+    const normalized = normalizeSettings(settings);
+    const runtime = getCemuRuntimeStatus(normalized);
+    if (!runtime.ok || !runtime.executablePath) {
+      return { ok: false, error: 'Cemu runtime is not available. Download it into SKALD or set a custom override.' };
+    }
+    if (!fs.existsSync(runtime.executablePath)) {
+      return { ok: false, error: `Cemu executable not found: ${runtime.executablePath}` };
+    }
+    const syncResult = syncCemuPortableConfig(normalized);
+    if (!syncResult?.ok) return syncResult;
+    return {
+      ok: true,
+      emulatorId: 'cemu',
+      runtime,
+      executablePath: runtime.executablePath,
+      portableConfig: syncResult,
+    };
+  }
+
+  function syncXemuPortableConfig(settings = loadSettings()) {
+    const runtime = getXemuRuntimeStatus(settings);
+    if (!runtime?.ok || !runtime.executablePath) {
+      return { ok: true, skipped: true, reason: 'runtime unavailable' };
+    }
+    const runtimeRoot = path.dirname(runtime.executablePath);
+    const configPath = path.join(runtimeRoot, 'xemu.toml');
+    try {
+      ensureDir(runtimeRoot);
+      if (!fs.existsSync(configPath)) {
+        fs.writeFileSync(configPath, '# SKALD managed portable XEMU config\n', 'utf8');
+      }
+      return {
+        ok: true,
+        runtimeRoot,
+        configPath,
+      };
+    } catch (error) {
+      return { ok: false, error: error?.message || 'Could not prepare the XEMU portable config.' };
+    }
+  }
+
+  function resolveXemuLaunch(settings) {
+    const normalized = normalizeSettings(settings);
+    const runtime = getXemuRuntimeStatus(normalized);
+    if (!runtime.ok || !runtime.executablePath) {
+      return { ok: false, error: 'XEMU runtime is not available. Download it into SKALD or set a custom override.' };
+    }
+    if (!fs.existsSync(runtime.executablePath)) {
+      return { ok: false, error: `XEMU executable not found: ${runtime.executablePath}` };
+    }
+    const syncResult = syncXemuPortableConfig(normalized);
+    if (!syncResult?.ok) return syncResult;
+    return {
+      ok: true,
+      emulatorId: 'xemu',
+      runtime,
+      executablePath: runtime.executablePath,
+      portableConfig: syncResult,
+    };
+  }
+
     function resolveRPCS3Launch(settings) {
     const normalized = normalizeSettings(settings);
     const runtime = getRPCS3RuntimeStatus(normalized);
@@ -2577,6 +3203,27 @@ try {
       executablePath = runtime.executablePath;
       title = 'Dolphin';
       system = 'gamecube';
+    } else if (id === 'cemu') {
+      const runtime = getCemuRuntimeStatus(settings);
+      if (!runtime.executablePath || !fs.existsSync(runtime.executablePath)) {
+        return { ok: false, error: 'Cemu runtime is not available yet.' };
+      }
+      const syncResult = syncCemuPortableConfig(settings);
+      if (!syncResult?.ok) return syncResult;
+      executablePath = runtime.executablePath;
+      title = 'Cemu';
+      system = 'wiiu';
+    } else if (id === 'xemu') {
+      const runtime = getXemuRuntimeStatus(settings);
+      if (!runtime.executablePath || !fs.existsSync(runtime.executablePath)) {
+        return { ok: false, error: 'XEMU runtime is not available yet.' };
+      }
+      const syncResult = syncXemuPortableConfig(settings);
+      if (!syncResult?.ok) return syncResult;
+      executablePath = runtime.executablePath;
+      args = ['-config_path', syncResult.configPath, ...args];
+      title = 'XEMU';
+      system = 'xbox';
     } else if (id === 'rpcs3') {
       const runtime = getRPCS3RuntimeStatus(settings);
       if (!runtime.executablePath || !fs.existsSync(runtime.executablePath)) {
@@ -2767,6 +3414,136 @@ try {
     child.once('error', (error) => {
       session.status = 'error';
       session.error = error?.message || 'Failed to launch Dolphin.';
+      emitSessionsChanged();
+      notifySessionEnded(session);
+      activeSessions.delete(session.id);
+      if (!activeSessions.size) stopForegroundPolling();
+      emitSessionsChanged();
+    });
+
+    child.once('exit', (code) => {
+      session.status = 'exited';
+      session.exitCode = code;
+      emitSessionsChanged();
+      notifySessionEnded(session);
+      activeSessions.delete(session.id);
+      if (!activeSessions.size) stopForegroundPolling();
+      emitSessionsChanged();
+    });
+
+    child.unref();
+    if (identifier) markGamePlayed(identifier);
+    return { ok: true, session: serializeSession(session) };
+  }
+
+  function launchCemuRom({ romPath, system = 'wiiu', identifier = null, title = null }) {
+    const settings = loadSettings();
+    const resolved = resolveCemuLaunch(settings);
+    if (!resolved.ok) return resolved;
+
+    const romResolved = resolveRomPath(romPath);
+    if (!romResolved.ok) return romResolved;
+
+    const args = ['-g', romResolved.romPath, '-f'];
+    const child = spawn(resolved.executablePath, args, {
+      detached: false,
+      stdio: 'ignore',
+      windowsHide: false,
+      cwd: path.dirname(resolved.executablePath),
+    });
+
+    const session = {
+      id: `emu-${nextSessionId++}`,
+      type: 'cemu',
+      emulatorId: resolved.emulatorId,
+      system,
+      identifier,
+      title: title || identifier || path.basename(romResolved.romPath, path.extname(romResolved.romPath)),
+      romPath: romResolved.romPath,
+      command: resolved.executablePath,
+      args,
+      pid: child.pid || null,
+      startedAt: Date.now(),
+      status: 'running',
+      exitCode: null,
+      error: null,
+      child,
+    };
+
+    activeSessions.set(session.id, session);
+    startForegroundPolling();
+    pollForegroundSession().catch(() => {});
+    emitSessionsChanged();
+    notifySessionStarted(session);
+
+    child.once('error', (error) => {
+      session.status = 'error';
+      session.error = error?.message || 'Failed to launch Cemu.';
+      emitSessionsChanged();
+      notifySessionEnded(session);
+      activeSessions.delete(session.id);
+      if (!activeSessions.size) stopForegroundPolling();
+      emitSessionsChanged();
+    });
+
+    child.once('exit', (code) => {
+      session.status = 'exited';
+      session.exitCode = code;
+      emitSessionsChanged();
+      notifySessionEnded(session);
+      activeSessions.delete(session.id);
+      if (!activeSessions.size) stopForegroundPolling();
+      emitSessionsChanged();
+    });
+
+    child.unref();
+    if (identifier) markGamePlayed(identifier);
+    return { ok: true, session: serializeSession(session) };
+  }
+
+  function launchXemuRom({ romPath, system = 'xbox', identifier = null, title = null }) {
+    const settings = loadSettings();
+    const resolved = resolveXemuLaunch(settings);
+    if (!resolved.ok) return resolved;
+
+    const romResolved = resolveRomPath(romPath);
+    if (!romResolved.ok) return romResolved;
+
+    const args = ['-config_path', resolved.portableConfig.configPath, '-full-screen', '-dvd_path', romResolved.romPath];
+    const child = spawn(resolved.executablePath, args, {
+      detached: false,
+      stdio: 'ignore',
+      windowsHide: false,
+      cwd: path.dirname(resolved.executablePath),
+    });
+
+    const session = {
+      id: `emu-${nextSessionId++}`,
+      type: 'xemu',
+      emulatorId: resolved.emulatorId,
+      system,
+      identifier,
+      title: title || identifier || path.basename(romResolved.romPath, path.extname(romResolved.romPath)),
+      romPath: romResolved.romPath,
+      command: resolved.executablePath,
+      args,
+      pid: child.pid || null,
+      startedAt: Date.now(),
+      status: 'running',
+      exitCode: null,
+      error: null,
+      child,
+    };
+
+    activeSessions.set(session.id, session);
+    startForegroundPolling();
+    pollForegroundSession().catch(() => {});
+    emitSessionsChanged();
+    notifySessionStarted(session);
+
+    child.once('error', (error) => {
+      session.status = 'error';
+      session.error = error?.message || 'Failed to launch XEMU.';
       emitSessionsChanged();
       notifySessionEnded(session);
       activeSessions.delete(session.id);
@@ -2994,6 +3771,8 @@ try {
       getPCSX2RuntimeStatus,
       getDuckStationRuntimeStatus,
       getDolphinRuntimeStatus,
+      getCemuRuntimeStatus,
+      getXemuRuntimeStatus,
       getRPCS3RuntimeStatus,
       getVLCRuntimeStatus,
     getXeniaRuntimeStatus,
@@ -3002,6 +3781,8 @@ try {
       importPCSX2Runtime,
       importDuckStationRuntime,
       importDolphinRuntime,
+      importCemuRuntime,
+      importXemuRuntime,
       importRPCS3Runtime,
       importVLCRuntime,
     importXeniaRuntime,
@@ -3013,24 +3794,32 @@ try {
       getPCSX2ManagedExecutablePath,
       getDuckStationManagedExecutablePath,
       getDolphinManagedExecutablePath,
+      getCemuManagedExecutablePath,
+      getXemuManagedExecutablePath,
       getRPCS3ManagedExecutablePath,
       getVLCManagedExecutablePath,
     getXeniaManagedExecutablePath,
     syncPCSX2PortableConfig,
     syncDuckStationPortableConfig,
     syncDolphinPortableConfig,
+    syncCemuPortableConfig,
+    syncXemuPortableConfig,
     syncXeniaProfileConfig,
     getXeniaProfileStatus,
     resolveLibretroLaunch,
       resolvePCSX2Launch,
       resolveDuckStationLaunch,
       resolveDolphinLaunch,
+      resolveCemuLaunch,
+      resolveXemuLaunch,
       resolveRPCS3Launch,
       resolveXeniaLaunch,
       launchStandaloneEmulator,
       launchLibretroRom,
       launchDuckStationRom,
       launchDolphinRom,
+      launchCemuRom,
+      launchXemuRom,
       launchPCSX2Rom,
       launchRPCS3Rom,
       launchXeniaRom,

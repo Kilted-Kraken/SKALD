@@ -1,0 +1,182 @@
+system,contentType,purpose,url,notes
+dc,content-source,Live Archive.org content source,https://archive.org/download/dc-chd-zstd-redump/dc-chd-zstd/,referer=https://archive.org/details/dc-chd-zstd-redump; extensions=.chd
+gamecube,content-source,Live Archive.org content source,https://archive.org/download/GamecubeCollectionByGhostware/,referer=https://archive.org/details/GamecubeCollectionByGhostware; metadata-driven; extensions=.iso
+genesis,catalog,Primary Archive.org catalog listing,https://ia802803.us.archive.org/view_archive.php?archive=/17/items/ni-roms/roms/Sega%20-%20Mega%20Drive%20-%20Genesis.zip,Sega Genesis
+genesis,download-base,Primary Archive.org download base,https://archive.org/download/ni-roms/roms/Sega%20-%20Mega%20Drive%20-%20Genesis.zip/,Sega Genesis
+ps2,content-source,Live Archive.org content source,https://archive.org/download/sony-playstation-2-0-redump-collection/,extensions=.chd
+ps2,content-source,Live Archive.org content source,https://archive.org/download/sony-playstation-2-a-redump-collection/,extensions=.chd
+ps2,content-source,Live Archive.org content source,https://archive.org/download/sony-playstation-2-b-redump-collection/,extensions=.chd
+ps2,content-source,Live Archive.org content source,https://archive.org/download/sony-playstation-2-c-redump-collection/,extensions=.chd
+ps2,content-source,Live Archive.org content source,https://archive.org/download/sony-playstation-2-d0-dm-redump-collection/,extensions=.chd
+ps2,content-source,Live Archive.org content source,https://archive.org/download/sony-playstation-2-dn-dz-redump-collection/,extensions=.chd
+ps2,content-source,Live Archive.org content source,https://archive.org/download/sony-playstation-2-e-redump-collection/,extensions=.chd
+ps2,content-source,Live Archive.org content source,https://archive.org/download/sony-playstation-2-f-redump-collection/,extensions=.chd
+ps2,content-source,Live Archive.org content source,https://archive.org/download/sony-playstation-2-g-redump-collection/,extensions=.chd
+ps2,content-source,Live Archive.org content source,https://archive.org/download/sony-playstation-2-h-redump-collection/,extensions=.chd
+ps2,content-source,Live Archive.org content source,https://archive.org/download/sony-playstation-2-i-redump-collection/,extensions=.chd
+ps2,content-source,Live Archive.org content source,https://archive.org/download/sony-playstation-2-j-redump-collection/,extensions=.chd
+ps2,content-source,Live Archive.org content source,https://archive.org/download/sony-playstation-2-k-redump-collection/,extensions=.chd
+ps2,content-source,Live Archive.org content source,https://archive.org/download/sony-playstation-2-l-redump-collection/,extensions=.chd
+ps2,content-source,Live Archive.org content source,https://archive.org/download/sony-playstation-2-m0-mm-redump-collection/,extensions=.chd
+ps2,content-source,Live Archive.org content source,https://archive.org/download/sony-playstation-2-mn-mz-redump-collection/,extensions=.chd
+ps2,content-source,Live Archive.org content source,https://archive.org/download/sony-playstation-2-n-redump-collection/,extensions=.chd
+ps2,content-source,Live Archive.org content source,https://archive.org/download/sony-playstation-2-o0-om-redump-collection/,extensions=.chd
+ps2,content-source,Live Archive.org content source,https://archive.org/download/sony-playstation-2-on-oz-redump-collection/,extensions=.chd
+ps2,content-source,Live Archive.org content source,https://archive.org/download/sony-playstation-2-p-redump-collection/,extensions=.chd
+ps2,content-source,Live Archive.org content source,https://archive.org/download/sony-playstation-2-q-redump-collection/,extensions=.chd
+ps2,content-source,Live Archive.org content source,https://archive.org/download/sony-playstation-2-r-redump-collection/,extensions=.chd
+ps2,content-source,Live Archive.org content source,https://archive.org/download/sony-playstation-2-s0-sh-redump-collection/,extensions=.chd
+ps2,content-source,Live Archive.org content source,https://archive.org/download/sony-playstation-2-si-so-redump-collection/,extensions=.chd
+ps2,content-source,Live Archive.org content source,https://archive.org/download/sony-playstation-2-sr-sz-redump-collection/,extensions=.chd
+ps2,content-source,Live Archive.org content source,https://archive.org/download/sony-playstation-2-t-redump-collection/,extensions=.chd
+ps2,content-source,Live Archive.org content source,https://archive.org/download/sony-playstation-2-u-redump-collection/,extensions=.chd
+ps2,content-source,Live Archive.org content source,https://archive.org/download/sony-playstation-2-v-redump-collection/,extensions=.chd
+ps2,content-source,Live Archive.org content source,https://archive.org/download/sony-playstation-2-w-redump-collection/,extensions=.chd
+ps2,content-source,Live Archive.org content source,https://archive.org/download/sony-playstation-2-x-redump-collection/,extensions=.chd
+ps2,content-source,Live Archive.org content source,https://archive.org/download/sony-playstation-2-y-redump-collection/,extensions=.chd
+ps2,content-source,Live Archive.org content source,https://archive.org/download/sony-playstation-2-z-redump-collection/,extensions=.chd
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_a_part1/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_a_part2/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_a_part3/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_b_part1/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_b_part2/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_b_part3/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_c_part1/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_c_part2/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_c_part3/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_d_part1/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_d_part2/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_d_part3/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_d_part4/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_d_part5/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_e/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_f_part1/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_f_part2/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_f_part3/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_g_part1/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_g_part2/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_g_part3/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_h_part1/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_h_part2/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_i/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_j/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_k/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_l_part1/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_l_part2/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_l_part3/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_m_part1/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_m_part2/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_m_part3/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_m_part4/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_m_part5/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_n_part1/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_n_part2/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_n_part3/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_o_part1/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_o_part2/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_o_part3/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_p_part1/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_p_part2/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_q/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_r_part1/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_r_part2/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_r_part3/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_r_part4/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_s_part1/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_s_part2/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_s_part3/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_s_part4/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_s_part5/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_s_part6/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_t_part1/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_t_part2/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_t_part3/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_t_part4/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_u_part1/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_u_part2/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_v/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_w_part1/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_w_part2/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_x/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_y/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+ps3,content-source,Live Archive.org content source,https://archive.org/download/sony_playstation3_z/,referer=https://archive.org/details/sony_playstation3_a_part1; extensions=.zip .pkg .iso
+psp,content-source,Live Archive.org content source,https://archive.org/download/psp-chd-zstd-redump-part1/psp-chd-zstd/,referer=https://archive.org/details/psp-chd-zstd-redump-part1; extensions=.chd
+psp,content-source,Live Archive.org content source,https://archive.org/download/psp-chd-zstd-redump-part2/psp-chd-zstd/,referer=https://archive.org/details/psp-chd-zstd-redump-part1; extensions=.chd
+snes,catalog,Primary Archive.org catalog listing,https://ia802803.us.archive.org/view_archive.php?archive=/17/items/ni-roms/roms/Nintendo%20-%20Super%20Nintendo%20Entertainment%20System.zip,Super Nintendo (SNES)
+snes,download-base,Primary Archive.org download base,https://archive.org/download/ni-roms/roms/Nintendo%20-%20Super%20Nintendo%20Entertainment%20System.zip/,Super Nintendo (SNES)
+wiiu,content-source,Live Archive.org content source,https://archive.org/download/wiiu_disc_wux_1/,referer=https://archive.org/details/wiiu_disc_wux_1; metadata-driven; extensions=.wux
+wiiu,content-source,Live Archive.org content source,https://archive.org/download/wiiu_disc_wux_2/,referer=https://archive.org/details/wiiu_disc_wux_1; metadata-driven; extensions=.wux
+wiiu,content-source,Live Archive.org content source,https://archive.org/download/wiiu_disc_wux_3/,referer=https://archive.org/details/wiiu_disc_wux_1; metadata-driven; extensions=.wux
+wiiu,content-source,Live Archive.org content source,https://archive.org/download/wiiu_disc_wux_4/,referer=https://archive.org/details/wiiu_disc_wux_1; metadata-driven; extensions=.wux
+x360,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox360_a_part1/,referer=https://archive.org/details/microsoft_xbox360_numberssymbols; extensions=.zip
+x360,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox360_a_part2/,referer=https://archive.org/details/microsoft_xbox360_numberssymbols; extensions=.zip
+x360,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox360_b_part1/,referer=https://archive.org/details/microsoft_xbox360_numberssymbols; extensions=.zip
+x360,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox360_b_part2/,referer=https://archive.org/details/microsoft_xbox360_numberssymbols; extensions=.zip
+x360,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox360_c_part1/,referer=https://archive.org/details/microsoft_xbox360_numberssymbols; extensions=.zip
+x360,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox360_c_part2/,referer=https://archive.org/details/microsoft_xbox360_numberssymbols; extensions=.zip
+x360,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox360_d_part1/,referer=https://archive.org/details/microsoft_xbox360_numberssymbols; extensions=.zip
+x360,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox360_d_part2/,referer=https://archive.org/details/microsoft_xbox360_numberssymbols; extensions=.zip
+x360,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox360_d_part3/,referer=https://archive.org/details/microsoft_xbox360_numberssymbols; extensions=.zip
+x360,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox360_e/,referer=https://archive.org/details/microsoft_xbox360_numberssymbols; extensions=.zip
+x360,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox360_f_part1/,referer=https://archive.org/details/microsoft_xbox360_numberssymbols; extensions=.zip
+x360,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox360_f_part2/,referer=https://archive.org/details/microsoft_xbox360_numberssymbols; extensions=.zip
+x360,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox360_g/,referer=https://archive.org/details/microsoft_xbox360_numberssymbols; extensions=.zip
+x360,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox360_h/,referer=https://archive.org/details/microsoft_xbox360_numberssymbols; extensions=.zip
+x360,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox360_i/,referer=https://archive.org/details/microsoft_xbox360_numberssymbols; extensions=.zip
+x360,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox360_j/,referer=https://archive.org/details/microsoft_xbox360_numberssymbols; extensions=.zip
+x360,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox360_k/,referer=https://archive.org/details/microsoft_xbox360_numberssymbols; extensions=.zip
+x360,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox360_l/,referer=https://archive.org/details/microsoft_xbox360_numberssymbols; extensions=.zip
+x360,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox360_m_part1/,referer=https://archive.org/details/microsoft_xbox360_numberssymbols; extensions=.zip
+x360,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox360_m_part2/,referer=https://archive.org/details/microsoft_xbox360_numberssymbols; extensions=.zip
+x360,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox360_n_part1/,referer=https://archive.org/details/microsoft_xbox360_numberssymbols; extensions=.zip
+x360,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox360_n_part2/,referer=https://archive.org/details/microsoft_xbox360_numberssymbols; extensions=.zip
+x360,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox360_numberssymbols/,referer=https://archive.org/details/microsoft_xbox360_numberssymbols; extensions=.zip
+x360,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox360_o/,referer=https://archive.org/details/microsoft_xbox360_numberssymbols; extensions=.zip
+x360,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox360_p/,referer=https://archive.org/details/microsoft_xbox360_numberssymbols; extensions=.zip
+x360,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox360_q/,referer=https://archive.org/details/microsoft_xbox360_numberssymbols; extensions=.zip
+x360,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox360_r/,referer=https://archive.org/details/microsoft_xbox360_numberssymbols; extensions=.zip
+x360,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox360_s_part1/,referer=https://archive.org/details/microsoft_xbox360_numberssymbols; extensions=.zip
+x360,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox360_s_part2/,referer=https://archive.org/details/microsoft_xbox360_numberssymbols; extensions=.zip
+x360,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox360_t_part1/,referer=https://archive.org/details/microsoft_xbox360_numberssymbols; extensions=.zip
+x360,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox360_t_part2/,referer=https://archive.org/details/microsoft_xbox360_numberssymbols; extensions=.zip
+x360,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox360_u/,referer=https://archive.org/details/microsoft_xbox360_numberssymbols; extensions=.zip
+x360,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox360_v/,referer=https://archive.org/details/microsoft_xbox360_numberssymbols; extensions=.zip
+x360,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox360_w/,referer=https://archive.org/details/microsoft_xbox360_numberssymbols; extensions=.zip
+x360,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox360_x_part1/,referer=https://archive.org/details/microsoft_xbox360_numberssymbols; extensions=.zip
+x360,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox360_x_part2/,referer=https://archive.org/details/microsoft_xbox360_numberssymbols; extensions=.zip
+x360,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox360_y/,referer=https://archive.org/details/microsoft_xbox360_numberssymbols; extensions=.zip
+x360,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox360_z/,referer=https://archive.org/details/microsoft_xbox360_numberssymbols; extensions=.zip
+xbox,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox_a/,referer=https://archive.org/details/microsoft_xbox_numberssymbols; extensions=.zip
+xbox,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox_b/,referer=https://archive.org/details/microsoft_xbox_numberssymbols; extensions=.zip
+xbox,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox_c_part1/,referer=https://archive.org/details/microsoft_xbox_numberssymbols; extensions=.zip
+xbox,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox_c_part2/,referer=https://archive.org/details/microsoft_xbox_numberssymbols; extensions=.zip
+xbox,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox_d_part1/,referer=https://archive.org/details/microsoft_xbox_numberssymbols; extensions=.zip
+xbox,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox_d_part2/,referer=https://archive.org/details/microsoft_xbox_numberssymbols; extensions=.zip
+xbox,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox_e/,referer=https://archive.org/details/microsoft_xbox_numberssymbols; extensions=.zip
+xbox,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox_f/,referer=https://archive.org/details/microsoft_xbox_numberssymbols; extensions=.zip
+xbox,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox_g/,referer=https://archive.org/details/microsoft_xbox_numberssymbols; extensions=.zip
+xbox,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox_h/,referer=https://archive.org/details/microsoft_xbox_numberssymbols; extensions=.zip
+xbox,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox_i/,referer=https://archive.org/details/microsoft_xbox_numberssymbols; extensions=.zip
+xbox,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox_j/,referer=https://archive.org/details/microsoft_xbox_numberssymbols; extensions=.zip
+xbox,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox_k/,referer=https://archive.org/details/microsoft_xbox_numberssymbols; extensions=.zip
+xbox,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox_l/,referer=https://archive.org/details/microsoft_xbox_numberssymbols; extensions=.zip
+xbox,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox_m_part1/,referer=https://archive.org/details/microsoft_xbox_numberssymbols; extensions=.zip
+xbox,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox_m_part2/,referer=https://archive.org/details/microsoft_xbox_numberssymbols; extensions=.zip
+xbox,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox_n_part1/,referer=https://archive.org/details/microsoft_xbox_numberssymbols; extensions=.zip
+xbox,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox_n_part2/,referer=https://archive.org/details/microsoft_xbox_numberssymbols; extensions=.zip
+xbox,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox_numberssymbols/,referer=https://archive.org/details/microsoft_xbox_numberssymbols; extensions=.zip
+xbox,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox_o_part1/,referer=https://archive.org/details/microsoft_xbox_numberssymbols; extensions=.zip
+xbox,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox_o_part2/,referer=https://archive.org/details/microsoft_xbox_numberssymbols; extensions=.zip
+xbox,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox_p/,referer=https://archive.org/details/microsoft_xbox_numberssymbols; extensions=.zip
+xbox,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox_q/,referer=https://archive.org/details/microsoft_xbox_numberssymbols; extensions=.zip
+xbox,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox_r/,referer=https://archive.org/details/microsoft_xbox_numberssymbols; extensions=.zip
+xbox,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox_s_part1/,referer=https://archive.org/details/microsoft_xbox_numberssymbols; extensions=.zip
+xbox,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox_s_part2/,referer=https://archive.org/details/microsoft_xbox_numberssymbols; extensions=.zip
+xbox,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox_t_part1/,referer=https://archive.org/details/microsoft_xbox_numberssymbols; extensions=.zip
+xbox,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox_t_part2/,referer=https://archive.org/details/microsoft_xbox_numberssymbols; extensions=.zip
+xbox,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox_u/,referer=https://archive.org/details/microsoft_xbox_numberssymbols; extensions=.zip
+xbox,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox_v/,referer=https://archive.org/details/microsoft_xbox_numberssymbols; extensions=.zip
+xbox,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox_w/,referer=https://archive.org/details/microsoft_xbox_numberssymbols; extensions=.zip
+xbox,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox_x/,referer=https://archive.org/details/microsoft_xbox_numberssymbols; extensions=.zip
+xbox,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox_y/,referer=https://archive.org/details/microsoft_xbox_numberssymbols; extensions=.zip
+xbox,content-source,Live Archive.org content source,https://archive.org/download/microsoft_xbox_z/,referer=https://archive.org/details/microsoft_xbox_numberssymbols; extensions=.zip

@@ -1,0 +1,11 @@
+system,totalRows,contentTypes,firstUrl
+dc,1,content-source,https://archive.org/download/dc-chd-zstd-redump/dc-chd-zstd/
+gamecube,1,content-source,https://archive.org/download/GamecubeCollectionByGhostware/
+genesis,2,catalog | download-base,https://ia802803.us.archive.org/view_archive.php?archive=/17/items/ni-roms/roms/Sega%20-%20Mega%20Drive%20-%20Genesis.zip
+ps2,32,content-source,https://archive.org/download/sony-playstation-2-0-redump-collection/
+ps3,67,content-source | disc-keys-archive | disc-keys-catalog,https://archive.org/download/sony_playstation3_a_part1/
+psp,2,content-source,https://archive.org/download/psp-chd-zstd-redump-part1/psp-chd-zstd/
+snes,2,catalog | download-base,https://ia802803.us.archive.org/view_archive.php?archive=/17/items/ni-roms/roms/Nintendo%20-%20Super%20Nintendo%20Entertainment%20System.zip
+wiiu,7,cemu-keys-bootstrap | content-source | disc-keys-archive | disc-keys-catalog,https://archive.org/download/cemu-keys/Cemu%20keys.rar
+x360,40,content-source | theme-source,https://archive.org/download/microsoft_xbox360_a_part1/
+xbox,34,content-source,https://archive.org/download/microsoft_xbox_a/

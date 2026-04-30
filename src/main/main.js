@@ -50,6 +50,11 @@ const THUMB_CACHE_DIR   = path.join(ART_PROVIDER_ARCHIVE_DIR, 'thumbs');
 const SGDB_CACHE_DIR    = ART_PROVIDER_SGDB_DIR;
 const MARKETPLACE_DIR   = path.join(USER_DATA, 'marketplace');
 const MARKETPLACE_THEMES_DIR = path.join(MARKETPLACE_DIR, 'themes', 'xbox360');
+const MARKETPLACE_GAMERPICS_DIR = path.join(MARKETPLACE_DIR, 'gamerpics');
+const MARKETPLACE_XBOX360_GAMERPICS_BASE_URL = 'https://archive.org/download/skald-xbox-360-gamerpics_202604/by-game/';
+const MARKETPLACE_PS3_AVATAR_ARCHIVE_SOURCES = [
+  { id: 'skald-ps3-avatars-a-c', label: 'A-C', baseUrl: 'https://archive.org/download/skald-ps3-avatars-a-c/' },
+];
 const XENIA_PROGRESS_LOG_PATH = path.join(USER_DATA, 'xenia-runtime-progress.log');
 const XENIA_CONTENT_TRACE_PATH = path.join(USER_DATA, 'xenia-content-trace.json');
 const RPCS3_INSTALL_MAP_PATH = path.join(USER_DATA, 'rpcs3-install-map.json');
@@ -1499,7 +1504,12 @@ function getActiveStoatUserId() {
     if (live?.user?.id) return live.user.id;
   } catch {}
   const settings = loadSettings();
-  return settings?.stoatSession?.user_id || null;
+  if (settings?.stoatSession?.user_id) return settings.stoatSession.user_id;
+  const localProfile = settings?.localProfile || {};
+  const localId = String(localProfile.id || '').trim();
+  if (localId) return localId;
+  const localName = String(localProfile.gamertag || localProfile.displayName || '').trim();
+  return localName ? `local:${localName.toLowerCase().replace(/[^a-z0-9_-]+/g, '-')}` : null;
 }
 
 function ensureThirdPartyProfiles(settings) {
@@ -2349,23 +2359,33 @@ function scanMusicLibrary(dir) {
 }
 ipcMain.handle('profile-gamerpics-list', async () => {
   try {
-    if (!fs.existsSync(PROFILE_GAMERPICS_DIR)) return [];
-    const files = fs.readdirSync(PROFILE_GAMERPICS_DIR, { withFileTypes: true })
-      .filter(entry => entry.isFile())
-      .map(entry => entry.name)
-      .filter(name => /\.(png|jpe?g|webp|bmp)$/i.test(name))
-      .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
-    return files.map(name => {
-      const fullPath = path.join(PROFILE_GAMERPICS_DIR, name);
-      const normalized = fullPath.replace(/\\/g, '/');
-      return {
-        id: path.parse(name).name.toLowerCase(),
-        title: path.parse(name).name,
-        fileName: name,
-        path: fullPath,
-        url: `file:///${normalized}`,
-      };
-    });
+    const roots = [
+      { root: PROFILE_GAMERPICS_DIR, source: 'bundled' },
+      { root: MARKETPLACE_GAMERPICS_DIR, source: 'marketplace' },
+    ];
+    const files = [];
+    const walk = (root, current, source) => {
+      if (!fs.existsSync(current)) return;
+      for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+        const fullPath = path.join(current, entry.name);
+        if (entry.isDirectory()) {
+          walk(root, fullPath, source);
+          continue;
+        }
+        if (!entry.isFile() || !/\.(png|jpe?g|webp|bmp)$/i.test(entry.name)) continue;
+        files.push({ root, source, fullPath, rel: path.relative(root, fullPath), name: entry.name });
+      }
+    };
+    roots.forEach(({ root, source }) => walk(root, root, source));
+    files.sort((a, b) => a.rel.localeCompare(b.rel, undefined, { numeric: true, sensitivity: 'base' }));
+    return files.map(file => ({
+      id: `${file.source}:${file.rel.replace(/\\/g, '/').toLowerCase()}`,
+      title: path.parse(file.name).name,
+      fileName: file.name,
+      path: file.fullPath,
+      url: filePathToFileUrl(file.fullPath),
+      source: file.source,
+    }));
   } catch {
     return [];
   }
@@ -3710,6 +3730,53 @@ async function resolveCemuStableWindowsDownload() {
   };
 }
 
+async function resolveXemuStableWindowsDownload() {
+  const releasesUrl = 'https://api.github.com/repos/xemu-project/xemu/releases?per_page=10';
+  const releases = await fetchJson(releasesUrl, { headers: { 'User-Agent': 'SKALD Launcher' }, timeoutMs: 30000 });
+  if (!Array.isArray(releases) || !releases.length) {
+    return { ok: false, error: 'Could not read the current XEMU releases from GitHub.' };
+  }
+  const findWindowsAsset = (entry) => {
+    const assets = Array.isArray(entry?.assets) ? entry.assets : [];
+    const isPackage = (asset) => {
+      const name = String(asset?.name || '').toLowerCase();
+      return !!name
+        && name.endsWith('.zip')
+        && name.includes('xemu')
+        && name.includes('win')
+        && (name.includes('x86_64') || name.includes('x64'))
+        && !name.includes('aarch64')
+        && !name.includes('arm64')
+        && !name.includes('debug')
+        && !name.includes('pdb')
+        && !name.includes('src')
+        && !name.includes('source');
+    };
+    return assets.find(asset => isPackage(asset) && String(asset?.name || '').toLowerCase().includes('release'))
+      || assets.find(asset => isPackage(asset))
+      || null;
+  };
+  const stableRelease = releases.find(entry => !entry?.draft && !entry?.prerelease && findWindowsAsset(entry)) || null;
+  const fallbackRelease = releases.find(entry => !entry?.draft && findWindowsAsset(entry)) || null;
+  const release = stableRelease || fallbackRelease;
+  if (!release) {
+    return { ok: false, error: 'Could not find a XEMU release with downloadable Windows x64 assets.' };
+  }
+  const asset = findWindowsAsset(release);
+  if (!asset?.browser_download_url) {
+    return { ok: false, error: 'Could not find a Windows x64 XEMU package in the current release assets.' };
+  }
+  return {
+    ok: true,
+    version: String(release.tag_name || release.name || 'latest').trim(),
+    archiveUrl: String(asset.browser_download_url || '').trim(),
+    archiveFileName: String(asset.name || 'xemu-win-x86_64-release.zip').trim(),
+    archiveSize: Number(asset.size || 0) || 0,
+    sourcePage: String(release.html_url || 'https://github.com/xemu-project/xemu/releases'),
+    prerelease: !!release.prerelease,
+  };
+}
+
 async function resolveRPCS3StableWindowsDownload() {
   const sourcePage = 'https://rpcs3.net/download';
   const latestWindowsUrl = 'https://rpcs3.net/latest-windows';
@@ -3974,6 +4041,27 @@ function findCemuExecutableRecursive(dirPath) {
       if ((lower === 'cemu.exe' || (lower.startsWith('cemu') && lower.endsWith('.exe'))) && !lower.includes('installer') && !lower.includes('setup')) {
         return fullPath;
       }
+    }
+  }
+  return '';
+}
+
+function findXemuExecutableRecursive(dirPath) {
+  if (!dirPath || !fs.existsSync(dirPath)) return '';
+  const exact = findFileRecursive(dirPath, 'xemu.exe');
+  if (exact) return exact;
+  const queue = [dirPath];
+  while (queue.length) {
+    const current = queue.shift();
+    let entries = [];
+    try { entries = fs.readdirSync(current, { withFileTypes: true }); } catch { continue; }
+    for (const entry of entries) {
+      const fullPath = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        queue.push(fullPath);
+        continue;
+      }
+      if (String(entry.name || '').toLowerCase() === 'xemu.exe') return fullPath;
     }
   }
   return '';
@@ -4562,6 +4650,88 @@ async function downloadManagedCemuRuntime(onProgress = null) {
   };
 }
 
+async function downloadManagedXemuRuntime(onProgress = null) {
+  const emitProgress = (payload = {}) => {
+    if (typeof onProgress !== 'function') return;
+    try { onProgress(payload); } catch {}
+  };
+  const runtimeStatus = emulatorManager.getXemuRuntimeStatus(loadSettings());
+  const managedRuntimeDir = runtimeStatus?.managedRuntimeDir || path.join(USER_DATA, 'emulators', 'xemu');
+  const stagingRoot = path.join(USER_DATA, 'emulators', 'downloads');
+  const extractRoot = path.join(stagingRoot, 'xemu-stable');
+
+  emitProgress({ stage: 'resolving', percent: 5, message: 'Checking the official XEMU release...' });
+  const release = await resolveXemuStableWindowsDownload();
+  if (!release?.ok) return release;
+
+  const archivePath = path.join(stagingRoot, release.archiveFileName || 'xemu-win-x86_64-release.zip');
+  if (fs.existsSync(extractRoot)) {
+    try { fs.rmSync(extractRoot, { recursive: true, force: true }); } catch {}
+  }
+  ensureDir(stagingRoot);
+
+  emitProgress({ stage: 'downloading', percent: 8, message: `Downloading XEMU ${release.version}...` });
+  const downloadResult = await downloadFileToPath(release.archiveUrl, archivePath, {
+    headers: { Referer: release.sourcePage, 'User-Agent': 'SKALD Launcher' },
+    timeoutMs: 120000,
+    onProgress: ({ percent, received, total }) => {
+      const scaled = percent == null
+        ? Math.max(10, Math.min(55, 10 + Math.round((Number(received || 0) / (1024 * 1024)) * 2.4)))
+        : Math.max(8, Math.min(55, 8 + Math.round(percent * 0.47)));
+      emitProgress({
+        stage: 'downloading',
+        percent: scaled,
+        received,
+        total,
+        message: total > 0
+          ? `Downloading XEMU ${release.version}... ${Math.round((received / total) * 100)}%`
+          : `Downloading XEMU ${release.version}...`,
+      });
+    },
+  });
+  if (!downloadResult?.ok) return downloadResult;
+
+  emitProgress({ stage: 'extracting', percent: 58, message: 'Extracting the XEMU package...' });
+  try {
+    await extractZip(archivePath, { dir: extractRoot });
+  } catch (error) {
+    return { ok: false, error: error?.message || 'Could not extract the XEMU archive.' };
+  }
+
+  const extractedExe = findXemuExecutableRecursive(extractRoot);
+  if (!extractedExe) {
+    return { ok: false, error: 'XEMU downloaded, but SKALD could not find xemu.exe in the extracted package.' };
+  }
+
+  emitProgress({ stage: 'importing', percent: 68, message: 'Importing XEMU into the SKALD managed runtime...' });
+  const importResult = emulatorManager.importXemuRuntime(extractedExe);
+  if (!importResult?.ok) return importResult;
+
+  const settings = loadSettings();
+  const next = emulatorManager.normalizeSettings({
+    ...settings,
+    emulators: {
+      ...(settings.emulators || {}),
+      xemu: {
+        ...((settings.emulators || {}).xemu || {}),
+        mode: 'bundled',
+        customExecutablePath: String(settings?.emulators?.xemu?.customExecutablePath || '').trim(),
+      },
+    },
+  });
+  saveSettings(next);
+
+  emitProgress({ stage: 'ready', percent: 100, message: 'XEMU is ready.' });
+  return {
+    ok: true,
+    version: release.version,
+    archiveUrl: release.archiveUrl,
+    managedRuntimeDir,
+    executablePath: importResult.executablePath,
+    status: emulatorManager.getXemuRuntimeStatus(loadSettings()),
+  };
+}
+
 async function downloadManagedRPCS3Runtime(onProgress = null) {
   const emitProgress = (payload = {}) => {
     if (typeof onProgress !== 'function') return;
@@ -4976,6 +5146,7 @@ async function uninstallManagedEmulatorRuntime(emulatorId, { channel = null } = 
     duckstation: () => emulatorManager.getDuckStationRuntimeStatus(loadSettings()),
     dolphin: () => emulatorManager.getDolphinRuntimeStatus(loadSettings()),
     cemu: () => emulatorManager.getCemuRuntimeStatus(loadSettings()),
+    xemu: () => emulatorManager.getXemuRuntimeStatus(loadSettings()),
     vlc: () => emulatorManager.getVLCRuntimeStatus(loadSettings()),
     xenia: () => emulatorManager.getXeniaRuntimeStatus(loadSettings()),
   };
@@ -4995,6 +5166,7 @@ async function uninstallManagedEmulatorRuntime(emulatorId, { channel = null } = 
       pcsx2: 'pcsx2-stable',
       duckstation: 'duckstation-stable',
       cemu: 'cemu-stable',
+      xemu: 'xemu-stable',
       vlc: 'vlc-stable',
       xenia: 'xenia-canary',
     };
@@ -6486,7 +6658,7 @@ async function downloadMarketplaceThemeFolder({ item = {}, folderUrl = '', title
   if (detail.directories?.length && !detail.files?.length) {
     return {
       ok: false,
-      error: 'This is a parent folder. Open one of the child theme folders before downloading.',
+      error: 'This is a parent folder. Choose one of the available themes before downloading.',
       requiresChildFolder: true,
       detail,
     };
@@ -6599,6 +6771,232 @@ function deleteDownloadedMarketplaceTheme({ themeId = '', installDir = '' } = {}
   }
   fs.rmSync(resolved, { recursive: true, force: true });
   return { ok: true, deleted: resolved };
+}
+
+let marketplacePs3AvatarCatalogCache = null;
+let marketplacePs3AvatarCatalogCacheAt = 0;
+let marketplaceXbox360GamerpicCatalogCache = null;
+let marketplaceXbox360GamerpicCatalogCacheAt = 0;
+
+async function fetchMarketplaceXbox360GamerpicCatalog({ force = false } = {}) {
+  const maxAgeMs = 1000 * 60 * 15;
+  if (!force && marketplaceXbox360GamerpicCatalogCache && Date.now() - marketplaceXbox360GamerpicCatalogCacheAt < maxAgeMs) {
+    return { ...marketplaceXbox360GamerpicCatalogCache, cached: true };
+  }
+  const html = await fetchArchiveText(MARKETPLACE_XBOX360_GAMERPICS_BASE_URL, 'https://archive.org/details/skald-xbox-360-gamerpics_202604');
+  const listing = parseArchiveFolderListing(html, MARKETPLACE_XBOX360_GAMERPICS_BASE_URL);
+  const items = (listing.directories || [])
+    .map(entry => ({
+      id: `xbox360-gamerpic-title:${entry.url}`,
+      title: entry.name,
+      type: 'Xbox 360 Gamerpic Pack',
+      meta: 'Archive.org gamerpic source',
+      status: 'Xbox 360 gamer pictures organized by game/title.',
+      notes: 'Press A to choose a gamer picture from this Xbox 360 title.',
+      source: 'xbox360-gamerpic-title',
+      folderUrl: entry.url,
+      thumbnail: filePathToFileUrl(path.join(APP_ROOT_DIR, 'assets', 'icons', 'Systems', 'Xbox_360.webp')),
+    }))
+    .sort((a, b) => a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: 'base' }));
+  const payload = { ok: true, items, sourceUrl: MARKETPLACE_XBOX360_GAMERPICS_BASE_URL };
+  marketplaceXbox360GamerpicCatalogCache = payload;
+  marketplaceXbox360GamerpicCatalogCacheAt = Date.now();
+  return payload;
+}
+
+function normalizeArchiveUrl(baseUrl = '', relativePath = '') {
+  return new URL(String(relativePath || '').split('/').map(part => encodeURIComponent(part)).join('/'), baseUrl).href;
+}
+
+async function fetchMarketplacePs3AvatarArchiveCatalog({ force = false } = {}) {
+  const maxAgeMs = 1000 * 60 * 15;
+  if (!force && marketplacePs3AvatarCatalogCache && Date.now() - marketplacePs3AvatarCatalogCacheAt < maxAgeMs) {
+    return { ...marketplacePs3AvatarCatalogCache, cached: true };
+  }
+
+  const grouped = new Map();
+  const errors = [];
+  for (const source of MARKETPLACE_PS3_AVATAR_ARCHIVE_SOURCES) {
+    try {
+      const sourceBase = source.baseUrl.endsWith('/') ? source.baseUrl : `${source.baseUrl}/`;
+      const html = await fetchArchiveText(sourceBase, `https://archive.org/details/${source.id}`);
+      const listing = parseArchiveFolderListing(html, sourceBase);
+      const letterFolders = (listing.directories || []).filter(entry => /^(0-9|[A-Z]|Other)$/i.test(entry.name || ''));
+      for (const letter of letterFolders) {
+        const letterBase = letter.url.endsWith('/') ? letter.url : `${letter.url}/`;
+        const manifestUrl = new URL('manifest.json', letterBase).href;
+        let manifest = null;
+        try {
+          manifest = JSON.parse(await fetchArchiveText(manifestUrl, `https://archive.org/details/${source.id}`));
+        } catch (error) {
+          errors.push(`${source.label || source.id}/${letter.name}: ${error?.message || 'manifest failed'}`);
+          continue;
+        }
+        const items = Array.isArray(manifest?.items) ? manifest.items : [];
+        for (const avatar of items) {
+          const title = String(avatar.title || avatar.folderTitle || 'PS3 Avatar').trim();
+          const titleId = String(avatar.titleId || avatar.folderTitleId || '').trim().toUpperCase();
+          const groupKey = `${source.id}:${letter.name}:${title}:${titleId}`;
+          const relativePath = String(avatar.relativePath || '').replace(/\\/g, '/');
+          const downloadUrl = normalizeArchiveUrl(letterBase, relativePath || avatar.fileName || '');
+          const existing = grouped.get(groupKey) || {
+            id: `ps3-avatar-title:${source.id}:${letter.name}:${titleId || sanitizeFolderName(title)}`,
+            title,
+            type: 'PS3 Avatar Pack',
+            meta: titleId ? `${source.label || source.id} · ${titleId}` : (source.label || source.id),
+            status: 'Clean PS3 avatar images from the SKALD Archive.org source.',
+            notes: 'Press A to choose an avatar from this PS3 pack.',
+            source: 'ps3-avatar-title',
+            sourceId: source.id,
+            sourceLabel: source.label || source.id,
+            letter: letter.name,
+            titleId,
+            thumbnail: '',
+            avatars: [],
+          };
+          const avatarRow = {
+            id: `ps3-avatar:${downloadUrl}`,
+            title: String(avatar.contentName || path.parse(avatar.fileName || 'PS3 Avatar').name || 'PS3 Avatar'),
+            type: 'PS3 Avatar',
+            meta: titleId ? `${letter.name} · ${titleId}` : letter.name,
+            status: 'Ready to download and apply.',
+            notes: 'Press A to download and apply this PS3 avatar as your SKALD gamer pic.',
+            source: 'ps3-avatar',
+            sourceId: source.id,
+            sourceLabel: source.label || source.id,
+            parentTitle: title,
+            titleId,
+            letter: letter.name,
+            contentId: avatar.contentId || '',
+            contentName: avatar.contentName || '',
+            psnaId: avatar.psnaId || '',
+            fileName: avatar.fileName || path.basename(downloadUrl),
+            downloadUrl,
+            size: 0,
+            thumbnail: downloadUrl,
+          };
+          existing.avatars.push(avatarRow);
+          if (!existing.thumbnail) existing.thumbnail = downloadUrl;
+          grouped.set(groupKey, existing);
+        }
+      }
+    } catch (error) {
+      errors.push(`${source.label || source.id}: ${error?.message || 'catalog failed'}`);
+    }
+  }
+
+  const items = [...grouped.values()]
+    .map(group => ({
+      ...group,
+      status: `${group.avatars.length.toLocaleString()} PS3 avatar${group.avatars.length === 1 ? '' : 's'} available.`,
+    }))
+    .sort((a, b) => a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: 'base' }));
+  const payload = { ok: true, items, errors, sources: MARKETPLACE_PS3_AVATAR_ARCHIVE_SOURCES };
+  marketplacePs3AvatarCatalogCache = payload;
+  marketplacePs3AvatarCatalogCacheAt = Date.now();
+  return payload;
+}
+
+async function listMarketplacePs3AvatarArchivePack({ avatars = [] } = {}) {
+  const rows = Array.isArray(avatars) ? avatars : [];
+  return { ok: true, avatars: rows };
+}
+
+async function downloadMarketplacePs3AvatarImage({ avatar = {}, title = '' } = {}) {
+  const downloadUrl = String(avatar.downloadUrl || '').trim();
+  const allowed = MARKETPLACE_PS3_AVATAR_ARCHIVE_SOURCES.some(source => downloadUrl.startsWith(source.baseUrl));
+  if (!downloadUrl || !allowed) return { ok: false, error: 'Missing PS3 avatar download URL.' };
+  const packTitle = sanitizeFolderName(title || avatar.parentTitle || 'PS3 Avatars');
+  const fileName = sanitizeFolderName(avatar.fileName || path.basename(safeDecodeUriComponent(new URL(downloadUrl).pathname)) || `${avatar.title || 'PS3 Avatar'}.png`);
+  const outputDir = path.join(MARKETPLACE_GAMERPICS_DIR, 'ps3-avatars', packTitle);
+  ensureDir(outputDir);
+  const outputPath = path.join(outputDir, fileName);
+  const downloadResult = await downloadFileToPath(downloadUrl, outputPath, {
+    headers: { 'User-Agent': 'SKALD Launcher' },
+    timeoutMs: 60000,
+  });
+  if (!downloadResult?.ok) return downloadResult;
+  return {
+    ok: true,
+    gamerpic: {
+      id: `marketplace:${path.relative(MARKETPLACE_GAMERPICS_DIR, outputPath).replace(/\\/g, '/').toLowerCase()}`,
+      title: path.parse(fileName).name,
+      fileName,
+      path: outputPath,
+      url: filePathToFileUrl(outputPath),
+      source: 'ps3-avatar',
+    },
+    outputPath,
+  };
+}
+
+async function listMarketplaceXbox360GamerpicPack({ folderUrl = '', title = '' } = {}) {
+  const cleanUrl = String(folderUrl || '').trim();
+  if (!cleanUrl || !cleanUrl.startsWith(MARKETPLACE_XBOX360_GAMERPICS_BASE_URL)) {
+    return { ok: false, error: 'Missing Xbox 360 gamerpic folder URL.' };
+  }
+  const rootUrl = cleanUrl.endsWith('/') ? cleanUrl : `${cleanUrl}/`;
+  const rootHtml = await fetchArchiveText(rootUrl, 'https://archive.org/details/skald-xbox-360-gamerpics_202604');
+  const rootListing = parseArchiveFolderListing(rootHtml, rootUrl);
+  const titleIdFolders = (rootListing.directories || []).filter(entry => /^[0-9A-Fa-f]{8}$/.test(entry.name || ''));
+  const foldersToRead = titleIdFolders.length ? titleIdFolders : [{ name: '', url: rootUrl }];
+  const gamerpics = [];
+
+  for (const folder of foldersToRead) {
+    const packUrl = folder.url.endsWith('/') ? folder.url : `${folder.url}/`;
+    const html = await fetchArchiveText(packUrl, 'https://archive.org/details/skald-xbox-360-gamerpics_202604');
+    const listing = parseArchiveFolderListing(html, packUrl);
+    const pngFiles = (listing.files || []).filter(file => ['.png', '.jpg', '.jpeg', '.webp'].includes(file.extension));
+    for (const file of pngFiles) {
+      const displayName = path.parse(file.name).name;
+      gamerpics.push({
+        id: `xbox360-gamerpic:${file.url}`,
+        title: displayName,
+        type: 'Xbox 360 Gamerpic',
+        meta: folder.name ? `Title ID ${folder.name}` : 'Xbox 360 gamerpic',
+        status: 'Ready to download and apply.',
+        notes: 'Press A to download and apply this Xbox 360 gamerpic as your SKALD gamer pic.',
+        source: 'xbox360-gamerpic',
+        titleId: folder.name || '',
+        parentTitle: title || '',
+        downloadUrl: file.url,
+        size: file.size || 0,
+        thumbnail: file.url,
+      });
+    }
+  }
+
+  gamerpics.sort((a, b) => a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: 'base' }));
+  return { ok: true, gamerpics };
+}
+
+async function downloadMarketplaceXbox360Gamerpic({ gamerpic = {}, title = '' } = {}) {
+  const downloadUrl = String(gamerpic.downloadUrl || '').trim();
+  if (!downloadUrl || !downloadUrl.startsWith(MARKETPLACE_XBOX360_GAMERPICS_BASE_URL)) {
+    return { ok: false, error: 'Missing Xbox 360 gamerpic download URL.' };
+  }
+  const packTitle = sanitizeFolderName(title || gamerpic.parentTitle || 'Xbox 360 Gamerpics');
+  const fileName = sanitizeFolderName(path.basename(safeDecodeUriComponent(new URL(downloadUrl).pathname)) || `${gamerpic.title || 'Xbox 360 Gamerpic'}.png`);
+  const outputDir = path.join(MARKETPLACE_GAMERPICS_DIR, 'xbox360-gamerpics', packTitle);
+  ensureDir(outputDir);
+  const outputPath = path.join(outputDir, fileName);
+  const downloadResult = await downloadFileToPath(downloadUrl, outputPath, {
+    headers: { 'User-Agent': 'SKALD Launcher' },
+    timeoutMs: 60000,
+  });
+  if (!downloadResult?.ok) return downloadResult;
+  return {
+    ok: true,
+    gamerpic: {
+      id: `marketplace:${path.relative(MARKETPLACE_GAMERPICS_DIR, outputPath).replace(/\\/g, '/').toLowerCase()}`,
+      title: path.parse(fileName).name,
+      fileName,
+      path: outputPath,
+      url: filePathToFileUrl(outputPath),
+      source: 'xbox360-gamerpic',
+    },
+    outputPath,
+  };
 }
 
 async function fetchMarketplaceThemesCatalog({ force = false } = {}) {
@@ -9375,6 +9773,12 @@ ipcMain.handle('marketplace-theme-folder-inspect', async (_, opts = {}) => inspe
 ipcMain.handle('marketplace-theme-folder-download', async (_, opts = {}) => downloadMarketplaceThemeFolder(opts));
 ipcMain.handle('marketplace-themes-downloaded', async () => listDownloadedMarketplaceThemes());
 ipcMain.handle('marketplace-theme-delete', async (_, opts = {}) => deleteDownloadedMarketplaceTheme(opts));
+ipcMain.handle('marketplace-gamerpics-ps3-catalog', async (_, opts = {}) => fetchMarketplacePs3AvatarArchiveCatalog(opts));
+ipcMain.handle('marketplace-gamerpics-ps3-archive-pack', async (_, opts = {}) => listMarketplacePs3AvatarArchivePack(opts));
+ipcMain.handle('marketplace-gamerpics-ps3-archive-download', async (_, opts = {}) => downloadMarketplacePs3AvatarImage(opts));
+ipcMain.handle('marketplace-gamerpics-xbox360-catalog', async (_, opts = {}) => fetchMarketplaceXbox360GamerpicCatalog(opts));
+ipcMain.handle('marketplace-gamerpics-xbox360-pack', async (_, opts = {}) => listMarketplaceXbox360GamerpicPack(opts));
+ipcMain.handle('marketplace-gamerpics-xbox360-download', async (_, opts = {}) => downloadMarketplaceXbox360Gamerpic(opts));
 
 ipcMain.handle('download-cancel', (_, { identifier }) => {
   const dl = activeDownloads.get(identifier);
@@ -11308,6 +11712,9 @@ function parseSizeString(str) {
     if (!cemuSync?.ok) return cemuSync;
     return emulatorManager.launchCemuRom({ romPath, system, identifier, title });
   }
+  if (String(system || '').toLowerCase() === 'xbox') {
+    return emulatorManager.launchXemuRom({ romPath, system, identifier, title });
+  }
   if (String(system || '').toLowerCase() === 'ps2') {
     return emulatorManager.launchPCSX2Rom({ romPath, system, identifier, title });
     }
@@ -12346,6 +12753,7 @@ ipcMain.handle('pcsx2-runtime-status', () => emulatorManager.getPCSX2RuntimeStat
 ipcMain.handle('duckstation-runtime-status', () => emulatorManager.getDuckStationRuntimeStatus(loadSettings()));
 ipcMain.handle('dolphin-runtime-status', () => emulatorManager.getDolphinRuntimeStatus(loadSettings()));
 ipcMain.handle('cemu-runtime-status', () => emulatorManager.getCemuRuntimeStatus(loadSettings()));
+ipcMain.handle('xemu-runtime-status', () => emulatorManager.getXemuRuntimeStatus(loadSettings()));
 ipcMain.handle('cemu-controller-config-get', () => getCemuControllerConfig(loadSettings()));
 ipcMain.handle('cemu-controller-preset-apply', async (_, opts = {}) => applyCemuControllerPreset(opts));
 ipcMain.handle('rpcs3-runtime-status', () => emulatorManager.getRPCS3RuntimeStatus(loadSettings()));
@@ -12454,6 +12862,8 @@ ipcMain.handle('dolphin-runtime-download', async (event, opts = {}) => downloadM
 ipcMain.handle('dolphin-runtime-uninstall', async (_, opts = {}) => uninstallManagedEmulatorRuntime('dolphin', opts));
 ipcMain.handle('cemu-runtime-download', async (event) => downloadManagedCemuRuntime(createEmulatorRuntimeProgressSender(event.sender)));
 ipcMain.handle('cemu-runtime-uninstall', async () => uninstallManagedEmulatorRuntime('cemu'));
+ipcMain.handle('xemu-runtime-download', async (event) => downloadManagedXemuRuntime(createEmulatorRuntimeProgressSender(event.sender)));
+ipcMain.handle('xemu-runtime-uninstall', async () => uninstallManagedEmulatorRuntime('xemu'));
     ipcMain.handle('rpcs3-runtime-download', async (event) => downloadManagedRPCS3Runtime(createEmulatorRuntimeProgressSender(event.sender)));
   ipcMain.handle('rpcs3-runtime-uninstall', async () => uninstallManagedRPCS3Runtime());
   ipcMain.handle('rpcs3-firmware-download', async (event) => downloadManagedRPCS3Firmware(createEmulatorRuntimeProgressSender(event.sender)));
@@ -12599,6 +13009,25 @@ ipcMain.handle('cemu-runtime-import', async (_, { executablePath } = {}) => {
           ...((settings.emulators || {}).cemu || {}),
           mode: 'bundled',
           customExecutablePath: String(settings?.emulators?.cemu?.customExecutablePath || '').trim(),
+        },
+      },
+    });
+    saveSettings(next);
+  }
+  return result;
+});
+ipcMain.handle('xemu-runtime-import', async (_, { executablePath } = {}) => {
+  const result = emulatorManager.importXemuRuntime(executablePath);
+  if (result?.ok) {
+    const settings = loadSettings();
+    const next = emulatorManager.normalizeSettings({
+      ...settings,
+      emulators: {
+        ...(settings.emulators || {}),
+        xemu: {
+          ...((settings.emulators || {}).xemu || {}),
+          mode: 'bundled',
+          customExecutablePath: String(settings?.emulators?.xemu?.customExecutablePath || '').trim(),
         },
       },
     });
