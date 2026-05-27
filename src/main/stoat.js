@@ -47,6 +47,29 @@ function serializeUser(u) {
   };
 }
 
+function safeAssetUrl(target, methodName, args) {
+  if (!target || typeof target !== 'object') return null;
+  const method = target[methodName];
+  if (typeof method !== 'function') return null;
+  try {
+    return method.call(target, args);
+  } catch {
+    return null;
+  }
+}
+
+function normalizeIdList(value) {
+  if (Array.isArray(value)) return value;
+  if (value instanceof Set) return [...value.values()];
+  if (value && typeof value.values === 'function') {
+    try { return [...value.values()]; } catch {}
+  }
+  if (value && typeof value === 'object') {
+    return Object.values(value);
+  }
+  return [];
+}
+
 function serializeChannel(ch) {
   if (!ch) return null;
   return {
@@ -55,7 +78,7 @@ function serializeChannel(ch) {
     name:        ch.name ?? null,
     description: ch.description ?? null,
     serverId:    ch.serverId ?? null,
-    icon:        ch.icon ? ch.generateIconURL({ max_side: 64 }) : null,
+    icon:        ch.icon ? safeAssetUrl(ch, 'generateIconURL', { max_side: 64 }) : null,
     lastMessageId: ch.lastMessageId ?? null,
   };
 }
@@ -82,10 +105,10 @@ function serializeServer(srv) {
   return {
     id:          srv.id,
     name:        srv.name,
-    icon:        srv.icon ? srv.generateIconURL({ max_side: 128 }) : null,
-    banner:      srv.banner ? srv.generateBannerURL({ max_side: 480 }) : null,
+    icon:        srv.icon ? safeAssetUrl(srv, 'generateIconURL', { max_side: 128 }) : null,
+    banner:      srv.banner ? safeAssetUrl(srv, 'generateBannerURL', { max_side: 480 }) : null,
     description: srv.description ?? null,
-    channelIds:  srv.channelIds ?? [],
+    channelIds:  normalizeIdList(srv.channelIds),
     ownerId:     srv.ownerId ?? null,
   };
 }
@@ -257,7 +280,7 @@ function getChannels(serverId) {
   if (!isReady || !client) return [];
   const server = client.servers.get(serverId);
   if (!server) return [];
-  return (server.channelIds ?? [])
+  return normalizeIdList(server.channelIds)
     .map(id => client.channels.get(id))
     .filter(Boolean)
     .filter(ch => ch.type === 'TextChannel')

@@ -9,21 +9,21 @@
   font-src file:;
   img-src 'self' file: data: https:;
 ">
-<title>SKALD — 3rd Party Account</title>
+<title>SKALD â€” 3rd Party Account</title>
 <style>
-@font-face{font-family:'MC360';src:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/fonts/MC360.ttf') format('truetype');}
+@font-face{font-family:'MC360';src:url('../../assets/themes/RG-THEMES/X360 BLADES/blades/fonts/MC360.ttf') format('truetype');}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'MC360','Segoe UI',Tahoma,sans-serif;color:#111;}
 body{position:relative;}
-#stage{position:absolute;inset:0;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/background-grey.webp') center/cover no-repeat;}
-#tint{position:absolute;inset:0;background:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/background-overlay-whitewash-centertile-ws.webp') repeat-x center/100% 100%;opacity:.95;}
+#stage{position:absolute;inset:0;background:url('../../assets/themes/RG-THEMES/X360 BLADES/blades/background-grey.webp') center/cover no-repeat;}
+#tint{position:absolute;inset:0;background:url('../../assets/themes/RG-THEMES/X360 BLADES/blades/background-overlay-whitewash-centertile-ws.webp') repeat-x center/100% 100%;opacity:.95;}
 #drag{position:absolute;left:0;right:0;top:0;height:12px;-webkit-app-region:drag;z-index:20;}
 #close{position:absolute;top:18px;right:22px;z-index:25;border:none;background:rgba(0,0,0,.42);color:#fff;font-size:18px;padding:8px 16px;cursor:pointer;font-family:'MC360',sans-serif;}
 #shell{position:absolute;left:74px;top:70px;right:74px;bottom:56px;display:grid;grid-template-columns:440px 1fr;gap:42px;}
 #menuFrame{position:relative;height:520px;}
 #menuShadow,#menuGlass{position:absolute;left:0;top:0;width:440px;height:520px;background-repeat:no-repeat;background-size:100% 100%;}
-#menuShadow{background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/systemhomebutton-4-shadow.webp');opacity:.75;filter:blur(.25px);}
-#menuGlass{background-image:url('file:///C:/Projects/RG-THEMES/X360 BLADES/blades/systemhomebutton-4a.webp');}
+#menuShadow{background-image:url('../../assets/themes/RG-THEMES/X360 BLADES/blades/systemhomebutton-4-shadow.webp');opacity:.75;filter:blur(.25px);}
+#menuGlass{background-image:url('../../assets/themes/RG-THEMES/X360 BLADES/blades/systemhomebutton-4a.webp');}
 #menu{position:absolute;left:62px;top:34px;right:28px;list-style:none;}
 .row{display:flex;align-items:center;gap:16px;height:58px;font-size:25px;color:rgba(0,0,0,.82);}
 .row + .row{margin-top:12px;}
@@ -58,10 +58,10 @@ body{position:relative;}
         <div id="menuShadow"></div>
         <div id="menuGlass"></div>
         <ul id="menu">
-          <li class="row"><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-profile.webp" alt=""><span id="row-provider">Provider</span></li>
-          <li class="row"><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-system.webp" alt=""><span>Save to Stoat Profile</span></li>
-          <li class="row"><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-network.webp" alt=""><span>Shared Sign-In Source</span></li>
-          <li class="row"><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/icon-messages.webp" alt=""><span>Manage Per User</span></li>
+          <li class="row"><img id="row-provider-icon" src="../../assets/themes/RG-THEMES/X360 BLADES/blades/icon-profile.webp" alt=""><span id="row-provider">Provider</span></li>
+          <li class="row"><img src="../../assets/themes/RG-THEMES/X360 BLADES/blades/icon-system.webp" alt=""><span>Save to Stoat Profile</span></li>
+          <li class="row"><img src="../../assets/themes/RG-THEMES/X360 BLADES/blades/icon-network.webp" alt=""><span>Shared Sign-In Source</span></li>
+          <li class="row"><img src="../../assets/themes/RG-THEMES/X360 BLADES/blades/icon-messages.webp" alt=""><span>Manage Per User</span></li>
         </ul>
       </div>
       <div id="details">
@@ -94,8 +94,8 @@ body{position:relative;}
       </div>
     </div>
     <div id="footer">
-      <div class="hint"><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-a.webp" alt="">Save</div>
-      <div class="hint"><img src="file:///C:/Projects/RG-THEMES/X360 BLADES/blades/button-b.webp" alt="">Close</div>
+      <div class="hint"><img src="../../assets/themes/RG-THEMES/X360 BLADES/blades/button-a.webp" alt="">Save</div>
+      <div class="hint"><img src="../../assets/themes/RG-THEMES/X360 BLADES/blades/button-b.webp" alt="">Close</div>
     </div>
   </div>
 <script>
@@ -109,9 +109,10 @@ const PROVIDERS = {
     name: 'RetroAchievements',
     desc: 'Store your RetroAchievements username and API key for this Stoat profile.\nThis powers achievement lookups, progress tracking, and future profile features.',
   },
-  steamgriddb: {
-    name: 'SteamGridDB',
-    desc: 'Store your SteamGridDB account email and API key for this Stoat profile.\nSaved credentials are used for logo, cover, and art lookups.',
+  'savecloud-dropbox': {
+    name: 'Dropbox Save Backup',
+    desc: 'Connect Dropbox for profile-specific SKALD save backups.\nSKALD keeps local saves first, then backs up this profile vault to Dropbox.',
+    icon: '../../assets/icons/Systems/DropBox.webp',
   },
 };
 
@@ -120,6 +121,7 @@ const providerId = qs.get('provider') || 'archiveorg';
 const providerMeta = PROVIDERS[providerId] || PROVIDERS.archiveorg;
 
 const rowProvider = document.getElementById('row-provider');
+const rowProviderIcon = document.getElementById('row-provider-icon');
 const titleEl = document.getElementById('title');
 const descEl = document.getElementById('desc');
 const statusEl = document.getElementById('status');
@@ -141,6 +143,7 @@ function showMessage(text, isError){
 
 async function load(){
   rowProvider.textContent = providerMeta.name;
+  if(rowProviderIcon && providerMeta.icon) rowProviderIcon.src = providerMeta.icon;
   titleEl.textContent = providerMeta.name;
   descEl.textContent = providerMeta.desc;
 
@@ -189,18 +192,46 @@ async function load(){
 }
 
 async function save(){
-  const result = await window.electronAPI.saveThirdPartyAccount({
-    provider: providerId,
-    login: loginInput.value.trim(),
-    secret: secretInput.value,
-    saveToProfile: !!saveToggle.checked,
-  });
-  if (!result?.ok) {
-    showMessage(result?.error || 'Could not save this account.', true);
-    return;
+  try {
+    let result = null;
+    const login = loginInput.value.trim();
+    const secret = secretInput.value;
+    if (providerId === 'savecloud-dropbox') {
+      if (secret.trim()) {
+        result = await window.electronAPI.saveThirdPartyAccount({
+          provider: providerId,
+          login,
+          secret,
+          saveToProfile: !!saveToggle.checked,
+        });
+        if (!result?.ok) throw new Error(result?.error || 'Could not save the Dropbox token.');
+      } else {
+        result = await window.electronAPI.connectDropboxSaveCloud({ login });
+        if (!result?.ok) throw new Error(result?.error || 'Could not connect Dropbox.');
+      }
+      await window.electronAPI.setSaveCloudProvider({ provider: providerId, enabled: !!saveToggle.checked }).catch(() => null);
+      const validation = await window.electronAPI.validateDropboxSaveCloud({ token: secret }).catch((error) => ({ ok: false, error: error?.message || String(error) }));
+      if (!validation?.ok) throw new Error(validation?.error || 'Dropbox connected, but validation failed.');
+      showMessage('Dropbox connected and verified.');
+      await load();
+      return;
+    }
+
+    result = await window.electronAPI.saveThirdPartyAccount({
+      provider: providerId,
+      login,
+      secret,
+      saveToProfile: !!saveToggle.checked,
+    });
+    if (!result?.ok) throw new Error(result?.error || 'Could not save this account.');
+    if (providerId.startsWith('savecloud-')) {
+      await window.electronAPI.setSaveCloudProvider({ provider: providerId, enabled: !!saveToggle.checked }).catch(() => null);
+    }
+    showMessage(saveToggle.checked ? 'Saved to current Stoat profile.' : 'Saved credentials removed.');
+    await load();
+  } catch (error) {
+    showMessage(error?.message || 'Could not save this account.', true);
   }
-  showMessage(saveToggle.checked ? 'Saved to current Stoat profile.' : 'Saved credentials removed.');
-  await load();
 }
 
 async function clearSaved(){
@@ -212,6 +243,12 @@ async function clearSaved(){
   loginInput.value = '';
   secretInput.value = '';
   saveToggle.checked = true;
+  if (providerId.startsWith('savecloud-')) {
+    const cloud = await window.electronAPI.getSaveCloudStatus().catch(() => null);
+    if (cloud?.saveCloud?.provider === providerId) {
+      await window.electronAPI.setSaveCloudProvider({ provider: '', enabled: false }).catch(() => null);
+    }
+  }
   showMessage('Saved credentials cleared.');
   await load();
 }
@@ -272,3 +309,4 @@ load();
 </script>
 </body>
 </html>
+
