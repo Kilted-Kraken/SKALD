@@ -1,0 +1,8 @@
+system,contentType,purpose,url,notes
+ps3,disc-keys-archive,PS3 disc key archive used for filtering and paired key downloads,https://archive.org/download/sony-playstation-3-disc-keys-dat-cuesheets/Sony%20-%20PlayStation%203%20-%20Disc%20Keys%20%283388%29%20%282021-06-05%2001-59-33%29.zip,
+ps3,disc-keys-catalog,PS3 disc key catalog used to enumerate available key files,https://ia800701.us.archive.org/view_archive.php?archive=/32/items/sony-playstation-3-disc-keys-dat-cuesheets/Sony%20-%20PlayStation%203%20-%20Disc%20Keys%20%283388%29%20%282021-06-05%2001-59-33%29.zip,
+wiiu,cemu-keys-bootstrap,Cemu keys bootstrap archive used to seed managed keys.txt,https://archive.org/download/cemu-keys/Cemu%20keys.rar,
+wiiu,disc-keys-archive,Wii U disc key archive used for WUX filtering and key downloads,https://archive.org/download/nintendo-wii-u-disc-keys-483-2021-06-08-02-04-20,
+wiiu,disc-keys-catalog,Wii U disc key catalog used to enumerate available key files,https://archive.org/download/nintendo-wii-u-disc-keys-483-2021-06-08-02-04-20,
+x360,theme-source,Xbox 360 themes marketplace source,https://archive.org/download/Xbox_360_Themes_Archivev.1/Xbox%20360%20Themes/,Xbox 360 Themes
+x360,theme-source,Xbox 360 custom themes marketplace source,https://archive.org/download/Xbox_360_Themes_Archivev.1/Xbox%20360%20Themes/Custom%20Themes/,Xbox 360 Custom Themes

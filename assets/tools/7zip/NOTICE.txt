@@ -1,0 +1,17 @@
+SKALD bundles the 7-Zip standalone console runtime for archive extraction support.
+
+Source:
+https://www.7-zip.org/
+
+Package used:
+7-Zip Extra (x64 console runtime payload)
+
+Included upstream files:
+- 7za.exe
+- 7za.dll
+- 7zxa.dll
+- License.txt
+- readme.txt
+- history.txt
+
+See License.txt for the upstream 7-Zip license terms.

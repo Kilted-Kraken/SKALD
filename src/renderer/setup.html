@@ -1,0 +1,2378 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SKALD Initial Setup</title>
+  <style>
+    :root{
+      --green-0:#163a0d;
+      --green-1:#4aa11f;
+      --green-2:#82cf42;
+      --green-3:#baf06c;
+      --ink:#173112;
+      --glass:rgba(235,255,218,.24);
+      --line:rgba(40,78,30,.38);
+      --white:rgba(248,255,240,.92);
+    }
+    *{box-sizing:border-box}
+    html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#000;color:var(--ink);font-family:'MC360',"Segoe UI",Tahoma,sans-serif}
+    @font-face{font-family:'MC360';src:url('../../assets/themes/RG-THEMES/X360 BLADES/blades/fonts/MC360.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap}
+    .setup-shell{
+      position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden;
+      background:url('../../assets/themes/RG-THEMES/X360 BLADES/blades/background-green-alpha.webp') center/cover no-repeat;
+      transform-origin:0 0;
+      --setup-whitewash-left:373px;
+      --setup-whitewash-width:1267px;
+      --setup-whitewash-right-left:1640px;
+    }
+    .setup-shell:before{
+      content:"";position:absolute;left:var(--setup-whitewash-left);top:0;width:85px;height:1080px;z-index:10;
+      background:url('../../assets/themes/RG-THEMES/X360 BLADES/blades/background-overlay-whitewash-left-ws.webp') 0 0/100% 100% no-repeat;
+      pointer-events:none;
+    }
+    .setup-shell:after{
+      content:"";position:absolute;left:var(--setup-whitewash-right-left);top:0;width:171px;height:1080px;z-index:10;
+      background:url('../../assets/themes/RG-THEMES/X360 BLADES/blades/background-overlay-whitewash-right-ws.webp') 0 0/100% 100% no-repeat;
+      pointer-events:none;
+    }
+    .green-spine-left{
+      position:absolute;left:calc(var(--setup-whitewash-left) + 85px);top:0;width:calc(var(--setup-whitewash-width) - 85px);height:1080px;z-index:9;pointer-events:none;
+      background:url('../../assets/themes/RG-THEMES/X360 BLADES/blades/background-overlay-whitewash-centertile-ws.webp') 0 0/auto 100% repeat-x;
+    }
+    .green-spine-right{
+      position:absolute;left:0;top:0;width:1px;height:1px;z-index:11;pointer-events:none;
+      background:none;
+    }
+    .side-shadow-left{
+      position:absolute;left:-163px;top:-94px;width:341px;height:1268px;z-index:25;pointer-events:none;
+      background:url('../../assets/themes/RG-THEMES/X360 BLADES/blades/blades-runner-left.webp') 0 0/100% 100% no-repeat;
+    }
+    .side-shadow-right{
+      position:absolute;left:1773px;top:-94px;width:341px;height:1268px;z-index:25;pointer-events:none;
+      background:url('../../assets/themes/RG-THEMES/X360 BLADES/blades/blades-runner-right.webp') 0 0/100% 100% no-repeat;
+    }
+    .left-blade-notch{
+      position:absolute;left:0;top:0;width:1px;height:1px;z-index:26;pointer-events:none;background:none;
+    }
+    .side-tab{
+      display:none;
+    }
+    .setup-blade-layer{position:absolute;left:0;top:-94px;width:1920px;height:1268px;z-index:24;pointer-events:none}
+    .setup-blade-tab{
+      position:absolute;top:0;width:160px;height:1268px;background-size:100% 100%;background-repeat:no-repeat;
+      pointer-events:auto;cursor:pointer;transition:left 180ms ease-out;
+    }
+    .setup-blade-tab-label{
+      position:absolute;top:340px;width:100%;z-index:3;
+      writing-mode:vertical-lr;text-orientation:mixed;text-align:center;line-height:48px;
+      font-size:22px;letter-spacing:3px;color:#555;text-transform:lowercase;
+      pointer-events:none;
+    }
+    .setup-blade-tab.active .setup-blade-tab-label{font-size:24px;color:#333;font-weight:bold}
+    .blade{
+      position:absolute;z-index:30;left:248px;top:0;width:1424px;height:1080px;overflow:hidden;
+      background:transparent;border-radius:0;box-shadow:none;
+    }
+    .blade:before,.blade:after{display:none}
+    .title{position:absolute;z-index:2;left:64px;top:76px;font-size:34px;letter-spacing:1px;color:rgba(245,255,237,.86);text-shadow:0 1px 2px rgba(0,0,0,.24)}
+    .time{position:absolute;z-index:2;right:48px;top:79px;font-size:26px;color:rgba(245,255,237,.72)}
+    .content{position:absolute;z-index:2;left:64px;right:64px;top:150px;bottom:178px;display:grid;grid-template-columns:46% 1fr;gap:28px}
+    .content.welcome-mode{grid-template-columns:1fr}
+    .content.welcome-mode .side-card{display:none}
+    .content > *{min-height:0}
+    .list{
+      padding-top:6px;
+      height:100%;
+      min-height:0;
+      overflow-y:auto;
+      overflow-x:hidden;
+      padding-right:12px;
+      scrollbar-width:none;
+      -ms-overflow-style:none;
+    }
+    .list::-webkit-scrollbar{display:none}
+    .list.skin-choice-list{
+      width:100%;
+      max-width:1620px;
+      margin:0 auto;
+      padding:54px 0;
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:10px;
+      align-content:center;
+    }
+    .welcome-logo-hero{
+      grid-column:1 / -1;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      margin:0 0 18px 0;
+      pointer-events:none;
+    }
+    .welcome-logo-hero img{
+      width:min(480px,58vw);
+      max-width:480px;
+      height:auto;
+      object-fit:contain;
+      filter:drop-shadow(0 10px 18px rgba(0,0,0,.22));
+    }
+    .item{
+      position:relative;min-height:62px;padding:12px 20px 12px 24px;border-top:2px solid var(--line);
+      display:flex;align-items:center;gap:16px;font-size:24px;color:#24441d;
+    }
+    .item:last-child{border-bottom:2px solid var(--line)}
+    .item.sel{background:linear-gradient(90deg, rgba(240,255,232,.72), rgba(210,250,174,.22));border-radius:9px;box-shadow:inset 0 0 0 2px rgba(41,88,30,.42), 0 8px 22px rgba(28,62,18,.16)}
+    .item-icon{width:42px;height:42px;background:center/contain no-repeat;filter:drop-shadow(0 2px 2px rgba(0,0,0,.18));flex:0 0 auto}
+    .item-copy{display:flex;flex-direction:column;line-height:1.1}
+    .item-meta{font-size:15px;margin-top:6px;color:rgba(24,54,16,.68)}
+    .item-badge{margin-left:auto;align-self:center;padding:5px 10px;border-radius:999px;border:1px solid rgba(45,89,32,.32);background:rgba(245,255,232,.45);font-size:15px;line-height:1;color:rgba(20,48,12,.72);white-space:nowrap}
+    .item.enabled .item-badge{background:rgba(111,205,76,.24);color:#173112}
+    .item.needs-files .item-badge{background:rgba(255,223,126,.34);border-color:rgba(123,91,18,.28)}
+    .item.installing{opacity:.8;pointer-events:none}
+    .item.disabled{opacity:.48}
+    .item.skin-choice{
+      min-height:318px;
+      padding:14px 12px 18px;
+      border:2px solid rgba(45,89,32,.32);
+      border-radius:12px;
+      background:linear-gradient(180deg,rgba(244,255,236,.58),rgba(188,226,151,.16));
+      box-shadow:inset 0 0 16px rgba(28,62,18,.08);
+      flex-direction:column;
+      justify-content:flex-start;
+      align-items:center;
+      gap:16px;
+      text-align:center;
+    }
+    .item.skin-choice:last-child{border-bottom:2px solid rgba(45,89,32,.32)}
+    .item.skin-choice .item-icon{
+      width:100%;
+      height:194px;
+      border-radius:10px;
+      background-size:cover;
+      background-position:center;
+    }
+    .item.skin-choice .item-copy{
+      align-items:center;
+      gap:8px;
+    }
+    .item.skin-choice .item-copy > div:first-child{
+      font-size:32px;
+      letter-spacing:1px;
+    }
+    .item.skin-choice .item-meta{
+      margin-top:0;
+      font-size:15px;
+      line-height:1.3;
+      white-space:normal;
+      text-align:center;
+    }
+    .item.skin-choice.sel{
+      background:linear-gradient(180deg, rgba(246,255,239,.84), rgba(210,250,174,.3));
+      box-shadow:inset 0 0 0 2px rgba(41,88,30,.42), 0 12px 28px rgba(28,62,18,.18);
+    }
+    .item.skin-choice.disabled{opacity:.96}
+    .item.skin-choice.disabled .item-icon,
+    .item.skin-choice.disabled .item-copy{filter:grayscale(1)}
+    .side-card{
+      min-height:320px;border:2px solid rgba(45,89,32,.35);border-radius:10px;padding:22px 26px;
+      background:rgba(128,206,74,.22);box-shadow:inset 0 0 18px rgba(30,75,18,.1);
+      font-size:25px;line-height:1.36;color:#24441d;
+    }
+    .card-head{display:flex;align-items:center;gap:18px;margin-bottom:20px;border-bottom:2px solid rgba(45,89,32,.22);padding-bottom:14px}
+    .card-icon{width:72px;height:72px;border-radius:10px;background:center/contain no-repeat rgba(238,255,218,.34);box-shadow:inset 0 0 0 2px rgba(45,89,32,.28)}
+    .card-title{font-size:29px;color:#1d3717}
+    .card-body{white-space:pre-line}
+    .card-body.setup-emulator-body{font-size:20px;line-height:1.24;margin-bottom:8px}
+    .status{margin-top:18px;padding:14px 16px;background:rgba(239,255,224,.22);border-radius:9px;border:1px solid rgba(45,89,32,.22);font-size:17px;line-height:1.35}
+    .status.setup-emulator-card{margin-top:12px;padding:0;background:rgba(239,255,224,.18);overflow:hidden}
+    .setup-emu-status{padding:14px 16px}
+    .setup-emu-status-title{font-size:19px;color:#1d3717;letter-spacing:.6px;margin-bottom:10px}
+    .setup-emu-status-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px;margin-bottom:12px}
+    .setup-emu-stat{min-height:64px;padding:8px 10px;border-radius:10px;border:1px solid rgba(45,89,32,.18);background:rgba(247,255,240,.45)}
+    .setup-emu-stat-label{font-size:13px;color:rgba(29,55,23,.7);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px}
+    .setup-emu-stat-value{font-size:24px;line-height:1;color:#173112}
+    .setup-emu-stat-copy{font-size:13px;line-height:1.18;color:rgba(24,54,16,.68);margin-top:4px}
+    .setup-emu-progress-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:6px}
+    .setup-emu-progress-label{font-size:16px;color:#1d3717}
+    .setup-emu-progress-percent{font-size:15px;color:rgba(24,54,16,.72)}
+    .setup-emu-progress-shell{height:18px;border-radius:999px;border:1px solid rgba(45,89,32,.22);background:rgba(255,255,255,.42);box-shadow:inset 0 2px 5px rgba(0,0,0,.08);overflow:hidden}
+    .setup-emu-progress-fill{height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,rgba(116,198,56,.84),rgba(189,236,112,.96));box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}
+    .setup-emu-status-note{margin-top:10px;padding-top:10px;border-top:1px solid rgba(45,89,32,.18);font-size:14px;line-height:1.25;color:rgba(24,54,16,.74);white-space:pre-line}
+    .legend{position:absolute;z-index:2;left:64px;right:64px;bottom:34px;display:flex;justify-content:space-between;align-items:center;color:rgba(238,255,225,.88);font-size:24px;text-shadow:0 1px 2px rgba(0,0,0,.28)}
+    .legend-group{display:flex;gap:28px;align-items:center}
+    .btn{display:inline-flex;align-items:center;gap:8px}
+    .control-icon{width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 2px 3px rgba(0,0,0,.32))}
+    .control-icon.shoulder{width:52px}
+    .orb{min-width:32px;height:32px;padding:0 7px;border-radius:999px;display:inline-grid;place-items:center;font-weight:700;color:#17230f;text-shadow:none;box-shadow:inset 0 2px 4px rgba(255,255,255,.55),0 2px 4px rgba(0,0,0,.22)}
+    .orb.a{background:#7be45c}.orb.b{background:#df4b43}.orb.y{background:#e8d54d}.orb.x{background:#4da8e8}
+    .skip-warning{font-size:17px;color:rgba(28,54,20,.76);margin-top:18px}
+    .setup-profile-modal{
+      position:absolute;inset:0;z-index:84;display:none;align-items:center;justify-content:center;
+      background:rgba(0,0,0,.58);
+    }
+    .setup-profile-modal.on{display:flex}
+    .setup-profile-panel{
+      width:900px;min-height:470px;padding:30px 36px 26px;color:#111;
+      background:linear-gradient(180deg,rgba(244,247,239,.98),rgba(204,209,196,.96));
+      border:2px solid rgba(55,62,49,.55);border-radius:16px;
+      box-shadow:inset 0 2px 0 rgba(255,255,255,.72),0 28px 70px rgba(0,0,0,.42);
+    }
+    .setup-profile-title{font-size:36px;line-height:1;margin-bottom:12px;color:#111}
+    .setup-profile-copy{font-size:21px;line-height:1.3;color:rgba(0,0,0,.68);margin-bottom:20px}
+    .setup-profile-list{border-top:2px solid rgba(80,80,74,.18);border-bottom:2px solid rgba(80,80,74,.18);min-height:236px}
+    .setup-profile-item{
+      min-height:70px;display:flex;align-items:center;gap:16px;padding:10px 18px;
+      border-bottom:1px solid rgba(80,80,74,.16);font-size:25px;color:#111;
+    }
+    .setup-profile-item.sel{background:linear-gradient(180deg,rgba(255,255,255,.86),rgba(224,230,216,.7));box-shadow:inset 0 0 0 2px rgba(102,122,88,.28)}
+    .setup-profile-item-icon{width:42px;height:42px;flex:0 0 auto;background:center/contain no-repeat}
+    .setup-profile-item-text{display:flex;flex-direction:column;line-height:1.08;min-width:0}
+    .setup-profile-item-meta{font-size:16px;line-height:1.25;margin-top:6px;color:rgba(0,0,0,.56);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .setup-profile-error{min-height:22px;margin-top:14px;font-size:17px;color:#8a1f16}
+    .setup-profile-footer{display:flex;justify-content:flex-end;gap:24px;margin-top:12px;font-size:22px;color:rgba(0,0,0,.72)}
+    .setup-profile-hint{display:inline-flex;align-items:center;gap:8px}
+    .setup-profile-hint img{width:30px;height:30px;object-fit:contain}
+    .folder-browser-modal{
+      position:absolute;inset:0;z-index:80;display:none;align-items:center;justify-content:center;
+      background:rgba(0,0,0,.62);
+    }
+    .folder-browser-modal.on{display:flex}
+    .folder-browser-panel{
+      width:1040px;max-height:790px;display:flex;flex-direction:column;padding:28px 34px 24px;
+      color:#111;background:linear-gradient(180deg,rgba(242,244,238,.97),rgba(202,205,196,.94));
+      border:2px solid rgba(64,64,58,.55);border-radius:16px;
+      box-shadow:inset 0 2px 0 rgba(255,255,255,.72),0 28px 70px rgba(0,0,0,.38);
+    }
+    .folder-browser-title{font-size:34px;line-height:1;margin-bottom:10px;color:#111}
+    .folder-browser-path{font-size:17px;line-height:1.25;color:rgba(0,0,0,.58);margin-bottom:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .folder-browser-list{min-height:360px;max-height:520px;overflow:hidden;border-top:2px solid rgba(80,80,74,.18);border-bottom:2px solid rgba(80,80,74,.18)}
+    .folder-browser-item{
+      min-height:58px;display:flex;align-items:center;gap:16px;padding:0 16px;
+      border-bottom:1px solid rgba(80,80,74,.16);font-size:24px;color:#111;
+    }
+    .folder-browser-item.sel{background:linear-gradient(180deg,rgba(255,255,255,.82),rgba(226,230,218,.68))}
+    .folder-browser-icon{width:31px;height:31px;flex:0 0 auto;background:url('../../assets/themes/RG-THEMES/X360 BLADES/blades/icon-folder.webp') center/contain no-repeat}
+    .folder-browser-item.drive .folder-browser-icon{background-image:url('../../assets/themes/RG-THEMES/X360 BLADES/blades/icon-memory.webp')}
+    .folder-browser-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .folder-browser-empty{padding:28px 16px;font-size:22px;line-height:1.35;color:rgba(0,0,0,.58)}
+    .folder-browser-footer{display:flex;justify-content:space-between;align-items:center;margin-top:18px;font-size:22px;color:rgba(0,0,0,.74)}
+    .folder-browser-hints{display:flex;gap:24px;align-items:center}
+    .folder-browser-hint{display:inline-flex;align-items:center;gap:8px}
+    .folder-browser-hint img{width:30px;height:30px;object-fit:contain}
+    .setup-vk-modal{
+      position:absolute;inset:0;z-index:90;display:none;align-items:stretch;justify-content:flex-start;
+      background:rgba(0,0,0,.48);
+    }
+    .setup-vk-modal.on{display:flex}
+    .setup-vk-panel{
+      position:relative;width:1584px;height:1080px;padding:270px 318px 36px 72px;
+      background:transparent;
+      border-radius:0;box-shadow:none;border:none;overflow:hidden;transform:translateX(-1584px);transition:transform 250ms ease-out;
+    }
+    .setup-vk-modal.on .setup-vk-panel{transform:translateX(0)}
+    .setup-vk-tile{position:absolute;left:0;top:0;width:1317px;height:1080px;background:#d9d9d6 url('../../assets/themes/RG-THEMES/X360 BLADES/blades/guide-blade-overlay-tile.webp') repeat-x left top;background-size:auto 100%;pointer-events:none;z-index:0}
+    .setup-vk-edge{position:absolute;left:1317px;top:0;width:267px;height:1080px;background:none;pointer-events:none;overflow:hidden;z-index:0}
+    .setup-vk-edge::before{content:'';position:absolute;inset:0;background:#d9d9d6;clip-path:polygon(0 0,64% 0,75% 10%,72% 31%,74% 45%,72% 61%,75% 90%,64% 100%,0 100%);z-index:0}
+    .setup-vk-edge::after{content:'';position:absolute;inset:0;background:url('../../assets/themes/RG-THEMES/X360 BLADES/blades/guide-blade-overlay-edge-left.webp') no-repeat;background-size:100% 100%;z-index:1}
+    .setup-vk-panel>*{position:relative;z-index:1}
+    .setup-vk-panel>.setup-vk-tile,.setup-vk-panel>.setup-vk-edge{position:absolute;z-index:0}
+    .setup-vk-title{font-size:34px;color:#222;margin-bottom:12px;text-shadow:0 1px 0 rgba(255,255,255,.55)}
+    .setup-vk-target{min-height:76px;padding:14px 18px;background:rgba(255,255,255,.62);border:2px solid rgba(0,0,0,.18);font-size:31px;color:#111;margin-bottom:22px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;box-shadow:inset 0 2px 6px rgba(0,0,0,.12),0 1px 0 rgba(255,255,255,.55)}
+    .setup-vk-caret{display:inline-block;width:3px;height:35px;margin:0 2px -6px;background:#111;animation:setup-vk-caret-blink 1s steps(2,start) infinite}
+    @keyframes setup-vk-caret-blink{50%{opacity:0}}
+    .setup-vk-layout{display:grid;grid-template-columns:172px 1fr 172px;gap:22px;align-items:stretch}
+    .setup-vk-grid{position:relative;display:grid;grid-template-columns:repeat(10,1fr);gap:8px;align-content:start}
+    .setup-vk-grid::after{content:'';position:absolute;left:calc((100% - 72px) * .7 + 52px);top:0;width:2px;height:288px;background:linear-gradient(180deg,rgba(80,86,72,.08),rgba(80,86,72,.5),rgba(80,86,72,.08));box-shadow:1px 0 0 rgba(255,255,255,.45);pointer-events:none}
+    .setup-vk-side{display:grid;grid-template-rows:repeat(3,112px) 1fr;gap:14px}
+    .setup-vk-side.right{grid-template-rows:repeat(2,112px) 1fr}
+    .setup-vk-side-card{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:112px;padding:12px 10px;border-radius:13px;background:linear-gradient(180deg,rgba(249,250,246,.86),rgba(210,213,204,.72));border:2px solid rgba(92,92,86,.34);box-shadow:inset 0 1px 0 rgba(255,255,255,.72),0 2px 5px rgba(0,0,0,.16);font-size:22px;color:#111}
+    .setup-vk-side-card.dim{opacity:.45}
+    .setup-vk-side-card.caps-on,.setup-vk-side-card.symbols-on,.setup-vk-side-card.accents-on{opacity:1;box-shadow:inset 0 1px 0 rgba(255,255,255,.72),0 0 0 4px rgba(132,203,70,.7),0 2px 5px rgba(0,0,0,.16)}
+    .setup-vk-side-card.done{min-height:112px;background:linear-gradient(180deg,rgba(249,250,246,.86),rgba(210,213,204,.72))}
+    .setup-vk-side-card.sel{filter:brightness(1.05);box-shadow:0 0 0 4px rgba(132,203,70,.92),0 0 16px rgba(132,203,70,.45),inset 0 1px 0 rgba(255,255,255,.72)}
+    .setup-vk-side-card img{width:66px;height:44px;object-fit:contain;filter:brightness(0) drop-shadow(0 1px 1px rgba(0,0,0,.22))}
+    .setup-vk-side-card .setup-vk-stick-icon{width:58px;height:58px}
+    .setup-vk-key{height:66px;border:none;background:transparent;font-family:inherit;font-size:24px;color:#222;cursor:pointer;position:relative}
+    .setup-vk-key::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(253,253,250,.96),rgba(198,202,194,.9));border:2px solid rgba(78,78,72,.38);border-radius:10px;box-shadow:inset 0 1px 0 rgba(255,255,255,.8),inset 0 -5px 12px rgba(120,126,112,.24),0 2px 4px rgba(0,0,0,.18);pointer-events:none}
+    .setup-vk-key.text-key::before{background:linear-gradient(180deg,rgba(253,253,250,.96),rgba(198,202,194,.9));-webkit-mask:none;mask:none;border:2px solid rgba(78,78,72,.38);border-radius:10px;box-shadow:inset 0 1px 0 rgba(255,255,255,.8),inset 0 -5px 12px rgba(120,126,112,.24),0 2px 4px rgba(0,0,0,.18)}
+    .setup-vk-key.sel{filter:brightness(1.05);box-shadow:0 0 0 4px rgba(132,203,70,.92),0 0 16px rgba(132,203,70,.45);border-radius:10px}
+    .setup-vk-key-label{position:absolute;inset:0;z-index:1;display:grid;place-items:center;font-size:25px;line-height:1;color:#111;text-shadow:0 1px 0 rgba(255,255,255,.55);pointer-events:none;transform:translateY(-3px)}
+    .setup-vk-key-label.with-hint{display:flex;align-items:center;justify-content:flex-start;gap:12px;box-sizing:border-box;padding-left:22px;transform:translateY(-3px)}
+    .setup-vk-key-hint-icon{width:31px;height:31px;object-fit:contain;flex:0 0 auto}
+    .setup-vk-key-spacer{height:66px}
+    .setup-vk-key.wide-2{grid-column:span 2}
+    .setup-vk-key.wide-3{grid-column:span 3}
+    .setup-vk-key.wide-5{grid-column:span 5}
+    .setup-vk-grid.symbols-on::after,.setup-vk-grid.accents-on::after{display:none}
+    .setup-vk-hints{display:flex;justify-content:flex-end;gap:28px;margin-top:20px;font-size:21px;color:rgba(0,0,0,.68)}
+    .setup-vk-hints span{display:flex;align-items:center;gap:7px}
+    .setup-vk-hints img{width:24px;height:24px;object-fit:contain}
+  </style>
+</head>
+<body>
+  <main class="setup-shell">
+    <div class="green-spine-left"></div>
+    <div class="green-spine-right"></div>
+    <div class="side-shadow-left"></div>
+    <div class="side-shadow-right"></div>
+    <div class="left-blade-notch"></div>
+    <div class="side-tab">SKALD</div>
+    <div id="setup-blade-layer" class="setup-blade-layer"></div>
+    <section class="blade">
+      <div id="step-title" class="title">Initial Setup</div>
+      <div id="time" class="time"></div>
+      <div class="content">
+        <div id="setup-list" class="list"></div>
+        <aside class="side-card">
+          <div class="card-head">
+            <div id="card-icon" class="card-icon"></div>
+            <div id="card-title" class="card-title">Welcome to SKALD</div>
+          </div>
+          <div id="card-body" class="card-body"></div>
+          <div id="card-status" class="status"></div>
+        </aside>
+      </div>
+      <div class="legend">
+        <div class="legend-group">
+          <span class="btn"><img class="control-icon" src="../../assets/icons/Controls/button-y.webp" alt=""> Skip Setup</span>
+          <span class="btn"><img class="control-icon" src="../../assets/icons/Controls/button-x.webp" alt=""> Resolution</span>
+          <span class="btn"><img class="control-icon shoulder" src="../../assets/icons/Controls/xbox_lb.webp" alt=""><img class="control-icon shoulder" src="../../assets/icons/Controls/xbox_rb.webp" alt=""> Switch Blades</span>
+        </div>
+        <div class="legend-group">
+          <span class="btn"><img class="control-icon" src="../../assets/icons/Controls/button-b.webp" alt=""> Back</span>
+          <span class="btn"><img class="control-icon" src="../../assets/icons/Controls/button-a.webp" alt=""> Select</span>
+        </div>
+      </div>
+    </section>
+    <div id="setup-profile-modal" class="setup-profile-modal">
+      <div class="setup-profile-panel">
+        <div id="setup-profile-title" class="setup-profile-title">Setup New Profile</div>
+        <div id="setup-profile-copy" class="setup-profile-copy"></div>
+        <div id="setup-profile-list" class="setup-profile-list"></div>
+        <div id="setup-profile-error" class="setup-profile-error"></div>
+        <div class="setup-profile-footer">
+          <span class="setup-profile-hint"><img src="../../assets/icons/Controls/button-b.webp" alt=""> Back</span>
+          <span class="setup-profile-hint"><img src="../../assets/icons/Controls/button-a.webp" alt=""> Select</span>
+        </div>
+      </div>
+    </div>
+    <div id="setup-service-modal" class="setup-profile-modal">
+      <div class="setup-profile-panel">
+        <div id="setup-service-title" class="setup-profile-title">Online Service</div>
+        <div id="setup-service-copy" class="setup-profile-copy"></div>
+        <div id="setup-service-list" class="setup-profile-list"></div>
+        <div id="setup-service-error" class="setup-profile-error"></div>
+        <div class="setup-profile-footer">
+          <span class="setup-profile-hint"><img src="../../assets/icons/Controls/button-b.webp" alt=""> Back</span>
+          <span class="setup-profile-hint"><img src="../../assets/icons/Controls/button-a.webp" alt=""> Select</span>
+        </div>
+      </div>
+    </div>
+    <div id="setup-collection-modal" class="setup-profile-modal">
+      <div class="setup-profile-panel">
+        <div id="setup-collection-title" class="setup-profile-title">Private Collection Folders</div>
+        <div id="setup-collection-copy" class="setup-profile-copy">Choose where your personal game collection lives for each supported system. These folders are saved into the same scan locations SKALD uses in Games Library.</div>
+        <div id="setup-collection-list" class="setup-profile-list"></div>
+        <div id="setup-collection-error" class="setup-profile-error"></div>
+        <div class="setup-profile-footer">
+          <span class="setup-profile-hint"><img src="../../assets/icons/Controls/button-b.webp" alt=""> Back</span>
+          <span class="setup-profile-hint"><img src="../../assets/icons/Controls/button-a.webp" alt=""> Select Folder</span>
+        </div>
+      </div>
+    </div>
+    <div id="folder-browser-modal" class="folder-browser-modal">
+      <div class="folder-browser-panel">
+        <div class="folder-browser-title">Select Folder</div>
+        <div class="folder-browser-path">Choose a drive</div>
+        <div class="folder-browser-list"></div>
+        <div class="folder-browser-footer">
+          <div class="folder-browser-hints">
+            <span class="folder-browser-hint"><img src="../../assets/icons/Controls/button-a.webp" alt=""> Open</span>
+            <span class="folder-browser-hint"><img src="../../assets/icons/Controls/button-y.webp" alt=""> Select Folder</span>
+            <span class="folder-browser-hint"><img src="../../assets/icons/Controls/button-x.webp" alt=""> New Folder</span>
+          </div>
+          <div class="folder-browser-hints">
+            <span class="folder-browser-hint"><img src="../../assets/icons/Controls/button-b.webp" alt=""> Back</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="setup-vk-modal" class="setup-vk-modal">
+      <div class="setup-vk-panel">
+        <div class="setup-vk-tile"></div>
+        <div class="setup-vk-edge"></div>
+        <div id="setup-vk-title" class="setup-vk-title">Keyboard</div>
+        <div id="setup-vk-target" class="setup-vk-target"></div>
+        <div class="setup-vk-layout">
+          <div class="setup-vk-side left">
+            <div class="setup-vk-side-card"><img src="../../assets/icons/Controls/xbox_lb.webp" alt="">Cursor</div>
+            <div id="setup-vk-symbols-card" class="setup-vk-side-card dim"><img src="../../assets/icons/Controls/xbox_lt.webp" alt="">Symbols</div>
+            <div id="setup-vk-caps-card" class="setup-vk-side-card dim"><img class="setup-vk-stick-icon" src="../../assets/icons/Controls/xbox_stick_side_l.webp" alt="">Caps</div>
+          </div>
+          <div id="setup-vk-grid" class="setup-vk-grid"></div>
+          <div class="setup-vk-side right">
+            <div class="setup-vk-side-card"><img src="../../assets/icons/Controls/xbox_rb.webp" alt="">Cursor</div>
+            <div id="setup-vk-accents-card" class="setup-vk-side-card dim"><img src="../../assets/icons/Controls/xbox_rt.webp" alt="">Accents</div>
+            <div id="setup-vk-done-card" class="setup-vk-side-card done"><img src="../../assets/icons/Controls/xbox_button_menu.webp" alt="">Done</div>
+          </div>
+        </div>
+        <div class="setup-vk-hints">
+          <span><img src="../../assets/icons/Controls/button-b.webp" alt="">Back</span>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script>
+    const asset=(path)=>`../../${path}`;
+    const bladeAsset=(name)=>`../../assets/themes/RG-THEMES/X360 BLADES/blades/${name}`;
+    const SND='../../assets/themes/RG-THEMES/X360 BLADES/XBMC360/XBMC360/01.Main Files/skin/MC360 2.1/sounds';
+    const state={step:0,sel:0,settings:{},stoat:null,archive:null,ra:null,runtime:null,emulatorStatuses:{},emulatorSetupPanel:0,emulatorSetupBusy:false,emulatorSetupMessage:'',emulatorRuntimeProgress:null};
+    let audioCtx=null;
+    const sfx={};
+    let setupSfxPromise=null;
+    const SETUP_BLADE_W=160;
+    const SETUP_OFFSET=72;
+    const SETUP_LEFT_ANCHOR=78;
+    const SETUP_RIGHT_EDGE=1873;
+    const SETUP_CONTENT_OFFSET=170;
+    const folderBrowserState={open:false,title:'Select Folder',currentPath:'',parentPath:null,entries:[],selectedIdx:0,resolve:null,error:''};
+    const profileModalState={open:false,mode:'choices',sel:0,email:'',password:'',gamertag:'',busy:false,error:''};
+    const serviceModalState={open:false,provider:'archiveorg',sel:0,login:'',secret:'',busy:false,error:''};
+    const collectionModalState={open:false,sel:0,error:''};
+    let setupConfirmState={open:false,title:'',copy:'',confirmLabel:'Confirm',cancelLabel:'Back',resolve:null};
+    const setupVkState={open:false,value:'',sel:0,onSubmit:null,title:'Keyboard',caps:false,symbols:false,accents:false,doneSel:false,cursor:0};
+    const EMULATOR_SETUP_RESOLUTIONS=[
+      {id:'native',label:'Native',output:'Native / Auto',meta:'Original console resolution or emulator auto mode.'},
+      {id:'hd',label:'HD',output:'720p',meta:'A balanced 720p/2x style preset for weaker PCs.'},
+      {id:'fullhd',label:'Full HD',output:'1080p',meta:'A 1080p/3x style preset for most gaming PCs.'},
+      {id:'2k',label:'2K',output:'1440p',meta:'A 1440p/high-scale preset for stronger PCs.'},
+      {id:'ultra',label:'4K',output:'2160p / 4K',meta:'A 4K/high-scale preset for stronger GPUs.'},
+    ];
+    const EMULATOR_SETUP_PANELS=['Select Emulators','Install','BIOS & Firmware','Resolution'];
+    const EMULATOR_SETUP_EMULATORS=[
+      {id:'retroarch',label:'RetroArch',generation:'8-bit / 16-bit / handheld classics',systems:['snes','genesis','dreamcast','psp'],icon:asset('assets/icons/Systems/Retroarch.webp')},
+      {id:'duckstation',label:'DuckStation',generation:'5th Generation',systems:['psx'],biosNote:'Needs user-owned PS1 BIOS files.',icon:asset('assets/icons/Systems/DuckStation.webp')},
+      {id:'pcsx2',label:'PCSX2',generation:'6th Generation',systems:['ps2'],biosNote:'Needs user-owned PS2 BIOS files.',icon:asset('assets/icons/Systems/PCSX2.webp')},
+      {id:'dolphin',label:'Dolphin',generation:'6th / 7th Generation',systems:['gamecube','wii'],icon:asset('assets/icons/Systems/Dolphin.webp')},
+      {id:'xemu',label:'Xemu',generation:'6th Generation',systems:['xbox'],biosNote:'Needs user-owned Original Xbox boot/BIOS assets.',icon:asset('assets/icons/Systems/Xemu.webp')},
+      {id:'rpcs3',label:'RPCS3',generation:'7th Generation',systems:['ps3'],firmware:'official',icon:asset('assets/icons/Systems/RPCS3.webp')},
+      {id:'xenia',label:'Xenia Canary',generation:'7th Generation',systems:['x360'],icon:asset('assets/icons/Systems/Xenia_Canary.webp')},
+      {id:'cemu',label:'Cemu',generation:'8th Generation',systems:['wiiu'],biosNote:'WUX titles need matching keys.txt entries.',icon:asset('assets/icons/Systems/CEMU.webp')},
+    ];
+    const EMULATOR_SETUP_SYSTEMS=[
+      {id:'snes',label:'Super Nintendo',emulator:'retroarch',resolution:false,icon:asset('assets/icons/CONTROLLER-snes.svg')},
+      {id:'genesis',label:'Sega Genesis',emulator:'retroarch',resolution:false,icon:asset('assets/icons/Systems/Genesis.webp')},
+      {id:'dreamcast',label:'Dreamcast',emulator:'retroarch',resolution:true,biosNote:'Some Dreamcast cores may need BIOS files later.',icon:asset('assets/icons/Systems/Dreamcast.webp')},
+      {id:'psx',label:'PlayStation',emulator:'duckstation',resolution:true,biosNote:'Requires user-owned PS1 BIOS files.',icon:asset('assets/icons/Systems/DuckStation.webp')},
+      {id:'ps2',label:'PlayStation 2',emulator:'pcsx2',resolution:true,biosNote:'Requires user-owned PS2 BIOS files.',icon:asset('assets/icons/Systems/PCSX2.webp')},
+      {id:'ps3',label:'PlayStation 3',emulator:'rpcs3',resolution:true,firmware:'official',icon:asset('assets/icons/Systems/RPCS3.webp')},
+      {id:'psp',label:'PSP',emulator:'retroarch',resolution:true,icon:asset('assets/icons/CONTROLLER-playstation1.svg')},
+      {id:'gamecube',label:'GameCube',emulator:'dolphin',resolution:true,icon:asset('assets/icons/Systems/Gamecube.webp')},
+      {id:'wii',label:'Wii',emulator:'dolphin',resolution:true,icon:asset('assets/icons/Systems/Dolphin.webp')},
+      {id:'wiiu',label:'Wii U',emulator:'cemu',resolution:true,biosNote:'Encrypted WUX titles need matching keys.txt entries.',icon:asset('assets/icons/Systems/WiiU.webp')},
+      {id:'xbox',label:'Original Xbox',emulator:'xemu',resolution:true,biosNote:'Requires user-owned Xbox boot/BIOS assets.',icon:asset('assets/icons/Systems/Xemu.webp')},
+      {id:'x360',label:'Xbox 360',emulator:'xenia',resolution:true,icon:asset('assets/icons/Systems/Xenia_Canary.webp')},
+    ];
+    const SETUP_PRIVATE_COLLECTION_SYSTEMS=[
+      {id:'snes',label:'Super Nintendo',icon:asset('assets/icons/CONTROLLER-snes.svg')},
+      {id:'genesis',label:'Sega Genesis',icon:asset('assets/icons/Systems/Genesis.webp')},
+      {id:'psx',label:'PlayStation',icon:asset('assets/icons/Systems/DuckStation.webp')},
+      {id:'ps2',label:'PlayStation 2',icon:asset('assets/icons/Systems/PCSX2.webp')},
+      {id:'ps3',label:'PlayStation 3',icon:asset('assets/icons/Systems/RPCS3.webp')},
+      {id:'psp',label:'PSP',icon:asset('assets/icons/CONTROLLER-playstation1.svg')},
+      {id:'dc',label:'Dreamcast',icon:asset('assets/icons/Systems/Dreamcast.webp')},
+      {id:'gamecube',label:'GameCube',icon:asset('assets/icons/Systems/Gamecube.webp')},
+      {id:'wiiu',label:'Wii U',icon:asset('assets/icons/Systems/WiiU.webp')},
+      {id:'xbox',label:'Original Xbox',icon:asset('assets/icons/Systems/Xemu.webp')},
+      {id:'x360',label:'Xbox 360',icon:asset('assets/icons/Systems/Xenia_Canary.webp')},
+    ];
+    const SETUP_VK_KEYS=[
+      'a','b','c','d','e','f','g','1','2','3',
+      'h','i','j','k','l','m','n','4','5','6',
+      'o','p','q','r','s','t','u','7','8','9',
+      'v','w','x','y','z','-','@','_','0','.',
+      {label:'Space',value:' ',cls:'wide-5 text-key',hint:'y'},
+      {label:'Backspace',action:'backspace',cls:'wide-5 text-key',hint:'x'}
+    ];
+    const SETUP_VK_SYMBOL_KEYS=[
+      '1','2','3','4','5','6','7','8','9','0',
+      ',',';',':',"'",'"','!','?','Â¡','Â¿','%',
+      '[',']','{','}','`','$','Â£','Â«','Â»','#',
+      '<','>','(',')','â‚¬','Â¥','Â¢','~','^','\\',
+      '|','=','*','/','+','-','@','_','&','.',
+      {label:'Space',value:' ',cls:'wide-5 text-key',hint:'y'},
+      {label:'Backspace',action:'backspace',cls:'wide-5 text-key',hint:'x'}
+    ];
+    const SETUP_VK_ACCENT_KEYS=[
+      '1','2','3','4','5','6','7','8','9','0',
+      'Ã€','Ã','Ã‚','Ãƒ','Ã„','Ã…','Ã‘','Ãˆ','Ã‰','ÃŠ',
+      'Ã‹','ÃŒ','Ã','ÃŽ','Ã','Ã‡','Ã','Ã™','Ãš','Ã›',
+      'Ãœ','Ã’','Ã“','Ã”','Ã–','Ã•','Ã˜','Å’','Ã†','Ã‡',
+      'Ã™','Ã','Â·','â€¢','_','Ãœ','Âµ','Â§','_','Ã',
+      {label:'Space',value:' ',cls:'wide-5 text-key',hint:'y'},
+      {label:'Backspace',action:'backspace',cls:'wide-5 text-key',hint:'x'}
+    ];
+    function esc(value){
+      return String(value ?? '').replace(/[&<>"']/g,(ch)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    }
+    async function loadSfx(name){
+      try{
+        if(!audioCtx) audioCtx=new AudioContext();
+        const res=await fetch(`${SND}/${name}`);
+        sfx[name]=await audioCtx.decodeAudioData(await res.arrayBuffer());
+      }catch{}
+    }
+    function playSfx(name){
+      try{
+        if(!audioCtx){
+          primeSetupAudio();
+          return;
+        }
+        if(audioCtx.state==='suspended') void audioCtx.resume();
+        if(!sfx[name]){
+          void loadAllSfx();
+          return;
+        }
+        const source=audioCtx.createBufferSource();
+        const gain=audioCtx.createGain();
+        gain.gain.value=1;
+        source.buffer=sfx[name];
+        source.connect(gain);
+        gain.connect(audioCtx.destination);
+        source.start(0);
+      }catch{}
+    }
+    function loadAllSfx(){
+      if(setupSfxPromise) return setupSfxPromise;
+      setupSfxPromise=Promise.all(['bladeslide_1.wav','cursor.wav','select.wav','back.wav','tier2_enter.wav','tier2_exit.wav'].map(loadSfx)).catch((error)=>{
+        setupSfxPromise=null;
+        throw error;
+      });
+      return setupSfxPromise;
+    }
+    function primeSetupAudio(){
+      if(audioCtx?.state==='suspended') void audioCtx.resume();
+      void loadAllSfx();
+    }
+    function scaleSetupStage(){
+      const stage=document.querySelector('.setup-shell');
+      if(!stage) return;
+      const scale=Math.min(window.innerWidth/1920, window.innerHeight/1080);
+      const offX=Math.round((window.innerWidth-1920*scale)/2);
+      const offY=Math.round((window.innerHeight-1080*scale)/2);
+      stage.style.transform=`scale(${scale})`;
+      stage.style.left=`${offX}px`;
+      stage.style.top=`${offY}px`;
+    }
+    window.addEventListener('resize',scaleSetupStage);
+    function setupProfileName(){
+      return state.stoat?.connected
+        ? (state.stoat?.user?.username || state.stoat?.user?.displayName || 'SKALD LIVE profile')
+        : (state.settings?.localProfile?.gamertag || state.settings?.localProfile?.displayName || '');
+    }
+    function setupProfileStatus(){
+      if(state.stoat?.connected) return `Profile Ready: signed in to SKALD LIVE as ${setupProfileName()}.`;
+      const localName=setupProfileName();
+      if(localName) return `Profile Ready: ${localName} is set up as an offline local profile.`;
+      return 'No profile has been set up yet. Start here with SKALD LIVE or an offline local gamertag.';
+    }
+    function emulatorSetupSettings(){
+      const setup=state.settings?.initialSetup?.emulators || {};
+      const selected=setup.selectedSystems && typeof setup.selectedSystems==='object' ? setup.selectedSystems : {};
+      const selectedEmulators=setup.selectedEmulators && typeof setup.selectedEmulators==='object' ? setup.selectedEmulators : {};
+      const resolutions=setup.resolutions && typeof setup.resolutions==='object' ? setup.resolutions : {};
+      return {selected,selectedEmulators,resolutions};
+    }
+    function emulatorRuntimeInstalled(emulatorId){
+      const status=state.emulatorStatuses?.[emulatorId];
+      if(emulatorId==='dolphin') return !!(status?.ok || status?.stableInstalled || status?.developmentInstalled);
+      return !!status?.ok;
+    }
+    function emulatorSetupSystemState(system){
+      const setup=emulatorSetupSettings();
+      const emulatorSelected=emulatorSetupEmulatorSelected(system.emulator);
+      const enabled=emulatorSelected && setup.selected[system.id] !== false;
+      const resolutionId=setup.resolutions[system.id] || 'native';
+      const resolution=EMULATOR_SETUP_RESOLUTIONS.find(item=>item.id===resolutionId) || EMULATOR_SETUP_RESOLUTIONS[0];
+      const installed=emulatorRuntimeInstalled(system.emulator);
+      return {enabled,resolution,installed};
+    }
+    function emulatorSetupEmulatorSelected(emulatorId){
+      const setup=emulatorSetupSettings();
+      if(Object.prototype.hasOwnProperty.call(setup.selectedEmulators,emulatorId)) return setup.selectedEmulators[emulatorId] === true;
+      return ['duckstation','pcsx2','rpcs3','dolphin','xenia'].includes(emulatorId);
+    }
+    function selectedEmulatorObjectsForSetup(){
+      return EMULATOR_SETUP_EMULATORS.filter(emulator=>emulatorSetupEmulatorSelected(emulator.id));
+    }
+    function emulatorSetupStatus(){
+      const panel=EMULATOR_SETUP_PANELS[state.emulatorSetupPanel] || EMULATOR_SETUP_PANELS[0];
+      const selectedEmulators=selectedEmulatorObjectsForSetup();
+      const enabledSystems=EMULATOR_SETUP_SYSTEMS.filter(system=>selectedEmulators.some(emulator=>emulator.id===system.emulator));
+      const emulatorIds=selectedEmulators.map(emulator=>emulator.id);
+      const installedCount=emulatorIds.filter(emulatorRuntimeInstalled).length;
+      const needsFiles=selectedEmulators.filter(emulator=>emulator.biosNote).map(emulator=>emulator.label);
+      const progress=emulatorSetupProgressLabel();
+      const progressPercent=state.emulatorRuntimeProgress?.active
+        ? Math.max(0,Math.min(100,Math.round(Number(state.emulatorRuntimeProgress?.percent)||0)))
+        : 0;
+      const statusMessage=state.emulatorSetupMessage || progress || 'SKALD will install managed runtimes here, then guide you through any BIOS, firmware, or key requirements.';
+      const note=needsFiles.length
+        ? `Still needs user-owned BIOS / keys: ${needsFiles.join(', ')}\nOfficial PS3 firmware can be downloaded and installed by SKALD.`
+        : 'Official PS3 firmware can be downloaded and installed by SKALD. Console BIOS files still need to come from the user.';
+      return `
+        <div class="setup-emu-status">
+          <div class="setup-emu-status-title">${esc(panel)}</div>
+          <div class="setup-emu-status-summary">
+            <div class="setup-emu-stat">
+              <div class="setup-emu-stat-label">Panels</div>
+              <div class="setup-emu-stat-value">${state.emulatorSetupPanel+1}/${EMULATOR_SETUP_PANELS.length}</div>
+              <div class="setup-emu-stat-copy">Current setup stage</div>
+            </div>
+            <div class="setup-emu-stat">
+              <div class="setup-emu-stat-label">Managed Emulators</div>
+              <div class="setup-emu-stat-value">${installedCount}/${emulatorIds.length || 0}</div>
+              <div class="setup-emu-stat-copy">Ready for launch</div>
+            </div>
+            <div class="setup-emu-stat">
+              <div class="setup-emu-stat-label">Selected Emulators</div>
+              <div class="setup-emu-stat-value">${selectedEmulators.length || 0}</div>
+              <div class="setup-emu-stat-copy">Managed runtimes to prepare</div>
+            </div>
+            <div class="setup-emu-stat">
+              <div class="setup-emu-stat-label">Selected Systems</div>
+              <div class="setup-emu-stat-value">${enabledSystems.length || 0}</div>
+              <div class="setup-emu-stat-copy">System profiles to configure</div>
+            </div>
+          </div>
+          <div class="setup-emu-progress-head">
+            <div class="setup-emu-progress-label">${esc(statusMessage)}</div>
+            <div class="setup-emu-progress-percent">${progressPercent}%</div>
+          </div>
+          <div class="setup-emu-progress-shell">
+            <div class="setup-emu-progress-fill" style="width:${progressPercent}%"></div>
+          </div>
+          <div class="setup-emu-status-note">${esc(note)}</div>
+        </div>
+      `.trim();
+    }
+    function emulatorSetupProgressLabel(){
+      const progress=state.emulatorRuntimeProgress;
+      if(!progress?.active) return '';
+      const stage=String(progress.stage || '').toLowerCase();
+      const pct=Number.isFinite(Number(progress.percent)) ? Math.max(0,Math.min(100,Math.round(Number(progress.percent)))) : null;
+      let verb='Working';
+      if(stage.includes('download')) verb='Downloading';
+      else if(stage.includes('extract')) verb='Extracting';
+      else if(stage.includes('install')) verb='Installing';
+      else if(stage.includes('compil')) verb='Compiling PPU Modules';
+      else if(stage.includes('complete')) verb='Installed';
+      const percentText=pct===null ? '' : ` ${pct}%`;
+      const message=String(progress.message || '').trim();
+      return `${verb}${percentText}${message ? ` - ${message}` : ''}`;
+    }
+    function emulatorSetupActions(){
+      if(state.emulatorSetupPanel===0) return emulatorSetupSelectActions();
+      if(state.emulatorSetupPanel===1) return emulatorSetupInstallActions();
+      if(state.emulatorSetupPanel===2) return emulatorSetupBiosActions();
+      return emulatorSetupResolutionActions();
+    }
+    function emulatorSetupSelectActions(){
+      const items=EMULATOR_SETUP_EMULATORS.map(emulator=>{
+        const selected=emulatorSetupEmulatorSelected(emulator.id);
+        const systems=emulator.systems.map(id=>EMULATOR_SETUP_SYSTEMS.find(system=>system.id===id)?.label || id).join(', ');
+        return {
+          label:emulator.label,
+          meta:`${emulator.generation} | Systems: ${systems}${emulator.biosNote ? ` | ${emulator.biosNote}` : ''}${emulator.firmware==='official' ? ' | Official firmware supported' : ''}`,
+          action:`emusetup-emulator:${emulator.id}`,
+          icon:emulator.icon,
+          enabled:selected,
+          needsFiles:!!emulator.biosNote,
+          badge:selected ? 'Install' : 'Off',
+        };
+      });
+      return [...items,{label:'Next: Install',meta:'Install the selected emulator runtimes.',action:'emusetup-panel-next',icon:bladeAsset('button-a.webp'),badge:'Next'}];
+    }
+    function emulatorSetupInstallActions(){
+      const selected=selectedEmulatorObjectsForSetup();
+      const progress=state.emulatorRuntimeProgress?.active ? state.emulatorRuntimeProgress : null;
+      const progressLabel=emulatorSetupProgressLabel();
+      return [
+        {label:state.emulatorSetupBusy ? 'Installing Selected...' : 'Install Selected Emulators',meta:progressLabel || `Downloads managed runtimes for: ${selected.map(item=>item.label).join(', ') || 'nothing selected'}.`,action:'emusetup-install',icon:bladeAsset('icon-update.webp'),badge:progress ? `${Math.round(Number(progress.percent)||0)}%` : 'A'},
+        ...selected.map(emulator=>({label:emulator.label,meta:`${emulatorRuntimeInstalled(emulator.id) ? 'Installed' : 'Not installed'} | ${emulator.generation}${progress && state.emulatorSetupMessage.includes(emulator.label) ? ` | ${progressLabel || progress.message || ''}` : ''}`,action:`emusetup-emulator-status:${emulator.id}`,icon:emulator.icon,badge:emulatorRuntimeInstalled(emulator.id)?'Ready':(progress && state.emulatorSetupMessage.includes(emulator.label)?`${Math.round(Number(progress.percent)||0)}%`:'Missing')})),
+        {label:'Back: Select Emulators',meta:'Adjust which emulators SKALD should prepare.',action:'emusetup-panel-back',icon:bladeAsset('button-b.webp')},
+        {label:'Next: BIOS & Firmware',meta:'Locate required BIOS files or install official firmware.',action:'emusetup-panel-next',icon:bladeAsset('button-a.webp'),badge:'Next'},
+      ];
+    }
+    function emulatorSetupBiosActions(){
+      const selected=selectedEmulatorObjectsForSetup();
+      const items=[];
+      if(selected.some(item=>item.id==='duckstation')) items.push({label:'DuckStation PS1 BIOS Folder',meta:`${state.emulatorStatuses?.duckstation?.biosAvailable ? 'Configured' : 'Required'} | Locate your legally dumped PS1 BIOS folder.`,action:'emusetup-bios:duckstation',icon:asset('assets/icons/Systems/DuckStation.webp'),needsFiles:true,badge:state.emulatorStatuses?.duckstation?.biosAvailable?'Ready':'Locate'});
+      if(selected.some(item=>item.id==='pcsx2')) items.push({label:'PCSX2 PS2 BIOS Folder',meta:`${state.emulatorStatuses?.pcsx2?.biosAvailable ? 'Configured' : 'Required'} | Locate your legally dumped PS2 BIOS folder.`,action:'emusetup-bios:pcsx2',icon:asset('assets/icons/Systems/PCSX2.webp'),needsFiles:true,badge:state.emulatorStatuses?.pcsx2?.biosAvailable?'Ready':'Locate'});
+      if(selected.some(item=>item.id==='rpcs3')) items.push({label:'RPCS3 PS3 Firmware',meta:`${state.emulatorStatuses?.rpcs3?.firmwareInstalled ? 'Installed' : 'Required'} | Download and install official Sony PS3 firmware.`,action:'emusetup-firmware:rpcs3',icon:asset('assets/icons/Systems/RPCS3.webp'),badge:state.emulatorStatuses?.rpcs3?.firmwareInstalled?'Ready':'Install'});
+      if(selected.some(item=>item.id==='xemu')) items.push({label:'Xemu Original Xbox Boot Assets',meta:'Required later: MCPX/BIOS/HDD assets. Native file mapping will be added in the next pass.',action:'emusetup-info:xemu',icon:asset('assets/icons/Systems/Xemu.webp'),needsFiles:true,badge:'Needed'});
+      if(selected.some(item=>item.id==='cemu')) items.push({label:'Cemu Wii U Keys',meta:'Marketplace WUX keys are merged automatically when available. Imported encrypted games may need a keys.txt import later.',action:'emusetup-info:cemu',icon:asset('assets/icons/Systems/CEMU.webp'),needsFiles:true,badge:'Keys'});
+      if(!items.length) items.push({label:'No BIOS/Firmware Needed',meta:'The selected emulators do not need a BIOS step right now.',action:'emusetup-panel-next',icon:bladeAsset('button-a.webp'),badge:'Ready'});
+      return [...items,{label:'Back: Install',meta:'Return to emulator installation.',action:'emusetup-panel-back',icon:bladeAsset('button-b.webp')},{label:'Next: Resolution',meta:'Choose resolution presets per selected system.',action:'emusetup-panel-next',icon:bladeAsset('button-a.webp'),badge:'Next'}];
+    }
+    function emulatorSetupResolutionActions(){
+      const selectedEmulators=selectedEmulatorObjectsForSetup().map(item=>item.id);
+      const systemItems=EMULATOR_SETUP_SYSTEMS.filter(system=>selectedEmulators.includes(system.emulator)).map(system=>{
+        const itemState=emulatorSetupSystemState(system);
+        return {
+          label:system.label,
+          meta:`Emulator: ${emulatorSetupName(system.emulator)} | Resolution: ${itemState.resolution.label} (${itemState.resolution.output}). ${itemState.resolution.meta} Press A or X to cycle.`,
+          action:`emusetup-resolution:${system.id}`,
+          icon:system.icon,
+          enabled:true,
+          badge:system.resolution ? itemState.resolution.output : 'Auto',
+        };
+      });
+      return [...systemItems,{label:'Back: BIOS & Firmware',meta:'Return to BIOS and firmware setup.',action:'emusetup-panel-back',icon:bladeAsset('button-b.webp')},{label:'Continue',meta:'Move to family and safety settings. Native controller setup is applied after installs where supported.',action:'next',icon:bladeAsset('button-a.webp'),badge:'Done'}];
+    }
+    function controllerSetupMeta(emulatorId){
+      if(emulatorId==='rpcs3') return 'Native SKALD XInput preset available.';
+      if(emulatorId==='cemu') return 'Native SKALD controller preset available.';
+      if(emulatorId==='pcsx2') return 'Native SKALD SDL controller preset available.';
+      if(emulatorId==='dolphin') return 'Portable controller defaults are prepared during Dolphin setup.';
+      if(emulatorId==='xenia') return 'Xenia Canary uses XInput by default.';
+      return 'Controller mapping UI will be expanded in the next emulator settings pass.';
+    }
+    function controllerSetupBadge(emulatorId){
+      if(['pcsx2','rpcs3','cemu','dolphin','xenia'].includes(emulatorId)) return 'Ready';
+      return 'Later';
+    }
+    function emulatorSetupName(id){
+      return {
+        retroarch:'RetroArch',
+        duckstation:'DuckStation',
+        pcsx2:'PCSX2',
+        rpcs3:'RPCS3',
+        dolphin:'Dolphin',
+        cemu:'Cemu',
+        xemu:'Xemu',
+        xenia:'Xenia Canary',
+        vlc:'VLC',
+      }[id] || id;
+    }
+    function saveCloudProviderLabel(providerId){
+      return {
+        'savecloud-dropbox':'Dropbox selected',
+      }[String(providerId||'')] || 'Not configured';
+    }
+    function privateCollectionConfiguredCount(settings){
+      const paths=settings?.systemScanPaths && typeof settings.systemScanPaths==='object'
+        ? settings.systemScanPaths
+        : {};
+      return SETUP_PRIVATE_COLLECTION_SYSTEMS.reduce((count, system)=>
+        paths?.[system.id] ? count + 1 : count
+      ,0);
+    }
+    const steps=[
+      {
+        id:'welcome',
+        title:'Welcome to SKALD',
+        icon:asset('assets/icons/Systems/SKALD_LIVE.webp'),
+        body:'',
+        status:()=>'',
+        actions:[
+          {label:'BLADES',meta:'Use the current SKALD blades experience.',action:'next',icon:asset('assets/heroes/Blades.webp')},
+          {label:'NXE',meta:'Future SKALD skin placeholder.',action:'',icon:asset('assets/heroes/NXE.webp')},
+          {label:'XMB',meta:'Future SKALD skin placeholder.',action:'',icon:asset('assets/heroes/XMB.webp')}
+        ]
+      },
+      {
+        id:'profiles',
+        title:'Profiles',
+        icon:asset('assets/icons/Systems/SKALD_LIVE.webp'),
+        body:'Your profile comes first because it anchors your gamer card, settings, saves, services, and future SKALD LIVE features.',
+        status:setupProfileStatus,
+        actions:[
+          {label:'Setup New Profile',meta:'Use SKALD LIVE with Stoat, create a Stoat account, or continue offline.',action:'setup-profile',icon:asset('assets/icons/Systems/SKALD_LIVE.webp')},
+          {label:'Skip Initial Setup',meta:'Open SKALD now and configure everything later from System settings.',action:'skip',icon:bladeAsset('icon-power.webp')}
+        ]
+      },
+      {
+        id:'services',
+        title:'Online Services',
+        icon:bladeAsset('icon-network.webp'),
+        body:'Connect the optional third-party accounts SKALD uses for marketplace access, achievements, LaunchBox-based scraping, and profile-specific save backups. These are saved to the active SKALD profile, including offline local profiles.',
+        status:()=>`Archive.org: ${state.archive?.loggedIn ? `Signed in${state.archive?.username ? ` as ${state.archive.username}` : ''}` : 'Not signed in'}\nRetroAchievements: ${state.ra?.secret ? `Configured${state.ra?.login ? ` for ${state.ra.login}` : ''}` : 'Not configured'}\nSave Cloud Backup: ${saveCloudProviderLabel(state.saveCloud?.provider)}`,
+        actions:[
+          {label:'Archive.org Account',meta:'Optional, used for authenticated Archive.org marketplace downloads.',action:'service-archiveorg',icon:asset('assets/icons/Systems/archiveorg.webp')},
+          {label:'RetroAchievements Account',meta:'Optional, used for achievements, profile points, and unlock data.',action:'service-retroachievements',icon:asset('assets/icons/Systems/RA-logo.webp')},
+          {label:'Save Cloud Backup',meta:'Choose Dropbox for profile save backups.',action:'service-savecloud',icon:asset('assets/icons/Systems/DropBox.webp')},
+          {label:'Continue',meta:'Move to storage setup.',action:'next',icon:bladeAsset('button-a.webp')}
+        ]
+      },
+      {
+        id:'storage',
+        title:'Storage',
+        icon:bladeAsset('icon-folder.webp'),
+        body:'Choose where SKALD should keep incoming Marketplace downloads, then set where your own private game collection lives per system so Scan for Games already knows where to look.',
+        status:()=>{
+          const configured=privateCollectionConfiguredCount(state.settings);
+          return `Marketplace Download Folder: ${state.settings.downloadPath || state.settings.installPath || 'Not set'}\nPrivate Collection Folders: ${configured ? `${configured} configured` : 'Not set'}`;
+        },
+        actions:[
+          {label:'Set MARKETPLACE Download Folder',meta:'Choose where SKALD should place downloaded ROMs, archives, and Marketplace game content.',action:'download-folder',icon:bladeAsset('icon-folder.webp')},
+          {label:'Set Private Collection Folder',meta:'Choose ROM locations per supported system using the same saved scan paths SKALD uses in Games Library.',action:'private-collections',icon:bladeAsset('icon-games.webp')},
+          {label:'Keep Current Storage',meta:'Continue with the paths shown on the right.',action:'next',icon:bladeAsset('button-a.webp')}
+        ]
+      },
+      {
+        id:'emulators',
+        title:'Emulator Setup',
+        icon:bladeAsset('icon-systeminfo.webp'),
+        body:'Choose the systems you want SKALD to prepare now. SKALD will install the matching managed emulators, save per-system resolution presets, and clearly call out firmware, BIOS, or key requirements.',
+        status:emulatorSetupStatus,
+        actions:emulatorSetupActions
+      },
+      {
+        id:'family',
+        title:'Family Settings',
+        icon:bladeAsset('icon-partymode.webp'),
+        body:'Family settings will eventually manage content visibility, online safety, download restrictions, and activity review.',
+        status:()=>'Family restrictions are not active yet. This setup step is reserved so the flow already has a native place for them.',
+        actions:[
+          {label:'Keep Defaults',meta:'Use the current unrestricted SKALD defaults.',action:'next',icon:bladeAsset('button-a.webp')},
+          {label:'Review Later',meta:'Family settings can be revisited from System.',action:'next',icon:bladeAsset('icon-system.webp')}
+        ]
+      },
+      {
+        id:'complete',
+        title:'Initial Setup Complete',
+        icon:asset('assets/icons/Systems/SKALD_LIVE.webp'),
+        body:'You can now play games, explore the Marketplace, tune emulators, or customize your system from the main Blades.',
+        status:()=>state.stoat?.connected ? `Ready for ${state.stoat?.user?.username || 'your SKALD profile'}.` : 'Ready to enter SKALD. You can sign in to SKALD LIVE later.',
+        actions:[
+          {label:'Enter SKALD',meta:'Save setup as complete and open the main Blades.',action:'finish',icon:bladeAsset('button-a.webp')},
+          {label:'Back to Setup',meta:'Return to the previous setup step.',action:'back',icon:bladeAsset('button-b.webp')}
+        ]
+      }
+    ];
+
+    function setTime(){
+      const el=document.getElementById('time');
+      if(!el) return;
+      el.textContent=new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+    }
+    function current(){return steps[state.step] || steps[0];}
+    function stepActions(step=current()){
+      if(typeof step.actions==='function') return step.actions();
+      return Array.isArray(step.actions) ? step.actions : [];
+    }
+    function statusText(step){
+      if(typeof step.status==='function') return step.status();
+      return 'Press A to continue, or Y to skip setup and configure SKALD later.';
+    }
+    function render(){
+      const step=current();
+      const actions=stepActions(step);
+      state.sel=Math.max(0,Math.min(state.sel,actions.length-1));
+      renderSetupBlades();
+      const setupTitle=`INITIAL SETUP: ${step.title}`;
+      const content=document.querySelector('.content');
+      if(content) content.className=`content${step.id==='welcome' ? ' welcome-mode' : ''}`;
+      document.getElementById('step-title').textContent=setupTitle;
+      document.getElementById('card-title').textContent=setupTitle;
+      const cardBody=document.getElementById('card-body');
+      if(cardBody){
+        cardBody.textContent=step.body;
+        cardBody.className=step.id==='emulators' ? 'card-body setup-emulator-body' : 'card-body';
+      }
+      const cardStatus=document.getElementById('card-status');
+      if(step.id==='emulators'){
+        cardStatus.className='status setup-emulator-card';
+        cardStatus.innerHTML=statusText(step);
+      }else{
+        cardStatus.className='status';
+        cardStatus.textContent=statusText(step);
+      }
+      document.getElementById('card-icon').style.backgroundImage=`url("${step.icon}")`;
+      const list=document.getElementById('setup-list');
+      list.className=`list${step.id==='welcome' ? ' skin-choice-list' : ''}`;
+      const welcomeHero=step.id==='welcome'
+        ? `<div class="welcome-logo-hero"><img src="${asset('assets/icons/Systems/SKALD-LOGO.webp')}" alt="SKALD"></div>`
+        : '';
+      list.innerHTML=`${welcomeHero}`+actions.map((item,idx)=>`
+        <div class="item ${step.id==='welcome'?'skin-choice':''} ${idx===state.sel?'sel':''} ${item.enabled?'enabled':''} ${item.needsFiles?'needs-files':''} ${state.emulatorSetupBusy?'installing':''} ${item.action?'':'disabled'}" data-index="${idx}">
+          <div class="item-icon" style="background-image:url('${item.icon || bladeAsset('button-a.webp')}')"></div>
+          <div class="item-copy">
+            <div>${item.label}</div>
+            <div class="item-meta">${item.meta || ''}</div>
+          </div>
+          ${item.badge ? `<div class="item-badge">${esc(item.badge)}</div>` : ''}
+        </div>`).join('');
+      list.querySelectorAll('.item').forEach(el=>el.addEventListener('click',()=>{
+        primeSetupAudio();
+        state.sel=Number(el.dataset.index)||0;
+        render();
+        if(actions[state.sel]?.action) activate();
+      }));
+      const selectedItem=list.querySelector('.item.sel');
+      if(selectedItem){
+        selectedItem.scrollIntoView({block:'nearest'});
+      }
+    }
+    function setupBladeLabel(step){
+      const label=String(step?.title || '').replace(/^Initial Setup\s*/i,'').trim();
+      return (label || 'Setup').toLowerCase();
+    }
+    function moveStep(dir){
+      const next=Math.max(0,Math.min(steps.length-1,state.step+dir));
+      if(next===state.step) return;
+      playSfx('bladeslide_1.wav');
+      state.step=next;
+      state.sel=0;
+      render();
+    }
+    function renderSetupBlades(){
+      const layer=document.getElementById('setup-blade-layer');
+      const blade=document.querySelector('.blade');
+      if(!layer || !blade) return;
+      layer.innerHTML='';
+      const activeIdx=state.step;
+      const numRight=steps.length-1-activeIdx;
+      steps.forEach((step,i)=>{
+        const dist=i-activeIdx;
+        let x,z;
+        if(i<activeIdx){
+          x=SETUP_LEFT_ANCHOR + i*SETUP_OFFSET;
+          z=21+i;
+        }else if(i===activeIdx){
+          x=SETUP_LEFT_ANCHOR + activeIdx*SETUP_OFFSET;
+          z=30;
+        }else{
+          const j=i-activeIdx-1;
+          x=SETUP_RIGHT_EDGE - SETUP_BLADE_W - (numRight-1-j)*SETUP_OFFSET;
+          z=25-j;
+        }
+        const img=dist===0
+          ? bladeAsset('blades-size4-header.webp')
+          : dist<0
+            ? bladeAsset('blades-size3-left-nf.webp')
+            : bladeAsset('blades-size3-right-nf.webp');
+        const tab=document.createElement('div');
+        tab.className=`setup-blade-tab ${dist===0?'active':'inactive'}`;
+        tab.style.left=`${x}px`;
+        tab.style.zIndex=String(z);
+        tab.style.backgroundImage=`url('${img}')`;
+        const lbl=document.createElement('div');
+        lbl.className='setup-blade-tab-label';
+        lbl.textContent=setupBladeLabel(step);
+        lbl.style.left=dist>0?'35px':'65px';
+        tab.appendChild(lbl);
+        tab.addEventListener('click',()=>{
+          if(i===state.step) return;
+          primeSetupAudio();
+          playSfx('bladeslide_1.wav');
+          state.step=i;
+          state.sel=0;
+          render();
+        });
+        layer.appendChild(tab);
+      });
+      const activeX=SETUP_LEFT_ANCHOR + activeIdx*SETUP_OFFSET;
+      const contentLeft=activeX + SETUP_CONTENT_OFFSET;
+      const nearestRightX = numRight > 0
+        ? SETUP_RIGHT_EDGE - SETUP_BLADE_W - (numRight - 1) * SETUP_OFFSET
+        : SETUP_RIGHT_EDGE - 86;
+      const contentRight = Math.max(contentLeft + 920, nearestRightX - 44);
+      const whitewashLeft = Math.max(160, contentLeft - 94);
+      const whitewashRight = Math.min(1640, contentRight + 18);
+      blade.style.left=`${contentLeft}px`;
+      blade.style.width=`${Math.max(920, contentRight - contentLeft)}px`;
+      const shell=document.querySelector('.setup-shell');
+      if(shell){
+        shell.style.setProperty('--setup-whitewash-left', `${whitewashLeft}px`);
+        shell.style.setProperty('--setup-whitewash-width', `${Math.max(420, whitewashRight - whitewashLeft)}px`);
+        shell.style.setProperty('--setup-whitewash-right-left', `${whitewashRight}px`);
+      }
+    }
+    async function refreshStatus(){
+      try{
+        const api=window.electronAPI || {};
+        const [settings, stoat, archive, ra, saveCloud, runtime, pcsx2, duckstation, dolphin, cemu, xemu, rpcs3, vlc, xenia]=await Promise.all([
+          api.getSettings?.() || {},
+          api.stoatStatus ? api.stoatStatus().catch(()=>null) : null,
+          api.archiveCheck ? api.archiveCheck().catch(()=>null) : null,
+          api.getThirdPartyAccount ? api.getThirdPartyAccount({provider:'retroachievements'}).catch(()=>null) : null,
+          api.getSaveCloudStatus ? api.getSaveCloudStatus().catch(()=>null) : null,
+          api.getEmulatorRuntimeStatus ? api.getEmulatorRuntimeStatus().catch(()=>null) : null,
+          api.getPCSX2RuntimeStatus ? api.getPCSX2RuntimeStatus().catch(()=>null) : null,
+          api.getDuckStationRuntimeStatus ? api.getDuckStationRuntimeStatus().catch(()=>null) : null,
+          api.getDolphinRuntimeStatus ? api.getDolphinRuntimeStatus().catch(()=>null) : null,
+          api.getCemuRuntimeStatus ? api.getCemuRuntimeStatus().catch(()=>null) : null,
+          api.getXemuRuntimeStatus ? api.getXemuRuntimeStatus().catch(()=>null) : null,
+          api.getRPCS3RuntimeStatus ? api.getRPCS3RuntimeStatus().catch(()=>null) : null,
+          api.getVLCRuntimeStatus ? api.getVLCRuntimeStatus().catch(()=>null) : null,
+          api.getXeniaRuntimeStatus ? api.getXeniaRuntimeStatus().catch(()=>null) : null
+        ]);
+        state.settings=settings || {};
+        state.stoat=stoat;
+        state.archive=archive;
+        state.ra=ra;
+        state.saveCloud=saveCloud?.saveCloud || settings?.saveCloud || {};
+        state.runtime=runtime;
+        state.emulatorStatuses={retroarch:runtime,pcsx2,duckstation,dolphin,cemu,xemu,rpcs3,vlc,xenia};
+      }catch{}
+      render();
+    }
+    function profileModalCopy(){
+      if(profileModalState.mode==='login') return 'Sign in with an existing Stoat account to connect this profile to SKALD LIVE.';
+      if(profileModalState.mode==='create') return 'Create a Stoat account in the browser, then come back here and sign in with it.';
+      if(profileModalState.mode==='offline') return 'Choose a local gamertag. You can connect to SKALD LIVE later without blocking setup today.';
+      return 'How would you like to set up this SKALD profile? Stoat is optional, so offline setup stays fully supported.';
+    }
+    function profileModalItems(){
+      if(profileModalState.mode==='login'){
+        return [
+          {label:'Email',meta:profileModalState.email || 'Enter Stoat email address',action:'email',icon:asset('assets/icons/Systems/SKALD_LIVE.webp')},
+          {label:'Password',meta:profileModalState.password ? '*'.repeat(Math.min(16,profileModalState.password.length)) : 'Enter Stoat password',action:'password',icon:bladeAsset('icon-profile.webp')},
+          {label:profileModalState.busy ? 'Signing In...' : 'Sign In to SKALD LIVE',meta:'Connect this setup profile to your Stoat account.',action:'login',icon:bladeAsset('button-a.webp')},
+          {label:'Back',meta:'Return to profile setup choices.',action:'choices',icon:bladeAsset('button-b.webp')},
+        ];
+      }
+      if(profileModalState.mode==='create'){
+        return [
+          {label:'Open Stoat Signup',meta:'Open stoat.chat so you can create a SKALD LIVE account.',action:'open-signup',icon:asset('assets/icons/Media/Stoat.webp')},
+          {label:'I Created My Account - Sign In',meta:'Return here after signup and log into the new account.',action:'to-login',icon:asset('assets/icons/Systems/SKALD_LIVE.webp')},
+          {label:'Back',meta:'Return to profile setup choices.',action:'choices',icon:bladeAsset('button-b.webp')},
+        ];
+      }
+      if(profileModalState.mode==='offline'){
+        return [
+          {label:'Gamer Tag',meta:profileModalState.gamertag || 'Enter a local gamertag',action:'gamertag',icon:bladeAsset('icon-profile.webp')},
+          {label:'Continue Without SKALD LIVE',meta:'Save this as a local offline profile for now.',action:'save-local',icon:bladeAsset('button-a.webp')},
+          {label:'Back',meta:'Return to profile setup choices.',action:'choices',icon:bladeAsset('button-b.webp')},
+        ];
+      }
+      return [
+        {label:'Use Existing Stoat Account',meta:'Log in and connect this profile to SKALD LIVE.',action:'to-login',icon:asset('assets/icons/Systems/SKALD_LIVE.webp')},
+        {label:'Setup New Stoat Account',meta:'Create a Stoat account first, then sign in.',action:'to-create',icon:asset('assets/icons/Media/Stoat.webp')},
+        {label:'Do Not Connect to SKALD LIVE',meta:'Use a local gamertag and continue offline.',action:'to-offline',icon:bladeAsset('icon-profile.webp')},
+      ];
+    }
+    function renderProfileModal(){
+      const modal=document.getElementById('setup-profile-modal');
+      if(!modal) return;
+      modal.classList.toggle('on',profileModalState.open);
+      const title=document.getElementById('setup-profile-title');
+      const copy=document.getElementById('setup-profile-copy');
+      const list=document.getElementById('setup-profile-list');
+      const error=document.getElementById('setup-profile-error');
+      if(title) title.textContent=profileModalState.mode==='choices' ? 'Setup New Profile' : profileModalState.mode==='login' ? 'Sign In to SKALD LIVE' : profileModalState.mode==='create' ? 'Setup New Stoat Account' : 'Offline Local Profile';
+      if(copy) copy.textContent=profileModalCopy();
+      if(error) error.textContent=profileModalState.error || '';
+      if(!list) return;
+      const items=profileModalItems();
+      profileModalState.sel=Math.max(0,Math.min(profileModalState.sel,items.length-1));
+      list.innerHTML=items.map((item,idx)=>`
+        <div class="setup-profile-item ${idx===profileModalState.sel?'sel':''}" data-profile-idx="${idx}">
+          <div class="setup-profile-item-icon" style="background-image:url('${item.icon || bladeAsset('button-a.webp')}')"></div>
+          <div class="setup-profile-item-text">
+            <div>${esc(item.label)}</div>
+            <div class="setup-profile-item-meta">${esc(item.meta || '')}</div>
+          </div>
+        </div>
+      `).join('');
+      list.querySelectorAll('.setup-profile-item').forEach(item=>item.addEventListener('click',()=>{
+        primeSetupAudio();
+        profileModalState.sel=Number(item.dataset.profileIdx || 0);
+        void activateProfileModal();
+      }));
+    }
+    function openProfileModal(mode='choices'){
+      primeSetupAudio();
+      playSfx('tier2_enter.wav');
+      profileModalState.open=true;
+      profileModalState.mode=mode;
+      profileModalState.sel=0;
+      profileModalState.error='';
+      profileModalState.gamertag=profileModalState.gamertag || setupProfileName() || '';
+      renderProfileModal();
+    }
+    function closeProfileModal(){
+      playSfx('tier2_exit.wav');
+      profileModalState.open=false;
+      profileModalState.error='';
+      renderProfileModal();
+    }
+    function setProfileModalMode(mode){
+      profileModalState.mode=mode;
+      profileModalState.sel=0;
+      profileModalState.error='';
+      renderProfileModal();
+    }
+    function moveProfileModalSelection(delta){
+      const items=profileModalItems();
+      if(!items.length) return;
+      profileModalState.sel=(profileModalState.sel+delta+items.length)%items.length;
+      playSfx('cursor.wav');
+      renderProfileModal();
+    }
+    async function saveLocalSetupProfile(){
+      const gamertag=String(profileModalState.gamertag || '').trim();
+      if(!gamertag){
+        profileModalState.error='Enter a gamertag before continuing offline.';
+        renderProfileModal();
+        return;
+      }
+      const settings=await window.electronAPI?.getSettings?.() || {};
+      const existingLocal=settings.localProfile || {};
+      settings.localProfile={...existingLocal,id:existingLocal.id || `local:${Date.now().toString(36)}-${Math.random().toString(36).slice(2,8)}`,gamertag,displayName:gamertag,updatedAt:new Date().toISOString()};
+      settings.profileMode='local';
+      await window.electronAPI?.saveSettings?.(settings);
+      state.settings=settings;
+      closeProfileModal();
+      if(current().id==='profiles') moveStep(1);
+      else render();
+    }
+    async function loginStoatFromSetup(){
+      if(profileModalState.busy) return;
+      const email=String(profileModalState.email || '').trim();
+      const password=String(profileModalState.password || '');
+      if(!email || !password){
+        profileModalState.error='Enter both email and password before signing in.';
+        renderProfileModal();
+        return;
+      }
+      profileModalState.busy=true;
+      profileModalState.error='';
+      renderProfileModal();
+      try{
+        const result=await window.electronAPI?.stoatLogin?.({email,password});
+        if(!result?.ok) throw new Error(result?.error || 'Could not sign in to Stoat.');
+        const settings=await window.electronAPI?.getSettings?.() || {};
+        settings.profileMode='stoat';
+        await window.electronAPI?.saveSettings?.(settings);
+        profileModalState.busy=false;
+        closeProfileModal();
+        await refreshStatus();
+        if(current().id==='profiles') moveStep(1);
+      }catch(error){
+        profileModalState.busy=false;
+        profileModalState.error=error?.message || 'Could not sign in to Stoat.';
+        renderProfileModal();
+      }
+    }
+    async function activateProfileModal(){
+      const item=profileModalItems()[profileModalState.sel];
+      const action=item?.action;
+      if(action==='to-login'){setProfileModalMode('login');return;}
+      if(action==='to-create'){setProfileModalMode('create');return;}
+      if(action==='to-offline'){setProfileModalMode('offline');return;}
+      if(action==='choices'){setProfileModalMode('choices');return;}
+      if(action==='email'){
+        openSetupKeyboard({title:'Stoat Email',value:profileModalState.email,onSubmit:(value)=>{profileModalState.email=value;renderProfileModal();}});
+        return;
+      }
+      if(action==='password'){
+        openSetupKeyboard({title:'Stoat Password',value:profileModalState.password,onSubmit:(value)=>{profileModalState.password=value;renderProfileModal();}});
+        return;
+      }
+      if(action==='gamertag'){
+        openSetupKeyboard({title:'Gamer Tag',value:profileModalState.gamertag,onSubmit:(value)=>{profileModalState.gamertag=value;renderProfileModal();}});
+        return;
+      }
+      if(action==='login'){await loginStoatFromSetup();return;}
+      if(action==='save-local'){await saveLocalSetupProfile();return;}
+      if(action==='open-signup'){
+        await window.electronAPI?.openExternal?.('https://stoat.chat');
+        profileModalState.error='Stoat signup opened in your browser. Come back here when the account is ready.';
+        renderProfileModal();
+        return;
+      }
+    }
+    async function backProfileModal(){
+      if(!profileModalState.open) return false;
+      playSfx('back.wav');
+      if(profileModalState.mode==='choices') closeProfileModal();
+      else setProfileModalMode('choices');
+      return true;
+    }
+    const SERVICE_PROVIDERS={
+      archiveorg:{
+        id:'archiveorg',
+        title:'Archive.org Account',
+        loginLabel:'Email',
+        secretLabel:'Password',
+        copy:'Optional. Sign in if your Archive.org account is needed for restricted or authenticated marketplace downloads.',
+        icon:asset('assets/icons/Systems/archiveorg.webp'),
+      },
+      retroachievements:{
+        id:'retroachievements',
+        title:'RetroAchievements Account',
+        loginLabel:'Username',
+        secretLabel:'API Key',
+        copy:'Optional. Connect this for achievement lists, profile points, progress, and future unlock syncing.',
+        icon:asset('assets/icons/Systems/RA-logo.webp'),
+      },
+      'savecloud-select':{
+        id:'savecloud-select',
+        title:'Save Cloud Backup',
+        loginLabel:'Account',
+        secretLabel:'Token',
+        copy:'Choose where SKALD should back up profile-specific save snapshots. Local saves stay enabled even if cloud backup is skipped.',
+        icon:asset('assets/icons/Systems/DropBox.webp'),
+      },
+      'savecloud-dropbox':{
+        id:'savecloud-dropbox',
+        title:'Dropbox Save Backup',
+        loginLabel:'Dropbox Account',
+        secretLabel:'OAuth Token',
+        copy:'Use Dropbox for cloud save backups. Connect it in SKALD and test the active save vault target for this profile.',
+        icon:asset('assets/icons/Systems/DropBox.webp'),
+      },
+    };
+    function currentServiceProvider(){
+      return SERVICE_PROVIDERS[serviceModalState.provider] || SERVICE_PROVIDERS.archiveorg;
+    }
+    function serviceSecretMeta(){
+      const provider=currentServiceProvider();
+      return serviceModalState.secret ? '*'.repeat(Math.min(16,serviceModalState.secret.length)) : `Enter ${provider.secretLabel}`;
+    }
+    function serviceModalItems(){
+      const provider=currentServiceProvider();
+      if(provider.id==='savecloud-select'){
+        return [
+          {label:'Dropbox',meta:'Use Dropbox as the save backup target for this profile.',action:'cloud-provider:savecloud-dropbox',icon:asset('assets/icons/Systems/DropBox.webp')},
+          {label:'Disable Cloud Backup',meta:'Keep local per-profile saves only.',action:'cloud-provider:',icon:asset('assets/icons/Controls/Keyboard/keyboard_delete.webp')},
+          {label:'Back',meta:'Return to Online Services.',action:'back',icon:bladeAsset('button-b.webp')},
+        ];
+      }
+      return [
+        {label:provider.loginLabel,meta:serviceModalState.login || `Enter ${provider.loginLabel}`,action:'login',icon:provider.icon},
+        {label:provider.secretLabel,meta:serviceSecretMeta(),action:'secret',icon:bladeAsset('icon-profile.webp')},
+        {label:serviceModalState.busy ? 'Saving...' : `Save ${provider.title}`,meta:'Save this account to the active SKALD profile.',action:'save',icon:bladeAsset('button-a.webp')},
+        {label:'Clear Saved Account',meta:'Remove this service from the active SKALD profile.',action:'clear',icon:asset('assets/icons/Controls/Keyboard/keyboard_delete.webp')},
+        {label:'Back',meta:'Return to Online Services.',action:'back',icon:bladeAsset('button-b.webp')},
+      ];
+    }
+    function renderServiceModal(){
+      const modal=document.getElementById('setup-service-modal');
+      if(!modal) return;
+      modal.classList.toggle('on',serviceModalState.open);
+      const provider=currentServiceProvider();
+      const title=document.getElementById('setup-service-title');
+      const copy=document.getElementById('setup-service-copy');
+      const list=document.getElementById('setup-service-list');
+      const error=document.getElementById('setup-service-error');
+      if(title) title.textContent=provider.title;
+      if(copy) copy.textContent=provider.copy;
+      if(error) error.textContent=serviceModalState.error || '';
+      if(!list) return;
+      const items=serviceModalItems();
+      serviceModalState.sel=Math.max(0,Math.min(serviceModalState.sel,items.length-1));
+      list.innerHTML=items.map((item,idx)=>`
+        <div class="setup-profile-item ${idx===serviceModalState.sel?'sel':''}" data-service-idx="${idx}">
+          <div class="setup-profile-item-icon" style="background-image:url('${item.icon || bladeAsset('button-a.webp')}')"></div>
+          <div class="setup-profile-item-text">
+            <div>${esc(item.label)}</div>
+            <div class="setup-profile-item-meta">${esc(item.meta || '')}</div>
+          </div>
+        </div>
+      `).join('');
+      list.querySelectorAll('.setup-profile-item').forEach(item=>item.addEventListener('click',()=>{
+        primeSetupAudio();
+        serviceModalState.sel=Number(item.dataset.serviceIdx || 0);
+        void activateServiceModal();
+      }));
+    }
+    async function openServiceModal(providerId){
+      primeSetupAudio();
+      playSfx('tier2_enter.wav');
+      const provider=SERVICE_PROVIDERS[providerId] || SERVICE_PROVIDERS.archiveorg;
+      serviceModalState.open=true;
+      serviceModalState.provider=provider.id;
+      serviceModalState.sel=0;
+      serviceModalState.error='';
+      serviceModalState.busy=false;
+      const account=provider.id==='savecloud-select'
+        ? null
+        : await window.electronAPI?.getThirdPartyAccount?.({provider:provider.id}).catch(()=>null);
+      serviceModalState.login=account?.login || '';
+      serviceModalState.secret=account?.secret || '';
+      renderServiceModal();
+    }
+    function closeServiceModal(){
+      playSfx('tier2_exit.wav');
+      serviceModalState.open=false;
+      serviceModalState.error='';
+      renderServiceModal();
+    }
+    function moveServiceModalSelection(delta){
+      const items=serviceModalItems();
+      if(!items.length) return;
+      serviceModalState.sel=(serviceModalState.sel+delta+items.length)%items.length;
+      playSfx('cursor.wav');
+      renderServiceModal();
+    }
+    async function saveServiceAccount(){
+      if(serviceModalState.busy) return;
+      const provider=currentServiceProvider();
+      const login=String(serviceModalState.login || '').trim();
+      const secret=String(serviceModalState.secret || '').trim();
+      if(provider.id!=='savecloud-dropbox' && (!login || !secret)){
+        serviceModalState.error=`Enter both ${provider.loginLabel} and ${provider.secretLabel}.`;
+        renderServiceModal();
+        return;
+      }
+      serviceModalState.busy=true;
+      serviceModalState.error='';
+      renderServiceModal();
+      try{
+        let result=null;
+        if(provider.id==='archiveorg'){
+          result=await window.electronAPI?.archiveSaveCredentials?.({email:login,password:secret});
+          const loginResult=await window.electronAPI?.archiveLogin?.({email:login,password:secret});
+          if(!loginResult?.ok) throw new Error(loginResult?.error || 'Saved credentials, but Archive.org sign-in failed.');
+        }else if(provider.id==='savecloud-dropbox'){
+          if(secret){
+            result=await window.electronAPI?.saveThirdPartyAccount?.({provider:provider.id,login,secret,saveToProfile:true});
+            if(!result?.ok) throw new Error(result?.error || 'Could not save the Dropbox token.');
+          }else{
+            result=await window.electronAPI?.connectDropboxSaveCloud?.({login}).catch(error=>({ok:false,error:error?.message||String(error)}));
+            if(!result?.ok) throw new Error(result?.error || 'Could not connect Dropbox.');
+          }
+          await window.electronAPI?.setSaveCloudProvider?.({provider:provider.id,enabled:true}).catch(()=>null);
+          const validation=await window.electronAPI?.validateDropboxSaveCloud?.({token:secret}).catch(error=>({ok:false,error:error?.message||String(error)}));
+          if(!validation?.ok) throw new Error(validation?.error || 'Dropbox connected, but validation failed.');
+        }else{
+          result=await window.electronAPI?.saveThirdPartyAccount?.({provider:provider.id,login,secret,saveToProfile:true});
+        }
+        if(!result?.ok) throw new Error(result?.error || `Could not save ${provider.title}.`);
+        if(String(provider.id||'').startsWith('savecloud-')){
+          await window.electronAPI?.setSaveCloudProvider?.({provider:provider.id,enabled:true}).catch(()=>null);
+        }
+        serviceModalState.busy=false;
+        closeServiceModal();
+        await refreshStatus();
+      }catch(error){
+        serviceModalState.busy=false;
+        serviceModalState.error=error?.message || `Could not save ${provider.title}.`;
+        renderServiceModal();
+      }
+    }
+    async function clearServiceAccount(){
+      const provider=currentServiceProvider();
+      const result=await window.electronAPI?.clearThirdPartyAccount?.({provider:provider.id});
+      if(!result?.ok){
+        serviceModalState.error=result?.error || `Could not clear ${provider.title}.`;
+        renderServiceModal();
+        return;
+      }
+      if(provider.id==='archiveorg') await window.electronAPI?.archiveLogout?.().catch(()=>null);
+      if(String(provider.id||'').startsWith('savecloud-')){
+        const cloud=await window.electronAPI?.getSaveCloudStatus?.().catch(()=>null);
+        if(cloud?.saveCloud?.provider===provider.id){
+          await window.electronAPI?.setSaveCloudProvider?.({provider:'',enabled:false}).catch(()=>null);
+        }
+      }
+      serviceModalState.login='';
+      serviceModalState.secret='';
+      closeServiceModal();
+      await refreshStatus();
+    }
+    async function activateServiceModal(){
+      const provider=currentServiceProvider();
+      const item=serviceModalItems()[serviceModalState.sel];
+      const action=item?.action;
+      if(action==='back'){closeServiceModal();return;}
+      if(String(action||'').startsWith('cloud-provider:')){
+        const providerId=String(action).slice('cloud-provider:'.length);
+        if(!providerId){
+          await window.electronAPI?.setSaveCloudProvider?.({provider:'',enabled:false}).catch(()=>null);
+          closeServiceModal();
+          await refreshStatus();
+          return;
+        }
+        await window.electronAPI?.setSaveCloudProvider?.({provider:providerId,enabled:true}).catch(()=>null);
+        await openServiceModal(providerId);
+        return;
+      }
+      if(action==='login'){
+        openSetupKeyboard({title:provider.loginLabel,value:serviceModalState.login,onSubmit:(value)=>{serviceModalState.login=value;renderServiceModal();}});
+        return;
+      }
+      if(action==='secret'){
+        openSetupKeyboard({title:provider.secretLabel,value:serviceModalState.secret,onSubmit:(value)=>{serviceModalState.secret=value;renderServiceModal();}});
+        return;
+      }
+      if(action==='save'){await saveServiceAccount();return;}
+      if(action==='clear'){await clearServiceAccount();return;}
+    }
+    async function backServiceModal(){
+      if(!serviceModalState.open) return false;
+      playSfx('back.wav');
+      closeServiceModal();
+      return true;
+    }
+    function collectionModalItems(){
+      const paths=state.settings?.systemScanPaths || {};
+      return SETUP_PRIVATE_COLLECTION_SYSTEMS.map(system=>({
+        system:system.id,
+        label:system.label,
+        meta:paths?.[system.id] || 'Not set',
+        icon:system.icon,
+      }));
+    }
+    function renderCollectionModal(){
+      const modal=document.getElementById('setup-collection-modal');
+      if(!modal) return;
+      modal.classList.toggle('on',collectionModalState.open);
+      const title=document.getElementById('setup-collection-title');
+      const copy=document.getElementById('setup-collection-copy');
+      const list=document.getElementById('setup-collection-list');
+      const error=document.getElementById('setup-collection-error');
+      const configured=privateCollectionConfiguredCount(state.settings);
+      if(title) title.textContent='Private Collection Folders';
+      if(copy) copy.textContent=`Choose where your personal game collection lives for each supported system. These folders are saved into the same scan locations SKALD uses in Games Library.\n\nConfigured systems: ${configured}/${SETUP_PRIVATE_COLLECTION_SYSTEMS.length}`;
+      if(error) error.textContent=collectionModalState.error || '';
+      if(!list) return;
+      const items=collectionModalItems();
+      collectionModalState.sel=Math.max(0,Math.min(collectionModalState.sel,items.length-1));
+      list.innerHTML=items.map((item,idx)=>`
+        <div class="setup-profile-item ${idx===collectionModalState.sel?'sel':''}" data-collection-idx="${idx}">
+          <div class="setup-profile-item-icon" style="background-image:url('${item.icon || bladeAsset('icon-folder.webp')}')"></div>
+          <div class="setup-profile-item-text">
+            <div>${esc(item.label)}</div>
+            <div class="setup-profile-item-meta">${esc(item.meta || '')}</div>
+          </div>
+        </div>
+      `).join('');
+      list.querySelectorAll('.setup-profile-item').forEach(item=>item.addEventListener('click',()=>{
+        primeSetupAudio();
+        collectionModalState.sel=Number(item.dataset.collectionIdx || 0);
+        void activateCollectionModal();
+      }));
+    }
+    function openCollectionModal(){
+      primeSetupAudio();
+      playSfx('tier2_enter.wav');
+      collectionModalState.open=true;
+      collectionModalState.sel=0;
+      collectionModalState.error='';
+      renderCollectionModal();
+    }
+    function closeCollectionModal(){
+      playSfx('tier2_exit.wav');
+      collectionModalState.open=false;
+      collectionModalState.error='';
+      renderCollectionModal();
+    }
+    function moveCollectionModalSelection(delta){
+      const items=collectionModalItems();
+      if(!items.length) return;
+      collectionModalState.sel=(collectionModalState.sel+delta+items.length)%items.length;
+      playSfx('cursor.wav');
+      renderCollectionModal();
+    }
+    async function saveCollectionModalSystemFolder(systemId){
+      const settings=await window.electronAPI?.getSettings?.() || {};
+      const picked=await openSkaldFolderBrowser({
+        title:`Select ${collectionModalItems().find(item=>item.system===systemId)?.label || 'System'} Private Collection Folder`,
+        startPath:settings?.systemScanPaths?.[systemId] || settings?.installPath || settings?.downloadPath || '',
+      });
+      if(!picked) return false;
+      const nextSettings={...settings, systemScanPaths:{...(settings?.systemScanPaths || {}), [systemId]:picked}};
+      await window.electronAPI?.saveSettings?.(nextSettings);
+      state.settings=nextSettings;
+      collectionModalState.error='';
+      await refreshStatus();
+      renderCollectionModal();
+      return true;
+    }
+    async function activateCollectionModal(){
+      const item=collectionModalItems()[collectionModalState.sel];
+      if(!item?.system) return false;
+      playSfx('select.wav');
+      const ok=await saveCollectionModalSystemFolder(item.system);
+      if(ok){
+        collectionModalState.error=`${item.label} folder saved.`;
+        renderCollectionModal();
+      }
+      return !!ok;
+    }
+    async function backCollectionModal(){
+      if(!collectionModalState.open) return false;
+      playSfx('back.wav');
+      closeCollectionModal();
+      return true;
+    }
+    function ensureSetupConfirmModal(){
+      let modal=document.getElementById('setup-confirm-modal');
+      if(modal) return modal;
+      modal=document.createElement('div');
+      modal.id='setup-confirm-modal';
+      modal.className='setup-profile-modal';
+      modal.innerHTML=`
+        <div class="setup-profile-panel">
+          <div id="setup-confirm-title" class="setup-profile-title">Confirm</div>
+          <div id="setup-confirm-copy" class="setup-profile-copy"></div>
+          <div id="setup-confirm-list" class="setup-profile-list"></div>
+          <div id="setup-confirm-error" class="setup-profile-error"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      return modal;
+    }
+    function renderSetupConfirmModal(){
+      const modal=ensureSetupConfirmModal();
+      modal.classList.toggle('on',!!setupConfirmState.open);
+      const title=document.getElementById('setup-confirm-title');
+      const copy=document.getElementById('setup-confirm-copy');
+      const list=document.getElementById('setup-confirm-list');
+      if(title) title.textContent=setupConfirmState.title || 'Confirm';
+      if(copy) copy.textContent=setupConfirmState.copy || '';
+      if(list){
+        list.innerHTML=`
+          <div class="setup-profile-item sel" data-confirm-action="yes">
+            <div class="setup-profile-item-icon" style="background-image:url('${bladeAsset('button-a.webp')}')"></div>
+            <div class="setup-profile-item-text"><div>${esc(setupConfirmState.confirmLabel || 'Confirm')}</div><div class="setup-profile-item-meta">Apply this SKALD setting now.</div></div>
+          </div>
+          <div class="setup-profile-item" data-confirm-action="no">
+            <div class="setup-profile-item-icon" style="background-image:url('${bladeAsset('button-b.webp')}')"></div>
+            <div class="setup-profile-item-text"><div>${esc(setupConfirmState.cancelLabel || 'Back')}</div><div class="setup-profile-item-meta">Skip this step for now.</div></div>
+          </div>
+        `;
+        list.querySelectorAll('.setup-profile-item').forEach(item=>item.addEventListener('click',()=>resolveSetupConfirm(item.dataset.confirmAction==='yes')));
+      }
+    }
+    function resolveSetupConfirm(value){
+      if(!setupConfirmState.open) return false;
+      playSfx(value ? 'select.wav' : 'back.wav');
+      const resolve=setupConfirmState.resolve;
+      setupConfirmState={open:false,title:'',copy:'',confirmLabel:'Confirm',cancelLabel:'Back',resolve:null};
+      renderSetupConfirmModal();
+      if(resolve) resolve(!!value);
+      return true;
+    }
+    function openSetupConfirm({title='Confirm',copy='',confirmLabel='Confirm',cancelLabel='Back'}={}){
+      if(setupConfirmState.open) resolveSetupConfirm(false);
+      primeSetupAudio();
+      playSfx('tier2_enter.wav');
+      setupConfirmState={open:true,title,copy,confirmLabel,cancelLabel,resolve:null};
+      renderSetupConfirmModal();
+      return new Promise(resolve=>{setupConfirmState.resolve=resolve;});
+    }
+    function renderFolderBrowser(){
+      const modal=document.getElementById('folder-browser-modal');
+      if(!modal) return;
+      const title=modal.querySelector('.folder-browser-title');
+      const pathEl=modal.querySelector('.folder-browser-path');
+      const list=modal.querySelector('.folder-browser-list');
+      if(title) title.textContent=folderBrowserState.title || 'Select Folder';
+      if(pathEl) pathEl.textContent=folderBrowserState.error || folderBrowserState.currentPath || 'Choose a drive';
+      if(!list) return;
+      if(!folderBrowserState.entries.length){
+        list.innerHTML=`<div class="folder-browser-empty">${esc(folderBrowserState.error || 'This folder has no subfolders. Press Y to select it.')}</div>`;
+        return;
+      }
+      folderBrowserState.selectedIdx=Math.max(0,Math.min(folderBrowserState.selectedIdx,folderBrowserState.entries.length-1));
+      list.innerHTML=folderBrowserState.entries.map((entry,idx)=>`
+        <div class="folder-browser-item ${entry.type==='drive'?'drive':''} ${idx===folderBrowserState.selectedIdx?'sel':''}" data-folder-idx="${idx}">
+          <div class="folder-browser-icon"></div>
+          <div class="folder-browser-name">${esc(entry.name || entry.path || 'Folder')}</div>
+        </div>
+      `).join('');
+      list.querySelectorAll('.folder-browser-item').forEach(item=>item.addEventListener('click',()=>{
+        primeSetupAudio();
+        folderBrowserState.selectedIdx=Number(item.dataset.folderIdx || 0);
+        openSelectedFolderBrowserEntry();
+      }));
+      list.querySelector('.folder-browser-item.sel')?.scrollIntoView({block:'nearest'});
+    }
+    async function loadFolderBrowserPath(dir,preserveSelection=false){
+      const result=await window.electronAPI?.listFolders?.({dir:dir||null});
+      if(!result?.ok){
+        folderBrowserState.error=result?.error || 'Could not read this folder.';
+        folderBrowserState.entries=[];
+        renderFolderBrowser();
+        return false;
+      }
+      folderBrowserState.currentPath=result.dir || '';
+      folderBrowserState.parentPath=result.parent || null;
+      folderBrowserState.entries=Array.isArray(result.entries) ? result.entries : [];
+      folderBrowserState.error='';
+      if(!preserveSelection) folderBrowserState.selectedIdx=0;
+      renderFolderBrowser();
+      return true;
+    }
+    async function openSkaldFolderBrowser({title='Select Folder',startPath=''}={}){
+      if(folderBrowserState.open) closeFolderBrowser(false);
+      primeSetupAudio();
+      playSfx('tier2_enter.wav');
+      folderBrowserState.open=true;
+      folderBrowserState.title=title;
+      folderBrowserState.currentPath='';
+      folderBrowserState.parentPath=null;
+      folderBrowserState.entries=[];
+      folderBrowserState.selectedIdx=0;
+      folderBrowserState.error='';
+      document.getElementById('folder-browser-modal')?.classList.add('on');
+      await loadFolderBrowserPath(startPath || null);
+      return new Promise(resolve=>{
+        folderBrowserState.resolve=resolve;
+      });
+    }
+    function closeFolderBrowser(value=null){
+      if(!folderBrowserState.open) return false;
+      playSfx('tier2_exit.wav');
+      const resolve=folderBrowserState.resolve;
+      folderBrowserState.open=false;
+      folderBrowserState.resolve=null;
+      document.getElementById('folder-browser-modal')?.classList.remove('on');
+      if(resolve) resolve(value);
+      return true;
+    }
+    async function openSelectedFolderBrowserEntry(){
+      if(!folderBrowserState.open) return false;
+      const entry=folderBrowserState.entries[folderBrowserState.selectedIdx];
+      if(!entry?.path) return false;
+      playSfx('select.wav');
+      await loadFolderBrowserPath(entry.path);
+      return true;
+    }
+    function moveFolderBrowserSelection(delta){
+      if(!folderBrowserState.open || !folderBrowserState.entries.length) return false;
+      folderBrowserState.selectedIdx=(folderBrowserState.selectedIdx+delta+folderBrowserState.entries.length)%folderBrowserState.entries.length;
+      playSfx('cursor.wav');
+      renderFolderBrowser();
+      return true;
+    }
+    async function folderBrowserBack(){
+      if(!folderBrowserState.open) return false;
+      playSfx('back.wav');
+      if(folderBrowserState.parentPath){
+        await loadFolderBrowserPath(folderBrowserState.parentPath);
+        return true;
+      }
+      if(folderBrowserState.currentPath){
+        await loadFolderBrowserPath(null);
+        return true;
+      }
+      closeFolderBrowser(null);
+      return true;
+    }
+    function chooseCurrentFolderBrowserPath(){
+      if(!folderBrowserState.open) return false;
+      if(!folderBrowserState.currentPath){
+        const entry=folderBrowserState.entries[folderBrowserState.selectedIdx];
+        if(entry?.path){
+          closeFolderBrowser(entry.path);
+          return true;
+        }
+        return false;
+      }
+      closeFolderBrowser(folderBrowserState.currentPath);
+      return true;
+    }
+    function renderSetupKeyboard(){
+      const modal=document.getElementById('setup-vk-modal');
+      const title=document.getElementById('setup-vk-title');
+      const target=document.getElementById('setup-vk-target');
+      const grid=document.getElementById('setup-vk-grid');
+      if(!modal || !grid) return;
+      const capsCard=document.getElementById('setup-vk-caps-card');
+      if(capsCard) capsCard.classList.toggle('caps-on',setupVkState.caps);
+      if(capsCard) capsCard.onclick=toggleSetupKeyboardCaps;
+      const symbolsCard=document.getElementById('setup-vk-symbols-card');
+      if(symbolsCard) symbolsCard.classList.toggle('symbols-on',setupVkState.symbols);
+      if(symbolsCard) symbolsCard.onclick=toggleSetupKeyboardSymbols;
+      grid.classList.toggle('symbols-on',setupVkState.symbols);
+      const accentsCard=document.getElementById('setup-vk-accents-card');
+      if(accentsCard) accentsCard.classList.toggle('accents-on',setupVkState.accents);
+      if(accentsCard) accentsCard.onclick=toggleSetupKeyboardAccents;
+      grid.classList.toggle('accents-on',setupVkState.accents);
+      const doneCard=document.getElementById('setup-vk-done-card');
+      if(doneCard) doneCard.classList.toggle('sel',setupVkState.doneSel);
+      if(doneCard) doneCard.onclick=()=>{ primeSetupAudio(); closeSetupKeyboard(true); };
+      const keyAsset=(obj)=>{
+        const raw=String(obj.asset || obj.value || obj.label || '').toLowerCase();
+        const map={
+          ' ':'keyboard_space.webp',
+          'space':'keyboard_space.webp',
+          'backspace':'keyboard_backspace.webp',
+          'clear':'keyboard_delete.webp',
+          'done':'keyboard_enter.webp',
+          '.':'keyboard_period.webp',
+          '-':'keyboard_minus.webp',
+          '_':'keyboard_minus.webp',
+          '@':'keyboard_space.webp',
+          "'":'keyboard_apostrophe.webp',
+          '"':'keyboard_quote.webp',
+          ':':'keyboard_colon.webp',
+          ';':'keyboard_semicolon.webp',
+          ',':'keyboard_comma.webp',
+          '/':'keyboard_slash_forward.webp',
+          '\\':'keyboard_slash_back.webp',
+          '?':'keyboard_question.webp',
+          '!':'keyboard_exclamation.webp',
+          '=':'keyboard_equals.webp',
+          '+':'keyboard_plus.webp',
+        };
+        const baseFile=map[raw] || (/^[a-z0-9]$/.test(raw) ? `keyboard_${raw}.webp` : 'keyboard_space.webp');
+        const file=baseFile.replace(/\.webp$/,'_outline.webp');
+        return `../../assets/icons/Controls/Keyboard/${file}`;
+      };
+      if(title) title.textContent=setupVkState.title || 'Keyboard';
+      renderSetupKeyboardTarget();
+      const keys=activeSetupKeyboardKeys();
+      grid.innerHTML=keys.map((key,idx)=>{
+        const obj=typeof key==='string' ? {label:key,value:key,cls:''} : key;
+        if(obj.disabled) return '<div class="setup-vk-key-spacer" aria-hidden="true"></div>';
+        const action=obj.action || obj.value || '';
+        const rawLabel=obj.label || obj.value || '';
+        const labelText=/^[a-z]$/.test(String(rawLabel)) && setupVkState.caps ? String(rawLabel).toUpperCase() : rawLabel;
+        const hintIcon=obj.hint==='y' ? '../../assets/icons/Controls/button-y.webp' : obj.hint==='x' ? '../../assets/icons/Controls/button-x.webp' : '';
+        const needsLabel=true;
+        const labelMarkup=obj.hint
+          ? `<span class="setup-vk-key-label with-hint"><img class="setup-vk-key-hint-icon" src="${hintIcon}" alt="${esc(String(obj.hint).toUpperCase())}">${esc(labelText)}</span>`
+          : (needsLabel ? `<span class="setup-vk-key-label">${esc(labelText)}</span>` : '');
+        return `<button class="setup-vk-key ${obj.cls||''} ${!setupVkState.doneSel&&idx===setupVkState.sel?'sel':''}" data-vk-idx="${idx}" aria-label="${esc(labelText||action)}">${labelMarkup}</button>`;
+      }).join('');
+      grid.querySelectorAll('.setup-vk-key').forEach(btn=>btn.addEventListener('click',()=>{
+        primeSetupAudio();
+        setupVkState.doneSel=false;
+        setupVkState.sel=Number(btn.dataset.vkIdx || 0);
+        activateSetupKeyboardKey();
+      }));
+    }
+    function openSetupKeyboard({title='Keyboard',value='',onSubmit=null}={}){
+      primeSetupAudio();
+      playSfx('tier2_enter.wav');
+      setupVkState.open=true;
+      setupVkState.value=value;
+      setupVkState.sel=0;
+      setupVkState.caps=false;
+      setupVkState.symbols=false;
+      setupVkState.accents=false;
+      setupVkState.doneSel=false;
+      setupVkState.cursor=String(value || '').length;
+      setupVkState.onSubmit=typeof onSubmit==='function' ? onSubmit : null;
+      setupVkState.title=title;
+      document.getElementById('setup-vk-modal')?.classList.add('on');
+      renderSetupKeyboard();
+    }
+    function closeSetupKeyboard(submit=false){
+      playSfx(submit ? 'select.wav' : 'tier2_exit.wav');
+      const value=setupVkState.value;
+      const onSubmit=setupVkState.onSubmit;
+      setupVkState.open=false;
+      setupVkState.onSubmit=null;
+      document.getElementById('setup-vk-modal')?.classList.remove('on');
+      if(submit && onSubmit) onSubmit(value);
+    }
+    function renderSetupKeyboardTarget(){
+      const target=document.getElementById('setup-vk-target');
+      if(!target) return;
+      const value=setupVkState.value || '';
+      setupVkState.cursor=Math.max(0,Math.min(value.length,setupVkState.cursor));
+      const before=value.slice(0,setupVkState.cursor);
+      const after=value.slice(setupVkState.cursor);
+      target.innerHTML=`${esc(before)}<span class="setup-vk-caret" aria-hidden="true"></span>${esc(after)}`;
+    }
+    function moveSetupKeyboardCursor(delta){
+      const value=setupVkState.value || '';
+      setupVkState.cursor=Math.max(0,Math.min(value.length,setupVkState.cursor+delta));
+      playSfx('cursor.wav');
+      renderSetupKeyboardTarget();
+    }
+    function moveSetupKeyboard(delta){
+      const keys=activeSetupKeyboardKeys();
+      if(setupVkState.doneSel){
+        if(delta<0){
+          setupVkState.doneSel=false;
+          setupVkState.sel=9;
+          playSfx('cursor.wav');
+          renderSetupKeyboard();
+        }
+        return;
+      }
+      if(delta>0 && (setupVkState.sel%10)===9){
+        setupVkState.doneSel=true;
+        playSfx('cursor.wav');
+        renderSetupKeyboard();
+        return;
+      }
+      const max=keys.length-1;
+      let next=Math.max(0,Math.min(max,setupVkState.sel+delta));
+      const step=delta>=0 ? 1 : -1;
+      let guard=0;
+      while(keys[next]?.disabled && guard<keys.length){
+        next=Math.max(0,Math.min(max,next+step));
+        if((next===0 && step<0) || (next===max && step>0)) break;
+        guard+=1;
+      }
+      setupVkState.sel=keys[next]?.disabled ? setupVkState.sel : next;
+      playSfx('cursor.wav');
+      renderSetupKeyboard();
+    }
+    function applySetupKeyboardAction(action){
+      const value=setupVkState.value || '';
+      setupVkState.cursor=Math.max(0,Math.min(value.length,setupVkState.cursor));
+      if(action==='backspace'){
+        if(setupVkState.cursor>0){
+          setupVkState.value=value.slice(0,setupVkState.cursor-1)+value.slice(setupVkState.cursor);
+          setupVkState.cursor-=1;
+        }
+      }
+      else if(action==='clear'){ setupVkState.value=''; setupVkState.cursor=0; }
+      else if(action==='done'){closeSetupKeyboard(true);return;}
+      else{
+        setupVkState.value=value.slice(0,setupVkState.cursor)+action+value.slice(setupVkState.cursor);
+        setupVkState.cursor+=String(action).length;
+      }
+      renderSetupKeyboard();
+    }
+    function toggleSetupKeyboardCaps(){
+      setupVkState.caps=!setupVkState.caps;
+      playSfx('cursor.wav');
+      renderSetupKeyboard();
+    }
+    function toggleSetupKeyboardSymbols(){
+      setupVkState.symbols=!setupVkState.symbols;
+      if(setupVkState.symbols) setupVkState.accents=false;
+      setupVkState.sel=Math.min(setupVkState.sel,activeSetupKeyboardKeys().length-1);
+      setupVkState.doneSel=false;
+      playSfx('cursor.wav');
+      renderSetupKeyboard();
+    }
+    function toggleSetupKeyboardAccents(){
+      setupVkState.accents=!setupVkState.accents;
+      if(setupVkState.accents) setupVkState.symbols=false;
+      setupVkState.sel=Math.min(setupVkState.sel,activeSetupKeyboardKeys().length-1);
+      setupVkState.doneSel=false;
+      playSfx('cursor.wav');
+      renderSetupKeyboard();
+    }
+    function activeSetupKeyboardKeys(){
+      if(setupVkState.accents) return SETUP_VK_ACCENT_KEYS;
+      return setupVkState.symbols ? SETUP_VK_SYMBOL_KEYS : SETUP_VK_KEYS;
+    }
+    function activateSetupKeyboardKey(){
+      if(setupVkState.doneSel){ closeSetupKeyboard(true); return; }
+      const key=activeSetupKeyboardKeys()[setupVkState.sel];
+      if(!key || key.disabled) return;
+      playSfx('select.wav');
+      const obj=typeof key==='string' ? {value:key} : key;
+      const value=obj.value || '';
+      const action=obj.action || (/^[a-z]$/.test(String(value)) && setupVkState.caps ? String(value).toUpperCase() : value);
+      applySetupKeyboardAction(action);
+    }
+    async function createFolderBrowserFolderNamed(rawName){
+      if(!folderBrowserState.open) return false;
+      if(!folderBrowserState.currentPath){
+        folderBrowserState.error='Open a drive or folder before creating a new folder.';
+        renderFolderBrowser();
+        return false;
+      }
+      const result=await window.electronAPI?.createFolder?.({parentDir:folderBrowserState.currentPath,name:rawName});
+      if(!result?.ok){
+        folderBrowserState.error=result?.error || 'Could not create folder.';
+        renderFolderBrowser();
+        return false;
+      }
+      await loadFolderBrowserPath(folderBrowserState.currentPath,true);
+      const idx=folderBrowserState.entries.findIndex(entry=>entry.path===result.path);
+      if(idx>=0) folderBrowserState.selectedIdx=idx;
+      renderFolderBrowser();
+      return true;
+    }
+    async function createFolderBrowserFolder(){
+      if(!folderBrowserState.open) return false;
+      if(!folderBrowserState.currentPath){
+        folderBrowserState.error='Open a drive or folder before creating a new folder.';
+        renderFolderBrowser();
+        return false;
+      }
+      openSetupKeyboard({
+        title:'New Folder Name',
+        value:'',
+        onSubmit:(value)=>{ void createFolderBrowserFolderNamed(value); },
+      });
+      return true;
+    }
+    async function chooseStorage(kind){
+      const currentSettings=await window.electronAPI?.getSettings?.() || {};
+      const picked=await openSkaldFolderBrowser({
+        title:'Select Marketplace Download Folder',
+        startPath:(currentSettings.downloadPath || currentSettings.installPath || ''),
+      });
+      if(!picked) return;
+      const settings=await window.electronAPI?.getSettings?.() || {};
+      settings.downloadPath=picked;
+      settings.installPath=picked;
+      await window.electronAPI?.saveSettings?.(settings);
+      await refreshStatus();
+    }
+    async function saveEmulatorSetupMutation(mutator){
+      const settings=await window.electronAPI?.getSettings?.() || {};
+      settings.initialSetup=settings.initialSetup || {};
+      settings.initialSetup.emulators=settings.initialSetup.emulators || {};
+      settings.initialSetup.emulators.selectedEmulators=settings.initialSetup.emulators.selectedEmulators || {};
+      settings.initialSetup.emulators.selectedSystems=settings.initialSetup.emulators.selectedSystems || {};
+      settings.initialSetup.emulators.resolutions=settings.initialSetup.emulators.resolutions || {};
+      mutator(settings.initialSetup.emulators);
+      await window.electronAPI?.saveSettings?.(settings);
+      state.settings=settings;
+      render();
+    }
+    async function moveEmulatorSetupPanel(delta){
+      state.emulatorSetupPanel=Math.max(0,Math.min(EMULATOR_SETUP_PANELS.length-1,state.emulatorSetupPanel+delta));
+      state.sel=0;
+      render();
+    }
+    async function toggleEmulatorSetupEmulator(emulatorId){
+      const emulator=EMULATOR_SETUP_EMULATORS.find(item=>item.id===emulatorId);
+      if(!emulator) return;
+      await saveEmulatorSetupMutation((setup)=>{
+        const current=emulatorSetupEmulatorSelected(emulatorId);
+        setup.selectedEmulators[emulatorId]=!current;
+        emulator.systems.forEach((systemId)=>{
+          if(!setup.resolutions[systemId]) setup.resolutions[systemId]='native';
+          setup.selectedSystems[systemId]=!current;
+        });
+      });
+    }
+    async function toggleEmulatorSetupSystem(systemId){
+      const system=EMULATOR_SETUP_SYSTEMS.find(item=>item.id===systemId);
+      if(!system) return;
+      await saveEmulatorSetupMutation((setup)=>{
+        const current=setup.selectedSystems[systemId] !== false && (setup.selectedSystems[systemId] === true || ['psx','ps2','ps3','gamecube','x360'].includes(systemId));
+        setup.selectedSystems[systemId]=!current;
+        if(!setup.resolutions[systemId]) setup.resolutions[systemId]='native';
+      });
+    }
+    async function cycleEmulatorSetupResolution(){
+      if(current().id!=='emulators') return false;
+      const action=stepActions()[state.sel]?.action || '';
+      if(!action.startsWith('emusetup-resolution:')) return false;
+      const systemId=action.split(':')[1];
+      const system=EMULATOR_SETUP_SYSTEMS.find(item=>item.id===systemId);
+      if(!system?.resolution) return false;
+      await saveEmulatorSetupMutation((setup)=>{
+        const currentId=setup.resolutions[systemId] || 'native';
+        const idx=EMULATOR_SETUP_RESOLUTIONS.findIndex(item=>item.id===currentId);
+        const next=EMULATOR_SETUP_RESOLUTIONS[(idx+1+EMULATOR_SETUP_RESOLUTIONS.length)%EMULATOR_SETUP_RESOLUTIONS.length];
+        setup.resolutions[systemId]=next.id;
+      });
+      return true;
+    }
+    function selectedEmulatorIdsForSetup(){
+      return selectedEmulatorObjectsForSetup().map(emulator=>emulator.id);
+    }
+    async function downloadSetupRuntime(emulatorId){
+      const api=window.electronAPI || {};
+      const calls={
+        retroarch:()=>api.downloadEmulatorRuntime?.(),
+        pcsx2:()=>api.downloadPCSX2Runtime?.(),
+        duckstation:()=>api.downloadDuckStationRuntime?.(),
+        dolphin:()=>api.downloadDolphinRuntime?.({channel:'stable'}),
+        cemu:()=>api.downloadCemuRuntime?.(),
+        xemu:()=>api.downloadXemuRuntime?.(),
+        rpcs3:()=>api.downloadRPCS3Runtime?.(),
+        vlc:()=>api.downloadVLCRuntime?.(),
+        xenia:()=>api.downloadXeniaRuntime?.(),
+      };
+      return calls[emulatorId]?.() || {ok:false,error:`No installer is wired for ${emulatorSetupName(emulatorId)} yet.`};
+    }
+    function emulatorControllerPromptLabel(emulatorId){
+      return {
+        pcsx2:'PCSX2',
+        duckstation:'DuckStation',
+        dolphin:'Dolphin',
+        cemu:'Cemu',
+        xemu:'XEMU',
+        rpcs3:'RPCS3',
+        xenia:'Xenia Canary',
+      }[String(emulatorId||'')] || emulatorSetupName(emulatorId);
+    }
+    function emulatorSupportsAutoControllerMapping(emulatorId){
+      return ['pcsx2','duckstation','dolphin','cemu','xemu','rpcs3','xenia'].includes(String(emulatorId||'').trim().toLowerCase());
+    }
+    function emulatorNeedsRequiredFilesBeforeControllerPrompt(emulatorId){
+      return ['pcsx2','duckstation','rpcs3','xemu'].includes(String(emulatorId||'').trim().toLowerCase());
+    }
+    async function applyAutoControllerMappingForSetupEmulator(emulatorId){
+      const id=String(emulatorId||'').trim().toLowerCase();
+      if(id==='pcsx2'){
+        const result=await window.electronAPI?.syncPCSX2Runtime?.().catch(error=>({ok:false,error:error?.message||String(error)}));
+        return result?.ok ? {ok:true,message:'PCSX2 controller/setup defaults applied'} : result;
+      }
+      if(id==='duckstation'){
+        const result=await window.electronAPI?.syncDuckStationRuntime?.().catch(error=>({ok:false,error:error?.message||String(error)}));
+        return result?.ok ? {ok:true,message:'DuckStation controller mapping applied'} : result;
+      }
+      if(id==='dolphin'){
+        const result=await window.electronAPI?.syncDolphinRuntime?.().catch(error=>({ok:false,error:error?.message||String(error)}));
+        return result?.ok ? {ok:true,message:'Dolphin controller defaults applied'} : result;
+      }
+      if(id==='cemu'){
+        const result=await window.electronAPI?.applyCemuControllerPreset?.({preset:'xinput-default'}).catch(error=>({ok:false,error:error?.message||String(error)}));
+        return result?.ok ? {ok:true,message:'Cemu controller mapping applied'} : result;
+      }
+      if(id==='xemu'){
+        const result=await window.electronAPI?.syncXemuRuntime?.().catch(error=>({ok:false,error:error?.message||String(error)}));
+        return result?.ok ? {ok:true,message:'XEMU controller/setup defaults applied'} : result;
+      }
+      if(id==='rpcs3'){
+        const result=await window.electronAPI?.applyRPCS3ControllerPreset?.({preset:'xinput-default'}).catch(error=>({ok:false,error:error?.message||String(error)}));
+        return result?.ok ? {ok:true,message:'RPCS3 controller mapping applied'} : result;
+      }
+      if(id==='xenia'){
+        return {ok:true,message:'Xenia Canary uses XInput controller defaults'};
+      }
+      return {ok:false,error:`No automatic controller mapping is available for ${emulatorControllerPromptLabel(id)} yet.`};
+    }
+    async function promptAutoControllerMappingForSetupEmulator(emulatorId){
+      if(!emulatorSupportsAutoControllerMapping(emulatorId)) return false;
+      const label=emulatorControllerPromptLabel(emulatorId);
+      const shouldApply=await openSetupConfirm({
+        title:'Apply Controller Mapping?',
+        copy:`SKALD can apply its standard controller mapping for ${label} now.\n\nPress A to apply the preset, or B to skip it for now.`,
+        confirmLabel:'Apply Mapping',
+        cancelLabel:'Skip',
+      });
+      if(!shouldApply) return false;
+      const result=await applyAutoControllerMappingForSetupEmulator(emulatorId);
+      state.emulatorSetupMessage=result?.ok
+        ? (result.message || `${label} controller mapping applied.`)
+        : (result?.error || `Could not apply ${label} controller mapping.`);
+      render();
+      return !!result?.ok;
+    }
+    async function installSelectedEmulators(){
+      if(state.emulatorSetupBusy) return;
+      const emulatorIds=selectedEmulatorIdsForSetup();
+      if(!emulatorIds.length){
+        state.emulatorSetupMessage='Select at least one system before installing emulators.';
+        render();
+        return;
+      }
+      state.emulatorSetupBusy=true;
+      state.emulatorSetupMessage='Starting selected emulator setup...';
+      render();
+      try{
+        for(const emulatorId of emulatorIds){
+          if(emulatorRuntimeInstalled(emulatorId)){
+            state.emulatorSetupMessage=`${emulatorSetupName(emulatorId)} is already installed.`;
+            render();
+            continue;
+          }
+          state.emulatorSetupMessage=`Installing ${emulatorSetupName(emulatorId)}...`;
+          render();
+          const result=await downloadSetupRuntime(emulatorId);
+          if(!result?.ok){
+            state.emulatorSetupMessage=`${emulatorSetupName(emulatorId)} install failed: ${result?.error || 'Unknown error'}`;
+            render();
+            break;
+          }
+          await refreshStatus();
+          if(!emulatorNeedsRequiredFilesBeforeControllerPrompt(emulatorId)){
+            state.emulatorSetupBusy=false;
+            await promptAutoControllerMappingForSetupEmulator(emulatorId);
+            state.emulatorSetupBusy=true;
+          }
+        }
+        await refreshStatus();
+        if(!state.emulatorSetupMessage.includes('failed')) state.emulatorSetupMessage='Selected emulator setup finished. Continue to BIOS & Firmware for required files.';
+      }catch(err){
+        state.emulatorSetupMessage=`Emulator setup failed: ${err?.message || err}`;
+      }finally{
+        state.emulatorSetupBusy=false;
+        render();
+      }
+    }
+    async function locateEmulatorBiosFolder(emulatorId){
+      const title=emulatorId==='pcsx2' ? 'Locate PS2 BIOS Folder' : 'Locate PS1 BIOS Folder';
+      const picked=await openSkaldFolderBrowser({title,startPath:''});
+      if(!picked) return;
+      const settings=await window.electronAPI?.getSettings?.() || {};
+      settings.emulators=settings.emulators || {};
+      settings.emulators[emulatorId]=settings.emulators[emulatorId] || {};
+      settings.emulators[emulatorId].biosPath=picked;
+      await window.electronAPI?.saveSettings?.(settings);
+      state.emulatorSetupMessage=`${emulatorSetupName(emulatorId)} BIOS folder saved.`;
+      await refreshStatus();
+      await promptAutoControllerMappingForSetupEmulator(emulatorId);
+    }
+    async function installOfficialRPCS3FirmwareFromSetup(){
+      if(state.emulatorSetupBusy) return;
+      state.emulatorSetupBusy=true;
+      state.emulatorSetupMessage='Downloading official PS3 firmware...';
+      render();
+      try{
+        const download=await window.electronAPI?.downloadRPCS3Firmware?.();
+        if(!download?.ok){
+          state.emulatorSetupMessage=`PS3 firmware download failed: ${download?.error || 'Unknown error'}`;
+          return;
+        }
+        state.emulatorSetupMessage='Installing official PS3 firmware...';
+        render();
+        const install=await window.electronAPI?.installRPCS3Firmware?.();
+        state.emulatorSetupMessage=install?.ok ? 'PS3 firmware installed.' : `PS3 firmware install failed: ${install?.error || 'Unknown error'}`;
+        if(install?.ok){
+          state.emulatorSetupBusy=false;
+          await promptAutoControllerMappingForSetupEmulator('rpcs3');
+          state.emulatorSetupBusy=true;
+        }
+      }catch(err){
+        state.emulatorSetupMessage=`PS3 firmware setup failed: ${err?.message || err}`;
+      }finally{
+        state.emulatorSetupBusy=false;
+        await refreshStatus();
+      }
+    }
+    async function applyStandardControllerSetup(){
+      const selected=selectedEmulatorIdsForSetup();
+      const results=[];
+      for(const emulatorId of selected){
+        if(!emulatorSupportsAutoControllerMapping(emulatorId)) continue;
+        const result=await applyAutoControllerMappingForSetupEmulator(emulatorId);
+        const label=emulatorControllerPromptLabel(emulatorId);
+        results.push(result?.ok ? (result.message || `${label} controller mapping applied`) : `${label} controller setup failed: ${result?.error || 'Unknown error'}`);
+      }
+      if(!results.length) results.push('No native controller presets are available for the selected emulators yet.');
+      state.emulatorSetupMessage=results.join(' ');
+      render();
+    }
+    async function complete(skipped=false){
+      const result=await window.electronAPI?.completeInitialSetup?.({skipped});
+      if(!result?.ok) {
+        const status=document.getElementById('card-status');
+        if(status) status.textContent=result?.error || 'Could not complete setup.';
+      }
+    }
+    async function activate(){
+      const action=stepActions()[state.sel]?.action;
+      if(!action) return;
+      if(action==='next'){moveStep(1);return;}
+      if(action==='back'){back();return;}
+      playSfx('select.wav');
+      if(action==='setup-profile'){openProfileModal('choices');return;}
+      if(action==='service-archiveorg'){await openServiceModal('archiveorg');return;}
+      if(action==='service-retroachievements'){await openServiceModal('retroachievements');return;}
+      if(action==='service-savecloud'){await openServiceModal('savecloud-select');return;}
+      if(action==='skip'){await complete(true);return;}
+      if(action==='finish'){await complete(false);return;}
+      if(action==='install-folder'){await chooseStorage('install');return;}
+      if(action==='download-folder'){await chooseStorage('download');return;}
+      if(action==='private-collections'){openCollectionModal();return;}
+      if(action==='emusetup-panel-next'){await moveEmulatorSetupPanel(1);return;}
+      if(action==='emusetup-panel-back'){await moveEmulatorSetupPanel(-1);return;}
+      if(action?.startsWith('emusetup-emulator:')){await toggleEmulatorSetupEmulator(action.split(':')[1]);return;}
+      if(action?.startsWith('emusetup-resolution:')){await cycleEmulatorSetupResolution();return;}
+      if(action?.startsWith('emusetup-bios:')){await locateEmulatorBiosFolder(action.split(':')[1]);return;}
+      if(action==='emusetup-firmware:rpcs3'){await installOfficialRPCS3FirmwareFromSetup();return;}
+      if(action==='emusetup-controllers-standard'){await applyStandardControllerSetup();return;}
+      if(action==='emusetup-install'){await installSelectedEmulators();return;}
+    }
+    function back(){
+      if(state.step<=0) return;
+      playSfx('back.wav');
+      moveStep(-1);
+    }
+    function moveWelcomeSelection(delta){
+      if(current().id!=='welcome') return false;
+      const actions=stepActions();
+      const next=Math.max(0,Math.min(actions.length-1,state.sel+delta));
+      if(next===state.sel) return true;
+      playSfx('cursor.wav');
+      state.sel=next;
+      render();
+      return true;
+    }
+    document.addEventListener('keydown',async(event)=>{
+      primeSetupAudio();
+      if(setupVkState.open){
+        if(event.key==='ArrowLeft') moveSetupKeyboard(-1);
+        else if(event.key==='ArrowRight') moveSetupKeyboard(1);
+        else if(event.key==='ArrowUp') moveSetupKeyboard(-10);
+        else if(event.key==='ArrowDown') moveSetupKeyboard(10);
+        else if(event.key==='PageUp') moveSetupKeyboardCursor(-1);
+        else if(event.key==='PageDown') moveSetupKeyboardCursor(1);
+        else if(event.key==='CapsLock') toggleSetupKeyboardCaps();
+        else if(event.key==='Tab') toggleSetupKeyboardSymbols();
+        else if(event.key==='AltGraph') toggleSetupKeyboardAccents();
+        else if(event.key==='Enter' || event.key===' ') activateSetupKeyboardKey();
+        else if(event.key==='Backspace') applySetupKeyboardAction('backspace');
+        else if(event.key==='Escape' || event.key.toLowerCase()==='b') closeSetupKeyboard(false);
+        else if(event.key.length===1) applySetupKeyboardAction(event.key);
+        else return;
+        event.preventDefault();
+        return;
+      }
+      if(setupConfirmState.open){
+        if(event.key==='Enter' || event.key===' ') resolveSetupConfirm(true);
+        else if(event.key==='Escape' || event.key==='Backspace' || event.key.toLowerCase()==='b') resolveSetupConfirm(false);
+        else return;
+        event.preventDefault();
+        return;
+      }
+      if(folderBrowserState.open){
+        if(event.key==='ArrowUp') moveFolderBrowserSelection(-1);
+        else if(event.key==='ArrowDown') moveFolderBrowserSelection(1);
+        else if(event.key==='Enter' || event.key===' ') await openSelectedFolderBrowserEntry();
+        else if(event.key.toLowerCase()==='x') await createFolderBrowserFolder();
+        else if(event.key.toLowerCase()==='y') chooseCurrentFolderBrowserPath();
+        else if(event.key==='Escape' || event.key==='Backspace' || event.key.toLowerCase()==='b') await folderBrowserBack();
+        else return;
+        event.preventDefault();
+        return;
+      }
+      if(collectionModalState.open){
+        if(event.key==='ArrowUp') moveCollectionModalSelection(-1);
+        else if(event.key==='ArrowDown') moveCollectionModalSelection(1);
+        else if(event.key==='Enter' || event.key===' ') await activateCollectionModal();
+        else if(event.key==='Escape' || event.key==='Backspace' || event.key.toLowerCase()==='b') await backCollectionModal();
+        else return;
+        event.preventDefault();
+        return;
+      }
+      if(profileModalState.open){
+        if(event.key==='ArrowUp') moveProfileModalSelection(-1);
+        else if(event.key==='ArrowDown') moveProfileModalSelection(1);
+        else if(event.key==='Enter' || event.key===' ') await activateProfileModal();
+        else if(event.key==='Escape' || event.key==='Backspace' || event.key.toLowerCase()==='b') await backProfileModal();
+        else return;
+        event.preventDefault();
+        return;
+      }
+      if(serviceModalState.open){
+        if(event.key==='ArrowUp') moveServiceModalSelection(-1);
+        else if(event.key==='ArrowDown') moveServiceModalSelection(1);
+        else if(event.key==='Enter' || event.key===' ') await activateServiceModal();
+        else if(event.key==='Escape' || event.key==='Backspace' || event.key.toLowerCase()==='b') await backServiceModal();
+        else return;
+        event.preventDefault();
+        return;
+      }
+      if(event.key==='ArrowUp'){
+        const next=Math.max(0,state.sel-1);
+        if(next!==state.sel) playSfx('cursor.wav');
+        state.sel=next;
+        render();
+      }
+      else if(event.key==='ArrowDown'){
+        const next=Math.min(stepActions().length-1,state.sel+1);
+        if(next!==state.sel) playSfx('cursor.wav');
+        state.sel=next;
+        render();
+      }
+      else if(event.key==='ArrowLeft'){
+        if(!moveWelcomeSelection(-1)) moveStep(-1);
+      }
+      else if(event.key==='ArrowRight'){
+        if(!moveWelcomeSelection(1)) moveStep(1);
+      }
+      else if(event.key==='PageUp' || event.key.toLowerCase()==='q'){moveStep(-1);}
+      else if(event.key==='PageDown' || event.key.toLowerCase()==='e'){moveStep(1);}
+      else if(event.key.toLowerCase()==='x'){await cycleEmulatorSetupResolution();}
+      else if(event.key==='Enter'){await activate();}
+      else if(event.key==='Escape' || event.key==='Backspace'){back();}
+      else if(event.key.toLowerCase()==='y'){await complete(true);}
+    });
+    const PAD={A:0,B:1,X:2,Y:3,LB:4,RB:5,LT:6,RT:7,START:9,LS:10,DU:12,DD:13,DL:14,DR:15};
+    let prev={};
+    function pollGamepad(){
+      const gp=navigator.getGamepads?.().find(Boolean);
+      if(gp){
+        const just=(button)=>gp.buttons[button]?.pressed && !prev[button];
+        if(gp.buttons?.some((button)=>button?.pressed)) primeSetupAudio();
+        if(setupVkState.open){
+          if(just(PAD.DL)) moveSetupKeyboard(-1);
+          if(just(PAD.DR)) moveSetupKeyboard(1);
+          if(just(PAD.DU)) moveSetupKeyboard(-10);
+          if(just(PAD.DD)) moveSetupKeyboard(10);
+          if(just(PAD.A)) activateSetupKeyboardKey();
+          if(just(PAD.LB)) moveSetupKeyboardCursor(-1);
+          if(just(PAD.RB)) moveSetupKeyboardCursor(1);
+          if(just(PAD.LT)) toggleSetupKeyboardSymbols();
+          if(just(PAD.RT)) toggleSetupKeyboardAccents();
+          if(just(PAD.X)) applySetupKeyboardAction('backspace');
+          if(just(PAD.Y)) applySetupKeyboardAction(' ');
+          if(just(PAD.LS)) toggleSetupKeyboardCaps();
+          if(just(PAD.START)) closeSetupKeyboard(true);
+          if(just(PAD.B)) closeSetupKeyboard(false);
+        }else if(setupConfirmState.open){
+          if(just(PAD.A)) resolveSetupConfirm(true);
+          if(just(PAD.B)) resolveSetupConfirm(false);
+        }else if(folderBrowserState.open){
+          if(just(PAD.DU)) moveFolderBrowserSelection(-1);
+          if(just(PAD.DD)) moveFolderBrowserSelection(1);
+          if(just(PAD.A)) openSelectedFolderBrowserEntry();
+          if(just(PAD.X)) createFolderBrowserFolder();
+          if(just(PAD.Y)) chooseCurrentFolderBrowserPath();
+          if(just(PAD.B)) folderBrowserBack();
+        }else if(profileModalState.open){
+          if(just(PAD.DU)) moveProfileModalSelection(-1);
+          if(just(PAD.DD)) moveProfileModalSelection(1);
+          if(just(PAD.A)) activateProfileModal();
+          if(just(PAD.B)) backProfileModal();
+        }else if(serviceModalState.open){
+          if(just(PAD.DU)) moveServiceModalSelection(-1);
+          if(just(PAD.DD)) moveServiceModalSelection(1);
+          if(just(PAD.A)) activateServiceModal();
+          if(just(PAD.B)) backServiceModal();
+        }else if(collectionModalState.open){
+          if(just(PAD.DU)) moveCollectionModalSelection(-1);
+          if(just(PAD.DD)) moveCollectionModalSelection(1);
+          if(just(PAD.A)) activateCollectionModal();
+          if(just(PAD.B)) backCollectionModal();
+        }else{
+          if(current().id==='welcome'){
+            if(just(PAD.DL)) moveWelcomeSelection(-1);
+            if(just(PAD.DR)) moveWelcomeSelection(1);
+            if(just(PAD.A)) activate();
+            if(just(PAD.B)) back();
+            if(just(PAD.Y)) complete(true);
+            prev={};
+            gp.buttons.forEach((button,idx)=>{prev[idx]=button.pressed;});
+            requestAnimationFrame(pollGamepad);
+            return;
+          }
+          if(just(PAD.DU)){
+            const next=Math.max(0,state.sel-1);
+            if(next!==state.sel) playSfx('cursor.wav');
+            state.sel=next;
+            render();
+          }
+          if(just(PAD.DD)){
+            const next=Math.min(stepActions().length-1,state.sel+1);
+            if(next!==state.sel) playSfx('cursor.wav');
+            state.sel=next;
+            render();
+          }
+          if(just(PAD.DL) || just(PAD.LB)) moveStep(-1);
+          if(just(PAD.DR) || just(PAD.RB)) moveStep(1);
+          if(just(PAD.A)) activate();
+          if(just(PAD.X)) cycleEmulatorSetupResolution();
+          if(just(PAD.B)) back();
+          if(just(PAD.Y)) complete(true);
+        }
+        prev={};
+        gp.buttons.forEach((button,idx)=>{prev[idx]=button.pressed;});
+      }
+      requestAnimationFrame(pollGamepad);
+    }
+    window.addEventListener('pointerdown',primeSetupAudio,{once:true});
+    window.addEventListener('keydown',primeSetupAudio,{once:true});
+    scaleSetupStage();
+    setTime();
+    setInterval(setTime,15000);
+    window.electronAPI?.onEmulatorRuntimeProgress?.((progress)=>{
+      state.emulatorRuntimeProgress=progress || null;
+      if(progress?.message) state.emulatorSetupMessage=progress.message;
+      render();
+    });
+    loadAllSfx().catch(()=>{});
+    refreshStatus();
+    pollGamepad();
+  </script>
+</body>
+</html>
+
